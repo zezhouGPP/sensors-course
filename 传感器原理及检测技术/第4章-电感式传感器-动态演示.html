@@ -329,7 +329,50 @@
               stroke-linecap="round" opacity=".9" style="display:none"/>
         <path id="loopSol" d="" fill="none" stroke="var(--flux)" stroke-width="3.2" stroke-dasharray="10 8"
               stroke-linecap="round" opacity=".9" style="display:none"/>
+        <path id="loopD1" d="" fill="none" stroke="var(--flux)" stroke-width="3.2" stroke-dasharray="10 8"
+              stroke-linecap="round" opacity=".9" style="display:none"/>
+        <path id="loopD2" d="" fill="none" stroke="var(--flux)" stroke-width="3.2" stroke-dasharray="10 8"
+              stroke-linecap="round" opacity=".9" style="display:none"/>
         <g id="fluxDots"></g>
+        <!-- 差动式：两个线圈分绕上/下磁芯，衔铁在中间，上下气隙一增一减 -->
+        <g id="stDiff" style="display:none">
+          <!-- 上磁芯（上轭 + 两条腿） -->
+          <rect x="128" y="14" width="136" height="22" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="128" y="36" width="24" height="52" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="240" y="36" width="24" height="52" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <!-- 下磁芯 -->
+          <rect x="128" y="242" width="136" height="22" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="128" y="190" width="24" height="52" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="240" y="190" width="24" height="52" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <!-- 线圈 L₁（绕上轭）／L₂（绕下轭） -->
+          <g id="coilD1"><rect x="168" y="6" width="56" height="38" rx="5" fill="var(--cu)" opacity=".92"/>
+            <line x1="168" y1="14" x2="224" y2="14" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="168" y1="26" x2="224" y2="26" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="168" y1="38" x2="224" y2="38" stroke="#8c4d22" stroke-width="1.2"/></g>
+          <g id="coilD2"><rect x="168" y="234" width="56" height="38" rx="5" fill="var(--cu)" opacity=".92"/>
+            <line x1="168" y1="242" x2="224" y2="242" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="168" y1="254" x2="224" y2="254" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="168" y1="266" x2="224" y2="266" stroke="#8c4d22" stroke-width="1.2"/></g>
+          <text x="230" y="18" font-size="12" font-weight="700" fill="#8c4d22">L₁</text>
+          <text x="230" y="264" font-size="12" font-weight="700" fill="#8c4d22">L₂</text>
+          <!-- 衔铁（中间，随被测位移上下移动） -->
+          <rect id="armDiff" x="112" y="128" width="168" height="22" rx="3" fill="#2b6cb0" opacity=".85" stroke="#1b4a7a" stroke-width="1.5"/>
+          <text id="armDiffTxt" x="288" y="144" font-size="12" font-weight="700" fill="#2b6cb0">衔铁</text>
+          <!-- 上下气隙尺寸 -->
+          <line id="d1Dim" x1="288" y1="88" x2="288" y2="128" stroke="var(--gapm)" stroke-width="2.4"/>
+          <line id="d1Tick" x1="281" y1="88" x2="295" y2="88" stroke="var(--gapm)" stroke-width="2.4"/>
+          <text id="d1Txt" x="304" y="112" font-size="12" font-weight="700" fill="var(--gapm)">δ₁</text>
+          <line id="d2Dim" x1="288" y1="150" x2="288" y2="190" stroke="var(--gapm)" stroke-width="2.4"/>
+          <line id="d2Tick" x1="281" y1="190" x2="295" y2="190" stroke="var(--gapm)" stroke-width="2.4"/>
+          <text id="d2Txt" x="304" y="176" font-size="12" font-weight="700" fill="var(--gapm)">δ₂</text>
+          <!-- 位移 Δa -->
+          <line id="dMove" x1="96" y1="150" x2="96" y2="120" stroke="#d94a3d" stroke-width="2.4"/>
+          <polygon id="dMoveH" points="96,116 91,126 101,126" fill="#d94a3d"/>
+          <text id="dMoveTxt" x="70" y="112" font-size="11.5" font-weight="700" fill="#d94a3d">Δa</text>
+          <!-- 输出 -->
+          <text id="dOutTxt" x="20" y="296" font-size="12.5" font-weight="700" fill="#0e4a8e">ΔL = L₁ − L₂ = 0.0000 H</text>
+          <text id="dOutSub" x="20" y="312" font-size="11.5" fill="#5b6b80">一个气隙减小、另一个增大 → 两线圈电感反向变化</text>
+        </g>
         <!-- 右侧：磁阻分解 + 磁通量 -->
         <g transform="translate(420,12)">
           <text x="0" y="0" font-size="13" font-weight="700" fill="#0e4a8e">磁阻分解（串联）</text>
@@ -494,8 +537,10 @@
           <text x="125" y="125" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">初级 w₁</text>
           <rect x="78" y="154" width="94" height="40" rx="3" fill="var(--cu)" opacity=".85"/>
           <text x="125" y="179" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">次级 w₂ᵦ</text>
-          <rect id="coreRod" x="146" y="20" width="16" height="200" rx="4" fill="var(--iron)" opacity=".75"/>
-          <text id="coreTxt" x="154" y="14" text-anchor="middle" font-size="12" font-weight="700" fill="#2f4b68">铁芯</text>
+          <rect x="44" y="24" width="150" height="192" rx="8" fill="none" stroke="#8296ad" stroke-width="1.6" stroke-dasharray="6 5"/>
+          <text x="44" y="16" font-size="11.5" fill="#8296ad">导磁外壳</text>
+          <rect id="coreRod" x="114" y="20" width="16" height="200" rx="4" fill="var(--iron)" opacity=".85"/>
+          <text id="coreTxt" x="122" y="14" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2f4b68">铁芯</text>
           <line x1="12" y1="120" x2="60" y2="120" stroke="#9fb2c8" stroke-width="1.5"/>
           <text x="4" y="112" font-size="11.5" fill="#5b6b80">u</text>
           <line x1="190" y1="66" x2="222" y2="66" stroke="#9fb2c8" stroke-width="1.5"/>
@@ -659,7 +704,7 @@
   }
 
   /* ============ 2b. 磁通流动动画 ============ */
-  var FLUX = { L:0, t:0, target:1, els:null, path:null };
+  var FLUX = { L:0, t:0, target:1, els:null, path:null, paths:[] };
   /* 闭合磁通回路：中腿下行 → 穿气隙 → 衔铁 → 外腿 → 上轭 → 回中腿 */
   function gapLoop(yArm){
     var y1 = 196, yA = yArm + 5, yB = yArm + 17;
@@ -685,22 +730,48 @@
     var yArm = parseFloat($('armGap').getAttribute('y')) || 204;
     var yTop = parseFloat($('plunger').getAttribute('y')) || 70;
     var depth = parseFloat($('plunger').getAttribute('height')) || 120;
-    $('loopGap').style.display  = (S.type === 'gap') ? '' : 'none';
-    $('loopArea').style.display = (S.type === 'area') ? '' : 'none';
-    $('loopSol').style.display  = (S.type === 'solenoid') ? '' : 'none';
-    var p = activeLoopEl();
-    var dxA = 120*0.6*(S.x/100);
-    p.setAttribute('d', S.type === 'solenoid' ? solLoop(yTop, depth)
-                    : (S.type === 'area' ? areaLoop(dxA, 207) : gapLoop(yArm)));
-    FLUX.path = p;
-    try { FLUX.L = p.getTotalLength(); } catch (e) { FLUX.L = 0; }
+    var isD = (S.diff === 'differ');
+    $('loopGap').style.display  = (!isD && S.type === 'gap') ? '' : 'none';
+    $('loopArea').style.display = (!isD && S.type === 'area') ? '' : 'none';
+    $('loopSol').style.display  = (!isD && S.type === 'solenoid') ? '' : 'none';
+    $('loopD1').style.display = isD ? '' : 'none';
+    $('loopD2').style.display = isD ? '' : 'none';
+    var paths = [];
+    if (isD){
+      /* 差动：两个线圈各自独立回路，各有一个气隙 */
+      var armTop = parseFloat($('armDiff').getAttribute('y')) || 118, armBot = armTop + 22;
+      $('loopD1').setAttribute('d', 'M140 20 V88 L140 ' + (armTop + 5) + ' L252 ' + (armTop + 5) + ' L252 20 Z');
+      $('loopD2').setAttribute('d', 'M140 256 V190 L140 ' + (armBot - 5) + ' L252 ' + (armBot - 5) + ' L252 256 Z');
+      var dP = diffPair(S.type, S.x/100, S.N), L0 = selfL('gap', 0, S.N).L;
+      paths.push({ el:$('loopD1'), L:0, f:dP.up.L/L0 });
+      paths.push({ el:$('loopD2'), L:0, f:dP.down.L/L0 });
+    } else {
+      var dxA = 120*0.6*(S.x/100);
+      var el = S.type === 'solenoid' ? $('loopSol') : (S.type === 'area' ? $('loopArea') : $('loopGap'));
+      el.setAttribute('d', S.type === 'solenoid' ? solLoop(yTop, depth)
+                      : (S.type === 'area' ? areaLoop(dxA, 207) : gapLoop(yArm)));
+      paths.push({ el:el, L:0, f:fluxRatio() });
+    }
+    paths.forEach(function(o){ try { o.L = o.el.getTotalLength(); } catch (e) { o.L = 0; } });
+    FLUX.paths = paths;
   }
   /* 相对磁通：Φ ∝ N·i/R_m，且 L = N²/R_m ⇒ Φ/Φ₀ = L/L₀ */
+  function dP_dummyFix(L, L0){ return L0 > 0 ? L/L0 : 1; }
   function fluxRatio(){
     var L = selfL(S.type, S.x/100, S.N).L, L0 = selfL(S.type, 0, S.N).L;
     return L0 > 0 ? L/L0 : 1;
   }
   function paintFluxGauge(){
+    if (S.diff === 'differ'){
+      /* 差动：两个线圈各有自己的气隙与磁通，分别显示 */
+      var L0d = selfL('gap', 0, S.N).L, dPd = diffPair(S.type, S.x/100, S.N);
+      var f1 = dP_dummyFix(dPd.up.L, L0d), f2 = dP_dummyFix(dPd.down.L, L0d);
+      FLUX.target = f1;
+      $('fluxBar').setAttribute('width', Math.max(6, Math.min(250, f1/2*250)).toFixed(1));
+      $('fluxTxt').textContent = 'Φ₁/Φ₀ = ' + f1.toFixed(2) + '　Φ₂/Φ₀ = ' + f2.toFixed(2) +
+                                 '　' + (f1 > 1.02 ? '↑↓ 一增一减' : '（相等）');
+      return;
+    }
     var f = fluxRatio();
     FLUX.target = f;
     var w = Math.max(6, Math.min(250, f/2*250));
@@ -714,39 +785,50 @@
     }
     g.innerHTML = html;
     FLUX.els = g.querySelectorAll('circle');
-    /* 先摆好初始位置，避免首帧之前粒子挤在原点 */
     setFluxPath();
-    if (FLUX.path && FLUX.L > 0 && FLUX.path.getPointAtLength){
-      for (i = 0; i < FLUX.els.length; i++){
-        var pt0 = FLUX.path.getPointAtLength(i/FLUX.els.length*FLUX.L);
-        FLUX.els[i].setAttribute('cx', pt0.x.toFixed(1));
-        FLUX.els[i].setAttribute('cy', pt0.y.toFixed(1));
-      }
-    }
-  }
-  function runFlux(){
-    var last = performance.now();
-    (function loop(now){
-      var dt = Math.min(60, now - last); last = now;
-      var f = Math.max(0.15, Math.min(2.2, FLUX.target || 1));
-      var speed = 0.30 + 0.55*f;                       /* 磁通越大，流动越快 */
-      FLUX.t = (FLUX.t + dt*speed/1500) % 1;
-      if (FLUX.path){
-        FLUX.path.setAttribute('stroke-dashoffset', (-FLUX.t*FLUX.L*2).toFixed(1));
-        if (FLUX.els && FLUX.L > 0 && FLUX.path.getPointAtLength){
-          var n = FLUX.els.length, i, pt;
-          for (i = 0; i < n; i++){
-            pt = FLUX.path.getPointAtLength((((FLUX.t*1 + i/n) % 1) + 1) % 1 * FLUX.L);
-            FLUX.els[i].setAttribute('cx', pt.x.toFixed(1));
-            FLUX.els[i].setAttribute('cy', pt.y.toFixed(1));
-            FLUX.els[i].setAttribute('opacity', (0.55 + 0.4*Math.min(1, f/1.4)).toFixed(2));
-          }
+    var nDots = FLUX.els.length;
+    (FLUX.paths || []).forEach(function(o, pi){
+      var per = Math.max(1, Math.floor(nDots/(FLUX.paths.length || 1)));
+      if (o.L > 0 && o.el.getPointAtLength){
+        for (var k = 0; k < per; k++){
+          var idx = pi*per + k;
+          if (idx >= nDots) break;
+          var pt = o.el.getPointAtLength(k/per*o.L);
+          FLUX.els[idx].setAttribute('cx', pt.x.toFixed(1));
+          FLUX.els[idx].setAttribute('cy', pt.y.toFixed(1));
         }
       }
-      /* 线圈激励脉冲：磁通越大越亮 */
-      var p = 0.5 + 0.5*Math.sin(now/420);
-      var c = $('coilPulse');
-      if (c) c.setAttribute('opacity', (0.06 + 0.30*p*Math.min(1.4, f)).toFixed(3));
+    });
+  }
+  function runFlux(){
+    var last = performance.now(), phase = [0, 0];
+    (function loop(now){
+      var dt = Math.min(60, now - last); last = now;
+      var paths = FLUX.paths || [], nDots = FLUX.els ? FLUX.els.length : 0;
+      paths.forEach(function(o, pi){
+        var f = Math.max(0.15, Math.min(2.2, o.f || 1));
+        phase[pi] = (phase[pi] + dt*(0.30 + 0.55*f)/1500) % 1;
+        if (o.L > 0){
+          o.el.setAttribute('stroke-dashoffset', (-phase[pi]*o.L*2).toFixed(1));
+          if (FLUX.els && o.el.getPointAtLength){
+            var per = Math.max(1, Math.floor(nDots/paths.length)), i, idx, pt;
+            for (i = 0; i < per; i++){
+              idx = pi*per + i;
+              if (idx >= nDots) break;
+              pt = o.el.getPointAtLength((((phase[pi] + i/per) % 1) + 1) % 1 * o.L);
+              FLUX.els[idx].setAttribute('cx', pt.x.toFixed(1));
+              FLUX.els[idx].setAttribute('cy', pt.y.toFixed(1));
+              FLUX.els[idx].setAttribute('opacity', (0.5 + 0.45*Math.min(1, f/1.4)).toFixed(2));
+            }
+          }
+        }
+      });
+      /* 线圈激励脉冲（单端结构用；差动时两个线圈各自强弱不同由粒子速度体现） */
+      var c1 = $('coilPulse');
+      if (c1){
+        var f0 = paths.length ? Math.max(0.15, Math.min(1.4, paths[0].f || 1)) : 1;
+        c1.setAttribute('opacity', (0.06 + 0.30*(0.5 + 0.5*Math.sin(now/420))*f0).toFixed(3));
+      }
       requestAnimationFrame(loop);
     })(performance.now());
   }
@@ -787,10 +869,32 @@
     $('freqOut').textContent = S.f.toFixed(1) + ' kHz';
 
     /* --- 结构图切换 --- */
-    $('stGap').style.display = (S.type === 'gap') ? '' : 'none';
-    $('stArea').style.display = (S.type === 'area') ? '' : 'none';
-    $('stSol').style.display = (S.type === 'solenoid') ? '' : 'none';
-    if (S.type === 'gap'){
+    var isD = (S.diff === 'differ');
+    $('stGap').style.display = (!isD && S.type === 'gap') ? '' : 'none';
+    $('stArea').style.display = (!isD && S.type === 'area') ? '' : 'none';
+    $('stSol').style.display = (!isD && S.type === 'solenoid') ? '' : 'none';
+    $('stDiff').style.display = isD ? '' : 'none';
+    if (isD){
+      /* 差动式：衔铁上移 → δ₁ 减小、δ₂ 增大（视觉 20 ~ 40 px，围绕中位 30） */
+      var gx = S.x/100, dP = diffPair(S.type, gx, S.N);
+      var gap1 = 30 - 10*gx, gap2 = 50 + 10*gx;      /* 视觉：δ₁ 由 30→20，δ₂ 由 50→60 */
+      var armTop = 88 + gap1, armBot = armTop + 22;
+      $('armDiff').setAttribute('y', armTop.toFixed(1));
+      $('armDiffTxt').setAttribute('y', (armTop + 15).toFixed(1));
+      $('d1Dim').setAttribute('y2', armTop.toFixed(1));
+      $('d2Dim').setAttribute('y1', armBot.toFixed(1));
+      $('d1Txt').setAttribute('y', (88 + gap1/2 + 4).toFixed(1));
+      $('d1Txt').textContent = 'δ₁ = ' + ((S.type === 'gap') ? ((CFG.d0 - gx*(CFG.d0-CFG.dMin))*1000).toFixed(3) : (CFG.d0*1000).toFixed(3)) + ' mm';
+      $('d2Txt').setAttribute('y', (armBot + gap2/2 + 4).toFixed(1));
+      $('d2Txt').textContent = 'δ₂ = ' + ((S.type === 'gap') ? ((CFG.d0 + gx*(CFG.d0-CFG.dMin))*1000).toFixed(3) : (CFG.d0*1000).toFixed(3)) + ' mm';
+      $('dMove').setAttribute('y1', (armTop + 20).toFixed(1)); $('dMove').setAttribute('y2', (armTop - 12).toFixed(1));
+      $('dMoveH').setAttribute('points', '96,' + (armTop - 16).toFixed(1) + ' 91,' + (armTop - 6).toFixed(1) + ' 101,' + (armTop - 6).toFixed(1));
+      $('dMoveTxt').setAttribute('y', (armTop - 22).toFixed(1));
+      $('dMoveTxt').textContent = 'Δa = ' + (S.x*2.5).toFixed(0) + ' μm';
+      $('dOutTxt').textContent = 'L₁ = ' + dP.up.L.toFixed(4) + ' H　L₂ = ' + dP.down.L.toFixed(4) +
+                                 ' H　ΔL = ' + (dP.up.L - dP.down.L).toFixed(4) + ' H';
+      $('dOutSub').textContent = 'δ₁ 减小 → L₁ 增大；δ₂ 增大 → L₂ 减小（ΔL ≈ 2L₀·Δδ/δ₀，灵敏度约翻倍）';
+    } else if (S.type === 'gap'){
       /* 视觉气隙：8 ~ 66 px（放大约 6 倍，便于观察） */
       var gapPx = 8 + 58*(r.delta/CFG.d0);
       var yArm = 196 + gapPx, yArmB = yArm + 24;
@@ -1235,7 +1339,7 @@
     say('① 单线圈在 x = 70% 处，ΔL/L 已经偏离直线很多（非线性误差 ' + nonlinearity('gap').toFixed(1) +
         '%）。原因是 L ≈ N²μ₀S/(2δ) 里 δ 在<b>分母</b>上。');
     if (!await sleep(2600, tok)) return;
-    say('② <b>改成差动</b>：两个线圈一个气隙减小、一个增大，桥臂输出取<b>两者之差</b> (Z₁−Z₂)/(Z₁+Z₂)（紫色虚线）。在小位移段灵敏度约为单端的 <b>2 倍</b>，而且分母中的偶次项相消 → 非线性从 ' +
+    say('② <b>改成差动</b>：看结构图变了 —— 上、下两个磁芯各绕一个线圈 L₁、L₂，衔铁夹在中间，上下各有一个气隙。衔铁上移时 <b>δ₁ 减小、δ₂ 增大</b>，于是 L₁ 增大、L₂ 减小，输出取<b>两者之差</b> (Z₁−Z₂)/(Z₁+Z₂)（紫色虚线）。上下两条磁通回路的速度一个变快、一个变慢，正是这个意思。小位移段灵敏度约为单端的 <b>2 倍</b>，且偶次项相消 → 非线性从 ' +
         (function(){ var s0=(selfL('gap',0,1000).L-selfL('gap',0,1000).L), d=0;
            var L0=selfL('gap',0,1000).L; var t0=(selfL('gap',0,1000).L-L0)/(selfL('gap',0,1000).L+L0), t1=(selfL('gap',1,1000).L-L0)/(selfL('gap',1,1000).L+L0);
            for (var i=0;i<=100;i++){ var x=i/100, v=(selfL('gap',x,1000).L-L0)/(selfL('gap',x,1000).L+L0);
