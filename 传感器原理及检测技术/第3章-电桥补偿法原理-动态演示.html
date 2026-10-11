@@ -102,13 +102,19 @@
   .seg button.on small{color:rgba(255,255,255,.85)}
   .seg button.bad.on{background:var(--hot); border-color:var(--hot)}
   .seg.disabled{opacity:.45; pointer-events:none}
-  .actions{display:flex; gap:6px; margin-top:7px; flex-wrap:wrap}
+  .actions{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap}
   .actions button{flex:1 1 108px; padding:7px 4px; border-radius:9px; border:1px solid var(--jhu); background:var(--jhu); color:#fff; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap}
   .actions button.ghost{background:#fff; color:var(--jhu)}
   .actions button:hover{filter:brightness(1.07)}
   .actions button.running{background:var(--hot); border-color:var(--hot); color:#fff}
   .narrate{margin-top:7px; border-left:5px solid var(--comp); background:#fffaf0; border-radius:0 10px 10px 0; padding:6px 11px; font-size:13.5px; line-height:1.5; min-height:40px; color:#7a4a05}
-  .ctrl{display:flex; flex-direction:column; gap:3px; margin-bottom:7px}
+  #voiceToggle{border:1px solid var(--jhu); background:#fff; color:var(--jhu); border-radius:9px;
+               font-size:13px; font-weight:700; padding:5px 11px; cursor:pointer; font-family:inherit; white-space:nowrap}
+  #voiceToggle.on{background:var(--jhu); color:#fff}
+  #voiceToggle:hover{filter:brightness(1.06)}
+  #voiceSel{border:1px solid var(--line); background:#fff; color:#33506f; border-radius:8px;
+            padding:4px 6px; font-size:12.5px; font-family:inherit; max-width:190px}
+  .ctrl{display:flex; flex-direction:column; gap:3px; margin-bottom:5px}
   .ctrl .row{display:flex; align-items:center; gap:9px}
   .ctrl .name{font-size:13.5px; color:var(--muted); width:112px; flex:none}
   .ctrl .name b{color:var(--ink); font-size:14px}
@@ -173,7 +179,7 @@
 <div id="laybar">
   <span style="font-weight:700;color:#0e4a8e">板块布局</span>
   <button id="layReset">↺ 恢复默认（一屏）</button>
-  <span class="hint">拖动板块<b>标题栏</b>可移到任意列、任意位置；拖动列间<b>竖条</b>可调整列宽；标题栏 <b>＋ －</b> 缩放该板块内容；<b>⛶</b> 或双击标题栏全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
+  <span class="hint">拖动板块<b>标题栏</b>可移到任意列、任意位置；拖动列间<b>竖条</b>可调整列宽；标题栏 <b>＋ －</b> 缩放该板块内容；<b>⛶</b> 或双击标题栏全屏放大（<b>Esc</b> 退出）。布局自动记住。<b>语音讲解</b>在「接法与输入量」面板里开启，语速跟随演示速度。</span>
 </div>
 
 <div id="boardWrap">
@@ -319,7 +325,15 @@
       <output id="speedOut">1.0×</output>
       </div>
       </div>
-      <div class="narrate" id="narration">初始状态：单臂接法、ΔT = 0、ε = 0，四臂等值 R₀ = 350 Ω，电桥平衡，U₀ = 0。点上面四个按钮可分别演示单臂 / 双臂 / 全桥 / 三接法对比，右侧滑块控制演示快慢。</div>
+
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b>语音讲解</b><br><span class="tiny" id="voiceHint">演示时自动朗读旁白</span></span>
+          <button id="voiceToggle">🔊 开启朗读</button>
+          <select id="voiceSel" title="选择朗读音色"></select>
+        </div>
+      </div>
+      <div class="narrate" id="narration" title="点一下可重听这一条">初始状态：单臂接法、ΔT = 0、ε = 0，四臂等值 R₀ = 350 Ω，电桥平衡，U₀ = 0。点上面四个按钮可分别演示单臂 / 双臂 / 全桥 / 三接法对比，右侧滑块控制演示快慢。</div>
       </div>
       </section>
   </div>
@@ -822,7 +836,7 @@
       if (b){ b.textContent = DEMOS[k].label; b.classList.remove('running'); }
     });
   }
-  function stopDemo(){ S.demoToken++; playingKey = null; resetDemoButtons(); }
+  function stopDemo(){ S.demoToken++; playingKey = null; resetDemoButtons(); stopSpeak(); }
   function beginDemo(key){
     stopDemo();
     playingKey = key;
@@ -831,10 +845,101 @@
     return ++S.demoToken;
   }
   function endDemo(){ playingKey = null; resetDemoButtons(); }
-  function say(t){ $('narration').innerHTML = t; }
-  /* 所有演示的等待与补间都按速度换算，运行中拖动速度条立即生效 */
+
+  /* ---------- 语音讲解（浏览器内置 TTS，无需音频文件） ---------- */
+  var synth = window.speechSynthesis || null;
+  var VOICE = { on:false, name:'', ready:false };
+  function plain(html){
+    return String(html).replace(/<[^>]*>/g, ' ')
+                       .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
+                       .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ').trim();
+  }
+  function zhVoices(){
+    var all = (synth && synth.getVoices()) || [];
+    var zh = all.filter(function(v){ return /^zh/i.test(v.lang) || /Chinese|中文|普通话|Huihui|Yaoyao|Kangkang|Xiaoxiao|Yunxi/i.test(v.name); });
+    return zh.length ? zh : all;
+  }
+  function loadVoices(){
+    if (!synth){ $('voiceHint').textContent = '此浏览器不支持朗读'; $('voiceToggle').disabled = true; return; }
+    var list = zhVoices();
+    if (!list.length){ $('voiceHint').textContent = '未找到语音包'; return; }
+    var natural = '', common = '', i;
+    for (i = 0; i < list.length; i++){
+      if (!natural && /Natural|Online|Xiaoxiao|Yunxi|Xiaoyi/i.test(list[i].name)) natural = list[i].name;
+      if (!common && /Huihui|Yaoyao|Kangkang|慧慧|瑶瑶|康康/i.test(list[i].name)) common = list[i].name;
+    }
+    if (!VOICE.name || !list.some(function(v){ return v.name === VOICE.name; }))
+      VOICE.name = natural || common || list[0].name;
+    var sel = $('voiceSel');
+    sel.innerHTML = list.map(function(v){
+      return '<option value="' + v.name + '"' + (v.name === VOICE.name ? ' selected' : '') + '>' + v.name + '</option>';
+    }).join('');
+    VOICE.ready = true;
+    if (!VOICE.on) $('voiceHint').textContent = list.length + ' 个音色可选';
+  }
+  function makeUtterance(text){
+    var u = new SpeechSynthesisUtterance(plain(text));
+    var list = zhVoices(), v = null, i;
+    for (i = 0; i < list.length; i++){ if (list[i].name === VOICE.name){ v = list[i]; break; } }
+    if (v){ u.voice = v; u.lang = v.lang; } else { u.lang = 'zh-CN'; }
+    u.rate = Math.max(0.6, Math.min(1.9, 0.95*SPEED));
+    u.pitch = 1;
+    u.volume = 1;
+    return u;
+  }
+  function speak(text){
+    if (!synth || !VOICE.on || !plain(text)) return;
+    try { synth.cancel(); synth.speak(makeUtterance(text)); } catch (e) {}
+  }
+  function stopSpeak(){ if (synth){ try { synth.cancel(); } catch (e) {} } }
+  function speaking(){ return !!(synth && VOICE.on && (synth.speaking || synth.pending)); }
+
+  $('voiceToggle').addEventListener('click', function(){
+    VOICE.on = !VOICE.on;
+    this.textContent = VOICE.on ? '🔊 朗读已开启' : '🔊 开启朗读';
+    this.classList.toggle('on', VOICE.on);
+    if (VOICE.on){
+      stopSpeak();
+      $('voiceHint').textContent = '语速跟随演示速度';
+      speak($('narration').innerHTML);
+    } else {
+      stopSpeak();
+      $('voiceHint').textContent = '演示时自动朗读旁白';
+    }
+  });
+  $('voiceSel').addEventListener('change', function(){
+    VOICE.name = this.value; stopSpeak(); if (VOICE.on) speak($('narration').innerHTML);
+  });
+  $('narration').addEventListener('click', function(){
+    if (!VOICE.on){ $('voiceHint').textContent = '先点「开启朗读」'; return; }
+    stopSpeak(); speak(this.innerHTML);
+  });
+  if (synth){
+    loadVoices();
+    if (typeof synth.addEventListener === 'function') synth.addEventListener('voiceschanged', loadVoices);
+    else synth.onvoiceschanged = loadVoices;
+    setTimeout(loadVoices, 600);
+  } else {
+    $('voiceHint').textContent = '此浏览器不支持朗读';
+  }
+
+  function say(t){ $('narration').innerHTML = t; speak(t); }
+  /* 等待：开启朗读时，等旁白读完再继续；未开启时与原逻辑完全一致 */
   function sleep(ms, tok){
-    return new Promise(function(res){ setTimeout(function(){ res(S.demoToken === tok); }, Math.max(50, ms/SPEED)); });
+    var base = Math.max(50, ms/SPEED);
+    if (!VOICE.on || !synth){
+      return new Promise(function(res){ setTimeout(function(){ res(S.demoToken === tok); }, base); });
+    }
+    return new Promise(function(res){
+      var t0 = performance.now();
+      (function poll(){
+        if (S.demoToken !== tok){ stopSpeak(); return res(false); }
+        var waited = performance.now() - t0;
+        if (waited >= base && !speaking()) return res(true);
+        if (waited >= base + 45000) return res(true);       /* 兜底，避免卡死 */
+        setTimeout(poll, 100);
+      })();
+    });
   }
   function tween(from, to, dur, set, tok){
     dur = Math.max(150, dur/SPEED);
