@@ -50,10 +50,17 @@
 
 ## 文件
 
-- `第3章-电桥补偿法原理-动态演示.html` —— 演示本体（单文件，双击即可用）
-- `第3章-电桥补偿法原理-动态演示-预览.png` —— 界面预览
-- `index.html` —— 入口页，点按钮打开演示
+```
+传感器原理及检测技术/          ← 课件目录
+  ├─ 第3章-电桥补偿法原理-动态演示.html   演示本体（单文件，双击即可用）
+  └─ 第3章-电桥补偿法原理-动态演示-预览.png  界面预览
+index.html                   入口页，点按钮进入演示
+README.md                    说明文档
+```
 
 ## 线上访问
 
-若已开启 GitHub Pages，可直接访问仓库首页的 `index.html` 进入演示。
+GitHub Pages 已开启，任何设备打开网址即可使用，无需安装任何环境：
+
+- 入口页：https://zezhougpp.github.io/sensors-course/
+- 演示页：https://zezhougpp.github.io/sensors-course/传感器原理及检测技术/第3章-电桥补偿法原理-动态演示.html
