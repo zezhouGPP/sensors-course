@@ -260,26 +260,43 @@
           <line id="gapLead" x1="180" y1="292" x2="180" y2="300" stroke="#c9d6e6" stroke-width="1.2"/>
           <text id="gapTxt" x="180" y="314" text-anchor="middle" font-size="13" font-weight="700" fill="var(--gapm)">气隙 δ = 0.500 mm</text>
         </g>
-        <!-- 变面积型 -->
+        <!-- 变面积型：极面固定，衔铁横向滑移 → 有效覆盖面积改变（气隙 δ 不变） -->
         <g id="stArea" style="display:none">
-          <rect x="118" y="54" width="152" height="30" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="118" y="84" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="180" y="84" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="240" y="84" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <text x="92" y="74" font-size="12.5" font-weight="700" fill="#2f4b68">铁芯</text>
-          <rect x="168" y="112" width="54" height="78" rx="5" fill="var(--cu)" opacity=".92"/>
-          <line x1="168" y1="128" x2="222" y2="128" stroke="#8c4d22" stroke-width="1.2"/>
-          <line x1="168" y1="152" x2="222" y2="152" stroke="#8c4d22" stroke-width="1.2"/>
-          <line x1="168" y1="176" x2="222" y2="176" stroke="#8c4d22" stroke-width="1.2"/>
-          <text x="230" y="108" font-size="12.5" font-weight="700" fill="#8c4d22">线圈 N</text>
-          <!-- 衔铁横向移动 → 改变有效覆盖面积 -->
-          <rect id="armArea" x="106" y="249" width="240" height="26" rx="3" fill="var(--iron)" opacity=".72" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect id="overlap" x="118" y="249" width="152" height="26" rx="3" fill="var(--gapm)" opacity=".45"/>
-          <text x="106" y="286" font-size="12.5" font-weight="700" fill="#2f4b68">衔铁（横向移动 → 有效面积改变）</text>
-          <line id="areaDim" x1="118" y1="290" x2="270" y2="290" stroke="var(--gapm)" stroke-width="2"/>
-          <line x1="118" y1="285" x2="118" y2="295" stroke="var(--gapm)" stroke-width="2"/>
-          <line id="areaDimR" x1="270" y1="285" x2="270" y2="295" stroke="var(--gapm)" stroke-width="2"/>
-          <text id="areaTxt" x="194" y="308" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--gapm)">有效面积 S = 4.00 cm²</text>
+          <rect x="112" y="18" width="120" height="26" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="112" y="44" width="24" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="160" y="44" width="24" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="208" y="44" width="24" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <text x="84" y="36" font-size="12.5" font-weight="700" fill="#2f4b68">铁芯</text>
+          <rect x="150" y="72" width="48" height="86" rx="5" fill="var(--cu)" opacity=".92"/>
+          <line x1="150" y1="86" x2="198" y2="86" stroke="#8c4d22" stroke-width="1.2"/>
+          <line x1="150" y1="100" x2="198" y2="100" stroke="#8c4d22" stroke-width="1.2"/>
+          <line x1="150" y1="114" x2="198" y2="114" stroke="#8c4d22" stroke-width="1.2"/>
+          <line x1="150" y1="128" x2="198" y2="128" stroke="#8c4d22" stroke-width="1.2"/>
+          <line x1="150" y1="142" x2="198" y2="142" stroke="#8c4d22" stroke-width="1.2"/>
+          <text x="204" y="64" font-size="12.5" font-weight="700" fill="#8c4d22">线圈 N</text>
+          <!-- 三个极面（腿的底面，固定不动） -->
+          <rect x="112" y="192" width="24" height="6" fill="#2f4b68" opacity=".55"/>
+          <rect x="160" y="192" width="24" height="6" fill="#2f4b68" opacity=".55"/>
+          <rect x="208" y="192" width="24" height="6" fill="#2f4b68" opacity=".55"/>
+          <!-- 气隙平面：橙色＝有效覆盖（磁通穿过），灰色＝失去覆盖 -->
+          <rect id="lostArea" x="112" y="198" width="0" height="9" fill="#94a3b8" opacity=".5"/>
+          <rect id="overlap" x="112" y="198" width="120" height="9" fill="var(--gapm)" opacity=".9"/>
+          <!-- 衔铁：横向滑移 -->
+          <rect id="armArea" x="112" y="207" width="200" height="24" rx="3" fill="var(--iron)" opacity=".72" stroke="#2f4b68" stroke-width="1.5"/>
+          <!-- 滑移方向箭头 -->
+          <line id="armArrow" x1="112" y1="224" x2="112" y2="224" stroke="#d94a3d" stroke-width="2"/>
+          <polygon id="armArrowH" points="112,224 112,224 112,224" fill="#d94a3d"/>
+          <text id="armAreaTxt" x="320" y="222" font-size="12.5" font-weight="700" fill="#2f4b68">衔铁（横向滑移）</text>
+          <!-- 标注：极面总宽 + 有效覆盖 -->
+          <line x1="112" y1="246" x2="232" y2="246" stroke="#8296ad" stroke-width="1.6"/>
+          <line x1="112" y1="242" x2="112" y2="250" stroke="#8296ad" stroke-width="1.6"/>
+          <line x1="232" y1="242" x2="232" y2="250" stroke="#8296ad" stroke-width="1.6"/>
+          <text x="172" y="240" text-anchor="middle" font-size="11.5" fill="#8296ad">极面总宽（S₀）</text>
+          <line id="areaDim" x1="112" y1="272" x2="232" y2="272" stroke="var(--gapm)" stroke-width="2.4"/>
+          <line id="areaDimL" x1="112" y1="267" x2="112" y2="277" stroke="var(--gapm)" stroke-width="2.4"/>
+          <line id="areaDimR" x1="232" y1="267" x2="232" y2="277" stroke="var(--gapm)" stroke-width="2.4"/>
+          <text id="areaTxt" x="172" y="292" text-anchor="middle" font-size="13" font-weight="700" fill="var(--gapm)">有效面积 S = 4.00 cm²</text>
+          <text id="lostTxt" x="140" y="190" text-anchor="middle" font-size="11.5" font-weight="700" fill="#64748b" stroke="#fff" stroke-width="3" paint-order="stroke"></text>
         </g>
         <!-- 螺管型 -->
         <g id="stSol" style="display:none">
@@ -649,6 +666,13 @@
     return 'M195 44 V' + y1 + ' L195 ' + yA + ' L133 ' + yA + ' L133 30 L257 30 L257 ' + yB +
            ' L203 ' + yB + ' L203 ' + y1 + ' V44 Z';
   }
+  /* 变面积型回路：有效覆盖变窄 → 磁通回路随之变窄（失去覆盖的极面不再参与） */
+  function areaLoop(dx, yArm){
+    var left = Math.max(124, 112 + dx);
+    var yA = yArm + 6, yB = yArm + 18;
+    return 'M172 44 V196 L172 ' + yA + ' L' + left + ' ' + yA + ' L' + left + ' 30 L220 30 L220 ' + yB +
+           ' L176 ' + yB + ' L176 196 V44 Z';
+  }
   function solLoop(yTop, depth){
     var yb = yTop + depth - 6;
     return 'M206 ' + (yTop - 6) + ' V' + yb + ' L180 ' + yb + ' L180 86 L240 86 L240 ' + yb +
@@ -665,7 +689,9 @@
     $('loopArea').style.display = (S.type === 'area') ? '' : 'none';
     $('loopSol').style.display  = (S.type === 'solenoid') ? '' : 'none';
     var p = activeLoopEl();
-    p.setAttribute('d', S.type === 'solenoid' ? solLoop(yTop, depth) : gapLoop(S.type === 'area' ? 249 : yArm));
+    var dxA = 120*0.6*(S.x/100);
+    p.setAttribute('d', S.type === 'solenoid' ? solLoop(yTop, depth)
+                    : (S.type === 'area' ? areaLoop(dxA, 207) : gapLoop(yArm)));
     FLUX.path = p;
     try { FLUX.L = p.getTotalLength(); } catch (e) { FLUX.L = 0; }
   }
@@ -777,15 +803,26 @@
       $('gapLead').setAttribute('y2', '300');
       $('gapTxt').textContent = '气隙 δ = ' + (r.delta*1000).toFixed(3) + ' mm';
     } else if (S.type === 'area'){
-      var wOver = 152*(1 - 0.6*(S.x/100));
-      wOver = Math.max(6, wOver);
+      /* 极面总宽 120 px（对应 S₀ = 4 cm²）；衔铁右移 dx，失去的覆盖由灰色表示 */
+      var dx = 120*0.6*(S.x/100), wOver = Math.max(4, 120 - dx), xL = 112 + dx;
+      $('armArea').setAttribute('x', xL.toFixed(1));
+      $('lostArea').setAttribute('x', '112');
+      $('lostArea').setAttribute('width', dx.toFixed(1));
+      $('overlap').setAttribute('x', xL.toFixed(1));
       $('overlap').setAttribute('width', wOver.toFixed(1));
-      $('areaDim').setAttribute('x2', (118 + wOver).toFixed(1));
-      $('areaDimR').setAttribute('x1', (118 + wOver).toFixed(1));
-      $('areaDimR').setAttribute('x2', (118 + wOver).toFixed(1));
-      $('areaTxt').setAttribute('x', (118 + wOver/2).toFixed(1));
-      $('areaTxt').textContent = 'S = ' + (r.Sarea*1e4).toFixed(2) + ' cm²';
-      $('armArea').setAttribute('x', (106 + (152 - wOver)*0.5).toFixed(1));
+      $('areaDim').setAttribute('x1', xL.toFixed(1));
+      $('areaDimL').setAttribute('x1', xL.toFixed(1)); $('areaDimL').setAttribute('x2', xL.toFixed(1));
+      $('areaTxt').setAttribute('x', (xL + wOver/2).toFixed(1));
+      $('areaTxt').textContent = '有效面积 S = ' + (r.Sarea*1e4).toFixed(2) + ' cm²（' + (r.Sarea/CFG.S*100).toFixed(0) + '% S₀）';
+      $('lostTxt').setAttribute('x', (112 + dx/2).toFixed(1));
+      $('lostTxt').textContent = dx > 10 ? '失去覆盖' : '';
+      /* 滑移箭头：从初始位置指向当前位置 */
+      $('armArrow').setAttribute('x1', '112'); $('armArrow').setAttribute('x2', Math.max(112, (xL - 6)).toFixed(1));
+      $('armArrow').setAttribute('y1', '232'); $('armArrow').setAttribute('y2', '232');
+      $('armArrow').setAttribute('opacity', dx > 4 ? 1 : 0);
+      $('armArrowH').setAttribute('points', (xL - 6).toFixed(1) + ',232 ' + (xL - 14).toFixed(1) + ',228 ' + (xL - 14).toFixed(1) + ',236');
+      $('armArrowH').setAttribute('opacity', dx > 4 ? 1 : 0);
+      $('armAreaTxt').setAttribute('x', '296');   /* 固定，避免碰到右侧磁阻块 */
     } else {
       var depth = 20 + 170*(S.x/100);
       $('plunger').setAttribute('y', '70');

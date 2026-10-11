@@ -88,7 +88,9 @@
   ├─ 第3章-电桥补偿法原理-动态演示.html      电桥演示本体（单文件，双击即可用）
   ├─ 第3章-电桥补偿法原理-动态演示-预览.png
   ├─ 第3章-半导体压阻效应-动态演示.html      压阻效应演示本体
-  └─ 第3章-半导体压阻效应-动态演示-预览.png
+  ├─ 第3章-半导体压阻效应-动态演示-预览.png
+  ├─ 第4章-电感式传感器-动态演示.html        电感式传感器演示本体
+  └─ 第4章-电感式传感器-动态演示-预览.png
 index.html                   入口页，点按钮进入演示
 README.md                    说明文档
 ```
@@ -100,3 +102,4 @@ GitHub Pages 已开启，任何设备打开网址即可使用，无需安装任�
 - 入口页：https://zezhougpp.github.io/sensors-course/
 - 电桥演示：https://zezhougpp.github.io/sensors-course/传感器原理及检测技术/第3章-电桥补偿法原理-动态演示.html
 - 压阻效应演示：https://zezhougpp.github.io/sensors-course/传感器原理及检测技术/第3章-半导体压阻效应-动态演示.html
+- 电感式传感器演示：https://zezhougpp.github.io/sensors-course/传感器原理及检测技术/第4章-电感式传感器-动态演示.html
