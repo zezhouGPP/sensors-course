@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第4章 电感式传感器 · 动态演示｜传感器原理与技术</title>
+<style>
+  :root{
+    --jhu:#0e4a8e; --jhu2:#0a2f5c; --ink:#12233a; --muted:#5b6b80;
+    --line:#d5dfec; --bg:#eef3f9; --card:#ffffff;
+    --flux:#0d8b7f;      /* 磁通 */
+    --cu:#c2703a;        /* 线圈/铜 */
+    --iron:#4b6b8f;      /* 铁芯 */
+    --gapm:#e08a1e;      /* 气隙磁阻 */
+    --eddy:#7c3aed;      /* 涡流 */
+    --hot:#d94a3d; --ok:#0f9d58;
+    --grid:rgba(14,74,142,.10);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC","Source Han Sans SC","Hiragino Sans GB",system-ui,sans-serif;
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+      var(--bg);
+    color:var(--ink); font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
+  }
+  header{
+    background:linear-gradient(120deg,var(--jhu) 0%,var(--jhu2) 100%);
+    color:#fff; padding:8px 24px; display:flex; align-items:center; gap:16px;
+    box-shadow:0 3px 14px rgba(10,47,92,.28);
+  }
+  header h1{font-size:22px; margin:0; letter-spacing:1px; font-weight:700}
+  header .sub{font-size:13px; opacity:.9; border-left:1px solid rgba(255,255,255,.45); padding-left:13px}
+  header .right{margin-left:auto; text-align:right; font-size:12.5px; opacity:.92; line-height:1.3}
+  header .right b{font-size:15px; letter-spacing:2px}
+  #laybar{display:flex; align-items:center; gap:10px; padding:3px 20px; font-size:12px; color:#41566f;
+          background:#e4edf8; border-bottom:1px solid #cfdcec}
+  #laybar button{border:1px solid #a9c1dd; background:#fff; color:var(--jhu); border-radius:7px;
+                 font-size:12px; font-weight:700; padding:2px 10px; cursor:pointer; font-family:inherit}
+  #laybar button:hover{background:#f2f7fd}
+  #laybar .hint{color:#6b7d92}
+  #boardWrap{padding:8px 14px 4px}
+  #board{display:flex; align-items:flex-start}
+  .col{display:flex; flex-direction:column; gap:6px; min-width:0; flex-grow:1; flex-basis:0}
+  .colhead{font-size:11.5px; font-weight:700; color:#8296ad; letter-spacing:.4px; padding:0 3px 2px; border-bottom:1px dashed #dbe5f0}
+  .vsplit{flex:0 0 13px; align-self:stretch; cursor:col-resize; position:relative; touch-action:none}
+  .vsplit::before{content:""; position:absolute; left:5.5px; top:8px; bottom:8px; width:2px; border-radius:2px; background:#cfdcec}
+  .vsplit:hover::before{background:var(--jhu); width:3px; left:5px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:13px;
+        box-shadow:0 2px 10px rgba(18,35,58,.06); padding:5px 9px}
+  .card h2{margin:0 0 4px; font-size:14.5px; color:var(--jhu); font-weight:700; display:flex; align-items:center; gap:7px}
+  .card h2::before{content:""; width:4px; height:15px; border-radius:3px; background:var(--jhu)}
+  .card h2 small{font-weight:400; color:var(--muted); font-size:12px}
+  .panel{position:relative; box-sizing:border-box}
+  .panel > .phead{display:flex; align-items:center; gap:6px; cursor:move; touch-action:none; user-select:none; margin:-1px 0 4px}
+  .panel > .phead h2{margin:0; flex:1; min-width:0; cursor:move}
+  .ptools{display:flex; gap:3px; flex:none}
+  .ptool{width:21px; height:21px; padding:0; line-height:1; border:1px solid var(--line); background:#fff;
+         color:var(--jhu); border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit}
+  .ptool:hover{background:#eef4fc; border-color:#9fbedd}
+  .panel.sorting{opacity:.6; outline:2px dashed var(--jhu); outline-offset:2px; pointer-events:none}
+  .panel.focused{position:fixed; left:14px; right:14px; top:80px; bottom:14px; z-index:300; overflow:auto;
+                 box-shadow:0 18px 50px rgba(10,47,92,.38); border-color:var(--jhu)}
+  #focusBack{position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(10,30,55,.34); z-index:290; display:none}
+  body.has-focus #focusBack{display:block}
+  body.layout-dragging{user-select:none}
+  svg{display:block; width:100%; height:auto}
+  .tiny{font-size:12px; fill:var(--muted); color:var(--muted)}
+  /* ---- 控件 ---- */
+  .ctrl{display:flex; flex-direction:column; gap:2px; margin-bottom:2px}
+  .ctrl .row{display:flex; align-items:center; gap:9px}
+  .ctrl .name{font-size:13.5px; color:var(--muted); width:126px; flex:none}
+  .ctrl .name b{color:var(--ink); font-size:14px}
+  .ctrl output{font-size:18px; font-weight:800; min-width:96px; text-align:right; font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none; appearance:none; height:8px; border-radius:5px; background:#dce6f2; outline:none; flex:1; min-width:70px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:21px; height:21px; border-radius:50%;
+        background:#fff; border:3px solid var(--jhu); cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.25)}
+  .seg{display:flex; gap:6px; flex-wrap:wrap}
+  .seg button{flex:1 1 0; min-width:96px; padding:5px 8px; border-radius:9px; border:1px solid var(--line);
+              background:#fff; cursor:pointer; font-size:13px; font-weight:700; color:#33506f; font-family:inherit; line-height:1.3}
+  .seg button small{display:block; font-weight:400; font-size:11px; color:var(--muted)}
+  .seg button:hover{border-color:#9fbedd}
+  .seg button.on{background:var(--jhu); border-color:var(--jhu); color:#fff}
+  .seg button.on small{color:rgba(255,255,255,.85)}
+  .step{border:1px solid var(--line); background:#fff; color:var(--jhu); width:28px; height:28px;
+        border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; line-height:1}
+  .actions{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap}
+  .actions button{flex:1 1 104px; padding:7px 4px; border-radius:9px; border:1px solid var(--jhu);
+                  background:var(--jhu); color:#fff; font-size:13.5px; font-weight:700; cursor:pointer;
+                  font-family:inherit; white-space:nowrap}
+  .actions button.ghost{background:#fff; color:var(--jhu)}
+  .actions button.running{background:var(--hot); border-color:var(--hot); color:#fff}
+  .actions button:hover{filter:brightness(1.07)}
+  .narrate{margin-top:4px; border-left:5px solid var(--flux); background:#f2fbf9; border-radius:0 10px 10px 0;
+           padding:4px 10px; font-size:13px; line-height:1.4; min-height:30px; color:#0a5f57}
+  /* ---- 读数 ---- */
+  .big{display:flex; align-items:baseline; gap:9px; background:linear-gradient(90deg,#f2f7ff,#fff);
+       border:1px solid #d9e5f5; border-radius:12px; padding:4px 12px}
+  .big .cap{font-size:13px; color:var(--muted); margin-right:auto}
+  .big .num{font-size:26px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
+  .big .unit{font-size:15px; font-weight:700; color:var(--muted)}
+  .kv{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px}
+  .kv .box{border:1px dashed var(--line); border-radius:9px; padding:3px 7px; font-size:11px; color:var(--muted)}
+  .kv .box b{display:block; font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:1px}
+  .fine{font-size:11px; color:var(--muted); margin-top:5px; line-height:1.5; font-variant-numeric:tabular-nums}
+  .fine b{color:var(--ink)}
+  /* ---- 磁阻条 ---- */
+  .rmbar{display:flex; height:15px; border-radius:5px; overflow:hidden; border:1px solid var(--line); background:#f4f8fd; margin-top:3px}
+  .rmbar i{display:block; height:100%}
+  .legend{display:flex; gap:10px; flex-wrap:wrap; font-size:11px; color:var(--muted); margin-top:2px}
+  .legend i{display:inline-block; width:14px; height:9px; border-radius:2px; margin-right:5px}
+  /* ---- 公式 ---- */
+  .fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:13.2px; line-height:1.5; color:#16283d}
+  .fml .row{display:block; border-bottom:1px dashed #e7eef7; padding:0}
+  .fml .row:last-child{border-bottom:none}
+  .fml .tag{display:inline-block; font-family:"Microsoft YaHei",sans-serif; font-size:11px; color:#fff;
+            background:var(--jhu); border-radius:5px; padding:0 6px; margin-right:5px; vertical-align:1px}
+  .fml .tag.g{background:var(--gapm)} .fml .tag.f{background:var(--flux)}
+  .fml b{color:var(--hot)}
+  .fml .note{font-family:"Microsoft YaHei",sans-serif; font-size:11.5px; color:var(--muted); line-height:1.5; margin-top:3px}
+  .frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.88em; line-height:1.02; margin:0 .14em}
+  .frac i{font-style:normal; padding:0 .3em}
+  .frac b{font-weight:400; color:inherit; border-top:1.4px solid currentColor; padding:0 .3em}
+  /* ---- 要点 ---- */
+  ol.points{margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:4px}
+  ol.points li{border:1px solid var(--line); border-left:4px solid #c8d6e6; border-radius:0 9px 9px 0;
+               padding:2px 8px; font-size:12.1px; line-height:1.4; color:#3c5068; background:#fbfdff; transition:.25s}
+  ol.points li.on{border-left-color:var(--ok); background:#f2fbf5; color:var(--ink); box-shadow:0 0 0 2px rgba(15,157,88,.12)}
+  ol.points li .hl{color:var(--ok); font-weight:700}
+  .hint{font-size:12px; color:var(--muted); margin-top:5px}
+  footer{padding:5px 18px 8px; font-size:11.5px; color:var(--muted); line-height:1.55}
+  footer b{color:var(--jhu)}
+  #mag{max-height:196px} #curve{max-height:170px} #diff,#lvd{max-height:158px}
+  #eddy{max-height:132px} #cir{max-height:150px}
+  @media (max-width:1200px){ #boardWrap{min-width:1180px} }
+</style>
+</head>
+<body>
+<header>
+  <h1>第 4 章 电感式传感器</h1>
+  <div class="sub">自感式（变气隙 / 变面积 / 螺管）· 差动变压器 · 电涡流式 · 转换电路&nbsp;|&nbsp;动态演示</div>
+  <div class="right"><b>江汉大学</b><br>传感器原理与技术</div>
+</header>
+<div id="laybar">
+  <span style="font-weight:700;color:#0e4a8e">板块布局</span>
+  <button id="layReset">↺ 恢复默认（一屏）</button>
+  <span class="hint">拖动板块<b>标题栏</b>可移到任意列、任意位置；拖动列间<b>竖条</b>可调整列宽；标题栏 <b>＋ －</b> 缩放内容；<b>⛶</b> 或双击标题栏全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
+</div>
+
+<div id="boardWrap">
+<main id="board">
+
+  <!-- ================= 左列 ================= -->
+  <div class="col" id="colA">
+    <div class="colhead">① 型式与参数 + 磁路原理</div>
+
+    <section class="card panel" id="ctrlCard">
+      <div class="phead">
+        <h2>型式与输入量</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="ctrl">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px" id="typeName"><b>自感式型式</b></span>
+          <div class="seg" id="segType" style="flex:1">
+            <button data-type="gap" class="on">变气隙型<small>改变 δ</small></button>
+            <button data-type="area">变面积型<small>改变 S</small></button>
+            <button data-type="solenoid">螺管型<small>改变插入深度</small></button>
+          </div>
+        </div>
+        <div class="hint" id="typeHint">变气隙型：灵敏度最高（dL/dδ ∝ 1/δ²），但非线性最严重。</div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b>位移 x</b><br><span class="tiny" id="xTxt">衔铁位移 0.00 mm</span></span>
+          <button class="step" id="xM" title="减小">−</button>
+          <input type="range" id="x" min="0" max="100" step="1" value="0">
+          <button class="step" id="xP" title="增大">＋</button>
+          <output id="xOut">0 %</output>
+        </div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b>线圈匝数 N</b><br><span class="tiny">N² 决定电感量</span></span>
+          <input type="range" id="turns" min="400" max="1600" step="50" value="1000">
+          <output id="turnsOut">1000</output>
+        </div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b>激励频率 f</b><br><span class="tiny">影响 Q 与涡流</span></span>
+          <input type="range" id="freq" min="1" max="20" step="0.5" value="5">
+          <output id="freqOut">5.0 kHz</output>
+        </div>
+      </div>
+      <div class="ctrl">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>接法</b><br><span class="tiny">单端 / 差动</span></span>
+          <div class="seg" id="segDiff" style="flex:1">
+            <button data-diff="single" class="on">单线圈<small>灵敏度低、非线性大</small></button>
+            <button data-diff="differ">差动（两线圈）<small>灵敏度×2、非线性改善</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="playSelf" class="ghost">▶ 自感原理</button>
+        <button id="playTypes" class="ghost">▶ 三种型式</button>
+        <button id="playDiff" class="ghost">▶ 差动与变压器</button>
+        <button id="playEddy" class="ghost">▶ 电涡流</button>
+        <button id="playCirc" class="ghost">▶ 转换电路</button>
+        <button id="reset" class="ghost" style="flex:0 0 58px">↺ 复位</button>
+      </div>
+      <div class="ctrl" style="margin-top:5px">
+        <div class="row">
+          <span class="name"><b>演示速度</b><br><span class="tiny">0.4× 慢 ～ 2.5× 快</span></span>
+          <input type="range" id="speed" min="0.4" max="2.5" step="0.1" value="1">
+          <output id="speedOut">1.0×</output>
+        </div>
+      </div>
+      <div class="narrate" id="narration">初始状态：变气隙型自感式传感器，气隙 δ = 0.50 mm，位移 x = 0。五个演示按钮分别讲：自感原理 / 三种型式 / 差动与变压器 / 电涡流 / 转换电路。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="magCard">
+      <div class="phead">
+        <h2>磁路与自感 <small id="magSub">L = N²/R_m，R_m = R铁芯 + R衔铁 + R气隙</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="mag" viewBox="0 0 700 320" role="img" aria-label="自感式传感器磁路示意">
+        <!-- 变气隙型 -->
+        <g id="stGap">
+          <rect x="118" y="54" width="152" height="30" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="118" y="84" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="180" y="84" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="240" y="84" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <text x="92" y="74" font-size="12.5" font-weight="700" fill="#2f4b68">铁芯</text>
+          <g id="coilGap">
+            <rect x="168" y="112" width="54" height="78" rx="5" fill="var(--cu)" opacity=".92"/>
+            <line x1="168" y1="128" x2="222" y2="128" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="168" y1="144" x2="222" y2="144" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="168" y1="160" x2="222" y2="160" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="168" y1="176" x2="222" y2="176" stroke="#8c4d22" stroke-width="1.2"/>
+          </g>
+          <text x="230" y="108" font-size="12.5" font-weight="700" fill="#8c4d22">线圈 N</text>
+          <rect id="armGap" x="106" y="249" width="176" height="26" rx="3" fill="var(--iron)" opacity=".72" stroke="#2f4b68" stroke-width="1.5"/>
+          <text x="292" y="267" font-size="12.5" font-weight="700" fill="#2f4b68">衔铁</text>
+          <!-- 气隙标注 -->
+          <line id="gapDim" x1="316" y1="236" x2="316" y2="249" stroke="var(--gapm)" stroke-width="2"/>
+          <line x1="310" y1="236" x2="322" y2="236" stroke="var(--gapm)" stroke-width="2"/>
+          <line id="gapDimB" x1="310" y1="249" x2="322" y2="249" stroke="var(--gapm)" stroke-width="2"/>
+          <text id="gapTxt" x="180" y="300" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--gapm)">气隙 δ = 0.500 mm</text>
+          <!-- 磁通路径 -->
+          <path id="fluxPath" d="M195 84 V236" stroke="var(--flux)" stroke-width="2" stroke-dasharray="6 5" fill="none" opacity=".95"/>
+          <path id="fluxPath2" d="M195 262 H133 V70 H257 V262 H195" stroke="var(--flux)" stroke-width="2" stroke-dasharray="6 5" fill="none" opacity=".45"/>
+          <text x="140" y="44" font-size="12" fill="var(--flux)">磁通 Φ：铁芯 → 气隙 → 衔铁 → 闭合</text>
+        </g>
+        <!-- 变面积型 -->
+        <g id="stArea" style="display:none">
+          <rect x="118" y="54" width="152" height="30" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="118" y="84" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="180" y="84" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="240" y="84" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <text x="92" y="74" font-size="12.5" font-weight="700" fill="#2f4b68">铁芯</text>
+          <rect x="168" y="112" width="54" height="78" rx="5" fill="var(--cu)" opacity=".92"/>
+          <line x1="168" y1="128" x2="222" y2="128" stroke="#8c4d22" stroke-width="1.2"/>
+          <line x1="168" y1="152" x2="222" y2="152" stroke="#8c4d22" stroke-width="1.2"/>
+          <line x1="168" y1="176" x2="222" y2="176" stroke="#8c4d22" stroke-width="1.2"/>
+          <text x="230" y="108" font-size="12.5" font-weight="700" fill="#8c4d22">线圈 N</text>
+          <!-- 衔铁横向移动 → 改变有效覆盖面积 -->
+          <rect id="armArea" x="106" y="249" width="240" height="26" rx="3" fill="var(--iron)" opacity=".72" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect id="overlap" x="118" y="249" width="152" height="26" rx="3" fill="var(--gapm)" opacity=".45"/>
+          <text x="106" y="286" font-size="12.5" font-weight="700" fill="#2f4b68">衔铁（横向移动 → 有效面积改变）</text>
+          <line id="areaDim" x1="118" y1="290" x2="270" y2="290" stroke="var(--gapm)" stroke-width="2"/>
+          <line x1="118" y1="285" x2="118" y2="295" stroke="var(--gapm)" stroke-width="2"/>
+          <line id="areaDimR" x1="270" y1="285" x2="270" y2="295" stroke="var(--gapm)" stroke-width="2"/>
+          <text id="areaTxt" x="194" y="308" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--gapm)">有效面积 S = 4.00 cm²</text>
+        </g>
+        <!-- 螺管型 -->
+        <g id="stSol" style="display:none">
+          <rect x="150" y="70" width="120" height="190" rx="8" fill="none" stroke="var(--iron)" stroke-width="2"/>
+          <g>
+            <rect x="150" y="80" width="26" height="170" fill="var(--cu)" opacity=".85"/>
+            <rect x="244" y="80" width="26" height="170" fill="var(--cu)" opacity=".85"/>
+            <line x1="150" y1="96" x2="176" y2="96" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="150" y1="130" x2="176" y2="130" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="150" y1="164" x2="176" y2="164" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="150" y1="198" x2="176" y2="198" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="150" y1="232" x2="176" y2="232" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="244" y1="96" x2="270" y2="96" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="244" y1="130" x2="270" y2="130" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="244" y1="164" x2="270" y2="164" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="244" y1="198" x2="270" y2="198" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="244" y1="232" x2="270" y2="232" stroke="#8c4d22" stroke-width="1.2"/>
+          </g>
+          <text x="285" y="120" font-size="12.5" font-weight="700" fill="#8c4d22">螺管线圈</text>
+          <rect id="plunger" x="196" y="60" width="28" height="120" rx="4" fill="var(--iron)" opacity=".8" stroke="#2f4b68" stroke-width="1.5"/>
+          <text id="plungerTxt" x="210" y="52" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2f4b68">衔铁插入深度 x</text>
+          <line id="solDim" x1="330" y1="70" x2="330" y2="190" stroke="var(--gapm)" stroke-width="2"/>
+          <text id="solTxt" x="338" y="134" font-size="12.5" font-weight="700" fill="var(--gapm)">x = 0</text>
+          <text x="150" y="288" font-size="12" fill="#5b6b80">插入越深 → 磁路磁阻越小 → L 越大（中段线性最好）</text>
+        </g>
+        <!-- 右侧：磁阻分解 -->
+        <g transform="translate(420,40)">
+          <text x="0" y="0" font-size="13" font-weight="700" fill="#0e4a8e">磁阻分解（串联）</text>
+          <text id="rmFe" x="0" y="34" font-size="12.5" fill="#2f4b68">R铁芯 + R衔铁 = 0</text>
+          <text id="rmGap" x="0" y="56" font-size="12.5" font-weight="700" fill="var(--gapm)">R气隙 = 0</text>
+          <text id="rmTot" x="0" y="78" font-size="12.5" font-weight="700" fill="#12233a">R_m = 0</text>
+          <rect x="0" y="92" width="250" height="16" rx="5" fill="#f4f8fd" stroke="#d5dfec"/>
+          <rect id="barFe" x="0" y="92" width="0" height="16" fill="#4b6b8f"/>
+          <rect id="barGap" x="0" y="92" width="0" height="16" fill="var(--gapm)"/>
+          <text id="gapShare" x="0" y="130" font-size="12.5" fill="#5b6b80">气隙占比 —</text>
+          <text x="0" y="158" font-size="12.5" fill="#5b6b80">铁芯 μ_r ≈ 5000，空气 μ₀ = 4π×10⁻⁷ H/m</text>
+          <text x="0" y="186" font-size="12.5" font-weight="700" fill="var(--flux)">→ 磁阻几乎全在气隙</text>
+          <text x="0" y="206" font-size="12" fill="#5b6b80">这就是 L ≈ N²μ₀S/(2δ) 的由来</text>
+        </g>
+      </svg>
+      <div class="hint" id="magHint">气隙磁阻远大于铁芯磁阻，所以电感量几乎由气隙决定 —— 这既是它灵敏度高的原因，也是它非线性严重的原因。</div>
+      </div>
+    </section>
+  </div>
+
+  <div class="vsplit" data-left="colA" data-right="colB" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 中列 ================= -->
+  <div class="col" id="colB">
+    <div class="colhead">② 公式与读数 + 特性曲线</div>
+
+    <section class="card panel" id="fmlCard">
+      <div class="phead">
+        <h2>公式推导 <small id="fmlTitle">自感 L 与磁路参数</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody"><div class="fml" id="fmlBody"></div></div>
+    </section>
+
+    <section class="card panel" id="readCard">
+      <div class="phead">
+        <h2>输出读数</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="big">
+        <span class="cap" id="bigCap">线圈自感 L</span>
+        <span class="num" id="bigNum">0.000</span><span class="unit" id="bigUnit">H</span>
+      </div>
+      <div class="kv">
+        <div class="box">相对变化 ΔL/L₀<b id="dLout">0.00 %</b></div>
+        <div class="box">品质因数 Q = ωL/R<b id="qOut">0</b></div>
+        <div class="box">灵敏度 S = dL/dx<b id="sensOut">0</b></div>
+        <div class="box">非线性误差<b id="nlOut">0.00 %</b></div>
+      </div>
+      <div class="fine" id="readFine">转换电路输出 u₀ = (u/2)·(ΔZ/Z)：当 ΔZ/Z = 0.00% 时，u₀ = 0.0 mV（u = 4 V 有效值）。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="curveCard">
+      <div class="phead">
+        <h2>特性曲线 <small>三种型式的 L–x 与差动输出</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="curve" viewBox="0 0 700 300" role="img" aria-label="电感式传感器特性曲线">
+        <g id="cGrid"></g>
+        <line x1="60" y1="240" x2="672" y2="240" stroke="#9fb2c8" stroke-width="1.5"/>
+        <line x1="60" y1="30" x2="60" y2="240" stroke="#9fb2c8" stroke-width="1.5"/>
+        <path id="pGap"  fill="none" stroke="#d94a3d" stroke-width="3"/>
+        <path id="pArea" fill="none" stroke="#0d8b7f" stroke-width="3"/>
+        <path id="pSol"  fill="none" stroke="#2b6cb0" stroke-width="3"/>
+        <path id="pDiff" fill="none" stroke="#7c3aed" stroke-width="3.5" stroke-dasharray="7 5"/>
+        <line id="mkX" x1="0" y1="30" x2="0" y2="240" stroke="#0e4a8e" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <circle id="mkDot" r="5.5" fill="#0e4a8e" stroke="#fff" stroke-width="2"/>
+        <text x="672" y="262" text-anchor="end" font-size="12.5" fill="#5b6b80">位移 x / %（满量程）</text>
+        <text x="14" y="26" font-size="12.5" fill="#5b6b80">L / L₀</text>
+      </svg>
+      <div class="legend">
+        <span><i style="background:#d94a3d"></i>变气隙型（非线性）</span>
+        <span><i style="background:#0d8b7f"></i>变面积型（线性）</span>
+        <span><i style="background:#2b6cb0"></i>螺管型（中段线性）</span>
+        <span><i style="background:#7c3aed"></i>差动输出 ΔL/L₀</span>
+        <span style="margin-left:auto" id="curveNote"></span>
+      </div>
+      </div>
+    </section>
+
+    <section class="card panel" id="eddyCard">
+      <div class="phead">
+        <h2>电涡流式传感器 <small>交变磁场在金属板中感应涡流，反过来改变线圈阻抗</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="eddy" viewBox="0 0 700 250" role="img" aria-label="电涡流传感器原理">
+        <g id="eddyCoil">
+          <rect x="150" y="34" width="90" height="26" rx="5" fill="var(--cu)" opacity=".9"/>
+          <line x1="150" y1="42" x2="240" y2="42" stroke="#8c4d22" stroke-width="1.2"/>
+          <line x1="150" y1="52" x2="240" y2="52" stroke="#8c4d22" stroke-width="1.2"/>
+          <text x="252" y="52" font-size="12.5" font-weight="700" fill="#8c4d22">激励线圈（高频）</text>
+        </g>
+        <!-- 磁力线 -->
+        <g id="eddyFlux" stroke="var(--flux)" fill="none" stroke-width="1.8">
+          <path d="M195 60 V92"/><path d="M170 60 C150 90, 150 110, 170 130"/>
+          <path d="M220 60 C240 90, 240 110, 220 130"/>
+        </g>
+        <!-- 金属板 -->
+        <rect id="plate" x="90" y="150" width="240" height="60" rx="4" fill="#cfdae8" stroke="#64748b" stroke-width="2"/>
+        <text x="340" y="186" font-size="12.5" font-weight="700" fill="#33506f">被测金属板</text>
+        <!-- 涡流环 -->
+        <g id="eddyRings"></g>
+        <line id="dDim" x1="60" y1="60" x2="60" y2="150" stroke="var(--eddy)" stroke-width="2"/>
+        <text id="dTxt" x="14" y="108" font-size="12.5" font-weight="700" fill="var(--eddy)">d = 0.0 mm</text>
+        <!-- 趋肤深度 -->
+        <g transform="translate(420,30)">
+          <text x="0" y="0" font-size="13" font-weight="700" fill="#0e4a8e">涡流渗透（趋肤效应）</text>
+          <rect x="0" y="14" width="250" height="34" rx="4" fill="#cfdae8" stroke="#64748b"/>
+          <rect id="skinBar" x="0" y="14" width="0" height="34" rx="4" fill="var(--eddy)" opacity=".55"/>
+          <text id="skinTxt" x="0" y="68" font-size="12.5" font-weight="700" fill="var(--eddy)">趋肤深度 δ = —</text>
+          <text id="skinFml" x="0" y="90" font-size="12" fill="#5b6b80">δ = √(2/(ωμσ))</text>
+          <text id="eddyNote" x="0" y="120" font-size="12.5" fill="#33506f">线圈阻抗 Z = R + jωL 随距离 d 变化</text>
+          <text id="eddyZ" x="0" y="142" font-size="13" font-weight="700" fill="#d94a3d">Z / Z₀ = 1.000</text>
+          <text id="eddyU" x="0" y="164" font-size="13" font-weight="700" fill="#0e4a8e">输出电压 u₀ = 0.00 V</text>
+          <text x="0" y="188" font-size="11.5" fill="#94a3b8">距离越近 → 涡流越强 → 等效阻抗变化越大</text>
+        </g>
+      </svg>
+      <div class="ctrl" style="margin-top:4px">
+        <div class="row">
+          <span class="name"><b>线圈—板距离 d</b><br><span class="tiny" id="matTxt">材料：铜</span></span>
+          <input type="range" id="dist" min="0.2" max="6" step="0.1" value="3">
+          <output id="distOut">3.0 mm</output>
+        </div>
+      </div>
+      <div class="seg" id="segMat" style="margin-top:3px">
+        <button data-mat="cu" class="on">铜<small>σ = 5.8×10⁷</small></button>
+        <button data-mat="al">铝<small>σ = 3.5×10⁷</small></button>
+        <button data-mat="steel">钢<small>σ = 1.0×10⁷，μ_r 大</small></button>
+      </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="vsplit" data-left="colB" data-right="colC" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 右列 ================= -->
+  <div class="col" id="colC">
+    <div class="colhead">③ 差动变压器 + 转换电路 + 要点</div>
+
+    <section class="card panel" id="diffCard">
+      <div class="phead">
+        <h2>差动变压器（互感式） <small>初级激励，两个次级反接，输出正比于铁芯位移</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="lvd" viewBox="0 0 700 300" role="img" aria-label="差动变压器结构与输出特性">
+        <!-- 结构 -->
+        <g transform="translate(20,20)">
+          <rect x="60" y="30" width="130" height="180" rx="6" fill="none" stroke="var(--iron)" stroke-width="2"/>
+          <rect x="78" y="46" width="94" height="40" rx="3" fill="var(--cu)" opacity=".85"/>
+          <text x="125" y="71" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">次级 w₂ₐ</text>
+          <rect x="78" y="100" width="94" height="40" rx="3" fill="#2b6cb0" opacity=".85"/>
+          <text x="125" y="125" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">初级 w₁</text>
+          <rect x="78" y="154" width="94" height="40" rx="3" fill="var(--cu)" opacity=".85"/>
+          <text x="125" y="179" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">次级 w₂ᵦ</text>
+          <rect id="coreRod" x="146" y="20" width="16" height="200" rx="4" fill="var(--iron)" opacity=".75"/>
+          <text id="coreTxt" x="154" y="14" text-anchor="middle" font-size="12" font-weight="700" fill="#2f4b68">铁芯</text>
+          <line x1="12" y1="120" x2="60" y2="120" stroke="#9fb2c8" stroke-width="1.5"/>
+          <text x="4" y="112" font-size="11.5" fill="#5b6b80">u</text>
+          <line x1="190" y1="66" x2="222" y2="66" stroke="#9fb2c8" stroke-width="1.5"/>
+          <line x1="190" y1="174" x2="222" y2="174" stroke="#9fb2c8" stroke-width="1.5"/>
+          <text x="228" y="70" font-size="11.5" fill="#5b6b80">u₂ₐ</text>
+          <text x="228" y="178" font-size="11.5" fill="#5b6b80">u₂ᵦ</text>
+          <line x1="222" y1="66" x2="222" y2="174" stroke="#9fb2c8" stroke-width="1.5"/>
+          <text id="lvdU" x="248" y="124" font-size="14" font-weight="800" fill="#d94a3d">u₀ = 0.0 mV</text>
+          <text x="60" y="238" font-size="12" fill="#5b6b80">铁芯上移 → u₂ₐ &gt; u₂ᵦ；下移 → u₂ᵦ &gt; u₂ₐ；u₀ = u₂ₐ − u₂ᵦ</text>
+        </g>
+        <!-- 输出特性 -->
+        <g transform="translate(380,20)">
+          <line x1="20" y1="140" x2="280" y2="140" stroke="#9fb2c8" stroke-width="1.5"/>
+          <line x1="150" y1="20" x2="150" y2="260" stroke="#9fb2c8" stroke-width="1.5"/>
+          <path id="lvdLine" fill="none" stroke="#0d8b7f" stroke-width="3"/>
+          <circle id="lvdDot" r="5.5" fill="#0e4a8e" stroke="#fff" stroke-width="2"/>
+          <text x="280" y="160" text-anchor="end" font-size="12" fill="#5b6b80">铁芯位移 x</text>
+          <text x="26" y="14" font-size="12" fill="#5b6b80">u₀</text>
+          <text id="nullTxt" x="150" y="272" text-anchor="middle" font-size="12" font-weight="700" fill="#e08a1e">零点残余电压 ≈ 0.5% FS（需相敏检波与补偿）</text>
+        </g>
+      </svg>
+      </div>
+    </section>
+
+    <section class="card panel" id="circCard">
+      <div class="phead">
+        <h2>转换电路 <small>变压器电桥 · 相敏检波 · 谐振调频</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="cir" viewBox="0 0 700 250" role="img" aria-label="变压器电桥与相敏检波">
+        <!-- 变压器电桥 -->
+        <g transform="translate(10,16)">
+          <circle cx="40" cy="100" r="22" fill="none" stroke="#233b57" stroke-width="2"/>
+          <path d="M40 78 a12 12 0 0 1 0 22 a12 12 0 0 1 0 22" fill="none" stroke="#233b57" stroke-width="1.6"/>
+          <text x="40" y="148" text-anchor="middle" font-size="12" font-weight="700" fill="#233b57">u</text>
+          <line x1="62" y1="88" x2="120" y2="60" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="62" y1="112" x2="120" y2="140" stroke="#233b57" stroke-width="1.8"/>
+          <rect x="120" y="44" width="46" height="30" rx="4" fill="#fff" stroke="#233b57" stroke-width="1.6"/>
+          <text x="143" y="64" text-anchor="middle" font-size="12" font-weight="700" fill="#0e4a8e">Z₁</text>
+          <rect x="120" y="126" width="46" height="30" rx="4" fill="#fff" stroke="#233b57" stroke-width="1.6"/>
+          <text x="143" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#0e4a8e">Z₂</text>
+          <line x1="166" y1="59" x2="230" y2="59" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="166" y1="141" x2="230" y2="141" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="230" y1="59" x2="230" y2="141" stroke="#233b57" stroke-width="1.8"/>
+          <circle cx="230" cy="100" r="3.5" fill="#233b57"/>
+          <text id="u0cir" x="252" y="105" font-size="14" font-weight="800" fill="#d94a3d">u₀ = 0.0 mV</text>
+          <text x="10" y="186" font-size="12" fill="#5b6b80">变压器电桥 u̇₀ = (u̇/2)(ΔZ/Z)；铁芯反向移动时 u̇₀ 反相 → 须相敏检波辨方向</text>
+        </g>
+        <!-- 相敏检波波形 -->
+        <g transform="translate(400,26)">
+          <text x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">相敏检波：辨方向</text>
+          <text x="0" y="24" font-size="11.5" fill="#5b6b80">激励 u</text>
+          <path id="wfRef" fill="none" stroke="#9fb2c8" stroke-width="1.8"/>
+          <text id="wfLab" x="0" y="86" font-size="11.5" fill="#5b6b80">x &gt; 0 时 u₀（同相）</text>
+          <path id="wfPos" fill="none" stroke="#0f9d58" stroke-width="2.4"/>
+          <text x="0" y="146" font-size="11.5" fill="#5b6b80">x &lt; 0 时 u₀（反相）</text>
+          <path id="wfNeg" fill="none" stroke="#d94a3d" stroke-width="2.4"/>
+          <text x="0" y="204" font-size="11.5" fill="#94a3b8">检波后 → 直流电压的正负即代表位移方向</text>
+        </g>
+      </svg>
+      </div>
+    </section>
+
+    <section class="card panel" id="ptsCard">
+      <div class="phead">
+        <h2>本章要点</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody"><ol class="points" id="points"></ol></div>
+    </section>
+  </div>
+</main>
+</div><!-- /#boardWrap -->
+
+<footer>
+  <b>参数：</b>μ_r = 5000，l₁ = 120 mm + l₂ = 60 mm，S = 4 cm²，δ₀ = 0.5 mm，N = 1000，R = 20 Ω，u = 4 V，μ₀ = 4π×10⁻⁷ H/m。<b>关系式：</b>R_m = Σl/(μS) + 2δ/(μ₀S)，L = N²/R_m，L ≈ N²μ₀S/(2δ)，Q = ωL/R，u₀ = (u/2)(ΔZ/Z)。<b>课堂提问：</b>① 灵敏度为何高而线性差？② 差动为何兼顾二者？③ 电涡流为何要用高频？
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  /* ============ 1. 物理参数 ============ */
+  var CFG = {
+    mu0: 4e-7*Math.PI,   /* 1.2566e-6 H/m */
+    mur: 5000,           /* 铁芯相对磁导率（硅钢/坡莫合金量级） */
+    l1: 0.12, l2: 0.06,  /* 铁芯、衔铁磁路长度 m */
+    S: 4e-4,             /* 4 cm²  */
+    N: 1000,
+    Rc: 20,              /* 线圈电阻 Ω */
+    d0: 0.5e-3,          /* 初始气隙 m */
+    dMin: 0.25e-3,       /* 气隙下限（对应量程 250 μm） */
+    u: 4.0,              /* 激励电压有效值 V */
+    Z0: 600              /* 线圈阻抗基准 Ω */
+  };
+  var TYPES = {
+    gap:      { name:'变气隙型', stroke:0.25, hint:'变气隙型：量程最小（约 0.25 mm），灵敏度最高、非线性最严重（dL/dδ ∝ 1/δ²）。', color:'#d94a3d' },
+    area:     { name:'变面积型', stroke:20,   hint:'变面积型：改变气隙等效面积 S，L 与 S 成正比 → 理论上线性；量程约 20 mm，灵敏度居中。', color:'#0d8b7f' },
+    solenoid: { name:'螺管型',   stroke:90,   hint:'螺管型：改变衔铁插入深度，量程最大（约 90 mm），中段线性较好，但灵敏度最低。', color:'#2b6cb0' }
+  };
+  var MATS = {
+    cu:    { name:'铜', sigma:5.8e7, mur:1 },
+    al:    { name:'铝', sigma:3.5e7, mur:1 },
+    steel: { name:'钢', sigma:1.0e7, mur:200 }
+  };
+  var S = { type:'gap', x:0, N:1000, f:5, diff:'single', dist:3, mat:'cu',
+            demoToken:0, playing:null };
+
+  var $ = function(id){ return document.getElementById(id); };
+  function sfmt(a, d){ return (a >= 0 ? '+' : '−') + Math.abs(a).toFixed(d); }
+  /* 分式排版：<span class="frac"><i>分子</i><b>分母</b></span> */
+  function frac(a, b){ return '<span class="frac"><i>' + a + '</i><b>' + b + '</b></span>'; }
+
+  /* ============ 2. 模型 ============ */
+  /* 磁阻（H⁻¹）：铁芯 + 衔铁 + 气隙，气隙计 2δ（两个气隙串联） */
+  function reluc(delta, Sarea, N){
+    var mu1 = CFG.mur*CFG.mu0, mu2 = CFG.mur*CFG.mu0;
+    var Rfe = CFG.l1/(mu1*CFG.S) + CFG.l2/(mu2*CFG.S);
+    var Rgap = 2*delta/(CFG.mu0*Sarea);
+    return { Rfe:Rfe, Rgap:Rgap, Rm:Rfe + Rgap };
+  }
+  /* 三种型式：把位移 x（0~1）映射到各自的几何量，再算 L */
+  function selfL(type, x, N){
+    var L0 = Math.pow(N,2)/reluc(CFG.d0, CFG.S, N).Rm;
+    if (type === 'gap'){
+      var d = CFG.d0 - x*(CFG.d0 - CFG.dMin);          /* 气隙随位移减小 */
+      return { L:Math.pow(N,2)/reluc(d, CFG.S, N).Rm, L0:L0, delta:d, Sarea:CFG.S };
+    }
+    if (type === 'area'){
+      var Sa = CFG.S*(1 - 0.6*x);                       /* 有效面积随位移减小到 40% */
+      return { L:Math.pow(N,2)/reluc(CFG.d0, Sa, N).Rm, L0:L0, delta:CFG.d0, Sarea:Sa };
+    }
+    /* 螺管型：插入深度 → 平滑 S 形曲线，相对变化小 */
+    var g = x*x*(3 - 2*x);
+    return { L:L0*(0.35 + 0.65*g), L0:L0, delta:CFG.d0, Sarea:CFG.S };
+  }
+  function omega(){ return 2*Math.PI*S.f*1000; }
+  /* 差动：两个线圈一个 δ+Δ、一个 δ−Δ（或面积、插入深度反向） */
+  function diffPair(type, x, N){
+    var a = selfL(type, x, N), b;
+    if (type === 'gap'){
+      var d = CFG.d0 + x*(CFG.d0 - CFG.dMin);
+      b = { L:Math.pow(N,2)/reluc(d, CFG.S, N).Rm, L0:a.L0 };
+    } else if (type === 'area'){
+      b = { L:Math.pow(N,2)/reluc(CFG.d0, CFG.S*(1 + 0.6*x), N).Rm, L0:a.L0 };
+    } else {
+      var g2 = x*x*(3 - 2*x);
+      b = { L:a.L0*(0.35 + 0.65*(1 - g2)), L0:a.L0 };
+    }
+    return { up:a, down:b };
+  }
+  function eddyModel(){
+    var m = MATS[S.mat];
+    var mur = m.mur, sigma = m.sigma;
+    var w = omega();
+    var skin = Math.sqrt(2/(w*mur*CFG.mu0*sigma));      /* 趋肤深度 m */
+    var k = 1/(1 + Math.pow(S.dist/ (skin*1000*3.2), 1.6));  /* 归一化耦合强度 */
+    var dZ = 0.42*k;                                     /* 阻抗相对变化（感性分量减小为主） */
+    var u0 = CFG.u*dZ*0.5;                               /* 用半桥输出量级表示 */
+    return { skin:skin, k:k, dZ:dZ, u0:u0, sigma:sigma, mur:mur, mat:m };
+  }
+
+  /* ============ 3. 主刷新 ============ */
+  function paint(){
+    var r = selfL(S.type, S.x/100, S.N);
+    var r0 = selfL(S.type, 0, S.N);
+    var dL = r.L/r0.L - 1;
+    var pair = diffPair(S.type, S.x/100, S.N);
+    var w = omega();
+    var Q = w*r.L/CFG.Rc;
+    /* 电桥输出统一用 (Z₁−Z₂)/(Z₁+Z₂) 形式：单端时 Z₂ 为参考线圈 */
+    var Lref = r0.L;
+    var dZ = (S.diff === 'differ')
+      ? (pair.up.L - pair.down.L)/(pair.up.L + pair.down.L)
+      : (r.L - Lref)/(r.L + Lref);
+    var u0 = CFG.u/2*dZ;
+
+    /* --- 型式按钮 / 提示 --- */
+    document.querySelectorAll('#segType button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-type') === S.type);
+    });
+    document.querySelectorAll('#segDiff button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-diff') === S.diff);
+    });
+    document.querySelectorAll('#segMat button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-mat') === S.mat);
+    });
+    $('typeHint').textContent = TYPES[S.type].hint;
+    $('magSub').textContent = S.type === 'gap' ? 'L = N²/R_m，R_m = R铁芯 + R衔铁 + R气隙'
+                          : (S.type === 'area' ? 'L = N²/R_m，改变气隙等效面积 S' : 'L = N²/R_m，改变衔铁插入深度');
+    $('xOut').textContent = S.x + ' %';
+    $('xTxt').textContent = S.type === 'gap'
+      ? '气隙 δ = ' + (r.delta*1000).toFixed(3) + ' mm'
+      : (S.type === 'area' ? '有效面积 S = ' + (r.Sarea*1e4).toFixed(2) + ' cm²' : '插入深度 ' + (S.x*0.9).toFixed(0) + ' mm / 90 mm');
+    $('turnsOut').textContent = S.N;
+    $('freqOut').textContent = S.f.toFixed(1) + ' kHz';
+
+    /* --- 结构图切换 --- */
+    $('stGap').style.display = (S.type === 'gap') ? '' : 'none';
+    $('stArea').style.display = (S.type === 'area') ? '' : 'none';
+    $('stSol').style.display = (S.type === 'solenoid') ? '' : 'none';
+    if (S.type === 'gap'){
+      var gapPx = Math.max(3, Math.min(16, 16*(r.delta/CFG.d0)));   /* 视觉气隙高度 */
+      var yArm = 236 + gapPx, yArmB = yArm + 26;
+      $('armGap').setAttribute('y', yArm.toFixed(1));
+      $('gapDim').setAttribute('y1', '236'); $('gapDim').setAttribute('y2', yArm.toFixed(1));
+      $('gapDimB').setAttribute('y1', yArm.toFixed(1)); $('gapDimB').setAttribute('y2', yArm.toFixed(1));
+      $('gapTxt').setAttribute('y', (yArmB + 22).toFixed(1));
+      $('gapTxt').textContent = 'δ = ' + (r.delta*1000).toFixed(3) + ' mm';
+      $('fluxPath2').setAttribute('d', 'M195 ' + (yArm + 13).toFixed(0) + ' H133 V70 H257 V' + (yArm + 13).toFixed(0) + ' H195');
+    } else if (S.type === 'area'){
+      var wOver = 152*(1 - 0.6*(S.x/100));
+      wOver = Math.max(6, wOver);
+      $('overlap').setAttribute('width', wOver.toFixed(1));
+      $('areaDim').setAttribute('x2', (118 + wOver).toFixed(1));
+      $('areaDimR').setAttribute('x1', (118 + wOver).toFixed(1));
+      $('areaDimR').setAttribute('x2', (118 + wOver).toFixed(1));
+      $('areaTxt').setAttribute('x', (118 + wOver/2).toFixed(1));
+      $('areaTxt').textContent = 'S = ' + (r.Sarea*1e4).toFixed(2) + ' cm²';
+      $('armArea').setAttribute('x', (106 + (152 - wOver)*0.5).toFixed(1));
+    } else {
+      var depth = 20 + 170*(S.x/100);
+      $('plunger').setAttribute('y', '70');
+      $('plunger').setAttribute('height', depth.toFixed(1));
+      $('solDim').setAttribute('y2', (70 + depth).toFixed(1));
+      $('solTxt').setAttribute('y', (70 + depth/2).toFixed(1));
+      $('plungerTxt').setAttribute('y', '64');
+      $('solTxt').textContent = 'x = ' + (S.x*0.9).toFixed(0) + ' mm';
+    }
+
+    /* --- 磁阻分解 --- */
+    var R = reluc(r.delta, r.Sarea, S.N);
+    $('rmFe').textContent = 'R铁芯 + R衔铁 = ' + (R.Rfe/1e5).toFixed(2) + '×10⁵ H⁻¹';
+    $('rmGap').textContent = 'R气隙 = ' + (R.Rgap/1e5).toFixed(2) + '×10⁵ H⁻¹';
+    $('rmTot').textContent = 'R_m = ' + (R.Rm/1e5).toFixed(2) + '×10⁵ H⁻¹';
+    var share = R.Rgap/R.Rm;
+    $('barFe').setAttribute('width', ((1 - share)*250).toFixed(1));
+    $('barFe').setAttribute('x', 0);
+    $('barGap').setAttribute('x', ((1 - share)*250).toFixed(1));
+    $('barGap').setAttribute('width', (share*250).toFixed(1));
+    $('gapShare').textContent = '气隙占比 ' + (share*100).toFixed(1) + '%';
+
+    /* --- 读数 --- */
+    var big = (S.diff === 'differ') ? (pair.up.L - pair.down.L) : r.L;
+    $('bigCap').textContent = (S.diff === 'differ') ? '差动输出 ΔL = L₁ − L₂' : '线圈自感 L';
+    $('bigNum').textContent = big.toFixed(4);
+    $('bigUnit').textContent = 'H';
+    $('dLout').textContent = sfmt(dL*100, 2) + ' %';
+    $('qOut').textContent = Q.toFixed(0);
+    /* 灵敏度：把满量程折算成真实位移（mm）后的 |ΔL|/行程 */
+    var stroke = TYPES[S.type].stroke;
+    var fullL = selfL(S.type, 1, S.N).L, zeroL = selfL(S.type, 0, S.N).L;
+    var dLab = (S.diff === 'differ')
+      ? Math.abs(diffPair(S.type, 1, S.N).up.L - diffPair(S.type, 1, S.N).down.L)/2
+      : Math.abs(fullL - zeroL);
+    $('sensOut').textContent = (dLab/stroke*1000).toFixed(dLab/stroke*1000 < 10 ? 3 : 2) + ' mH/mm';
+    var nl = nonlinearity(S.type);
+    $('nlOut').textContent = nl.toFixed(2) + ' %';
+    $('readFine').innerHTML = '满量程 ' + stroke + ' mm（' + TYPES[S.type].name + '）；' +
+      (S.diff === 'differ' ? '差动' : '单端') + '电桥输出 u₀ = (u/2)·(ΔZ/Z)：ΔZ/Z = <b>' + (dZ*100).toFixed(2) +
+      '%</b> → u₀ = <b>' + (u0*1000).toFixed(1) + ' mV</b>（u = ' + CFG.u.toFixed(1) + ' V 有效值）。';
+
+    /* --- 曲线 --- */
+    drawCurves(r, pair);
+    /* --- 差动变压器 / 转换电路 / 电涡流 --- */
+    paintLVDT();
+    paintCircuit(dZ, u0);
+    paintEddy();
+    paintFormulas(r, R, dL, Q, dZ, u0);
+    paintPoints();
+    if (window.__repack) window.__repack();
+  }
+
+  /* 非线性误差：曲线相对端基直线的最大偏差 */
+  function nonlinearity(type){
+    var L0 = selfL(type, 0, 1000).L, L1 = selfL(type, 1, 1000).L;
+    var maxDev = 0;
+    for (var i = 0; i <= 100; i++){
+      var x = i/100, Lx = selfL(type, x, 1000).L;
+      var lin = L0 + (L1 - L0)*x;
+      maxDev = Math.max(maxDev, Math.abs(Lx - lin)/Math.abs(L1 - L0));
+    }
+    return maxDev*100;
+  }
+
+  /* ============ 4. 曲线 ============ */
+  var CH = { x0:60, x1:672, y0:240, y1:30, ymax:2.2, ymin:0 };
+  function cpx(x){ return CH.x0 + x*(CH.x1 - CH.x0); }
+  function cpy(v){ return CH.y0 - (Math.max(CH.ymin, Math.min(CH.ymax, v)) - CH.ymin)/(CH.ymax - CH.ymin)*(CH.y0 - CH.y1); }
+  function drawCurves(r, pair){
+    if (!CH.grid){
+      var t = '', i, v;
+      for (v = 0; v <= CH.ymax + 1e-9; v += 0.4){
+        t += '<line x1="' + CH.x0 + '" y1="' + cpy(v).toFixed(1) + '" x2="' + CH.x1 + '" y2="' + cpy(v).toFixed(1) + '" stroke="#e6edf6"/>';
+        t += '<text x="52" y="' + (cpy(v)+4).toFixed(1) + '" text-anchor="end" font-size="12" fill="#5b6b80">' + v.toFixed(1) + '</text>';
+      }
+      for (i = 0; i <= 100; i += 20){
+        t += '<line x1="' + cpx(i/100).toFixed(1) + '" y1="' + CH.y1 + '" x2="' + cpx(i/100).toFixed(1) + '" y2="' + CH.y0 + '" stroke="#e6edf6"/>';
+        t += '<text x="' + cpx(i/100).toFixed(1) + '" y="' + (CH.y0+16) + '" text-anchor="middle" font-size="12" fill="#5b6b80">' + i + '</text>';
+      }
+      $('cGrid').innerHTML = t; CH.grid = true;
+    }
+    function pathOf(fn){
+      var d = '', first = true;
+      for (var i = 0; i <= 100; i += 2){
+        var x = i/100;
+        d += (first ? 'M' : 'L') + cpx(x).toFixed(1) + ' ' + cpy(fn(x)).toFixed(1) + ' ';
+        first = false;
+      }
+      return d;
+    }
+    var L0 = selfL('gap', 0, 1000).L;
+    $('pGap').setAttribute('d', pathOf(function(x){ return selfL('gap', x, 1000).L/L0; }));
+    $('pArea').setAttribute('d', pathOf(function(x){ return selfL('area', x, 1000).L/L0; }));
+    $('pSol').setAttribute('d', pathOf(function(x){ return selfL('solenoid', x, 1000).L/L0; }));
+    $('pDiff').setAttribute('d', pathOf(function(x){
+      var p = diffPair(S.type, x, 1000);
+      var ref = Math.abs(diffPair(S.type, 1, 1000).up.L - diffPair(S.type, 1, 1000).down.L) || 1;
+      return 1 + (p.up.L - p.down.L)/ref*1.0;
+    }));
+    var thin = { gap:0.9, area:2.2, solenoid:1.6 };
+    $('pGap').setAttribute('opacity', S.type === 'gap' ? 1 : 0.32);
+    $('pArea').setAttribute('opacity', S.type === 'area' ? 1 : 0.32);
+    $('pSol').setAttribute('opacity', S.type === 'solenoid' ? 1 : 0.32);
+    $('pGap').setAttribute('stroke-width', S.type === 'gap' ? 4 : 2.4);
+    $('pArea').setAttribute('stroke-width', S.type === 'area' ? 4 : 2.4);
+    $('pSol').setAttribute('stroke-width', S.type === 'solenoid' ? 4 : 2.4);
+    $('pDiff').setAttribute('opacity', S.diff === 'differ' ? 1 : 0.25);
+    var x = S.x/100, yv = r.L/L0;
+    $('mkX').setAttribute('x1', cpx(x)); $('mkX').setAttribute('x2', cpx(x));
+    $('mkDot').setAttribute('cx', cpx(x)); $('mkDot').setAttribute('cy', cpy(yv));
+    $('curveNote').textContent = TYPES[S.type].name + '：当前 L/L₀ = ' + yv.toFixed(3) +
+      '，非线性误差 ' + nonlinearity(S.type).toFixed(2) + '%';
+  }
+
+  /* ============ 5. 差动变压器 ============ */
+  function paintLVDT(){
+    /* 铁芯位置随位移移动；输出 u₀ 线性过零 + 零点残余电压 */
+    var x = S.x/100;
+    var up = x;                                    /* 归一化位移 -1..1（这里 0..1） */
+    var u0 = 120*up;                               /* mV 满量程 120 mV */
+    var nullV = 0.6;                               /* 零点残余 0.5% FS */
+    var uOut = u0 + nullV;
+    $('coreRod').setAttribute('y', (20 - 60*up).toFixed(1));
+    $('coreTxt').setAttribute('y', (14 - 60*up).toFixed(1));
+    $('lvdU').textContent = 'u₀ = ' + (uOut).toFixed(1) + ' mV';
+    $('lvdU').setAttribute('fill', uOut > 1 ? '#d94a3d' : (uOut < -1 ? '#2b6cb0' : '#e08a1e'));
+    /* 输出特性直线 */
+    var d = '', first = true, i;
+    for (i = -1; i <= 1.001; i += 0.05){
+      var px = 150 + i*120, py = 140 - (120*i + nullV)*0.55;
+      d += (first ? 'M' : 'L') + px.toFixed(1) + ' ' + py.toFixed(1) + ' ';
+      first = false;
+    }
+    $('lvdLine').setAttribute('d', d);
+    $('lvdDot').setAttribute('cx', (150 + up*120).toFixed(1));
+    $('lvdDot').setAttribute('cy', (140 - uOut*0.55).toFixed(1));
+    $('nullTxt').textContent = '零点残余电压 ≈ ' + nullV.toFixed(1) + ' mV（0.5% FS）—— 需相敏检波 + 补偿';
+  }
+
+  /* ============ 6. 转换电路 ============ */
+  function paintCircuit(dZ, u0){
+    $('u0cir').textContent = 'u₀ = ' + (u0*1000).toFixed(1) + ' mV';
+    /* 相敏检波波形：激励为正弦；x>0 时输出同相，x<0 时反相 */
+    var wf = function(amp, sign, step){
+      var d = '', first = true;
+      for (var t = 0; t <= 120; t += step){
+        var y = 40 - sign*amp*Math.sin(t/120*4*Math.PI);
+        d += (first ? 'M' : 'L') + (t*2.1).toFixed(1) + ' ' + y.toFixed(1) + ' ';
+        first = false;
+      }
+      return d;
+    };
+    $('wfRef').setAttribute('d', wf(16, 1, 2));
+    var amp = Math.max(4, Math.min(20, Math.abs(dZ)*60));
+    $('wfPos').setAttribute('d', wf(amp, 1, 2));
+    $('wfNeg').setAttribute('d', wf(amp, -1, 2));
+    $('wfPos').setAttribute('transform', 'translate(0,60)');
+    $('wfRef').setAttribute('transform', 'translate(0,60)');
+    $('wfNeg').setAttribute('transform', 'translate(0,120)');
+  }
+
+  /* ============ 7. 电涡流 ============ */
+  function paintEddy(){
+    var e = eddyModel();
+    var d = S.dist;
+    /* 线圈与板的间距（视觉） */
+    var gapPx = 10 + (d/6)*70;
+    $('plate').setAttribute('y', (60 + gapPx).toFixed(1));
+    $('dDim').setAttribute('y2', (60 + gapPx).toFixed(1));
+    $('dTxt').setAttribute('y', (60 + gapPx/2).toFixed(1));
+    $('dTxt').textContent = 'd = ' + d.toFixed(1) + ' mm';
+    $('eddyFlux').setAttribute('opacity', (1 - d/9).toFixed(2));
+    /* 涡流环：大小/亮度随耦合强度变化 */
+    var rings = '', i;
+    var plateY = 60 + gapPx + 28;
+    for (i = 0; i < 3; i++){
+      var rr = (14 + i*11)*(0.5 + e.k);
+      rings += '<ellipse cx="195" cy="' + plateY.toFixed(1) + '" rx="' + rr.toFixed(1) + '" ry="' + (rr*0.42).toFixed(1) +
+               '" fill="none" stroke="var(--eddy)" stroke-width="2" opacity="' + (0.8 - i*0.2)*e.k.toFixed(2) + '"/>';
+    }
+    $('eddyRings').innerHTML = rings;
+    $('skinBar').setAttribute('width', Math.max(4, Math.min(250, e.skin*1000*12)).toFixed(1));
+    $('skinTxt').textContent = '趋肤深度 δ = ' + (e.skin*1e6).toFixed(1) + ' μm（' + MATS[S.mat].name + '，' + S.f.toFixed(1) + ' kHz）';
+    $('skinFml').textContent = 'δ = √(2/(ωμσ)) = √(2/(2π·' + (S.f*1000).toFixed(0) + '·' +
+      (e.mur*CFG.mu0).toExponential(2) + '·' + e.sigma.toExponential(2) + '))';
+    $('eddyNote').textContent = '线圈阻抗 Z = R + jωL 随距离 d 变化（涡流反作用使等效 L 减小、R 增大）';
+    $('eddyZ').textContent = 'Z / Z₀ = ' + (1 + e.dZ).toFixed(3);
+    $('eddyU').textContent = '输出电压 u₀ = ' + e.u0.toFixed(3) + ' V';
+    $('matTxt').textContent = '材料：' + MATS[S.mat].name + '（σ = ' + e.sigma.toExponential(1) + ' S/m）';
+  }
+
+  /* ============ 8. 公式 ============ */
+  function paintFormulas(r, R, dL, Q, dZ, u0){
+    var N = S.N, d = r.delta, Sa = r.Sarea;
+    var Lsimple = Math.pow(N,2)*CFG.mu0*Sa/(2*d);
+    var err = (Lsimple - r.L)/r.L*100;
+    var html = '';
+    html += '<div class="row"><span class="tag">式 4-1</span><span>L = ' + frac('dΦ_N', 'dI') + ' = ' + frac('N²', 'R_m') +
+            ' = ' + (N*N).toExponential(2) + ' / ' + (R.Rm).toExponential(3) + ' = <b>' + r.L.toFixed(4) + ' H</b></span></div>';
+    html += '<div class="row"><span class="tag">式 4-2</span><span>R_m = ' + frac('l₁', 'μ₁S₁') + ' + ' + frac('l₂', 'μ₂S₂') + ' + ' +
+            frac('2δ', 'μ₀S') + ' = ' + (R.Rfe/1e5).toFixed(2) + ' + ' + (R.Rgap/1e5).toFixed(2) + ' = <b>' +
+            (R.Rm/1e5).toFixed(2) + '×10⁵ H⁻¹</b>　（气隙占 <b>' + (R.Rgap/R.Rm*100).toFixed(1) + '%</b>）</span></div>';
+    html += '<div class="row"><span class="tag g">式 4-4</span><span>铁芯磁导率远大于空气 → L ≈ ' + frac('N²μ₀S', '2δ') +
+            ' = <b>' + Lsimple.toFixed(4) + ' H</b>，与精确值相差 <b>' + sfmt(err, 1) + '%</b>' +
+            (S.type === 'gap' ? '' : '（本型式不以 δ 为变量，此式仅供对照）') + '</span></div>';
+    html += '<div class="row"><span class="tag f">式 4-5</span><span>Q = ' + frac('ωL', 'R') + ' = ' + frac('2πfL', 'R') + ' = ' +
+            (omega()).toFixed(0) + '×' + r.L.toFixed(4) + '/' + CFG.Rc + ' = <b>' + Q.toFixed(0) + '</b></span></div>';
+    html += '<div class="row"><span class="tag">式 4-7</span><span>变压器电桥：u̇₀ = ' + frac('u̇', '2') + '·' + frac('ΔZ', 'Z') +
+            ' = ' + (CFG.u/2).toFixed(1) + '×' + (dZ*100).toFixed(2) + '% = <b>' + (u0*1000).toFixed(1) + ' mV</b></span></div>';
+    html += '<div class="note">' + (S.diff === 'differ'
+      ? '当前为<b>差动接法</b>：两个线圈一个电感增大、一个减小，ΔZ/Z 取两者之差 → 灵敏度提高约 1 倍，且偶次非线性项互相抵消。'
+      : '当前为<b>单线圈</b>接法：输出直接由 ΔL/L 决定，灵敏度较低、非线性较大 —— 切到差动看差别。') + '</div>';
+    $('fmlTitle').textContent = TYPES[S.type].name + (S.diff === 'differ' ? ' · 差动' : ' · 单端');
+    $('fmlBody').innerHTML = html;
+  }
+
+  /* ============ 9. 要点 ============ */
+  function paintPoints(){
+    var list = [
+      { id:'a', txt:'电感式传感器把被测量转换成<b>线圈自感或互感的变化</b>，再由转换电路变成电压/电流输出。' },
+      { id:'b', txt:'<b>L = N²/R_m</b>，<b>R_m = l₁/(μ₁S₁) + l₂/(μ₂S₂) + 2δ/(μ₀S)</b>；气隙磁阻占 90% 以上 → <b>L ≈ N²μ₀S/(2δ)</b>，故灵敏度高（dL/dδ ∝ 1/δ²）而非线性严重。' },
+      { id:'c', txt:'三种型式：<b>变气隙型</b>最灵敏、量程最小、非线性最严重；<b>变面积型</b>理论线性、量程 20 mm；<b>螺管型</b>量程最大（90 mm）、灵敏度最低。' },
+      { id:'d', txt:'<b>差动接法</b>两个线圈反向变化、输出取差值：小位移段灵敏度约翻倍，偶次非线性与共模干扰自动抵消。' },
+      { id:'e', txt:'<b>差动变压器</b>：初级激励、两次级反接，u₀ = u₂ₐ − u₂ᵦ 正比于位移；零点有<b>零点残余电压</b>，需相敏检波并补偿。' },
+      { id:'f', txt:'<b>电涡流式</b>：高频磁场在金属板中感应涡流，涡流反作用改变线圈阻抗；<b>δ = √(2/(ωμσ))</b>，频率越高、电导率越大，渗透越浅、灵敏度越高。' },
+      { id:'g', txt:'转换电路：<b>变压器电桥</b> u₀ = (u/2)(ΔZ/Z)；<b>相敏检波</b>辨方向并抑制干扰；<b>谐振调频</b>用 f₀ = 1/(2π√(LC)) 表示位移。' }
+    ];
+    var html = '';
+    list.forEach(function(b){
+      var on = (b.id === 'c') ||
+               (b.id === 'd' && S.diff === 'differ') ||
+               (b.id === 'e' && S.type === 'gap' && S.diff === 'differ') ||
+               (b.id === 'f' && S.type === 'area');
+      html += '<li class="' + (on ? 'on' : '') + '">' + b.txt + '</li>';
+    });
+    $('points').innerHTML = html;
+  }
+
+  /* ============ 10. 交互 ============ */
+  function setType(t){ S.type = t; paint(); }
+  function setX(v){ S.x = Math.max(0, Math.min(100, Math.round(v))); $('x').value = S.x; paint(); }
+  function setN(v){ S.N = Math.round(v/50)*50; $('turns').value = S.N; paint(); }
+  function setF(v){ S.f = Math.round(v*2)/2; $('freq').value = S.f; paint(); }
+  function setDiff(d){ S.diff = d; paint(); }
+  function setDist(v){ S.dist = Math.round(v*10)/10; $('dist').value = S.dist; $('distOut').textContent = S.dist.toFixed(1) + ' mm'; paint(); }
+  function setMat(m){ S.mat = m; paint(); }
+
+  $('x').addEventListener('input', function(){ stopDemo(); setX(+this.value); });
+  $('turns').addEventListener('input', function(){ stopDemo(); setN(+this.value); });
+  $('freq').addEventListener('input', function(){ stopDemo(); setF(+this.value); });
+  $('dist').addEventListener('input', function(){ stopDemo(); setDist(+this.value); });
+  $('xM').addEventListener('click', function(){ stopDemo(); setX(S.x - 5); });
+  $('xP').addEventListener('click', function(){ stopDemo(); setX(S.x + 5); });
+  document.querySelectorAll('#segType button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setType(b.getAttribute('data-type')); say(TYPES[S.type].hint); });
+  });
+  document.querySelectorAll('#segDiff button').forEach(function(b){
+    b.addEventListener('click', function(){
+      stopDemo(); setDiff(b.getAttribute('data-diff'));
+      say(S.diff === 'differ'
+        ? '<b>差动接法</b>：两个线圈反向变化，输出取差值 → 灵敏度约翻倍，且偶次非线性项与共模温漂互相抵消。'
+        : '<b>单线圈接法</b>：输出直接反映 ΔL/L，灵敏度较低、非线性较大 —— 对比一下曲线上的紫色虚线。');
+    });
+  });
+  document.querySelectorAll('#segMat button').forEach(function(b){
+    b.addEventListener('click', function(){
+      stopDemo(); setMat(b.getAttribute('data-mat'));
+      var e = eddyModel();
+      say('材料改为 <b>' + MATS[S.mat].name + '</b>：σ = ' + e.sigma.toExponential(1) +
+          ' S/m → 趋肤深度 δ = ' + (e.skin*1e6).toFixed(1) + ' μm。电导率越大，涡流越强、渗透越浅、灵敏度越高。');
+    });
+  });
+  $('reset').addEventListener('click', function(){
+    stopDemo(); setType('gap'); setDiff('single'); setX(0); setN(1000); setF(5); setDist(3); setMat('cu'); paint();
+    say('已复位：变气隙型、单线圈、x = 0、N = 1000、f = 5 kHz、距离 3 mm、材料铜。');
+  });
+
+  /* ============ 11. 演示框架（含速度控制，无语音） ============ */
+  var SPEED = 1, playingKey = null;
+  $('speed').addEventListener('input', function(){
+    SPEED = parseFloat(this.value) || 1;
+    $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  });
+  var DEMOS = {
+    self:  { btn:'playSelf',  label:'▶ 自感原理' },
+    types: { btn:'playTypes', label:'▶ 三种型式' },
+    diff:  { btn:'playDiff',  label:'▶ 差动与变压器' },
+    eddy:  { btn:'playEddy',  label:'▶ 电涡流' },
+    circ:  { btn:'playCirc',  label:'▶ 转换电路' }
+  };
+  function resetDemoButtons(){
+    Object.keys(DEMOS).forEach(function(k){
+      var b = $(DEMOS[k].btn);
+      if (b){ b.textContent = DEMOS[k].label; b.classList.remove('running'); }
+    });
+  }
+  function stopDemo(){ S.demoToken++; playingKey = null; resetDemoButtons(); }
+  function beginDemo(key){
+    stopDemo(); playingKey = key;
+    var b = $(DEMOS[key].btn);
+    if (b){ b.textContent = '⏸ 暂停演示'; b.classList.add('running'); }
+    return ++S.demoToken;
+  }
+  function endDemo(){ playingKey = null; resetDemoButtons(); }
+  function say(t){ $('narration').innerHTML = t; }
+  function sleep(ms, tok){
+    return new Promise(function(res){ setTimeout(function(){ res(S.demoToken === tok); }, Math.max(60, ms/SPEED)); });
+  }
+  function tween(from, to, dur, set, tok){
+    dur = Math.max(160, dur/SPEED);
+    return new Promise(function(res){
+      var t0 = performance.now();
+      (function step(now){
+        if (S.demoToken !== tok) return res(false);
+        var p = (now - t0)/dur;
+        if (!isFinite(p)) p = 1;
+        p = Math.max(0, Math.min(1, p));
+        var e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
+        var v = from + (to - from)*e;
+        v = (from <= to) ? Math.min(to, Math.max(from, v)) : Math.max(to, Math.min(from, v));
+        set(v);
+        if (p < 1) requestAnimationFrame(step); else res(true);
+      })(performance.now());
+    });
+  }
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b) b.addEventListener('click', function(){
+      if (playingKey === k){ stopDemo(); say('演示已暂停。可继续拖动滑块手动观察，或点其它演示按钮。'); }
+      else if (DEMOS[k].fn){ DEMOS[k].fn(); }
+    });
+  });
+
+  /* ============ 12. 演示 1：自感原理 ============ */
+  async function demoSelf(){
+    var tok = beginDemo('self');
+    setType('gap'); setDiff('single'); setX(0); setN(1000);
+    var r = selfL('gap', 0, S.N), R = reluc(r.delta, r.Sarea, S.N);
+    say('【<b>自感式原理</b>】先看磁路：R_m = R铁芯 + R衔铁 + R气隙。铁芯 μ_r = 2000，空气 μ₀ 只有它的 1/2000，所以气隙磁阻占了 <b>' +
+        (R.Rgap/R.Rm*100).toFixed(1) + '%</b>。L = N²/R_m = <b>' + r.L.toFixed(4) + ' H</b>。');
+    if (!await sleep(3400, tok)) return;
+    say('① <b>衔铁靠近、气隙减小</b>（δ 从 ' + (CFG.d0*1000).toFixed(2) + ' mm → ' + (CFG.dMin*1000).toFixed(2) +
+        ' mm，行程 ' + ((CFG.d0-CFG.dMin)*1e6).toFixed(0) + ' μm）：气隙磁阻急剧下降 → L 迅速上升。注意 L 与 δ <b>成反比</b>，所以位移与输出<b>不是线性关系</b>。');
+    if (!await tween(0, 80, 2600, setX, tok)) return;
+    if (!await sleep(2200, tok)) return;
+    var r2 = selfL('gap', 0.8, S.N);
+    var sensG = Math.abs(selfL('gap',1,5000).L - selfL('gap',0,5000).L)/(CFG.d0-CFG.dMin)/1e3;   /* H/mm（N=5000 折算更直观） */
+    say('② 结果：δ 减小到 ' + (r2.delta*1000).toFixed(3) + ' mm（只有原来的 ' + (r2.delta/CFG.d0*100).toFixed(0) +
+        '%），而 L 增加到 <b>' + r2.L.toFixed(4) + ' H</b>（增加了 ' + ((r2.L/(selfL('gap',0,S.N).L) - 1)*100).toFixed(0) +
+        '%）—— 这就是变气隙型"<b>灵敏度高（约 ' + (Math.abs(selfL('gap',1,S.N).L - selfL('gap',0,S.N).L)/(CFG.d0-CFG.dMin)).toFixed(2) +
+        ' H/mm）但非线性严重（' + nonlinearity('gap').toFixed(0) + '%）</b>"的来源。');
+    if (!await sleep(3200, tok)) return;
+    say('③ <b>换变面积型</b>（改变气隙等效面积 S，行程约 ' + TYPES.area.stroke + ' mm）：L 与 S 成正比 → 位移与输出成正比，<b>理论上线性</b>（' +
+        nonlinearity('area').toFixed(2) + '%），但灵敏度降到约 ' + (Math.abs(selfL('area',1,S.N).L - selfL('area',0,S.N).L)/TYPES.area.stroke*1000).toFixed(1) + ' mH/mm。');
+    setType('area'); setX(0);
+    if (!await sleep(2000, tok)) return;
+    if (!await tween(0, 60, 2400, setX, tok)) return;
+    if (!await sleep(1800, tok)) return;
+    say('④ <b>换螺管型</b>（改变衔铁插入深度，行程约 ' + TYPES.solenoid.stroke + ' mm）：电感变化平缓 → 灵敏度最低（约 ' +
+        (Math.abs(selfL('solenoid',1,S.N).L - selfL('solenoid',0,S.N).L)/TYPES.solenoid.stroke*1000).toFixed(1) +
+        ' mH/mm），但<b>量程最大</b>，工程上最常用。');
+    setType('solenoid'); setX(0);
+    if (!await sleep(1800, tok)) return;
+    if (!await tween(0, 100, 2600, setX, tok)) return;
+    if (!await sleep(2000, tok)) return;
+    setType('gap'); setX(0);
+    say('【小结】同一个 L = N²/R_m，改变<b>不同几何量</b>就得到三种型式：变 δ（1.81 H/mm，最灵敏、量程 0.25 mm）、变 S（0.014 H/mm，最线性、量程 20 mm）、变插入深度（0.0035 H/mm，量程 90 mm 最大）。');
+    endDemo();
+  }
+
+  /* ============ 13. 演示 2：三种型式对比 ============ */
+  async function demoTypes(){
+    var tok = beginDemo('types');
+    setType('gap'); setDiff('single'); setX(50);
+    say('【<b>三种型式对比</b>】固定位移 x = 50% 满量程，依次切换三种型式，看曲线形状、灵敏度与非线性误差。');
+    if (!await sleep(2600, tok)) return;
+    say('① <b>变气隙型</b>：L–x 是<b>双曲线</b>，x 越大越陡。灵敏度最高（约 ' +
+        (Math.abs(selfL('gap',1,S.N).L - selfL('gap',0,S.N).L)/TYPES.gap.stroke).toFixed(2) +
+        ' H/mm），但非线性误差达 <b>' + nonlinearity('gap').toFixed(1) + '%</b>，量程只有 ' + TYPES.gap.stroke + ' mm（几百微米）。');
+    if (!await sleep(3200, tok)) return;
+    say('② <b>变面积型</b>：L 与有效面积成正比 → L–x 是<b>直线</b>，非线性误差仅 <b>' +
+        nonlinearity('area').toFixed(2) + '%</b>，灵敏度约 ' +
+        (Math.abs(selfL('area',1,S.N).L - selfL('area',0,S.N).L)/TYPES.area.stroke*1000).toFixed(1) +
+        ' mH/mm，量程扩大到 ' + TYPES.area.stroke + ' mm。');
+    setType('area');
+    if (!await sleep(3200, tok)) return;
+    say('③ <b>螺管型</b>：插入深度变化时，曲线中间段接近线性、两端变钝。灵敏度最低（约 ' +
+        (Math.abs(selfL('solenoid',1,S.N).L - selfL('solenoid',0,S.N).L)/TYPES.solenoid.stroke*1000).toFixed(1) +
+        ' mH/mm），但<b>量程最大</b>（' + TYPES.solenoid.stroke + ' mm），是工程上最常用的形式。');
+    setType('solenoid');
+    if (!await sleep(3200, tok)) return;
+    say('④ 三者的区别其实只有一句话：<b>改变磁路里的哪一个量 —— δ、S 还是铁芯位置</b>。选型就是在这三者之间做"灵敏度 ↔ 量程 ↔ 线性度"的取舍。');
+    setType('gap');
+    if (!await sleep(2600, tok)) return;
+    endDemo();
+  }
+
+  /* ============ 14. 演示 3：差动接法与差动变压器 ============ */
+  async function demoDiff(){
+    var tok = beginDemo('diff');
+    setType('gap'); setDiff('single'); setX(0);
+    say('【<b>差动接法</b>】先用单线圈：L–x 曲线是双曲线，位移一大就明显弯曲。');
+    if (!await sleep(2200, tok)) return;
+    if (!await tween(0, 70, 2200, setX, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('① 单线圈在 x = 70% 处，ΔL/L 已经偏离直线很多（非线性误差 ' + nonlinearity('gap').toFixed(1) +
+        '%）。原因是 L ≈ N²μ₀S/(2δ) 里 δ 在<b>分母</b>上。');
+    if (!await sleep(2600, tok)) return;
+    say('② <b>改成差动</b>：两个线圈一个气隙减小、一个增大，桥臂输出取<b>两者之差</b> (Z₁−Z₂)/(Z₁+Z₂)（紫色虚线）。在小位移段灵敏度约为单端的 <b>2 倍</b>，而且分母中的偶次项相消 → 非线性从 ' +
+        (function(){ var s0=(selfL('gap',0,1000).L-selfL('gap',0,1000).L), d=0;
+           var L0=selfL('gap',0,1000).L; var t0=(selfL('gap',0,1000).L-L0)/(selfL('gap',0,1000).L+L0), t1=(selfL('gap',1,1000).L-L0)/(selfL('gap',1,1000).L+L0);
+           for (var i=0;i<=100;i++){ var x=i/100, v=(selfL('gap',x,1000).L-L0)/(selfL('gap',x,1000).L+L0);
+             d=Math.max(d, Math.abs(v-(t0+(t1-t0)*x))/Math.abs(t1-t0)); } return (d*100).toFixed(1); })() +
+        '% 降到几乎为 0。');
+    setDiff('differ');
+    if (!await sleep(3400, tok)) return;
+    say('③ 这就是工程上几乎都做差动的原因：<b>灵敏度↑、非线性↓、温度与电源波动等共模干扰自动抵消</b>。');
+    if (!await sleep(2400, tok)) return;
+    setType('gap');
+    say('④ <b>差动变压器（互感式）</b>是差动思想的另一种实现：初级线圈激励，两个次级线圈反接，铁芯上移时 u₂ₐ &gt; u₂ᵦ、下移时相反，u₀ = u₂ₐ − u₂ᵦ 在正负位移上都<b>线性</b>。');
+    if (!await sleep(3400, tok)) return;
+    if (!await tween(70, 0, 2200, setX, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('⑤ 注意零点附近还有 <b>零点残余电压</b>（约 0.5% FS，来自两个次级不完全对称）—— 所以后面必须用<b>相敏检波</b>，既辨方向又抑制残余电压的影响。');
+    if (!await sleep(3000, tok)) return;
+    endDemo();
+  }
+
+  /* ============ 15. 演示 4：电涡流 ============ */
+  async function demoEddy(){
+    var tok = beginDemo('eddy');
+    setMat('cu'); setF(5); setDist(5);
+    say('【<b>电涡流式传感器</b>】线圈通高频交流电 → 交变磁场 → 在被测金属板中感应出<b>涡流</b> → 涡流的反磁场又反过来改变线圈的等效阻抗。');
+    if (!await sleep(3400, tok)) return;
+    say('① 线圈离金属板较远（5 mm）：耦合弱，涡流小，线圈阻抗接近空芯线圈，输出接近 0。');
+    if (!await sleep(2200, tok)) return;
+    say('② <b>把线圈靠近到 0.5 mm</b>：涡流增强 → 线圈等效电感减小、电阻增大 → 阻抗变化显著，输出电压上升。距离越近越灵敏。');
+    if (!await tween(5, 0.5, 2600, setDist, tok)) return;
+    if (!await sleep(2000, tok)) return;
+    say('③ <b>提高激励频率</b>（5 kHz → 15 kHz）：趋肤深度 δ = √(2/(ωμσ)) 随频率升高而<b>变小</b>，涡流被压缩在表面更薄的一层里，表面缺陷/薄片测量更灵敏。');
+    if (!await tween(5, 15, 2400, setF, tok)) return;
+    if (!await sleep(2200, tok)) return;
+    say('④ <b>换材料</b>：钢的电导率比铜小，但 μ_r 大得多 → 趋肤深度与耦合强度都不同。所以电涡流传感器测不同材料必须<b>重新标定</b>。');
+    setMat('steel');
+    if (!await sleep(2600, tok)) return;
+    setMat('cu'); setF(5); setDist(3);
+    say('【小结】电涡流式属于<b>非接触测量</b>：位移、振动、厚度、转速、探伤都能测，但只能测<b>金属</b>，且结果与材料、频率强相关。');
+    endDemo();
+  }
+
+  /* ============ 16. 演示 5：转换电路 ============ */
+  async function demoCirc(){
+    var tok = beginDemo('circ');
+    setType('gap'); setDiff('differ'); setX(0);
+    say('【<b>转换电路</b>】自感/互感的变化必须靠电路变成电压输出。最常用的是<b>变压器电桥</b>：两个线圈作为相邻桥臂，u̇₀ = (u̇/2)·(ΔZ/Z)。');
+    if (!await sleep(3200, tok)) return;
+    say('① 铁芯在中间位置时两个线圈阻抗相等 → ΔZ = 0 → <b>u₀ = 0</b>，电桥平衡。');
+    if (!await sleep(2200, tok)) return;
+    say('② <b>铁芯上移</b>：Z₁ 增大、Z₂ 减小 → ΔZ/Z &gt; 0 → u₀ 与激励<b>同相</b>，输出为正。');
+    if (!await tween(0, 80, 2400, setX, tok)) return;
+    if (!await sleep(2000, tok)) return;
+    say('③ 但交流输出只能反映大小，<b>无法判断方向</b>。所以必须加<b>相敏检波</b>：以激励电压为参考，同相输出判为正、反相判为负 → 既能辨方向，又能抑制零点残余电压与干扰。');
+    if (!await sleep(3400, tok)) return;
+    say('④ 另一条路是<b>谐振式调频电路</b>：把传感器电感 L 与电容 C 组成谐振回路，f₀ = 1/(2π√(LC))。L 变化 → 频率变化，用频差表示位移，抗干扰能力强。');
+    if (!await sleep(3200, tok)) return;
+    setX(0);
+    say('【小结】交流电桥（变压器电桥）＋ 相敏检波是经典组合；要求抗干扰或远距离传输时用调频电路。');
+    endDemo();
+  }
+
+  DEMOS.self.fn = demoSelf; DEMOS.types.fn = demoTypes;
+  DEMOS.diff.fn = demoDiff; DEMOS.eddy.fn = demoEddy; DEMOS.circ.fn = demoCirc;
+
+  /* ============ 17. 启动 ============ */
+  var q = new URLSearchParams(location.search);
+  if (q.has('type') && TYPES[q.get('type')]) setType(q.get('type'));
+  if (q.has('x')) setX(parseFloat(q.get('x')) || 0);
+  if (q.has('diff') && ['single','differ'].indexOf(q.get('diff')) >= 0) setDiff(q.get('diff'));
+  if (q.has('f')) setF(parseFloat(q.get('f')) || 5);
+  if (q.has('dist')) setDist(parseFloat(q.get('dist')) || 3);
+  if (q.has('mat') && MATS[q.get('mat')]) setMat(q.get('mat'));
+  if (q.has('speed')){ SPEED = Math.max(0.4, Math.min(2.5, parseFloat(q.get('speed')) || 1));
+    $('speed').value = SPEED; $('speedOut').textContent = SPEED.toFixed(1) + '×'; }
+  paint();
+  var AUTO = { '1':'self', '2':'types', '3':'diff', '4':'eddy', '5':'circ' };
+  if (AUTO[q.get('auto')]) DEMOS[AUTO[q.get('auto')]].fn();
+  document.addEventListener('keydown', function(e){
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input') return;
+    if (e.key === 'ArrowLeft'){ stopDemo(); setX(S.x - 2); e.preventDefault(); }
+    else if (e.key === 'ArrowRight'){ stopDemo(); setX(S.x + 2); e.preventDefault(); }
+    else if (e.key === '1'){ stopDemo(); setType('gap'); }
+    else if (e.key === '2'){ stopDemo(); setType('area'); }
+    else if (e.key === '3'){ stopDemo(); setType('solenoid'); }
+    else if (e.key === 'd'){ stopDemo(); setDiff(S.diff === 'differ' ? 'single' : 'differ'); }
+    else if (e.key === ' '){
+      e.preventDefault();
+      if (playingKey){ stopDemo(); say('演示已暂停。'); }
+      else { var k = { gap:'self', area:'types', solenoid:'types' }[S.type]; if (DEMOS[k].fn) DEMOS[k].fn(); }
+    }
+    else if (e.key === 'r' || e.key === 'R'){ $('reset').click(); }
+  });
+})();
+</script>
+
+<script>
+/* ==================== 板块布局引擎：拖动 / 缩放 / 记忆 ==================== */
+(function(){
+  "use strict";
+  var BOARD = document.getElementById('board');
+  var COLS  = ['colA','colB','colC'];
+  var IDS   = ['ctrlCard','magCard','fmlCard','readCard','curveCard','eddyCard','diffCard','circCard','ptsCard'];
+  var MINZ = 0.7, MAXZ = 1.6, MINCOL = 260;
+  var KEY = 'jh-inductive-layout-v1';
+  var DEF = {
+    weight: { colA:4.6, colB:4.0, colC:3.4 },
+    col: { colA:['ctrlCard','magCard'], colB:['fmlCard','curveCard','eddyCard','circCard'],
+           colC:['readCard','diffCard','ptsCard'] },
+    zoom: {}
+  };
+  var L = null, focused = null;
+  function el(id){ return document.getElementById(id); }
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function load(){
+    var d;
+    try { d = JSON.parse(localStorage.getItem(KEY)); } catch (e) { d = null; }
+    if (!d || !d.col) return clone(DEF);
+    COLS.forEach(function(c){ if (!d.col[c]) d.col[c] = []; });
+    var seen = {};
+    COLS.forEach(function(c){
+      d.col[c] = d.col[c].filter(function(id){ if (IDS.indexOf(id) < 0 || seen[id]) return false; seen[id] = 1; return true; });
+    });
+    IDS.forEach(function(id){ if (!seen[id]){ d.col.colC.push(id); seen[id] = 1; } });
+    d.weight = d.weight || clone(DEF.weight);
+    d.zoom = d.zoom || {};
+    return d;
+  }
+  L = load();
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(L)); } catch (e) {} }
+  function render(){
+    COLS.forEach(function(cid){
+      var col = el(cid);
+      L.col[cid].forEach(function(pid){ var p = el(pid); if (p) col.appendChild(p); });
+      col.style.flexGrow = L.weight[cid] || 1;
+    });
+  }
+  function applyZoom(id){
+    var p = el(id); if (!p) return;
+    var b = p.querySelector('.pbody'); if (!b) return;
+    b.style.zoom = L.zoom[id] || 1;
+  }
+  function applyAll(){ render(); IDS.forEach(applyZoom); }
+
+  function startDrag(ev, p){
+    if (ev.button) return;
+    var x0 = ev.clientX, y0 = ev.clientY, moved = false, lastTarget = null;
+    function move(e){
+      if (!moved){
+        if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) < 6) return;
+        moved = true;
+        document.body.classList.add('layout-dragging');
+        p.classList.add('sorting');
+      }
+      var col = null, i, r;
+      for (i = 0; i < COLS.length; i++){
+        r = el(COLS[i]).getBoundingClientRect();
+        if (e.clientX >= r.left - 6 && e.clientX <= r.right + 6){ col = COLS[i]; break; }
+      }
+      if (!col) col = (e.clientX < BOARD.getBoundingClientRect().left + BOARD.clientWidth/2) ? COLS[0] : COLS[COLS.length - 1];
+      var list = L.col[col].filter(function(id){ return id !== p.id; });
+      var idx = list.length, j, q, qr;
+      for (j = 0; j < list.length; j++){
+        q = el(list[j]); if (!q) continue;
+        qr = q.getBoundingClientRect();
+        if (e.clientY < qr.top + qr.height/2){ idx = j; break; }
+      }
+      var key = col + ':' + idx;
+      if (key === lastTarget) return;
+      lastTarget = key;
+      COLS.forEach(function(c2){ L.col[c2] = L.col[c2].filter(function(id){ return id !== p.id; }); });
+      L.col[col].splice(idx, 0, p.id);
+      render();
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', up);
+      document.body.classList.remove('layout-dragging');
+      p.classList.remove('sorting');
+      if (moved) save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
+  }
+  function startSplit(ev, sp){
+    ev.preventDefault();
+    var left = el(sp.getAttribute('data-left')), right = el(sp.getAttribute('data-right'));
+    var total = left.offsetWidth + right.offsetWidth;
+    var wl = L.weight[left.id] || 1, wr = L.weight[right.id] || 1, sum = wl + wr;
+    var x0 = ev.clientX, pxPerWeight = total/sum;
+    document.body.classList.add('layout-dragging');
+    function move(e){
+      var d = (e.clientX - x0)/pxPerWeight;
+      var nl = Math.max(MINCOL/(total/sum), Math.min(sum - MINCOL/(total/sum), wl + d));
+      left.style.flexGrow = nl; right.style.flexGrow = sum - nl;
+      L.weight[left.id] = nl; L.weight[right.id] = sum - nl;
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.body.classList.remove('layout-dragging');
+      save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  }
+  function zoomPanel(id, d){
+    var z = Math.round(((L.zoom[id] || 1) + d)*100)/100;
+    L.zoom[id] = Math.max(MINZ, Math.min(MAXZ, z));
+    applyZoom(id); save();
+  }
+  function toggleFocus(id){
+    var p = el(id); if (!p) return;
+    if (focused === id){ p.classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    else {
+      if (focused) el(focused).classList.remove('focused');
+      p.classList.add('focused'); document.body.classList.add('has-focus'); focused = id;
+    }
+  }
+  function reset(){
+    L = clone(DEF);
+    if (focused){ el(focused).classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    applyAll(); save();
+  }
+  var back = document.createElement('div');
+  back.id = 'focusBack';
+  back.addEventListener('click', function(){ if (focused) toggleFocus(focused); });
+  document.body.appendChild(back);
+
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var head = p.querySelector('.phead');
+    if (head){
+      head.addEventListener('pointerdown', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        e.preventDefault(); startDrag(e, p);
+      });
+      head.addEventListener('dblclick', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        toggleFocus(id);
+      });
+    }
+    p.querySelectorAll('.ptool').forEach(function(b){
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        var a = b.getAttribute('data-act');
+        if (a === 'in') zoomPanel(id, 0.08);
+        else if (a === 'out') zoomPanel(id, -0.08);
+        else if (a === 'max') toggleFocus(id);
+      });
+    });
+  });
+  document.querySelectorAll('.vsplit').forEach(function(sp){
+    sp.addEventListener('pointerdown', function(e){ startSplit(e, sp); });
+  });
+  var lr = document.getElementById('layReset');
+  if (lr) lr.addEventListener('click', reset);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && focused) toggleFocus(focused); });
+  window.addEventListener('resize', function(){ IDS.forEach(applyZoom); });
+  window.__repack = function(){};
+  applyAll();
+  window.addEventListener('load', applyAll);
+})();
+</script>
+</body>
+</html>
