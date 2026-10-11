@@ -233,30 +233,32 @@
       <svg id="mag" viewBox="0 0 700 320" role="img" aria-label="自感式传感器磁路示意">
         <!-- 变气隙型 -->
         <g id="stGap">
-          <rect x="118" y="54" width="152" height="30" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="118" y="84" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="180" y="84" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="240" y="84" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <text x="92" y="74" font-size="12.5" font-weight="700" fill="#2f4b68">铁芯</text>
+          <!-- 铁芯：上轭 + 三条腿（腿下沿 y=196，衔铁在其下方随气隙移动） -->
+          <rect x="118" y="18" width="152" height="26" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="118" y="44" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="180" y="44" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="240" y="44" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <text x="92" y="36" font-size="12.5" font-weight="700" fill="#2f4b68">铁芯</text>
+          <!-- 线圈（套在中腿）＋ 激励脉冲 -->
+          <rect id="coilPulse" x="162" y="66" width="66" height="98" rx="8" fill="none" stroke="var(--cu)" stroke-width="3" opacity="0"/>
           <g id="coilGap">
-            <rect x="168" y="112" width="54" height="78" rx="5" fill="var(--cu)" opacity=".92"/>
+            <rect x="168" y="72" width="54" height="86" rx="5" fill="var(--cu)" opacity=".92"/>
+            <line x1="168" y1="86" x2="222" y2="86" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="168" y1="100" x2="222" y2="100" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="168" y1="114" x2="222" y2="114" stroke="#8c4d22" stroke-width="1.2"/>
             <line x1="168" y1="128" x2="222" y2="128" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="168" y1="144" x2="222" y2="144" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="168" y1="160" x2="222" y2="160" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="168" y1="176" x2="222" y2="176" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="168" y1="142" x2="222" y2="142" stroke="#8c4d22" stroke-width="1.2"/>
           </g>
-          <text x="230" y="108" font-size="12.5" font-weight="700" fill="#8c4d22">线圈 N</text>
-          <rect id="armGap" x="106" y="249" width="176" height="26" rx="3" fill="var(--iron)" opacity=".72" stroke="#2f4b68" stroke-width="1.5"/>
-          <text x="292" y="267" font-size="12.5" font-weight="700" fill="#2f4b68">衔铁</text>
-          <!-- 气隙标注 -->
-          <line id="gapDim" x1="316" y1="236" x2="316" y2="249" stroke="var(--gapm)" stroke-width="2"/>
-          <line x1="310" y1="236" x2="322" y2="236" stroke="var(--gapm)" stroke-width="2"/>
-          <line id="gapDimB" x1="310" y1="249" x2="322" y2="249" stroke="var(--gapm)" stroke-width="2"/>
-          <text id="gapTxt" x="180" y="300" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--gapm)">气隙 δ = 0.500 mm</text>
-          <!-- 磁通路径 -->
-          <path id="fluxPath" d="M195 84 V236" stroke="var(--flux)" stroke-width="2" stroke-dasharray="6 5" fill="none" opacity=".95"/>
-          <path id="fluxPath2" d="M195 262 H133 V70 H257 V262 H195" stroke="var(--flux)" stroke-width="2" stroke-dasharray="6 5" fill="none" opacity=".45"/>
-          <text x="140" y="44" font-size="12" fill="var(--flux)">磁通 Φ：铁芯 → 气隙 → 衔铁 → 闭合</text>
+          <text x="230" y="66" font-size="12.5" font-weight="700" fill="#8c4d22">线圈 N（通交流 i）</text>
+          <!-- 衔铁：随气隙上下移动（行程放大约 6 倍） -->
+          <rect id="armGap" x="104" y="204" width="180" height="24" rx="3" fill="var(--iron)" opacity=".72" stroke="#2f4b68" stroke-width="1.5"/>
+          <text id="armTxt" x="292" y="220" font-size="12.5" font-weight="700" fill="#2f4b68">衔铁</text>
+          <!-- 气隙尺寸 -->
+          <line id="gapDim" x1="316" y1="196" x2="316" y2="204" stroke="var(--gapm)" stroke-width="2.5"/>
+          <line id="gapTick1" x1="309" y1="196" x2="323" y2="196" stroke="var(--gapm)" stroke-width="2.5"/>
+          <line id="gapDimB" x1="309" y1="204" x2="323" y2="204" stroke="var(--gapm)" stroke-width="2.5"/>
+          <line id="gapLead" x1="180" y1="292" x2="180" y2="300" stroke="#c9d6e6" stroke-width="1.2"/>
+          <text id="gapTxt" x="180" y="314" text-anchor="middle" font-size="13" font-weight="700" fill="var(--gapm)">气隙 δ = 0.500 mm</text>
         </g>
         <!-- 变面积型 -->
         <g id="stArea" style="display:none">
@@ -303,19 +305,32 @@
           <text id="solTxt" x="338" y="134" font-size="12.5" font-weight="700" fill="var(--gapm)">x = 0</text>
           <text x="150" y="288" font-size="12" fill="#5b6b80">插入越深 → 磁路磁阻越小 → L 越大（中段线性最好）</text>
         </g>
-        <!-- 右侧：磁阻分解 -->
-        <g transform="translate(420,40)">
+        <!-- 磁通闭合回路（动画：流动虚线 + 移动粒子） -->
+        <path id="loopGap" d="" fill="none" stroke="var(--flux)" stroke-width="3.2" stroke-dasharray="10 8"
+              stroke-linecap="round" opacity=".9"/>
+        <path id="loopArea" d="" fill="none" stroke="var(--flux)" stroke-width="3.2" stroke-dasharray="10 8"
+              stroke-linecap="round" opacity=".9" style="display:none"/>
+        <path id="loopSol" d="" fill="none" stroke="var(--flux)" stroke-width="3.2" stroke-dasharray="10 8"
+              stroke-linecap="round" opacity=".9" style="display:none"/>
+        <g id="fluxDots"></g>
+        <!-- 右侧：磁阻分解 + 磁通量 -->
+        <g transform="translate(420,12)">
           <text x="0" y="0" font-size="13" font-weight="700" fill="#0e4a8e">磁阻分解（串联）</text>
-          <text id="rmFe" x="0" y="34" font-size="12.5" fill="#2f4b68">R铁芯 + R衔铁 = 0</text>
-          <text id="rmGap" x="0" y="56" font-size="12.5" font-weight="700" fill="var(--gapm)">R气隙 = 0</text>
-          <text id="rmTot" x="0" y="78" font-size="12.5" font-weight="700" fill="#12233a">R_m = 0</text>
-          <rect x="0" y="92" width="250" height="16" rx="5" fill="#f4f8fd" stroke="#d5dfec"/>
-          <rect id="barFe" x="0" y="92" width="0" height="16" fill="#4b6b8f"/>
-          <rect id="barGap" x="0" y="92" width="0" height="16" fill="var(--gapm)"/>
-          <text id="gapShare" x="0" y="130" font-size="12.5" fill="#5b6b80">气隙占比 —</text>
-          <text x="0" y="158" font-size="12.5" fill="#5b6b80">铁芯 μ_r ≈ 5000，空气 μ₀ = 4π×10⁻⁷ H/m</text>
-          <text x="0" y="186" font-size="12.5" font-weight="700" fill="var(--flux)">→ 磁阻几乎全在气隙</text>
-          <text x="0" y="206" font-size="12" fill="#5b6b80">这就是 L ≈ N²μ₀S/(2δ) 的由来</text>
+          <text id="rmFe" x="0" y="28" font-size="12.5" fill="#2f4b68">R铁芯 + R衔铁 = 0</text>
+          <text id="rmGap" x="0" y="48" font-size="12.5" font-weight="700" fill="var(--gapm)">R气隙 = 0</text>
+          <text id="rmTot" x="0" y="68" font-size="12.5" font-weight="700" fill="#12233a">R_m = 0</text>
+          <rect x="0" y="80" width="250" height="15" rx="5" fill="#f4f8fd" stroke="#d5dfec"/>
+          <rect id="barFe" x="0" y="80" width="0" height="15" fill="#4b6b8f"/>
+          <rect id="barGap" x="0" y="80" width="0" height="15" fill="var(--gapm)"/>
+          <text id="gapShare" x="0" y="118" font-size="12.5" fill="#5b6b80">气隙占比 —</text>
+          <text x="0" y="142" font-size="12.5" fill="#5b6b80">铁芯 μ_r ≈ 5000，空气 μ₀ = 4π×10⁻⁷ H/m</text>
+          <text x="0" y="168" font-size="12.5" font-weight="700" fill="var(--flux)">→ 磁阻几乎全在气隙（这就是 L ≈ N²μ₀S/(2δ) 的由来）</text>
+          <text x="0" y="200" font-size="13" font-weight="700" fill="var(--flux)">磁通 Φ ∝ N·i / R_m</text>
+          <rect x="0" y="210" width="250" height="14" rx="5" fill="#f4f8fd" stroke="#d5dfec"/>
+          <rect id="fluxBar" x="0" y="210" width="0" height="14" rx="5" fill="var(--flux)"/>
+          <text id="fluxTxt" x="0" y="244" font-size="12.5" font-weight="700" fill="var(--flux)">Φ/Φ₀ = 1.00</text>
+          <text x="0" y="266" font-size="11.5" fill="#94a3b8">气隙越小 → 磁阻越小 → 磁通越大 → L 越大</text>
+          <text x="0" y="286" font-size="11.5" fill="#94a3b8">流动的绿点＝磁通，越密越快表示磁通越强</text>
         </g>
       </svg>
       <div class="hint" id="magHint">气隙磁阻远大于铁芯磁阻，所以电感量几乎由气隙决定 —— 这既是它灵敏度高的原因，也是它非线性严重的原因。</div>
@@ -626,6 +641,90 @@
     return { skin:skin, k:k, dZ:dZ, u0:u0, sigma:sigma, mur:mur, mat:m };
   }
 
+  /* ============ 2b. 磁通流动动画 ============ */
+  var FLUX = { L:0, t:0, target:1, els:null, path:null };
+  /* 闭合磁通回路：中腿下行 → 穿气隙 → 衔铁 → 外腿 → 上轭 → 回中腿 */
+  function gapLoop(yArm){
+    var y1 = 196, yA = yArm + 5, yB = yArm + 17;
+    return 'M195 44 V' + y1 + ' L195 ' + yA + ' L133 ' + yA + ' L133 30 L257 30 L257 ' + yB +
+           ' L203 ' + yB + ' L203 ' + y1 + ' V44 Z';
+  }
+  function solLoop(yTop, depth){
+    var yb = yTop + depth - 6;
+    return 'M206 ' + (yTop - 6) + ' V' + yb + ' L180 ' + yb + ' L180 86 L240 86 L240 ' + yb +
+           ' L214 ' + yb + ' L214 ' + (yTop - 6) + ' Z';
+  }
+  function activeLoopEl(){
+    return S.type === 'solenoid' ? $('loopSol') : (S.type === 'area' ? $('loopArea') : $('loopGap'));
+  }
+  function setFluxPath(){
+    var yArm = parseFloat($('armGap').getAttribute('y')) || 204;
+    var yTop = parseFloat($('plunger').getAttribute('y')) || 70;
+    var depth = parseFloat($('plunger').getAttribute('height')) || 120;
+    $('loopGap').style.display  = (S.type === 'gap') ? '' : 'none';
+    $('loopArea').style.display = (S.type === 'area') ? '' : 'none';
+    $('loopSol').style.display  = (S.type === 'solenoid') ? '' : 'none';
+    var p = activeLoopEl();
+    p.setAttribute('d', S.type === 'solenoid' ? solLoop(yTop, depth) : gapLoop(S.type === 'area' ? 249 : yArm));
+    FLUX.path = p;
+    try { FLUX.L = p.getTotalLength(); } catch (e) { FLUX.L = 0; }
+  }
+  /* 相对磁通：Φ ∝ N·i/R_m，且 L = N²/R_m ⇒ Φ/Φ₀ = L/L₀ */
+  function fluxRatio(){
+    var L = selfL(S.type, S.x/100, S.N).L, L0 = selfL(S.type, 0, S.N).L;
+    return L0 > 0 ? L/L0 : 1;
+  }
+  function paintFluxGauge(){
+    var f = fluxRatio();
+    FLUX.target = f;
+    var w = Math.max(6, Math.min(250, f/2*250));
+    $('fluxBar').setAttribute('width', w.toFixed(1));
+    $('fluxTxt').textContent = 'Φ/Φ₀ = ' + f.toFixed(2) + (f > 1.02 ? '　↑ 磁通增强' : (f < 0.98 ? '　↓ 磁通减弱' : '　（基准）'));
+  }
+  function initFlux(){
+    var g = $('fluxDots'), html = '', i;
+    for (i = 0; i < 12; i++){
+      html += '<circle r="3.8" fill="#0d8b7f" stroke="#fff" stroke-width="1.1" opacity=".95"/>';
+    }
+    g.innerHTML = html;
+    FLUX.els = g.querySelectorAll('circle');
+    /* 先摆好初始位置，避免首帧之前粒子挤在原点 */
+    setFluxPath();
+    if (FLUX.path && FLUX.L > 0 && FLUX.path.getPointAtLength){
+      for (i = 0; i < FLUX.els.length; i++){
+        var pt0 = FLUX.path.getPointAtLength(i/FLUX.els.length*FLUX.L);
+        FLUX.els[i].setAttribute('cx', pt0.x.toFixed(1));
+        FLUX.els[i].setAttribute('cy', pt0.y.toFixed(1));
+      }
+    }
+  }
+  function runFlux(){
+    var last = performance.now();
+    (function loop(now){
+      var dt = Math.min(60, now - last); last = now;
+      var f = Math.max(0.15, Math.min(2.2, FLUX.target || 1));
+      var speed = 0.30 + 0.55*f;                       /* 磁通越大，流动越快 */
+      FLUX.t = (FLUX.t + dt*speed/1500) % 1;
+      if (FLUX.path){
+        FLUX.path.setAttribute('stroke-dashoffset', (-FLUX.t*FLUX.L*2).toFixed(1));
+        if (FLUX.els && FLUX.L > 0 && FLUX.path.getPointAtLength){
+          var n = FLUX.els.length, i, pt;
+          for (i = 0; i < n; i++){
+            pt = FLUX.path.getPointAtLength((((FLUX.t*1 + i/n) % 1) + 1) % 1 * FLUX.L);
+            FLUX.els[i].setAttribute('cx', pt.x.toFixed(1));
+            FLUX.els[i].setAttribute('cy', pt.y.toFixed(1));
+            FLUX.els[i].setAttribute('opacity', (0.55 + 0.4*Math.min(1, f/1.4)).toFixed(2));
+          }
+        }
+      }
+      /* 线圈激励脉冲：磁通越大越亮 */
+      var p = 0.5 + 0.5*Math.sin(now/420);
+      var c = $('coilPulse');
+      if (c) c.setAttribute('opacity', (0.06 + 0.30*p*Math.min(1.4, f)).toFixed(3));
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+
   /* ============ 3. 主刷新 ============ */
   function paint(){
     var r = selfL(S.type, S.x/100, S.N);
@@ -666,14 +765,17 @@
     $('stArea').style.display = (S.type === 'area') ? '' : 'none';
     $('stSol').style.display = (S.type === 'solenoid') ? '' : 'none';
     if (S.type === 'gap'){
-      var gapPx = Math.max(3, Math.min(16, 16*(r.delta/CFG.d0)));   /* 视觉气隙高度 */
-      var yArm = 236 + gapPx, yArmB = yArm + 26;
+      /* 视觉气隙：8 ~ 66 px（放大约 6 倍，便于观察） */
+      var gapPx = 8 + 58*(r.delta/CFG.d0);
+      var yArm = 196 + gapPx, yArmB = yArm + 24;
       $('armGap').setAttribute('y', yArm.toFixed(1));
-      $('gapDim').setAttribute('y1', '236'); $('gapDim').setAttribute('y2', yArm.toFixed(1));
+      $('armTxt').setAttribute('y', (yArm + 16).toFixed(1));
+      $('gapDim').setAttribute('y1', '196'); $('gapDim').setAttribute('y2', yArm.toFixed(1));
+      $('gapTick1').setAttribute('y1', '196'); $('gapTick1').setAttribute('y2', '196');
       $('gapDimB').setAttribute('y1', yArm.toFixed(1)); $('gapDimB').setAttribute('y2', yArm.toFixed(1));
-      $('gapTxt').setAttribute('y', (yArmB + 22).toFixed(1));
-      $('gapTxt').textContent = 'δ = ' + (r.delta*1000).toFixed(3) + ' mm';
-      $('fluxPath2').setAttribute('d', 'M195 ' + (yArm + 13).toFixed(0) + ' H133 V70 H257 V' + (yArm + 13).toFixed(0) + ' H195');
+      $('gapLead').setAttribute('y1', (yArmB + 4).toFixed(1));
+      $('gapLead').setAttribute('y2', '300');
+      $('gapTxt').textContent = '气隙 δ = ' + (r.delta*1000).toFixed(3) + ' mm';
     } else if (S.type === 'area'){
       var wOver = 152*(1 - 0.6*(S.x/100));
       wOver = Math.max(6, wOver);
@@ -693,6 +795,8 @@
       $('plungerTxt').setAttribute('y', '64');
       $('solTxt').textContent = 'x = ' + (S.x*0.9).toFixed(0) + ' mm';
     }
+    setFluxPath();
+    paintFluxGauge();
 
     /* --- 磁阻分解 --- */
     var R = reluc(r.delta, r.Sarea, S.N);
@@ -1026,8 +1130,9 @@
     say('【<b>自感式原理</b>】先看磁路：R_m = R铁芯 + R衔铁 + R气隙。铁芯 μ_r = 2000，空气 μ₀ 只有它的 1/2000，所以气隙磁阻占了 <b>' +
         (R.Rgap/R.Rm*100).toFixed(1) + '%</b>。L = N²/R_m = <b>' + r.L.toFixed(4) + ' H</b>。');
     if (!await sleep(3400, tok)) return;
-    say('① <b>衔铁靠近、气隙减小</b>（δ 从 ' + (CFG.d0*1000).toFixed(2) + ' mm → ' + (CFG.dMin*1000).toFixed(2) +
-        ' mm，行程 ' + ((CFG.d0-CFG.dMin)*1e6).toFixed(0) + ' μm）：气隙磁阻急剧下降 → L 迅速上升。注意 L 与 δ <b>成反比</b>，所以位移与输出<b>不是线性关系</b>。');
+    say('① 注意看：<b>绿色小点就是磁通</b>，它沿铁芯 → 气隙 → 衔铁 → 闭合回路不断流动，流动越快表示磁通越强。现在<b>衔铁靠近、气隙减小</b>（δ ' +
+        (CFG.d0*1000).toFixed(2) + ' mm → ' + (CFG.dMin*1000).toFixed(2) + ' mm，行程 ' + ((CFG.d0-CFG.dMin)*1e6).toFixed(0) +
+        ' μm）：气隙磁阻急剧下降 → 磁通变大 → L 迅速上升。注意 L 与 δ <b>成反比</b>，所以位移与输出<b>不是线性关系</b>。');
     if (!await tween(0, 80, 2600, setX, tok)) return;
     if (!await sleep(2200, tok)) return;
     var r2 = selfL('gap', 0.8, S.N);
@@ -1169,6 +1274,8 @@
   if (q.has('speed')){ SPEED = Math.max(0.4, Math.min(2.5, parseFloat(q.get('speed')) || 1));
     $('speed').value = SPEED; $('speedOut').textContent = SPEED.toFixed(1) + '×'; }
   paint();
+  initFlux();
+  runFlux();
   var AUTO = { '1':'self', '2':'types', '3':'diff', '4':'eddy', '5':'circ' };
   if (AUTO[q.get('auto')]) DEMOS[AUTO[q.get('auto')]].fn();
   document.addEventListener('keydown', function(e){
