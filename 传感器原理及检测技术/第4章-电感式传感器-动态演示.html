@@ -132,6 +132,8 @@
   .hint{font-size:12px; color:var(--muted); margin-top:5px}
   footer{padding:5px 18px 8px; font-size:11.5px; color:var(--muted); line-height:1.55}
   footer b{color:var(--jhu)}
+  #segLvdt button{min-width:66px; flex:1 1 66px; padding:3px 4px; font-size:11.5px; line-height:1.25}
+  #segLvdt button small{font-size:10px}
   #mag{max-height:196px} #curve{max-height:170px} #diff,#lvd{max-height:158px}
   #eddy{max-height:132px} #cir{max-height:150px}
   @media (max-width:1200px){ #boardWrap{min-width:1180px} }
@@ -527,39 +529,160 @@
         <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
       </div>
       <div class="pbody">
-      <svg id="lvd" viewBox="0 0 700 300" role="img" aria-label="差动变压器结构与输出特性">
-        <!-- 结构 -->
-        <g transform="translate(20,20)">
-          <rect x="60" y="30" width="130" height="180" rx="6" fill="none" stroke="var(--iron)" stroke-width="2"/>
-          <rect x="78" y="46" width="94" height="40" rx="3" fill="var(--cu)" opacity=".85"/>
-          <text x="125" y="71" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">次级 w₂ₐ</text>
-          <rect x="78" y="100" width="94" height="40" rx="3" fill="#2b6cb0" opacity=".85"/>
-          <text x="125" y="125" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">初级 w₁</text>
-          <rect x="78" y="154" width="94" height="40" rx="3" fill="var(--cu)" opacity=".85"/>
-          <text x="125" y="179" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">次级 w₂ᵦ</text>
-          <rect x="44" y="24" width="150" height="192" rx="8" fill="none" stroke="#8296ad" stroke-width="1.6" stroke-dasharray="6 5"/>
-          <text x="44" y="16" font-size="11.5" fill="#8296ad">导磁外壳</text>
-          <rect id="coreRod" x="114" y="20" width="16" height="200" rx="4" fill="var(--iron)" opacity=".85"/>
-          <text id="coreTxt" x="122" y="14" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2f4b68">铁芯</text>
-          <line x1="12" y1="120" x2="60" y2="120" stroke="#9fb2c8" stroke-width="1.5"/>
-          <text x="4" y="112" font-size="11.5" fill="#5b6b80">u</text>
-          <line x1="190" y1="66" x2="222" y2="66" stroke="#9fb2c8" stroke-width="1.5"/>
-          <line x1="190" y1="174" x2="222" y2="174" stroke="#9fb2c8" stroke-width="1.5"/>
-          <text x="228" y="70" font-size="11.5" fill="#5b6b80">u₂ₐ</text>
-          <text x="228" y="178" font-size="11.5" fill="#5b6b80">u₂ᵦ</text>
-          <line x1="222" y1="66" x2="222" y2="174" stroke="#9fb2c8" stroke-width="1.5"/>
-          <text id="lvdU" x="248" y="124" font-size="14" font-weight="800" fill="#d94a3d">u₀ = 0.0 mV</text>
-          <text x="60" y="238" font-size="12" fill="#5b6b80">铁芯上移 → u₂ₐ &gt; u₂ᵦ；下移 → u₂ᵦ &gt; u₂ₐ；u₀ = u₂ₐ − u₂ᵦ</text>
+      <div class="seg" id="segLvdt" style="margin-bottom:4px">
+        <button data-lv="gap1" class="on">变气隙型1<small>图4-8(a)</small></button>
+        <button data-lv="gap2">变气隙型2<small>图4-8(b)</small></button>
+        <button data-lv="sol1">螺管型1<small>图4-8(c)</small></button>
+        <button data-lv="sol2">螺管型2<small>图4-8(d)</small></button>
+        <button data-lv="area1">变面积型1<small>图4-8(e)</small></button>
+        <button data-lv="area2">变面积型2<small>图4-8(f)</small></button>
+      </div>
+      <svg id="lvd" viewBox="0 0 700 250" role="img" aria-label="差动变压器六种结构">
+        <!-- ========== (a) 变气隙型1：口形铁芯，初级居中，两次级上下反接 ========== -->
+        <g id="lvGap1">
+          <rect x="150" y="18" width="140" height="20" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.4"/>
+          <rect x="150" y="38" width="22" height="54" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.4"/>
+          <rect x="268" y="38" width="22" height="54" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.4"/>
+          <rect x="150" y="202" width="140" height="20" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.4"/>
+          <rect x="150" y="148" width="22" height="54" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.4"/>
+          <rect x="268" y="148" width="22" height="54" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.4"/>
+          <!-- 初级 w₁（绕中柱两侧） -->
+          <rect x="182" y="86" width="34" height="84" rx="4" fill="#2b6cb0" opacity=".9"/>
+          <rect x="224" y="86" width="34" height="84" rx="4" fill="#2b6cb0" opacity=".9"/>
+          <text x="198" y="132" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">w₁</text>
+          <text x="241" y="132" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">w₁</text>
+          <!-- 次级 w₂ₐ（上）／w₂ᵦ（下） -->
+          <g id="lvA1sec"><rect x="152" y="40" width="18" height="50" rx="3" fill="var(--cu)" opacity=".92"/>
+            <rect x="270" y="40" width="18" height="50" rx="3" fill="var(--cu)" opacity=".92"/></g>
+          <g id="lvA2sec"><rect x="152" y="150" width="18" height="50" rx="3" fill="var(--cu)" opacity=".92"/>
+            <rect x="270" y="150" width="18" height="50" rx="3" fill="var(--cu)" opacity=".92"/></g>
+          <text x="120" y="66" text-anchor="end" font-size="11" font-weight="700" fill="#8c4d22">w₂ₐ</text>
+          <text x="120" y="180" text-anchor="end" font-size="11" font-weight="700" fill="#8c4d22">w₂ᵦ</text>
+          <!-- 活动衔铁（中间，上下移动） -->
+          <rect id="lvArm_gap1" x="140" y="108" width="160" height="20" rx="3" fill="#2b6cb0" opacity=".85" stroke="#1b4a7a" stroke-width="1.4"/>
+          <text id="lvArmTxt_gap1" x="310" y="123" font-size="11.5" font-weight="700" fill="#2b6cb0">活动衔铁 3</text>
+          <line id="lvD1" x1="336" y1="92" x2="336" y2="108" stroke="var(--gapm)" stroke-width="2.2"/>
+          <line id="lvD2" x1="336" y1="128" x2="336" y2="148" stroke="var(--gapm)" stroke-width="2.2"/>
+          <text id="lvDTxt" x="344" y="122" font-size="11" font-weight="700" fill="var(--gapm)">δₐ/δᵦ</text>
+          <circle cx="120" cy="128" r="3" fill="#233b57"/><text x="96" y="152" font-size="11.5" font-weight="700" fill="#233b57">U̇₁</text>
+          <circle cx="400" cy="66" r="3" fill="#233b57"/><text x="406" y="70" font-size="11.5" font-weight="700" fill="#233b57">Ė₂ₐ</text>
+          <circle cx="400" cy="180" r="3" fill="#233b57"/><text x="406" y="184" font-size="11.5" font-weight="700" fill="#233b57">Ė₂ᵦ</text>
         </g>
-        <!-- 输出特性 -->
-        <g transform="translate(380,20)">
-          <line x1="20" y1="140" x2="280" y2="140" stroke="#9fb2c8" stroke-width="1.5"/>
-          <line x1="150" y1="20" x2="150" y2="260" stroke="#9fb2c8" stroke-width="1.5"/>
-          <path id="lvdLine" fill="none" stroke="#0d8b7f" stroke-width="3"/>
-          <circle id="lvdDot" r="5.5" fill="#0e4a8e" stroke="#fff" stroke-width="2"/>
-          <text x="280" y="160" text-anchor="end" font-size="12" fill="#5b6b80">铁芯位移 x</text>
-          <text x="26" y="14" font-size="12" fill="#5b6b80">u₀</text>
-          <text id="nullTxt" x="150" y="272" text-anchor="middle" font-size="12" font-weight="700" fill="#e08a1e">零点残余电压 ≈ 0.5% FS（需相敏检波与补偿）</text>
+        <!-- ========== (b) 变气隙型2：П形铁芯两腿各绕初/次级，衔铁横向平移 ========== -->
+        <g id="lvGap2" style="display:none">
+          <rect x="130" y="24" width="200" height="22" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.4"/>
+          <rect x="130" y="46" width="26" height="86" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.4"/>
+          <rect x="304" y="46" width="26" height="86" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.4"/>
+          <rect x="134" y="60" width="18" height="60" rx="3" fill="#2b6cb0" opacity=".9"/>
+          <rect x="154" y="60" width="18" height="60" rx="3" fill="var(--cu)" opacity=".92"/>
+          <rect x="288" y="60" width="18" height="60" rx="3" fill="var(--cu)" opacity=".92"/>
+          <rect x="308" y="60" width="18" height="60" rx="3" fill="#2b6cb0" opacity=".9"/>
+          <text x="143" y="132" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2b6cb0">w₁</text>
+          <text x="163" y="132" text-anchor="middle" font-size="10.5" font-weight="700" fill="#8c4d22">w₂</text>
+          <text x="297" y="132" text-anchor="middle" font-size="10.5" font-weight="700" fill="#8c4d22">w₂</text>
+          <text x="317" y="132" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2b6cb0">w₁</text>
+          <!-- 活动衔铁：横向平移（改变两腿气隙/耦合） -->
+          <rect id="lvArm_gap2" x="120" y="140" width="220" height="20" rx="3" fill="#2b6cb0" opacity=".85" stroke="#1b4a7a" stroke-width="1.4"/>
+          <text id="lvArmTxt_gap2" x="348" y="155" font-size="11.5" font-weight="700" fill="#2b6cb0">活动衔铁 3</text>
+          <line id="lvMove2" x1="120" y1="176" x2="120" y2="176" stroke="#d94a3d" stroke-width="2.2"/>
+          <polygon id="lvMove2H" points="120,176 120,176 120,176" fill="#d94a3d"/>
+          <text id="lvMove2Txt" x="120" y="196" font-size="11" font-weight="700" fill="#d94a3d" text-anchor="middle">横向平移</text>
+          <text x="130" y="220" font-size="11.5" fill="#5b6b80">衔铁平移 → 两路耦合一增一减 → 次级差动输出</text>
+          <text x="130" y="16" font-size="11.5" font-weight="700" fill="#233b57">U̇₁ 加在两腿初级 w₁；两次级 w₂ 反接输出 U̇₂</text>
+        </g>
+        <!-- ========== (c) 螺管型1 ========== -->
+        <g id="lvSol1" style="display:none">
+          <rect x="130" y="16" width="170" height="224" rx="8" fill="none" stroke="#8296ad" stroke-width="1.6" stroke-dasharray="6 5"/>
+          <text x="215" y="236" text-anchor="middle" font-size="11" fill="#8296ad">2 导磁外壳</text>
+          <rect x="176" y="34" width="78" height="188" rx="6" fill="#f4f8fd" stroke="#8296ad" stroke-width="1.4"/>
+          <text x="272" y="46" font-size="11" fill="#8296ad">5 骨架</text>
+          <rect x="176" y="42" width="78" height="44" rx="4" fill="var(--cu)" opacity=".92"/>
+          <text x="215" y="69" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">1 次级</text>
+          <rect x="176" y="104" width="78" height="44" rx="4" fill="#2b6cb0" opacity=".9"/>
+          <text x="215" y="131" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">4 初级</text>
+          <rect x="176" y="166" width="78" height="44" rx="4" fill="var(--cu)" opacity=".92"/>
+          <text x="215" y="193" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">6 次级</text>
+          <rect id="lvRod_sol1" x="196" y="30" width="38" height="70" rx="4" fill="var(--iron)" opacity=".9" stroke="#2f4b68" stroke-width="1.4"/>
+          <text id="lvRodTxt_sol1" x="215" y="24" text-anchor="middle" font-size="11" font-weight="700" fill="#2f4b68">3 活动衔铁</text>
+          <line id="lvDim_sol1" x1="330" y1="30" x2="330" y2="100" stroke="var(--gapm)" stroke-width="2.2"/>
+          <text id="lvDimTxt_sol1" x="338" y="70" font-size="11" font-weight="700" fill="var(--gapm)">x</text>
+          <text x="130" y="248" font-size="11" fill="#5b6b80">衔铁插入越深 → 与两次级的耦合差越大 → U̇₂ 越大（中段线性最好）</text>
+        </g>
+        <!-- ========== (d) 螺管型2：两次级分列两端，初级居中，同轴 ========== -->
+        <g id="lvSol2" style="display:none">
+          <rect x="130" y="16" width="170" height="224" rx="8" fill="none" stroke="#8296ad" stroke-width="1.6" stroke-dasharray="6 5"/>
+          <rect x="188" y="34" width="54" height="188" rx="6" fill="#f4f8fd" stroke="#8296ad" stroke-width="1.4"/>
+          <g>
+            <rect x="140" y="42" width="44" height="172" rx="4" fill="var(--cu)" opacity=".9"/>
+            <rect x="246" y="42" width="44" height="172" rx="4" fill="var(--cu)" opacity=".9"/>
+            <line x1="140" y1="70" x2="184" y2="70" stroke="#8c4d22" stroke-width="1.1"/>
+            <line x1="140" y1="110" x2="184" y2="110" stroke="#8c4d22" stroke-width="1.1"/>
+            <line x1="140" y1="150" x2="184" y2="150" stroke="#8c4d22" stroke-width="1.1"/>
+            <line x1="140" y1="190" x2="184" y2="190" stroke="#8c4d22" stroke-width="1.1"/>
+            <line x1="246" y1="70" x2="290" y2="70" stroke="#8c4d22" stroke-width="1.1"/>
+            <line x1="246" y1="110" x2="290" y2="110" stroke="#8c4d22" stroke-width="1.1"/>
+            <line x1="246" y1="150" x2="290" y2="150" stroke="#8c4d22" stroke-width="1.1"/>
+            <line x1="246" y1="190" x2="290" y2="190" stroke="#8c4d22" stroke-width="1.1"/>
+          </g>
+          <text x="162" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#8c4d22">1 次级</text>
+          <text x="268" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#8c4d22">6 次级</text>
+          <rect x="194" y="92" width="42" height="72" rx="4" fill="#2b6cb0" opacity=".9"/>
+          <text x="215" y="132" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">4 初级</text>
+          <rect id="lvRod_sol2" x="200" y="40" width="30" height="80" rx="4" fill="var(--iron)" opacity=".9" stroke="#2f4b68" stroke-width="1.4"/>
+          <line id="lvDim_sol2" x1="330" y1="40" x2="330" y2="120" stroke="var(--gapm)" stroke-width="2.2"/>
+          <text id="lvDimTxt_sol2" x="338" y="84" font-size="11" font-weight="700" fill="var(--gapm)">x</text>
+          <text x="130" y="248" font-size="11" fill="#5b6b80">初级居中、两次级分列两端：工程上最常用的形式，量程可达数百毫米</text>
+        </g>
+        <!-- ========== (e) 变面积型1：衔铁绕支点摆动，两腿气隙差动 ========== -->
+        <g id="lvArea1" style="display:none">
+          <rect x="140" y="24" width="180" height="20" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.4"/>
+          <rect x="140" y="44" width="24" height="66" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.4"/>
+          <rect x="296" y="44" width="24" height="66" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.4"/>
+          <rect x="146" y="52" width="16" height="50" rx="3" fill="#2b6cb0" opacity=".9"/>
+          <rect x="300" y="52" width="16" height="50" rx="3" fill="var(--cu)" opacity=".92"/>
+          <text x="132" y="82" text-anchor="end" font-size="11" font-weight="700" fill="#2b6cb0">w₁</text>
+          <text x="322" y="82" font-size="11" font-weight="700" fill="#8c4d22">w₂</text>
+          <!-- 摆动衔铁（凸形） -->
+          <g id="lvTilt_area1">
+            <path d="M164 120 H300 V136 H246 V196 H218 V136 H164 Z" fill="#2b6cb0" opacity=".85" stroke="#1b4a7a" stroke-width="1.4"/>
+            <circle cx="232" cy="204" r="6" fill="#1b4a7a"/>
+          </g>
+          <text x="326" y="150" font-size="11.5" font-weight="700" fill="#2b6cb0">3 活动衔铁</text>
+          <path id="lvRot_area1" d="M196 176 a24 24 0 0 1 22 -12" fill="none" stroke="#d94a3d" stroke-width="2.2"/>
+          <polygon id="lvRotH_area1" points="196,176 202,170 205,178" fill="#d94a3d"/>
+          <text x="150" y="196" font-size="11" font-weight="700" fill="#d94a3d">摆动 Δθ</text>
+          <text x="140" y="228" font-size="11.5" fill="#5b6b80">衔铁绕支点摆动 → 两腿气隙一个减小、一个增大 → 差动输出</text>
+        </g>
+        <!-- ========== (f) 变面积型2：转角式，转子转动改变耦合面积 ========== -->
+        <g id="lvArea2" style="display:none">
+          <circle cx="215" cy="118" r="98" fill="none" stroke="#8296ad" stroke-width="1.6" stroke-dasharray="6 5"/>
+          <!-- 两个绕组扇区 -->
+          <path d="M215 30 a88 88 0 0 0 0 176" fill="none" stroke="#2b6cb0" stroke-width="18" opacity=".85"/>
+          <path d="M215 30 a88 88 0 0 1 0 176" fill="none" stroke="var(--cu)" stroke-width="18" opacity=".9"/>
+          <text x="104" y="118" text-anchor="end" font-size="11" font-weight="700" fill="#2b6cb0">4 初级 w₁</text>
+          <text x="330" y="118" font-size="11" font-weight="700" fill="#8c4d22">1/6 次级 w₂</text>
+          <!-- 转子（活动衔铁） -->
+          <g id="lvRotor_area2">
+            <path d="M215 118 L215 46 A72 72 0 0 1 275 82 Z" fill="#2b6cb0" opacity=".9" stroke="#1b4a7a" stroke-width="1.4"/>
+            <path d="M215 118 L215 190 A72 72 0 0 1 155 154 Z" fill="#2b6cb0" opacity=".9" stroke="#1b4a7a" stroke-width="1.4"/>
+          </g>
+          <circle cx="215" cy="118" r="5" fill="#1b4a7a"/>
+          <path id="lvRot_area2" d="M262 74 a60 60 0 0 1 14 34" fill="none" stroke="#d94a3d" stroke-width="2.2"/>
+          <polygon id="lvRotH_area2" points="262,74 270,78 266,86" fill="#d94a3d"/>
+          <text x="286" y="66" font-size="11" font-weight="700" fill="#d94a3d">转角 θ</text>
+          <text x="112" y="238" font-size="11.5" fill="#5b6b80">转子转动 → 与两次级的耦合面积一增一减 → 差动输出（可测角位移）</text>
+        </g>
+        <!-- ========== 右侧：输出现象 ========== -->
+        <g transform="translate(470,26)">
+          <text x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">输出特性</text>
+          <line x1="10" y1="120" x2="200" y2="120" stroke="#9fb2c8" stroke-width="1.4"/>
+          <line x1="105" y1="16" x2="105" y2="196" stroke="#9fb2c8" stroke-width="1.4"/>
+          <path id="lvLine" fill="none" stroke="#0d8b7f" stroke-width="2.6"/>
+          <circle id="lvDot" r="5" fill="#0e4a8e" stroke="#fff" stroke-width="1.8"/>
+          <text x="200" y="138" text-anchor="end" font-size="11" fill="#5b6b80">衔铁位移 x</text>
+          <text x="16" y="12" font-size="11" fill="#5b6b80">U̇₂</text>
+          <text id="lvOut" x="0" y="216" font-size="12.5" font-weight="800" fill="#d94a3d">U̇₂ = 0.0 mV</text>
+          <text id="lvNote" x="0" y="236" font-size="10.5" fill="#94a3b8">零点残余电压 ≈ 0.5% FS</text>
         </g>
       </svg>
       </div>
@@ -1044,29 +1167,77 @@
       '，非线性误差 ' + nonlinearity(S.type).toFixed(2) + '%';
   }
 
-  /* ============ 5. 差动变压器 ============ */
+  /* ============ 5. 差动变压器：六种结构（对应图4-8） ============ */
+  var LVDT = { k:'gap1' };
+  var LVDT_IDS = { gap1:'lvGap1', gap2:'lvGap2', sol1:'lvSol1', sol2:'lvSol2', area1:'lvArea1', area2:'lvArea2' };
+  var LVDT_INFO = {
+    gap1:  { n:'变气隙型1·图4-8(a)', d:'口形铁芯：初级 w₁ 居中、两次级 w₂ₐ/w₂ᵦ 上下反接。衔铁上下移动 → δₐ 减小、δᵦ 增大，两路互感一增一减。灵敏度最高，量程仅几十~几百微米，非线性较大。' },
+    gap2:  { n:'变气隙型2·图4-8(b)', d:'П 形铁芯：两腿各绕初级与次级，衔铁横向平移使两路耦合一增一减。灵敏度高、量程小，结构紧凑。' },
+    sol1:  { n:'螺管型1·图4-8(c)', d:'同轴螺管：次级分列两端、初级居中，活动衔铁在骨架内插入。插入越深，与两次级的耦合差越大。量程大（可达数百毫米）、中段线性最好，工程上最常用。' },
+    sol2:  { n:'螺管型2·图4-8(d)', d:'与 (c) 同原理：两次级分列两端、初级居中，外加导磁外壳屏蔽，磁场更集中、灵敏度更均匀。' },
+    area1: { n:'变面积型1·图4-8(e)', d:'衔铁绕支点摆动：两腿气隙一个减小、一个增大 → 差动输出。适合测微小位移/角位移，线性较好。' },
+    area2: { n:'变面积型2·图4-8(f)', d:'转角式：转子转动改变与两次级的耦合面积，一增一减 → 差动输出，用于测角位移。' }
+  };
+  function setLvdt(k){ if (LVDT_INFO[k]){ LVDT.k = k; paint(); } }
   function paintLVDT(){
-    /* 铁芯位置随位移移动；输出 u₀ 线性过零 + 零点残余电压 */
     var x = S.x/100;
-    var up = x;                                    /* 归一化位移 -1..1（这里 0..1） */
-    var u0 = 120*up;                               /* mV 满量程 120 mV */
-    var nullV = 0.6;                               /* 零点残余 0.5% FS */
-    var uOut = u0 + nullV;
-    $('coreRod').setAttribute('y', (20 - 60*up).toFixed(1));
-    $('coreTxt').setAttribute('y', (14 - 60*up).toFixed(1));
-    $('lvdU').textContent = 'u₀ = ' + (uOut).toFixed(1) + ' mV';
-    $('lvdU').setAttribute('fill', uOut > 1 ? '#d94a3d' : (uOut < -1 ? '#2b6cb0' : '#e08a1e'));
-    /* 输出特性直线 */
-    var d = '', first = true, i;
-    for (i = -1; i <= 1.001; i += 0.05){
-      var px = 150 + i*120, py = 140 - (120*i + nullV)*0.55;
-      d += (first ? 'M' : 'L') + px.toFixed(1) + ' ' + py.toFixed(1) + ' ';
+    Object.keys(LVDT_IDS).forEach(function(k){
+      var g = $(LVDT_IDS[k]);
+      if (g) g.style.display = (k === LVDT.k) ? '' : 'none';
+    });
+    var btns = document.querySelectorAll('#segLvdt button');
+    for (var b = 0; b < btns.length; b++){
+      btns[b].classList.toggle('on', btns[b].getAttribute('data-lv') === LVDT.k);
+    }
+    /* —— 各结构自己的运动 —— */
+    if (LVDT.k === 'gap1'){
+      var ay = 108 - 10*x;
+      $('lvArm_gap1').setAttribute('y', ay.toFixed(1));
+      $('lvArmTxt_gap1').setAttribute('y', (ay + 15).toFixed(1));
+      $('lvD1').setAttribute('y2', ay.toFixed(1));
+      $('lvD2').setAttribute('y1', (ay + 20).toFixed(1));
+    } else if (LVDT.k === 'gap2'){
+      var ax = 120 + 34*x;
+      $('lvArm_gap2').setAttribute('x', ax.toFixed(1));
+      $('lvArmTxt_gap2').setAttribute('x', (ax + 230).toFixed(1));
+      $('lvMove2').setAttribute('x1', '120'); $('lvMove2').setAttribute('x2', Math.max(122, ax - 4).toFixed(1));
+      $('lvMove2H').setAttribute('points', (ax - 4).toFixed(1) + ',176 ' + (ax - 12).toFixed(1) + ',172 ' + (ax - 12).toFixed(1) + ',180');
+      $('lvMove2').setAttribute('opacity', x > 0.02 ? 1 : 0);
+      $('lvMove2H').setAttribute('opacity', x > 0.02 ? 1 : 0);
+    } else if (LVDT.k === 'sol1' || LVDT.k === 'sol2'){
+      var rh = 56 + 92*x, rod = $('lvRod_' + LVDT.k), dim = $('lvDim_' + LVDT.k), dt = $('lvDimTxt_' + LVDT.k);
+      if (rod) rod.setAttribute('height', rh.toFixed(1));
+      if (dim) dim.setAttribute('y2', (rod ? 30 : 40) + rh ? (parseFloat(rod.getAttribute('y')) + rh).toFixed(1) : '0');
+      if (dim && rod) dim.setAttribute('y2', (parseFloat(rod.getAttribute('y')) + rh).toFixed(1));
+      if (dt && rod) dt.setAttribute('y', (parseFloat(rod.getAttribute('y')) + rh/2).toFixed(1));
+      if (dt) dt.textContent = 'x = ' + (S.x*0.9).toFixed(0) + ' mm';
+    } else if (LVDT.k === 'area1' || LVDT.k === 'area2'){
+      var g2 = $(LVDT.k === 'area1' ? 'lvTilt_area1' : 'lvRotor_area2');
+      var cxy = (LVDT.k === 'area1') ? '232 204' : '215 118';
+      var ang = (LVDT.k === 'area1' ? 9 : 50)*x;
+      if (g2) g2.setAttribute('transform', 'rotate(' + ang.toFixed(1) + ' ' + cxy + ')');
+    }
+    /* —— 输出特性 —— */
+    var u0 = 120*x + 0.6;                       /* mV，含零点残余 */
+    $('lvOut').textContent = 'U̇₂ = ' + u0.toFixed(1) + ' mV';
+    $('lvNote').textContent = '零点残余 0.6 mV（0.5% FS）｜' + LVDT_INFO[LVDT.k].n;
+    var d = '', first = true, k2;
+    for (k2 = -1; k2 <= 1.001; k2 += 0.05){
+      d += (first ? 'M' : 'L') + (105 + k2*88).toFixed(1) + ' ' + (120 - (120*k2 + 0.6)*0.62).toFixed(1) + ' ';
       first = false;
     }
-    $('lvdLine').setAttribute('d', d);
-    $('lvdDot').setAttribute('cx', (150 + up*120).toFixed(1));
-    $('lvdDot').setAttribute('cy', (140 - uOut*0.55).toFixed(1));
-    $('nullTxt').textContent = '零点残余电压 ≈ ' + nullV.toFixed(1) + ' mV（0.5% FS）—— 需相敏检波 + 补偿';
+    $('lvLine').setAttribute('d', d);
+    $('lvDot').setAttribute('cx', (105 + x*88).toFixed(1));
+    $('lvDot').setAttribute('cy', (120 - u0*0.62).toFixed(1));
+  }
+  var lvBtns = document.querySelectorAll('#segLvdt button');
+  for (var li = 0; li < lvBtns.length; li++){
+    (function(btn){
+      btn.addEventListener('click', function(){
+        stopDemo(); setLvdt(btn.getAttribute('data-lv'));
+        say('<b>' + LVDT_INFO[LVDT.k].n + '</b>：' + LVDT_INFO[LVDT.k].d);
+      });
+    })(lvBtns[li]);
   }
 
   /* ============ 6. 转换电路 ============ */
@@ -1356,6 +1527,17 @@
     if (!await sleep(1600, tok)) return;
     say('⑤ 注意零点附近还有 <b>零点残余电压</b>（约 0.5% FS，来自两个次级不完全对称）—— 所以后面必须用<b>相敏检波</b>，既辨方向又抑制残余电压的影响。');
     if (!await sleep(3000, tok)) return;
+    say('⑥ 差动变压器按结构分为<b>六种形式</b>（教材图4-8）：变气隙型 1/2、螺管型 1/2、变面积型 1/2。下面依次看一遍，注意"<b>改变的到底是磁路里的哪个量</b>"。');
+    if (!await sleep(3000, tok)) return;
+    var lvs = ['gap1','gap2','sol1','sol2','area1','area2'];
+    for (var qi = 0; qi < lvs.length; qi++){
+      setLvdt(lvs[qi]);
+      say('<b>' + (qi+1) + '/6　' + LVDT_INFO[lvs[qi]].n + '</b>：' + LVDT_INFO[lvs[qi]].d);
+      if (!await sleep(2800, tok)) return;
+    }
+    setLvdt('gap1');
+    say('【小结】<b>气隙型</b>灵敏度最高、量程最小（几十~几百微米）；<b>螺管型</b>量程最大（可达数百毫米）、中段线性最好、工程上最常用；<b>变面积型</b>适合小位移与角位移。');
+    if (!await sleep(3200, tok)) return;
     endDemo();
   }
 
@@ -1415,6 +1597,8 @@
   if (q.has('speed')){ SPEED = Math.max(0.4, Math.min(2.5, parseFloat(q.get('speed')) || 1));
     $('speed').value = SPEED; $('speedOut').textContent = SPEED.toFixed(1) + '×'; }
   paint();
+  if (q.has('lv') && LVDT_INFO[q.get('lv')]) LVDT.k = q.get('lv');
+  paint();                     /* 应用 ?lv= 后再刷一次，保证结构图正确 */
   initFlux();
   runFlux();
   var AUTO = { '1':'self', '2':'types', '3':'diff', '4':'eddy', '5':'circ' };
