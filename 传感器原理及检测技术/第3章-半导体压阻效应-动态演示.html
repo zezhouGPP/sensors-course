@@ -227,19 +227,43 @@
 
     <section class="card panel" id="lattice">
       <div class="phead">
-        <h2>微观机制 <small>应力 → 晶格变形 → 载流子迁移率变化 → 电阻率变化</small></h2>
+        <h2>微观机制 <small>应力 → 晶格变形 → 散射变化 → 迁移率 → 电阻率</small></h2>
         <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
       </div>
       <div class="pbody">
-      <svg id="lat" viewBox="0 0 700 250" role="img" aria-label="半导体晶格与载流子示意">
-        <text x="14" y="18" font-size="13" font-weight="700" fill="#0e4a8e">半导体晶格（放大示意）</text>
-        <text id="latState" x="686" y="18" text-anchor="end" font-size="12.5" fill="#5b6b80">无应力：晶格间距正常</text>
-        <g id="latGrid"></g>
-        <g id="carriers"></g>
-        <text x="14" y="216" font-size="12.5" fill="#5b6b80">载流子（电子 / 空穴）在电场下漂移</text>
-        <text id="carrierNote" x="14" y="234" font-size="13" font-weight="700" fill="#7c3aed">迁移率 μ_c 相对变化 0.0%　→　电阻率 ρ 相对变化 0.0%</text>
+      <svg id="lat" viewBox="0 0 700 356" role="img" aria-label="应力改变晶格、散射与电阻率的对照示意">
+        <g id="chain"></g>
+        <!-- ① 基准 -->
+        <text x="12" y="82" font-size="13" font-weight="700" fill="#5b6b80">① 无应力（基准）</text>
+        <text id="roA" x="688" y="82" text-anchor="end" font-size="12.5" fill="#5b6b80">μ_c = 1.00　ρ = 1.00</text>
+        <g id="atomsA"></g><g id="carsA"></g><g id="flashA"></g>
+        <g id="dimA">
+          <line x1="150" y1="142" x2="150" y2="148" stroke="#9fb2c8" stroke-width="1.2"/>
+          <line x1="212" y1="142" x2="212" y2="148" stroke="#9fb2c8" stroke-width="1.2"/>
+          <line x1="150" y1="145" x2="212" y2="145" stroke="#9fb2c8" stroke-width="1.2"/>
+          <text x="181" y="140" text-anchor="middle" font-size="11" fill="#8296ad">间距 a</text>
+        </g>
+        <text id="scA" x="688" y="142" text-anchor="end" font-size="12" fill="#94a3b8">散射 ≈ — 次/秒</text>
+        <!-- ② 当前 -->
+        <text id="laB" x="12" y="180" font-size="13" font-weight="700" fill="#0d8b7f">② 当前：ε = 0 με</text>
+        <text id="roB" x="688" y="180" text-anchor="end" font-size="12.5" fill="#0d8b7f">μ_c = 1.00　ρ = 1.00</text>
+        <g id="atomsB"></g><g id="carsB"></g><g id="flashB"></g>
+        <g id="dimB">
+          <line id="dimB1" x1="150" y1="240" x2="150" y2="246" stroke="#0d8b7f" stroke-width="1.2"/>
+          <line id="dimB2" x1="212" y1="240" x2="212" y2="246" stroke="#0d8b7f" stroke-width="1.2"/>
+          <line id="dimB3" x1="150" y1="243" x2="212" y2="243" stroke="#0d8b7f" stroke-width="1.2"/>
+          <text id="dimBt" x="181" y="238" text-anchor="middle" font-size="11" font-weight="700" fill="#0d8b7f">间距 a ×1.00</text>
+        </g>
+        <text id="scB" x="688" y="240" text-anchor="end" font-size="12" fill="#94a3b8">散射 ≈ — 次/秒</text>
+        <!-- 结论 -->
+        <line x1="12" y1="256" x2="688" y2="256" stroke="#e2e8f0"/>
+        <text x="12" y="282" font-size="15" font-weight="700" fill="#0e4a8e">ρ = 1 / (n q μ_c)</text>
+        <text id="rhoLine" x="178" y="282" font-size="13.5" fill="#33506f">应力使迁移率 μ_c 变化 → 电阻率 ρ 反向变化</text>
+        <text id="whyLine" x="12" y="302" font-size="12.5" fill="#5b6b80">机理：应力改变晶格的对称性与原子间距 → 半导体能带结构（能谷位置、有效质量、散射几率）随之变化 → μ_c 改变。</text>
+        <text id="whyLine2" x="12" y="322" font-size="12.5" fill="#5b6b80">金属缺少这个“杠杆”：晶格同样会变形，但 ρ 几乎不变，只能靠尺寸变化（1+2μ）—— 对比一下 ② 行。</text>
+        <text x="12" y="346" font-size="11.5" fill="#94a3b8">动画示意：晶格变形放大 300 倍，漂移速度与散射频率放大 12 倍；右侧 μ_c、ρ 为真实比例。</text>
       </svg>
-      <div class="hint" id="latHint">ρ = 1/(nqμ_c)：载流子浓度 n 基本不变时，迁移率 μ_c 的下降就等于电阻率 ρ 的上升 —— 这就是压阻效应与金属“几何形变”最本质的区别。</div>
+      <div class="hint" id="latHint">紫色圆点＝载流子，虚线圆＝它被晶格散射一次（撞一下、失去定向速度）：散射越频繁 → 漂移越慢 → 迁移率越小 → 电阻率越大。这就是“应力让晶格变形之后，宏观上量到 ρ 变化”的全过程。</div>
       </div>
     </section>
   </div>
@@ -485,95 +509,156 @@
     if (window.__repack) window.__repack();
   }
 
-  /* ============ 5. 微观机制动画 ============ */
-  var LAT = { atoms:[], carriers:[], t:0, raf:0 };
-  function initLattice(){
-    var g = $('latGrid'), c = $('carriers'), html = '', i, j;
-    LAT.atoms = [];
-    for (j = 0; j < 4; j++){
-      for (i = 0; i < 9; i++){
-        LAT.atoms.push({ bx:110 + i*62, by:60 + j*38 });
+  /* ============ 5. 微观机制：双行对照动画（基准 vs 当前） ============ */
+  /* 说明：晶格变形放大 GAIN_A 倍、漂移速度与散射频率放大 GAIN_B 倍，右侧数字为真实比例 */
+  var GAIN_A = 300, GAIN_B = 12;
+  var V0 = 1.15;                 /* 基准漂移速度 px/帧 */
+  var INTERVAL0 = 620;           /* 基准散射间隔 ms */
+  var MICRO = { lanes:{}, last:0 };
+
+  function buildLane(key, gAtoms, gCars, gFlash, yTop, yBot, yCar){
+    var atoms = [], cars = [], html = '', fh = '', i;
+    var X0 = 150, N = 8, SP = 62;
+    /* 晶格：两行原子 + 竖向/横向键 */
+    for (i = 0; i < N; i++){
+      atoms.push({ bx:X0 + i*SP, y1:yTop, y2:yBot });
+    }
+    for (i = 0; i < N; i++){
+      if (i < N-1){
+        html += '<line class="bA" x1="' + (X0+i*SP) + '" y1="' + yTop + '" x2="' + (X0+(i+1)*SP) + '" y2="' + yTop + '" stroke="#c3d5e8" stroke-width="2"/>';
+        html += '<line class="bA" x1="' + (X0+i*SP) + '" y1="' + yBot + '" x2="' + (X0+(i+1)*SP) + '" y2="' + yBot + '" stroke="#c3d5e8" stroke-width="2"/>';
       }
+      html += '<line class="bA" x1="' + (X0+i*SP) + '" y1="' + yTop + '" x2="' + (X0+i*SP) + '" y2="' + yBot + '" stroke="#e0eaf5" stroke-width="2"/>';
+      html += '<circle class="aA" cx="' + (X0+i*SP) + '" cy="' + yTop + '" r="7" fill="#0e4a8e" opacity=".85"/>';
+      html += '<circle class="aA" cx="' + (X0+i*SP) + '" cy="' + yBot + '" r="7" fill="#0e4a8e" opacity=".85"/>';
     }
-    /* 键（连线） */
-    for (j = 0; j < 4; j++){
-      for (i = 0; i < 8; i++){
-        var a = LAT.atoms[j*9 + i], b = LAT.atoms[j*9 + i + 1];
-        html += '<line x1="' + a.bx + '" y1="' + a.by + '" x2="' + b.bx + '" y2="' + b.by +
-                '" stroke="#bcd0e5" stroke-width="2"/>';
-      }
+    $(gAtoms).innerHTML = html;
+    /* 载流子 + 散射闪烁圈 */
+    for (i = 0; i < 3; i++){
+      var x = 205 + i*175;
+      cars.push({ x:x, timer:INTERVAL0*(0.4 + 0.3*i), flash:0 });
+      fh += '<circle class="fA" cx="' + x + '" cy="' + yCar + '" r="6" fill="none" stroke="#7c3aed" stroke-width="2" opacity="0"/>';
     }
-    for (j = 0; j < 3; j++){
-      for (i = 0; i < 9; i++){
-        var p = LAT.atoms[j*9 + i], q = LAT.atoms[(j+1)*9 + i];
-        html += '<line x1="' + p.bx + '" y1="' + p.by + '" x2="' + q.bx + '" y2="' + q.by +
-                '" stroke="#bcd0e5" stroke-width="2"/>';
-      }
-    }
-    /* 原子 */
-    LAT.atoms.forEach(function(a){
-      html += '<circle class="latAtom" cx="' + a.bx + '" cy="' + a.by + '" r="7" fill="#0e4a8e" opacity=".85"/>';
-    });
-    g.innerHTML = html;
-    /* 载流子 */
-    var ch = '';
-    for (i = 0; i < 10; i++){
-      var y = 74 + (i % 5)*38, x = 120 + Math.floor(i/5)*300;
-      LAT.carriers.push({ x:x, y:y, base:x });
-      ch += '<circle class="carrier" cx="' + x + '" cy="' + y + '" r="4.5" fill="#7c3aed"/>';
-    }
-    c.innerHTML = ch;
-    LAT.nodes = g.querySelectorAll('.latAtom');
-    LAT.lines = g.querySelectorAll('line');
-    LAT.carr  = c.querySelectorAll('.carrier');
-    runLattice();
+    $(gCars).innerHTML = cars.map(function(c){
+      return '<circle class="cA" cx="' + c.x + '" cy="' + yCar + '" r="6" fill="#7c3aed"/>';
+    }).join('');
+    $(gFlash).innerHTML = fh;
+    MICRO.lanes[key] = {
+      cars: cars, yCar: yCar, x0:X0, x1:X0 + (N-1)*SP, yTop:yTop, yBot:yBot, N:N, SP:SP,
+      els: $(gCars).querySelectorAll('.cA'), flashEls: $(gFlash).querySelectorAll('.fA'),
+      atomEls: $(gAtoms).querySelectorAll('.aA'), bondEls: $(gAtoms).querySelectorAll('.bA'),
+      factor:1, scatter:0, acc:0, rate:null, rateEl: key === 'A' ? 'scA' : 'scB'
+    };
   }
-  function runLattice(){
-    var speedFactor = 1;
-    function loop(){
-      LAT.t += 1;
-      var dRho = LAT.dRho || 0;
-      /* 载流子漂移速度 ∝ 迁移率，Δμ/μ = −Δρ/ρ */
-      speedFactor = Math.max(0.25, Math.min(2.2, 1 - dRho*6));
-      LAT.carriers.forEach(function(o, i){
-        o.x += 1.05*speedFactor;
-        if (o.x > 660) o.x = 96;
+
+  function initMicro(){
+    /* 顶部流程链 */
+    var chain = [
+      { t:'轴向应力 ε', id:'cv0', c:'#0e4a8e' },
+      { t:'晶格间距 a', id:'cv1', c:'#0e4a8e' },
+      { t:'散射频率',   id:'cv2', c:'#7c3aed' },
+      { t:'迁移率 μ_c', id:'cv3', c:'#7c3aed' },
+      { t:'电阻率 ρ',   id:'cv4', c:'#d94a3d' }
+    ];
+    var html = '';
+    chain.forEach(function(c, i){
+      var x = 11 + i*138;
+      html += '<rect x="' + x + '" y="12" width="126" height="36" rx="9" fill="#f6faff" stroke="#d9e5f5"/>' +
+              '<text x="' + (x+63) + '" y="26" text-anchor="middle" font-size="11" fill="#8296ad">' + c.t + '</text>' +
+              '<text id="' + c.id + '" x="' + (x+63) + '" y="42" text-anchor="middle" font-size="13" font-weight="700" fill="' + c.c + '">—</text>';
+      if (i < 4){
+        html += '<line x1="' + (x+128) + '" y1="30" x2="' + (x+136) + '" y2="30" stroke="#9fb2c8" stroke-width="1.6"/>';
+        html += '<polygon points="' + (x+140) + ',30 ' + (x+132) + ',26 ' + (x+132) + ',34" fill="#9fb2c8"/>';
+      }
+    });
+    $('chain').innerHTML = html;
+    buildLane('A', 'atomsA', 'carsA', 'flashA', 98, 126, 112);
+    buildLane('B', 'atomsB', 'carsB', 'flashB', 196, 224, 210);
+    microLoop();
+  }
+
+  function microLoop(){
+    var now = performance.now();
+    var dt = Math.min(60, MICRO.last ? now - MICRO.last : 16.7);
+    MICRO.last = now;
+    ['A','B'].forEach(function(k){
+      var L = MICRO.lanes[k];
+      var f = L.factor;
+      L.cars.forEach(function(c, i){
+        /* 漂移（速度 ∝ 1/散射频率） */
+        c.x += V0/f * dt/16.7;
+        if (c.x > 645) c.x = 148;
+        L.els[i].setAttribute('cx', c.x.toFixed(1));
+        /* 散射闪烁 */
+        if (c.flash > 0){
+          c.flash -= dt/700;
+          var t = Math.max(0, c.flash);
+          L.flashEls[i].setAttribute('cx', c.x.toFixed(1));
+          L.flashEls[i].setAttribute('r', (6 + (1-t)*13).toFixed(1));
+          L.flashEls[i].setAttribute('opacity', (t*0.9).toFixed(2));
+        }
+        /* 散射计时：间隔 ∝ 1/散射频率 */
+        c.timer -= dt;
+        if (c.timer <= 0){ c.timer = INTERVAL0/f; c.flash = 1; L.scatter++; }
       });
-      for (var k = 0; k < LAT.carr.length; k++){
-        LAT.carr[k].setAttribute('cx', LAT.carriers[k].x.toFixed(1));
+      L.acc += dt;
+      if (L.acc >= 1000){
+        L.rate = L.scatter; L.scatter = 0; L.acc = 0;
+        $(L.rateEl).textContent = '散射 ≈ ' + L.rate + ' 次/秒';
       }
-      LAT.raf = requestAnimationFrame(loop);
-    }
-    loop();
-  }
-  function paintLattice(m){
-    var stretch = 1 + m.eps*60;                 /* 放大 60 倍便于观察 */
-    LAT.dRho = m.dRho;
-    LAT.atoms.forEach(function(a, i){
-      LAT.nodes[i].setAttribute('cx', (a.bx*stretch).toFixed(1));
     });
-    /* 键跟着动 */
-    var idx = 0, j, i;
-    for (j = 0; j < 4; j++){
-      for (i = 0; i < 8; i++){
-        var a = LAT.atoms[j*9 + i], b = LAT.atoms[j*9 + i + 1], L = LAT.lines[idx++];
-        L.setAttribute('x1', (a.bx*stretch).toFixed(1));
-        L.setAttribute('x2', (b.bx*stretch).toFixed(1));
+    requestAnimationFrame(microLoop);
+  }
+
+  function paintLattice(m){
+    /* 晶格位移：变形量按 ε 放大 GAIN_A 倍（金属同样会变形） */
+    var vis = Math.max(-0.18, Math.min(0.45, m.eps*GAIN_A));
+    var L = MICRO.lanes.B;
+    for (var i = 0; i < L.N; i++){
+      var ax = L.x0 + i*L.SP*(1 + vis);
+      L.atomEls[2*i].setAttribute('cx', ax.toFixed(1));
+      L.atomEls[2*i+1].setAttribute('cx', ax.toFixed(1));
+    }
+    var b = 0;
+    for (i = 0; i < L.N; i++){
+      if (i < L.N-1){
+        L.bondEls[b++].setAttribute('x1', (L.x0 + i*L.SP*(1+vis)).toFixed(1));
+        L.bondEls[b++].setAttribute('x2', (L.x0 + (i+1)*L.SP*(1+vis)).toFixed(1));
       }
     }
-    for (j = 0; j < 3; j++){
-      for (i = 0; i < 9; i++){
-        var p = LAT.atoms[j*9 + i], q = LAT.atoms[(j+1)*9 + i], L2 = LAT.lines[idx++];
-        L2.setAttribute('x1', (p.bx*stretch).toFixed(1));
-        L2.setAttribute('x2', (q.bx*stretch).toFixed(1));
-      }
-    }
-    var st = Math.abs(m.eps) < 1e-9 ? '无应力：晶格间距正常'
-           : (m.eps > 0 ? '受拉：晶格沿轴向被拉长 ' + (m.eps*60*100).toFixed(1) + '%（示意放大）'
-                        : '受压：晶格沿轴向被压缩 ' + Math.abs(m.eps*60*100).toFixed(1) + '%（示意放大）');
-    $('latState').textContent = st;
-    $('carrierNote').textContent = '迁移率 μ_c 相对变化 ' + sgn(-m.dRho*100, 1) + '%　→　电阻率 ρ 相对变化 ' + sgn(m.dRho*100, 1) + '%';
-    $('carrierNote').setAttribute('fill', Math.abs(m.dRho) < 1e-6 ? '#7c3aed' : (m.dRho > 0 ? '#d94a3d' : '#2b6cb0'));
+    /* 散射因子：Δρ/ρ > 0 → 散射变频繁、漂移变慢（放大 GAIN_B 倍显示） */
+    var factor = Math.max(0.4, Math.min(2.5, 1 + m.dRho*GAIN_B));
+    MICRO.lanes.A.factor = 1;
+    MICRO.lanes.B.factor = factor;
+    /* ② 行的间距标注（跟着变形一起动） */
+    var x2 = L.x0 + L.SP*(1 + vis);
+    $('dimB2').setAttribute('x1', x2.toFixed(1)); $('dimB2').setAttribute('x2', x2.toFixed(1));
+    $('dimB3').setAttribute('x2', x2.toFixed(1));
+    $('dimBt').setAttribute('x', ((L.x0 + x2)/2).toFixed(1));
+    $('dimBt').textContent = '间距 a ×' + (1 + vis).toFixed(2);
+
+    /* 文字读数（真实比例） */
+    var muRel = 1/(1 + m.dRho), rhoRel = 1 + m.dRho;
+    $('roA').textContent = 'μ_c = 1.00　ρ = 1.00';
+    $('roB').textContent = 'μ_c = ' + muRel.toFixed(3) + '　ρ = ' + rhoRel.toFixed(3);
+    $('roB').setAttribute('fill', Math.abs(m.dRho) < 1e-6 ? '#5b6b80' : (m.dRho > 0 ? '#d94a3d' : '#2b6cb0'));
+    var stateTxt = Math.abs(m.eps) < 1e-9 ? 'ε = 0 με（无应力）'
+                 : (m.eps > 0 ? 'ε = ' + S.eps + ' με（受拉）' : 'ε = ' + S.eps + ' με（受压）');
+    $('laB').textContent = '② 当前：' + stateTxt + (m.mat.kind === 'metal' ? '　金属：ρ 几乎不变' : '');
+    $('laB').setAttribute('fill', m.mat.kind === 'metal' ? '#64748b' : '#0d8b7f');
+    $('rhoLine').textContent = 'Δρ/ρ = ' + sgn(m.dRho*100, 2) + '%　→　Δμ_c/μ_c = ' + sgn(-m.dRho*100, 2) + '%';
+    $('rhoLine').setAttribute('fill', Math.abs(m.dRho) < 1e-6 ? '#5b6b80' : (m.dRho > 0 ? '#d94a3d' : '#2b6cb0'));
+    /* 顶部流程链取值 */
+    $('cv0').textContent = S.eps + ' με';
+    $('cv1').textContent = '×' + (1 + vis).toFixed(2);
+    $('cv2').textContent = (factor - 1 >= 0 ? '+' : '−') + Math.abs((factor - 1)*100).toFixed(0) + '%';
+    $('cv3').textContent = sgn(-m.dRho*100, 2) + '%';
+    $('cv4').textContent = sgn(m.dRho*100, 2) + '%';
+    $('cv4').setAttribute('fill', Math.abs(m.dRho) < 1e-6 ? '#5b6b80' : (m.dRho > 0 ? '#d94a3d' : '#2b6cb0'));
+    /* 金属时给一句针对性提示 */
+    $('whyLine2').textContent = m.mat.kind === 'metal'
+      ? '金属缺少这个“杠杆”：看 ② 行——晶格明明也被拉长了，但 ρ 与 μ_c 几乎不变，金属的 K 只能来自尺寸变化（1+2μ）。'
+      : '对比 ① 行与 ② 行：同样一段时间里 ② 行被散射的次数更多、跑得更慢，这就是 μ_c 下降、ρ 上升的直观来源。';
   }
 
   /* ============ 6. 公式推导 ============ */
@@ -884,7 +969,7 @@
   }
 
   /* ============ 16. 启动 ============ */
-  initLattice();
+  initMicro();
   setMat('metal');
   DEMOS.main.fn = demoMain; DEMOS.micro.fn = demoMicro;
   DEMOS.cmp.fn = demoCmp;   DEMOS.chip.fn = demoChip;
