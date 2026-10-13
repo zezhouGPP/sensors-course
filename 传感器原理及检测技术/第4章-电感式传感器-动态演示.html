@@ -389,12 +389,12 @@
           <rect id="barGap" x="0" y="80" width="0" height="15" fill="var(--gapm)"/>
           <text id="gapShare" x="0" y="118" font-size="12.5" fill="#5b6b80">气隙占比 —</text>
           <text x="0" y="142" font-size="12.5" fill="#5b6b80">铁芯 μ_r ≈ 5000，空气 μ₀ = 4π×10⁻⁷ H/m</text>
-          <text x="0" y="168" font-size="12.5" font-weight="700" fill="var(--flux)">→ 磁阻几乎全在气隙（这就是 L ≈ N²μ₀S/(2δ) 的由来）</text>
+          <text id="rmExplain" x="0" y="168" font-size="12.5" font-weight="700" fill="var(--flux)">→ 磁阻几乎全在气隙（这就是 L ≈ N²μ₀S/(2δ) 的由来）</text>
           <text x="0" y="200" font-size="13" font-weight="700" fill="var(--flux)">磁通 Φ ∝ N·i / R_m</text>
           <rect x="0" y="210" width="250" height="14" rx="5" fill="#f4f8fd" stroke="#d5dfec"/>
           <rect id="fluxBar" x="0" y="210" width="0" height="14" rx="5" fill="var(--flux)"/>
           <text id="fluxTxt" x="0" y="244" font-size="12.5" font-weight="700" fill="var(--flux)">Φ/Φ₀ = 1.00</text>
-          <text x="0" y="266" font-size="11.5" fill="#94a3b8">气隙越小 → 磁阻越小 → 磁通越大 → L 越大</text>
+          <text id="fluxNote" x="0" y="266" font-size="11.5" fill="#94a3b8">气隙越小 → 磁阻越小 → 磁通越大 → L 越大</text>
           <text x="0" y="286" font-size="11.5" fill="#94a3b8">流动的绿点＝磁通，越密越快表示磁通越强</text>
         </g>
       </svg>
@@ -843,15 +843,25 @@
     var L0 = Math.pow(N,2)/reluc(CFG.d0, CFG.S, N).Rm;
     if (type === 'gap'){
       var d = CFG.d0 - x*(CFG.d0 - CFG.dMin);          /* 气隙随位移减小 */
-      return { L:Math.pow(N,2)/reluc(d, CFG.S, N).Rm, L0:L0, delta:d, Sarea:CFG.S };
+      var Rg = reluc(d, CFG.S, N);
+      return { L:Math.pow(N,2)/Rg.Rm, L0:L0, delta:d, Sarea:CFG.S,
+               rel:{ iron:Rg.Rfe, air:Rg.Rgap } };
     }
     if (type === 'area'){
       var Sa = CFG.S*(1 - 0.6*x);                       /* 有效面积随位移减小到 40% */
-      return { L:Math.pow(N,2)/reluc(CFG.d0, Sa, N).Rm, L0:L0, delta:CFG.d0, Sarea:Sa };
+      var Ra = reluc(CFG.d0, Sa, N);
+      return { L:Math.pow(N,2)/Ra.Rm, L0:L0, delta:CFG.d0, Sarea:Sa,
+               rel:{ iron:Ra.Rfe, air:Ra.Rgap } };
     }
-    /* 螺管型：插入深度 → 平滑 S 形曲线，相对变化小 */
+    /* 螺管型：无集中气隙，插入深度改变的是磁路里“空气段”的长度。
+       插入越深 → 空气段越短 → 空气磁阻显著减小；衔铁(铁芯)占的磁路比例增大 → 铁芯磁阻小幅上升（占比仍小） */
     var g = x*x*(3 - 2*x);
-    return { L:L0*(0.35 + 0.65*g), L0:L0, delta:CFG.d0, Sarea:CFG.S };
+    var L = L0*(0.35 + 0.65*g);
+    var Rm = Math.pow(N,2)/L;
+    var Riron = 0.72e5 + 1.2e5*x;              /* H⁻¹：随插入深度微增 */
+    var Rair = Math.max(0.1e5, Rm - Riron);    /* H⁻¹：随插入深度显著减小 */
+    return { L:L, L0:L0, delta:CFG.d0, Sarea:CFG.S,
+             rel:{ iron:Riron, air:Rair } };
   }
   function omega(){ return 2*Math.PI*S.f*1000; }
   /* 差动：两个线圈一个 δ+Δ、一个 δ−Δ（或面积、插入深度反向） */
@@ -1115,17 +1125,26 @@
     setFluxPath();
     paintFluxGauge();
 
-    /* --- 磁阻分解 --- */
-    var R = reluc(r.delta, r.Sarea, S.N);
-    $('rmFe').textContent = 'R铁芯 + R衔铁 = ' + (R.Rfe/1e5).toFixed(2) + '×10⁵ H⁻¹';
-    $('rmGap').textContent = 'R气隙 = ' + (R.Rgap/1e5).toFixed(2) + '×10⁵ H⁻¹';
-    $('rmTot').textContent = 'R_m = ' + (R.Rm/1e5).toFixed(2) + '×10⁵ H⁻¹';
-    var share = R.Rgap/R.Rm;
+    /* --- 磁阻分解（随型式：气隙型/面积型 = 气隙磁阻；螺管型 = 空气段磁阻，随插入深度变化） --- */
+    var R = r.rel, isSol = (S.type === 'solenoid');
+    $('rmFe').textContent = (isSol ? 'R衔铁(铁芯)' : 'R铁芯 + R衔铁') + ' = ' + (R.iron/1e5).toFixed(2) + '×10⁵ H⁻¹';
+    $('rmGap').textContent = (isSol ? 'R空气段' : 'R气隙') + ' = ' + (R.air/1e5).toFixed(2) + '×10⁵ H⁻¹';
+    $('rmTot').textContent = 'R_m = ' + ((R.iron + R.air)/1e5).toFixed(2) + '×10⁵ H⁻¹';
+    var share = R.air/(R.iron + R.air);
     $('barFe').setAttribute('width', ((1 - share)*250).toFixed(1));
     $('barFe').setAttribute('x', 0);
     $('barGap').setAttribute('x', ((1 - share)*250).toFixed(1));
     $('barGap').setAttribute('width', (share*250).toFixed(1));
-    $('gapShare').textContent = '气隙占比 ' + (share*100).toFixed(1) + '%';
+    $('gapShare').textContent = (isSol ? '空气占比 ' : '气隙占比 ') + (share*100).toFixed(1) + '%';
+    $('rmExplain').textContent = isSol
+      ? '→ 磁阻几乎全在空气段；插入越深空气段越短（螺管型无集中气隙）'
+      : '→ 磁阻几乎全在气隙（这就是 L ≈ N²μ₀S/(2δ) 的由来）';
+    $('fluxNote').textContent = isSol
+      ? '衔铁插入越深 → 空气段越短 → 磁阻越小 → 磁通越大 → L 越大'
+      : '气隙越小 → 磁阻越小 → 磁通越大 → L 越大';
+    $('magHint').textContent = isSol
+      ? '螺管型没有集中的“气隙”：插入深度直接改变磁路里空气段的长度，空气磁阻随插入而减小 —— 与变气隙型的机制不同。'
+      : '气隙磁阻远大于铁芯磁阻，所以电感量几乎由气隙决定 —— 这既是它灵敏度高的原因，也是它非线性严重的原因。';
 
     /* --- 读数 --- */
     var big = (S.diff === 'differ') ? (pair.up.L - pair.down.L) : r.L;
@@ -1415,7 +1434,7 @@
   /* ============ 9. 要点：编号按钮 + 巡览 ============ */
   var PTS_TEXT = [
     '电感式传感器把被测量转换成<b>线圈自感或互感的变化</b>，再由转换电路变成电压/电流输出。',
-    '<b>L = N²/R_m</b>，<b>R_m = l₁/(μ₁S₁) + l₂/(μ₂S₂) + 2δ/(μ₀S)</b>；气隙磁阻占 90% 以上 → <b>L ≈ N²μ₀S/(2δ)</b>，故灵敏度高（dL/dδ ∝ 1/δ²）而非线性严重。',
+    '<b>L = N²/R_m</b>，<b>R_m = l₁/(μ₁S₁) + l₂/(μ₂S₂) + 2δ/(μ₀S)</b>；气隙/空气磁阻占 90% 以上 → <b>L ≈ N²μ₀S/(2δ)</b>，故灵敏度高（dL/dδ ∝ 1/δ²）而非线性严重。',
     '三种型式：<b>变气隙型</b>最灵敏、量程最小、非线性最严重；<b>变面积型</b>理论线性、量程 20 mm；<b>螺管型</b>量程最大（90 mm）、灵敏度最低。',
     '<b>差动接法</b>两个线圈反向变化、输出取差值：小位移段灵敏度约翻倍，偶次非线性与共模干扰自动抵消。',
     '<b>差动变压器</b>：初级激励、两次级反接，u₀ = u₂ₐ − u₂ᵦ 正比于位移；零点有<b>零点残余电压</b>，需相敏检波并补偿。',
