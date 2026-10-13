@@ -41,7 +41,7 @@
                  font-size:12px; font-weight:700; padding:2px 10px; cursor:pointer; font-family:inherit}
   #laybar button:hover{background:#f2f7fd}
   #laybar .hint{color:#6b7d92}
-  #boardWrap{padding:8px 14px 4px}
+  #boardWrap{padding:6px 14px 2px}
   #board{display:flex; align-items:flex-start}
   .col{display:flex; flex-direction:column; gap:6px; min-width:0; flex-grow:1; flex-basis:0}
   .colhead{font-size:11.5px; font-weight:700; color:#8296ad; letter-spacing:.4px; padding:0 3px 2px; border-bottom:1px dashed #dbe5f0}
@@ -97,11 +97,11 @@
            padding:4px 10px; font-size:13px; line-height:1.4; min-height:30px; color:#0a5f57}
   /* ---- 读数 ---- */
   .big{display:flex; align-items:baseline; gap:9px; background:linear-gradient(90deg,#f2f7ff,#fff);
-       border:1px solid #d9e5f5; border-radius:12px; padding:4px 12px}
+       border:1px solid #d9e5f5; border-radius:12px; padding:3px 12px}
   .big .cap{font-size:13px; color:var(--muted); margin-right:auto}
   .big .num{font-size:26px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
   .big .unit{font-size:15px; font-weight:700; color:var(--muted)}
-  .kv{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px}
+  .kv{display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:5px}
   .kv .box{border:1px dashed var(--line); border-radius:9px; padding:3px 7px; font-size:11px; color:var(--muted)}
   .kv .box b{display:block; font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:1px}
   .fine{font-size:11px; color:var(--muted); margin-top:5px; line-height:1.5; font-variant-numeric:tabular-nums}
@@ -126,16 +126,19 @@
   /* ---- 要点 ---- */
   ol.points{margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:4px}
   ol.points li{border:1px solid var(--line); border-left:4px solid #c8d6e6; border-radius:0 9px 9px 0;
-               padding:2px 8px; font-size:12.1px; line-height:1.4; color:#3c5068; background:#fbfdff; transition:.25s}
+               padding:1px 8px; font-size:12px; line-height:1.38; color:#3c5068; background:#fbfdff; transition:.25s}
   ol.points li.on{border-left-color:var(--ok); background:#f2fbf5; color:var(--ink); box-shadow:0 0 0 2px rgba(15,157,88,.12)}
   ol.points li .hl{color:var(--ok); font-weight:700}
   .hint{font-size:12px; color:var(--muted); margin-top:5px}
-  footer{padding:5px 18px 8px; font-size:11.5px; color:var(--muted); line-height:1.55}
+  footer{padding:3px 18px 5px; font-size:11px; color:var(--muted); line-height:1.5}
   footer b{color:var(--jhu)}
   #segLvdt button{min-width:66px; flex:1 1 66px; padding:3px 4px; font-size:11.5px; line-height:1.25}
   #segLvdt button small{font-size:10px}
-  #mag{max-height:196px} #curve{max-height:170px} #diff,#lvd{max-height:158px}
-  #eddy{max-height:132px} #cir{max-height:150px}
+  #segCirc button{min-width:74px; flex:1 1 74px; padding:3px 4px; font-size:11.5px; line-height:1.25}
+  #segCirc button small{font-size:10px}
+  .ptsB{flex:0 0 30px; padding:3px 0; font-size:12px; border-radius:7px}
+  #mag{max-height:196px} #curve{max-height:170px} #diff,#lvd{max-height:146px}
+  #eddy{max-height:132px} #cir{max-height:140px}
   @media (max-width:1200px){ #boardWrap{min-width:1180px} }
 </style>
 </head>
@@ -694,35 +697,76 @@
         <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
       </div>
       <div class="pbody">
-      <svg id="cir" viewBox="0 0 700 250" role="img" aria-label="变压器电桥与相敏检波">
-        <!-- 变压器电桥 -->
-        <g transform="translate(10,16)">
-          <circle cx="40" cy="100" r="22" fill="none" stroke="#233b57" stroke-width="2"/>
-          <path d="M40 78 a12 12 0 0 1 0 22 a12 12 0 0 1 0 22" fill="none" stroke="#233b57" stroke-width="1.6"/>
-          <text x="40" y="148" text-anchor="middle" font-size="12" font-weight="700" fill="#233b57">u</text>
-          <line x1="62" y1="88" x2="120" y2="60" stroke="#233b57" stroke-width="1.8"/>
-          <line x1="62" y1="112" x2="120" y2="140" stroke="#233b57" stroke-width="1.8"/>
-          <rect x="120" y="44" width="46" height="30" rx="4" fill="#fff" stroke="#233b57" stroke-width="1.6"/>
-          <text x="143" y="64" text-anchor="middle" font-size="12" font-weight="700" fill="#0e4a8e">Z₁</text>
-          <rect x="120" y="126" width="46" height="30" rx="4" fill="#fff" stroke="#233b57" stroke-width="1.6"/>
-          <text x="143" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#0e4a8e">Z₂</text>
-          <line x1="166" y1="59" x2="230" y2="59" stroke="#233b57" stroke-width="1.8"/>
-          <line x1="166" y1="141" x2="230" y2="141" stroke="#233b57" stroke-width="1.8"/>
-          <line x1="230" y1="59" x2="230" y2="141" stroke="#233b57" stroke-width="1.8"/>
-          <circle cx="230" cy="100" r="3.5" fill="#233b57"/>
-          <text id="u0cir" x="252" y="105" font-size="14" font-weight="800" fill="#d94a3d">u₀ = 0.0 mV</text>
-          <text x="10" y="186" font-size="12" fill="#5b6b80">变压器电桥 u̇₀ = (u̇/2)(ΔZ/Z)；铁芯反向移动时 u̇₀ 反相 → 须相敏检波辨方向</text>
+      <div class="seg" id="segCirc" style="margin-bottom:4px">
+        <button data-m="bridge" class="on">交流电桥<small>u₀ = (u/2)(ΔZ/Z)</small></button>
+        <button data-m="phase">相敏检波<small>辨方向</small></button>
+        <button data-m="res">谐振调频<small>f₀ = 1/(2π√(LC))</small></button>
+      </div>
+      <svg id="cir" viewBox="0 0 700 252" role="img" aria-label="电感式传感器转换电路（三种）">
+        <!-- 变压器电桥（电桥 / 相敏检波 共用） -->
+        <g id="cirBridgeLeft">
+          <circle cx="46" cy="104" r="22" fill="none" stroke="#233b57" stroke-width="2"/>
+          <path d="M46 82 a12 12 0 0 1 0 22 a12 12 0 0 1 0 22" fill="none" stroke="#233b57" stroke-width="1.6"/>
+          <text x="46" y="152" text-anchor="middle" font-size="12" font-weight="700" fill="#233b57">u</text>
+          <line x1="68" y1="92" x2="124" y2="64" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="68" y1="116" x2="124" y2="144" stroke="#233b57" stroke-width="1.8"/>
+          <rect x="124" y="48" width="46" height="30" rx="4" fill="#fff" stroke="#233b57" stroke-width="1.6"/>
+          <text x="147" y="68" text-anchor="middle" font-size="12" font-weight="700" fill="#0e4a8e">Z₁</text>
+          <rect x="124" y="130" width="46" height="30" rx="4" fill="#fff" stroke="#233b57" stroke-width="1.6"/>
+          <text x="147" y="150" text-anchor="middle" font-size="12" font-weight="700" fill="#0e4a8e">Z₂</text>
+          <line x1="170" y1="63" x2="234" y2="63" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="170" y1="145" x2="234" y2="145" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="234" y1="63" x2="234" y2="145" stroke="#233b57" stroke-width="1.8"/>
+          <circle cx="234" cy="104" r="3.5" fill="#233b57"/>
+          <text id="u0cir" x="254" y="109" font-size="14" font-weight="800" fill="#d94a3d">u₀ = 0.0 mV</text>
+          <text x="14" y="190" font-size="12" fill="#5b6b80">桥路输出 u̇₀ = (u̇/2)·(ΔZ/Z)；衔铁反向移动时 u̇₀ 反相</text>
+          <text x="14" y="210" font-size="12" fill="#5b6b80">—— 只能测大小、不能判方向，故需相敏检波</text>
         </g>
-        <!-- 相敏检波波形 -->
-        <g transform="translate(400,26)">
-          <text x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">相敏检波：辨方向</text>
-          <text x="0" y="24" font-size="11.5" fill="#5b6b80">激励 u</text>
+        <!-- 模式① 交流电桥：动态输出波形 -->
+        <g id="cirBridgeMode" style="display:none">
+          <text x="360" y="34" font-size="12.5" font-weight="700" fill="#0e4a8e">桥路输出 u₀（示意波形）</text>
+          <line x1="360" y1="120" x2="688" y2="120" stroke="#e2e8f0" stroke-width="1.4"/>
+          <line x1="360" y1="120" x2="360" y2="24" stroke="#e2e8f0" stroke-width="1.4"/>
+          <path id="wfBridge" fill="none" stroke="#d94a3d" stroke-width="2.6"/>
+          <text id="u0big" x="360" y="208" font-size="14" font-weight="800" fill="#d94a3d">u₀ = 0.0 mV</text>
+          <text x="360" y="228" font-size="11.5" fill="#94a3b8">波形幅度 ∝ |ΔZ/Z|；方向反过来时波形反相（虚线为反相情形）</text>
+        </g>
+        <!-- 模式② 相敏检波：激励参考 + 同相/反相输出 + 检波直流 -->
+        <g id="cirPhaseMode" style="display:none">
+          <text x="360" y="22" font-size="12" font-weight="700" fill="#0e4a8e">相敏检波：以激励为参考判方向</text>
+          <text x="360" y="44" font-size="11.5" fill="#5b6b80">激励 u（参考）</text>
           <path id="wfRef" fill="none" stroke="#9fb2c8" stroke-width="1.8"/>
-          <text id="wfLab" x="0" y="86" font-size="11.5" fill="#5b6b80">x &gt; 0 时 u₀（同相）</text>
+          <text x="360" y="100" font-size="11.5" fill="#5b6b80">x &gt; 0：u₀ 同相</text>
           <path id="wfPos" fill="none" stroke="#0f9d58" stroke-width="2.4"/>
-          <text x="0" y="146" font-size="11.5" fill="#5b6b80">x &lt; 0 时 u₀（反相）</text>
+          <text x="360" y="160" font-size="11.5" fill="#5b6b80">x &lt; 0：u₀ 反相</text>
           <path id="wfNeg" fill="none" stroke="#d94a3d" stroke-width="2.4"/>
-          <text x="0" y="204" font-size="11.5" fill="#94a3b8">检波后 → 直流电压的正负即代表位移方向</text>
+          <rect id="dcBar" x="360" y="182" width="0" height="24" rx="4" fill="#0f9d58"/>
+          <text id="dcTxt" x="520" y="198" font-size="12" font-weight="700" fill="#0f9d58">检波直流 = 0（未检波）</text>
+          <text x="360" y="230" font-size="11" fill="#94a3b8">检波后直流电压的正负＝位移方向，且抑制零点残余电压与干扰</text>
+        </g>
+        <!-- 模式③ 谐振调频：L 变化 → f₀ 变化 -->
+        <g id="cirResMode" style="display:none">
+          <g transform="translate(60,96)">
+            <path d="M0 0 V-46 M0 -46 q15 -28 30 0 q15 -28 30 0 q15 -28 30 0 q15 -28 30 0"
+                  fill="none" stroke="#233b57" stroke-width="2"/>
+            <text x="60" y="-62" text-anchor="middle" font-size="12" font-weight="700" fill="#2b6cb0">L(δ) 传感器线圈</text>
+            <line x1="120" y1="0" x2="156" y2="0" stroke="#233b57" stroke-width="2"/>
+            <line x1="156" y1="-10" x2="176" y2="-10" stroke="#233b57" stroke-width="3"/>
+            <line x1="156" y1="10" x2="176" y2="10" stroke="#233b57" stroke-width="3"/>
+            <line x1="176" y1="0" x2="212" y2="0" stroke="#233b57" stroke-width="2"/>
+            <text x="166" y="34" text-anchor="middle" font-size="12" font-weight="700" fill="#0e4a8e">C = 200 pF</text>
+            <line x1="212" y1="0" x2="212" y2="40" stroke="#233b57" stroke-width="2"/>
+            <path d="M212 40 h34" stroke="#233b57" stroke-width="2"/>
+            <path d="M246 40 a12 12 0 0 1 0 24 a12 12 0 0 1 0 24" fill="none" stroke="#233b57" stroke-width="1.8"/>
+            <path d="M246 88 h34" stroke="#233b57" stroke-width="2"/>
+            <text x="263" y="60" text-anchor="middle" font-size="11.5" fill="#233b57">频率计</text>
+          </g>
+          <text x="360" y="34" font-size="12.5" font-weight="700" fill="#0e4a8e">输出：振荡频率 f₀</text>
+          <line x1="360" y1="120" x2="688" y2="120" stroke="#e2e8f0" stroke-width="1.4"/>
+          <path id="wfRes" fill="none" stroke="#2b6cb0" stroke-width="2.4"/>
+          <text id="f0out" x="360" y="196" font-size="15" font-weight="800" fill="#2b6cb0">f₀ = — kHz</text>
+          <text id="f0fml" x="360" y="218" font-size="11.5" fill="#5b6b80">f₀ = 1/(2π√(LC))</text>
+          <text x="360" y="238" font-size="11" fill="#94a3b8">位移 → L 变化 → f₀ 变化，用频率差值表示位移，抗干扰、适合远传</text>
         </g>
       </svg>
       </div>
@@ -733,7 +777,16 @@
         <h2>本章要点</h2>
         <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
       </div>
-      <div class="pbody"><ol class="points" id="points"></ol></div>
+      <div class="pbody">
+      <div class="actions" style="margin-top:0">
+        <button id="ptsPlay" class="ghost" style="flex:0 0 98px">▶ 巡览要点</button>
+        <button id="ptsB0" class="ghost ptsB">1</button><button id="ptsB1" class="ghost ptsB">2</button>
+        <button id="ptsB2" class="ghost ptsB">3</button><button id="ptsB3" class="ghost ptsB">4</button>
+        <button id="ptsB4" class="ghost ptsB">5</button><button id="ptsB5" class="ghost ptsB">6</button>
+        <button id="ptsB6" class="ghost ptsB">7</button>
+      </div>
+      <ol class="points" id="points"></ol>
+      </div>
     </section>
   </div>
 </main>
@@ -1241,25 +1294,67 @@
   }
 
   /* ============ 6. 转换电路 ============ */
+  /* ============ 6b. 转换电路：三模式（交流电桥 / 相敏检波 / 谐振调频） ============ */
+  var CIRC = { mode:'bridge', u0:0, dZ:0, f0:20e3, t:0 };
+  var CIRC_INFO = {
+    bridge: '交流电桥：u₀ = (u/2)(ΔZ/Z)。桥臂阻抗差越大，输出越大；但交流输出只能测大小、不能判方向。',
+    phase:  '相敏检波：以激励电压为参考，u₀ 同相判为正位移、反相判为负位移 —— 既辨方向，又抑制零点残余电压与干扰。',
+    res:    '谐振调频：传感器电感 L 与电容 C 组成谐振回路，f₀ = 1/(2π√(LC))。位移 → L → f₀，用频率表示位移，抗干扰、适合远距离传输。'
+  };
+  function setCircMode(m){
+    if (CIRC_INFO[m]){ CIRC.mode = m; stopDemo(); paint(); say('<b>' + CIRC_INFO[m].split('：')[0] + '</b>：' + CIRC_INFO[m]); }
+  }
   function paintCircuit(dZ, u0){
+    CIRC.u0 = u0; CIRC.dZ = dZ;
+    var isB = CIRC.mode === 'bridge', isP = CIRC.mode === 'phase', isR = CIRC.mode === 'res';
+    $('cirBridgeLeft').style.display = (isB || isP) ? '' : 'none';
+    $('cirBridgeMode').style.display = isB ? '' : 'none';
+    $('cirPhaseMode').style.display = isP ? '' : 'none';
+    $('cirResMode').style.display = isR ? '' : 'none';
+    var btns = document.querySelectorAll('#segCirc button');
+    for (var b = 0; b < btns.length; b++){
+      btns[b].classList.toggle('on', btns[b].getAttribute('data-m') === CIRC.mode);
+    }
     $('u0cir').textContent = 'u₀ = ' + (u0*1000).toFixed(1) + ' mV';
-    /* 相敏检波波形：激励为正弦；x>0 时输出同相，x<0 时反相 */
-    var wf = function(amp, sign, step){
-      var d = '', first = true;
-      for (var t = 0; t <= 120; t += step){
-        var y = 40 - sign*amp*Math.sin(t/120*4*Math.PI);
-        d += (first ? 'M' : 'L') + (t*2.1).toFixed(1) + ' ' + y.toFixed(1) + ' ';
-        first = false;
-      }
-      return d;
-    };
-    $('wfRef').setAttribute('d', wf(16, 1, 2));
-    var amp = Math.max(4, Math.min(20, Math.abs(dZ)*60));
-    $('wfPos').setAttribute('d', wf(amp, 1, 2));
-    $('wfNeg').setAttribute('d', wf(amp, -1, 2));
-    $('wfPos').setAttribute('transform', 'translate(0,60)');
-    $('wfRef').setAttribute('transform', 'translate(0,60)');
-    $('wfNeg').setAttribute('transform', 'translate(0,120)');
+    $('u0big').textContent = 'u₀ = ' + (u0*1000).toFixed(1) + ' mV';
+    var r = selfL(S.type, S.x/100, S.N);
+    CIRC.f0 = 1/(2*Math.PI*Math.sqrt(r.L*200e-12));
+    $('f0out').textContent = 'f₀ = ' + (CIRC.f0/1000).toFixed(1) + ' kHz';
+    $('f0fml').textContent = 'f₀ = 1/(2π√(LC))，L = ' + r.L.toFixed(4) + ' H，C = 200 pF → f₀ = ' + (CIRC.f0/1000).toFixed(1) + ' kHz';
+  }
+  /* 画一条随时间滚动的正弦 */
+  function wf(id, y0, amp, cycles, phase){
+    var d = '', x0 = 360, x1 = 688, n = 90, i, x, y;
+    for (i = 0; i <= n; i++){
+      x = x0 + (x1 - x0)*i/n;
+      y = y0 - amp*Math.sin(2*Math.PI*(cycles*(i/n) + CIRC.t*cycles) + phase);
+      d += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
+    }
+    $(id).setAttribute('d', d);
+  }
+  function runCircuit(){
+    (function loop(now){
+      CIRC.t = now/1000;
+      var u0 = CIRC.u0 || 0, amp = Math.max(3, Math.min(40, Math.abs(u0)*70));
+      wf('wfBridge', 120, amp, 4, u0 < 0 ? Math.PI : 0);
+      wf('wfRef', 56, 16, 4, 0);
+      wf('wfPos', 112, Math.max(3, Math.min(30, Math.abs(u0)*50)), 4, 0);
+      wf('wfNeg', 172, Math.max(3, Math.min(30, Math.abs(u0)*50)), 4, Math.PI);
+      wf('wfRes', 120, 24, Math.max(3, Math.min(9, CIRC.f0/4000)), 0);
+      var dc = Math.max(-1, Math.min(1, u0/1.5));
+      $('dcBar').setAttribute('width', Math.abs(dc)*150);
+      $('dcBar').setAttribute('x', 360 + (dc >= 0 ? 165 : 165 - Math.abs(dc)*150));
+      $('dcBar').setAttribute('fill', dc >= 0 ? '#0f9d58' : '#d94a3d');
+      $('dcTxt').setAttribute('fill', dc >= 0 ? '#0f9d58' : '#d94a3d');
+      $('dcTxt').textContent = '检波直流 ' + (dc >= 0 ? '+' : '−') + ' → 位移方向' + (dc >= 0 ? '（正）' : '（负）');
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+  var cbtns = document.querySelectorAll('#segCirc button');
+  for (var cb = 0; cb < cbtns.length; cb++){
+    (function(btn){
+      btn.addEventListener('click', function(){ setCircMode(btn.getAttribute('data-m')); });
+    })(cbtns[cb]);
   }
 
   /* ============ 7. 电涡流 ============ */
@@ -1317,27 +1412,40 @@
     $('fmlBody').innerHTML = html;
   }
 
-  /* ============ 9. 要点 ============ */
+  /* ============ 9. 要点：编号按钮 + 巡览 ============ */
+  var PTS_TEXT = [
+    '电感式传感器把被测量转换成<b>线圈自感或互感的变化</b>，再由转换电路变成电压/电流输出。',
+    '<b>L = N²/R_m</b>，<b>R_m = l₁/(μ₁S₁) + l₂/(μ₂S₂) + 2δ/(μ₀S)</b>；气隙磁阻占 90% 以上 → <b>L ≈ N²μ₀S/(2δ)</b>，故灵敏度高（dL/dδ ∝ 1/δ²）而非线性严重。',
+    '三种型式：<b>变气隙型</b>最灵敏、量程最小、非线性最严重；<b>变面积型</b>理论线性、量程 20 mm；<b>螺管型</b>量程最大（90 mm）、灵敏度最低。',
+    '<b>差动接法</b>两个线圈反向变化、输出取差值：小位移段灵敏度约翻倍，偶次非线性与共模干扰自动抵消。',
+    '<b>差动变压器</b>：初级激励、两次级反接，u₀ = u₂ₐ − u₂ᵦ 正比于位移；零点有<b>零点残余电压</b>，需相敏检波并补偿。',
+    '<b>电涡流式</b>：高频磁场在金属板中感应涡流，涡流反作用改变线圈阻抗；<b>δ = √(2/(ωμσ))</b>，频率越高、电导率越大，渗透越浅、灵敏度越高。',
+    '转换电路：<b>变压器电桥</b> u₀ = (u/2)(ΔZ/Z)；<b>相敏检波</b>辨方向并抑制干扰；<b>谐振调频</b>用 f₀ = 1/(2π√(LC)) 表示位移。'
+  ];
+  var PTS = { active:-1 };
   function paintPoints(){
-    var list = [
-      { id:'a', txt:'电感式传感器把被测量转换成<b>线圈自感或互感的变化</b>，再由转换电路变成电压/电流输出。' },
-      { id:'b', txt:'<b>L = N²/R_m</b>，<b>R_m = l₁/(μ₁S₁) + l₂/(μ₂S₂) + 2δ/(μ₀S)</b>；气隙磁阻占 90% 以上 → <b>L ≈ N²μ₀S/(2δ)</b>，故灵敏度高（dL/dδ ∝ 1/δ²）而非线性严重。' },
-      { id:'c', txt:'三种型式：<b>变气隙型</b>最灵敏、量程最小、非线性最严重；<b>变面积型</b>理论线性、量程 20 mm；<b>螺管型</b>量程最大（90 mm）、灵敏度最低。' },
-      { id:'d', txt:'<b>差动接法</b>两个线圈反向变化、输出取差值：小位移段灵敏度约翻倍，偶次非线性与共模干扰自动抵消。' },
-      { id:'e', txt:'<b>差动变压器</b>：初级激励、两次级反接，u₀ = u₂ₐ − u₂ᵦ 正比于位移；零点有<b>零点残余电压</b>，需相敏检波并补偿。' },
-      { id:'f', txt:'<b>电涡流式</b>：高频磁场在金属板中感应涡流，涡流反作用改变线圈阻抗；<b>δ = √(2/(ωμσ))</b>，频率越高、电导率越大，渗透越浅、灵敏度越高。' },
-      { id:'g', txt:'转换电路：<b>变压器电桥</b> u₀ = (u/2)(ΔZ/Z)；<b>相敏检波</b>辨方向并抑制干扰；<b>谐振调频</b>用 f₀ = 1/(2π√(LC)) 表示位移。' }
-    ];
-    var html = '';
-    list.forEach(function(b){
-      var on = (b.id === 'c') ||
-               (b.id === 'd' && S.diff === 'differ') ||
-               (b.id === 'e' && S.type === 'gap' && S.diff === 'differ') ||
-               (b.id === 'f' && S.type === 'area');
-      html += '<li class="' + (on ? 'on' : '') + '">' + b.txt + '</li>';
-    });
-    $('points').innerHTML = html;
+    if (!$('points').children.length){
+      var html = '';
+      PTS_TEXT.forEach(function(t, k){ html += '<li data-pi="' + k + '">' + t + '</li>'; });
+      $('points').innerHTML = html;
+    }
   }
+  function setPt(i){
+    PTS.active = i;
+    var lis = $('points').children;
+    for (var k = 0; k < lis.length; k++) lis[k].classList.toggle('on', k === i);
+    for (var b = 0; b < PTS_TEXT.length; b++){
+      var bb = $('ptsB' + b);
+      if (bb) bb.classList.toggle('on', b === i);
+    }
+    if (i >= 0) say('<b>要点 ' + (i+1) + '/' + PTS_TEXT.length + '</b>：' + PTS_TEXT[i]);
+  }
+  for (var pb = 0; pb < PTS_TEXT.length; pb++){
+    (function(k){
+      $('ptsB' + k).addEventListener('click', function(){ stopDemo(); setPt(k); });
+    })(pb);
+  }
+  $('ptsPlay').addEventListener('click', function(){ if (DEMOS.pts) DEMOS.pts.fn(); });
 
   /* ============ 10. 交互 ============ */
   function setType(t){ S.type = t; paint(); }
@@ -1389,7 +1497,8 @@
     types: { btn:'playTypes', label:'▶ 三种型式' },
     diff:  { btn:'playDiff',  label:'▶ 差动与变压器' },
     eddy:  { btn:'playEddy',  label:'▶ 电涡流' },
-    circ:  { btn:'playCirc',  label:'▶ 转换电路' }
+    circ:  { btn:'playCirc',  label:'▶ 转换电路' },
+    pts:   { btn:'ptsPlay',  label:'▶ 巡览要点' }
   };
   function resetDemoButtons(){
     Object.keys(DEMOS).forEach(function(k){
@@ -1566,25 +1675,43 @@
   /* ============ 16. 演示 5：转换电路 ============ */
   async function demoCirc(){
     var tok = beginDemo('circ');
-    setType('gap'); setDiff('differ'); setX(0);
+    setType('gap'); setDiff('differ'); setX(0); setCircMode('bridge');
     say('【<b>转换电路</b>】自感/互感的变化必须靠电路变成电压输出。最常用的是<b>变压器电桥</b>：两个线圈作为相邻桥臂，u̇₀ = (u̇/2)·(ΔZ/Z)。');
     if (!await sleep(3200, tok)) return;
-    say('① 铁芯在中间位置时两个线圈阻抗相等 → ΔZ = 0 → <b>u₀ = 0</b>，电桥平衡。');
-    if (!await sleep(2200, tok)) return;
-    say('② <b>铁芯上移</b>：Z₁ 增大、Z₂ 减小 → ΔZ/Z &gt; 0 → u₀ 与激励<b>同相</b>，输出为正。');
+    say('① 铁芯在中间位置时两个线圈阻抗相等 → ΔZ = 0 → <b>u₀ = 0</b>，电桥平衡，输出波形幅度为 0。');
+    if (!await sleep(2400, tok)) return;
+    say('② <b>铁芯上移</b>：Z₁ 增大、Z₂ 减小 → ΔZ/Z &gt; 0 → 输出波形长出来，幅度 ∝ 位移。注意：它只能反映<b>大小</b>，同幅值下看不出是"上移"还是"下移"。');
     if (!await tween(0, 80, 2400, setX, tok)) return;
-    if (!await sleep(2000, tok)) return;
-    say('③ 但交流输出只能反映大小，<b>无法判断方向</b>。所以必须加<b>相敏检波</b>：以激励电压为参考，同相输出判为正、反相判为负 → 既能辨方向，又能抑制零点残余电压与干扰。');
+    if (!await sleep(2400, tok)) return;
+    say('③ 切到<b>相敏检波</b>：把输出与激励比相位。上面绿波是 x &gt; 0（与激励<b>同相</b>），下面红波是 x &lt; 0（<b>反相</b>）—— 相位就代表了位移方向。右侧的检波直流电压随方向取正负。');
+    setCircMode('phase'); setX(60);
     if (!await sleep(3400, tok)) return;
-    say('④ 另一条路是<b>谐振式调频电路</b>：把传感器电感 L 与电容 C 组成谐振回路，f₀ = 1/(2π√(LC))。L 变化 → 频率变化，用频差表示位移，抗干扰能力强。');
-    if (!await sleep(3200, tok)) return;
+    say('④ 再切到<b>谐振调频</b>：传感器电感 L 与电容 C 组成谐振回路，f₀ = 1/(2π√(LC))。现在把铁芯继续上移，看右侧波形<b>变密</b>——频率升高，L 减小；位移就用频率差值来表示。');
+    setCircMode('res');
+    if (!await tween(60, 100, 2200, setX, tok)) return;
+    if (!await sleep(2600, tok)) return;
     setX(0);
-    say('【小结】交流电桥（变压器电桥）＋ 相敏检波是经典组合；要求抗干扰或远距离传输时用调频电路。');
+    say('【小结】交流电桥（变压器电桥）＋ 相敏检波是经典组合：电桥给"大小"，检波给"方向"；要求抗干扰或远距离传输时改用调频电路。');
+    if (!await sleep(3000, tok)) return;
+    endDemo();
+  }
+
+  /* 要点巡览 */
+  async function demoPoints(){
+    var tok = beginDemo('pts');
+    say('【<b>本章要点</b>】共 7 条，逐条看一遍，可点下方编号按钮单独回看。');
+    if (!await sleep(2000, tok)) return;
+    for (var i = 0; i < PTS_TEXT.length; i++){
+      setPt(i);
+      if (!await sleep(PTS_TEXT[i].length > 60 ? 3000 : 2300, tok)) return;
+    }
+    setPt(-1);
     endDemo();
   }
 
   DEMOS.self.fn = demoSelf; DEMOS.types.fn = demoTypes;
   DEMOS.diff.fn = demoDiff; DEMOS.eddy.fn = demoEddy; DEMOS.circ.fn = demoCirc;
+  DEMOS.pts.fn = demoPoints;
 
   /* ============ 17. 启动 ============ */
   var q = new URLSearchParams(location.search);
@@ -1601,6 +1728,9 @@
   paint();                     /* 应用 ?lv= 后再刷一次，保证结构图正确 */
   initFlux();
   runFlux();
+  runCircuit();
+  if (q.has('circ') && CIRC_INFO[q.get('circ')]) CIRC.mode = q.get('circ');
+  paint();
   var AUTO = { '1':'self', '2':'types', '3':'diff', '4':'eddy', '5':'circ' };
   if (AUTO[q.get('auto')]) DEMOS[AUTO[q.get('auto')]].fn();
   document.addEventListener('keydown', function(e){
