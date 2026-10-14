@@ -139,8 +139,18 @@
   #segEddy button, #segPm button{min-width:70px; flex:1 1 70px; padding:2px 4px; font-size:11px; line-height:1.2}
   #segEddy button small, #segPm button small{font-size:9.5px}
   .ptsB{flex:0 0 26px; padding:2px 0; font-size:11px; border-radius:6px}
-  #mag{max-height:132px} #curve{max-height:104px} #diff,#lvd{max-height:96px}
-  #eddy{max-height:86px} #cir{max-height:80px} #pm{max-height:78px}
+  /* 左列（型式与输入量）吸附固定，右侧滚动时始终可见 */
+  #colA{position:sticky; top:6px; align-self:flex-start; max-height:calc(100vh - 16px); overflow-y:auto}
+  #colA::-webkit-scrollbar{width:6px}
+  #colA::-webkit-scrollbar-thumb{background:#c3d3e6; border-radius:3px}
+  .panel.folded > .pbody{display:none}
+  .panel.folded{border-color:#bcd0e5; background:#f8fbff}
+  .panel.folded > .phead h2{color:#5b6b80}
+  .ptool[data-act="fold"]{font-size:11px}
+  .readlabel{font-size:12.5px; font-weight:700; color:#5b6b80; margin:7px 0 3px; padding-top:6px; border-top:1px dashed #dbe5f0}
+  .readwrap svg{max-height:196px}
+  .pbody > svg{max-height:300px}
+  .pbody > svg + svg{max-height:196px}
   @media (max-width:1200px){ #boardWrap{min-width:1180px} }
 </style>
 </head>
@@ -153,7 +163,7 @@
 <div id="laybar">
   <span style="font-weight:700;color:#0e4a8e">板块布局</span>
   <button id="layReset">↺ 恢复默认（一屏）</button>
-  <span class="hint">拖动板块<b>标题栏</b>可移到任意列、任意位置；拖动列间<b>竖条</b>可调整列宽；标题栏 <b>＋ －</b> 缩放内容；<b>⛶</b> 或双击标题栏全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
+  <span class="hint">左列<b>型式与输入量</b>固定吸附，右侧滚动查看各结构；每块标题栏的 <b>▾</b> 可折叠该板块（<b>滑过上方会自动折叠</b>、回到可视区自动展开）；拖动<b>标题栏</b>可换列换位、拖<b>竖条</b>调列宽、<b>＋ －</b> 缩放、<b>⛶</b> 全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
 </div>
 
 <div id="boardWrap">
@@ -446,7 +456,11 @@
         <!-- 差动式：两个线圈分绕上/下磁芯，衔铁在中间，上下气隙一增一减 -->
 
         <!-- 右侧：磁阻分解 + 磁通量 -->
-        <g transform="translate(420,12)">
+        
+      </svg>
+      <div class="readlabel">输出读数：磁阻分解与磁通量</div>
+      <div class="readwrap"><svg viewBox="0 0 620 320" role="img" aria-label="输出读数 ① 磁阻分解与磁通量">
+<g transform="translate(160,12)">
           <text x="0" y="0" font-size="13" font-weight="700" fill="#0e4a8e">磁阻分解（串联）</text>
           <text id="rmFe" x="0" y="28" font-size="12.5" fill="#2f4b68">R铁芯 + R衔铁 = 0</text>
           <text id="rmGap" x="0" y="48" font-size="12.5" font-weight="700" fill="var(--gapm)">R气隙 = 0</text>
@@ -464,17 +478,20 @@
           <text id="fluxNote" x="0" y="266" font-size="11.5" fill="#94a3b8">气隙越小 → 磁阻越小 → 磁通越大 → L 越大</text>
           <text x="0" y="286" font-size="11.5" fill="#94a3b8">流动的绿点＝磁通，越密越快表示磁通越强</text>
         </g>
-      </svg>
+      </svg></div>
+
       <div class="hint" id="magHint">气隙磁阻远大于铁芯磁阻，所以电感量几乎由气隙决定 —— 这既是它灵敏度高的原因，也是它非线性严重的原因。</div>
       </div>
     </section>
+
+    
   </div>
 
   <div class="vsplit" data-left="colA" data-right="colB" title="拖动可调整两列宽度"></div>
 
   <!-- ================= 中列 ================= -->
   <div class="col" id="colB">
-    <div class="colhead">② 结构动态（自感 · 差动 · 电涡流）</div>
+    <div class="colhead">② 结构动态 ＋ 输出读数（成对显示）</div>
 
     <section class="card panel" id="fmlCard">
       <div class="phead">
@@ -564,17 +581,7 @@
           <line id="dDim" x1="52" y1="56" x2="52" y2="150" stroke="var(--eddy)" stroke-width="2"/>
           <text id="dTxt" x="8" y="106" font-size="12" font-weight="700" fill="var(--eddy)">d = 0.0 mm</text>
           <!-- 因果链 -->
-          <g transform="translate(430,20)">
-            <text x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">涡流效应链</text>
-            <text x="0" y="26" font-size="12" fill="#33506f">① 线圈通高频电流 I₁ → 产生交变磁场 H₁</text>
-            <text x="0" y="48" font-size="12" fill="#33506f">② 金属板中感应出闭合涡流 I₂</text>
-            <text x="0" y="70" font-size="12" fill="#33506f">③ 涡流产生反磁场 H₂，<b>削弱</b> H₁</text>
-            <text x="0" y="92" font-size="12" fill="#33506f">④ 线圈等效 <b>L、R、Q</b> 改变</text>
-            <text id="eddyZ" x="0" y="122" font-size="13" font-weight="700" fill="#d94a3d">Z / Z₀ = 1.000</text>
-            <text id="eddyU" x="0" y="146" font-size="13" font-weight="700" fill="#0e4a8e">输出电压 u₀ = 0.00 V</text>
-            <text id="eddyNote" x="0" y="172" font-size="11" fill="#94a3b8">距离越近 → 涡流越强 → 阻抗变化越大</text>
-            <text x="0" y="196" font-size="11" fill="#94a3b8">应用：位移 · 振动 · 厚度 · 转速 · 温度 · 硬度 · 无损探伤</text>
-          </g>
+          
         </g>
         <!-- ===== 模式② 低频透射式 ===== -->
         <g id="eddyTrans" style="display:none">
@@ -598,7 +605,23 @@
           <line x1="150" y1="217" x2="260" y2="217" stroke="#8c4d22" stroke-width="1.2"/>
           <text x="268" y="216" font-size="12" font-weight="700" fill="#8c4d22">接收线圈 L₂</text>
           <text x="106" y="212" font-size="12" font-weight="700" fill="#2b6cb0">U̇₂</text>
-          <g transform="translate(430,20)">
+          
+        </g>
+      </svg>
+      <div class="readlabel">输出读数：阻抗变化 / 接收信号</div>
+      <div class="readwrap"><svg viewBox="0 0 640 240" role="img" aria-label="输出读数 ③ 电涡流：阻抗变化 / 接收信号">
+<g id="eddyReadRefl" transform="translate(180,14)">
+            <text x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">涡流效应链</text>
+            <text x="0" y="26" font-size="12" fill="#33506f">① 线圈通高频电流 I₁ → 产生交变磁场 H₁</text>
+            <text x="0" y="48" font-size="12" fill="#33506f">② 金属板中感应出闭合涡流 I₂</text>
+            <text x="0" y="70" font-size="12" fill="#33506f">③ 涡流产生反磁场 H₂，<b>削弱</b> H₁</text>
+            <text x="0" y="92" font-size="12" fill="#33506f">④ 线圈等效 <b>L、R、Q</b> 改变</text>
+            <text id="eddyZ" x="0" y="122" font-size="13" font-weight="700" fill="#d94a3d">Z / Z₀ = 1.000</text>
+            <text id="eddyU" x="0" y="146" font-size="13" font-weight="700" fill="#0e4a8e">输出电压 u₀ = 0.00 V</text>
+            <text id="eddyNote" x="0" y="172" font-size="11" fill="#94a3b8">距离越近 → 涡流越强 → 阻抗变化越大</text>
+            <text x="0" y="196" font-size="11" fill="#94a3b8">应用：位移 · 振动 · 厚度 · 转速 · 温度 · 硬度 · 无损探伤</text>
+          </g>
+<g id="eddyReadTrans" transform="translate(190,14)" style="display:none">
             <text x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">透射式原理链</text>
             <text x="0" y="26" font-size="12" fill="#33506f">U → L₁ → 同频交变电流 → 交变磁场</text>
             <text x="0" y="48" font-size="12" fill="#33506f">→ 磁力线切割 M → 产生涡流 i</text>
@@ -608,8 +631,8 @@
             <text id="transNote" x="0" y="152" font-size="11" fill="#94a3b8">降低频率 → 贯穿深度加厚 → 可测更厚的板材</text>
             <text x="0" y="176" font-size="11" fill="#94a3b8">板越厚 → 涡流吸收越多 → 接收信号越小（测厚度）</text>
           </g>
-        </g>
-      </svg>
+      </svg></div>
+
       <div class="ctrl" style="margin-top:4px">
         <div class="row">
           <span class="name"><b id="eddyLbl">线圈—板距离 d</b><br><span class="tiny" id="matTxt">材料：铜</span></span>
@@ -624,6 +647,8 @@
       </div>
       </div>
     </section>
+
+    
 
     <section class="card panel" id="pmCard">
       <div class="phead">
@@ -672,7 +697,11 @@
           <polygon id="pmF2H" points="428,218 422,232 434,232" fill="#d94a3d" opacity="0"/>
         </g>
         <!-- 右侧：解释与读数 -->
-        <g transform="translate(468,26)">
+        
+      </svg>
+      <div class="readlabel">输出读数：磁导率与输出电压</div>
+      <div class="readwrap"><svg viewBox="0 0 480 280" role="img" aria-label="输出读数 ④ 压磁式：磁导率与输出电压">
+<g transform="translate(120,14)">
           <text x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">压磁效应</text>
           <text x="0" y="24" font-size="11.5" fill="#33506f">铁磁体磁化时受限制不能伸缩 →</text>
           <text x="0" y="44" font-size="11.5" fill="#33506f">内部产生应力 → 磁畴界限移动、磁化矢量转动</text>
@@ -685,7 +714,8 @@
           <text id="pmNote" x="0" y="210" font-size="11" fill="#94a3b8">无外力时磁路对称 → 测量绕组无输出</text>
           <text x="0" y="232" font-size="11" fill="#94a3b8">应用：力 / 压力 / 扭矩 / 转速 · 结构坚固、抗过载</text>
         </g>
-      </svg>
+      </svg></div>
+
       <div class="ctrl" style="margin-top:4px">
         <div class="row">
           <span class="name"><b>压力 F</b><br><span class="tiny" id="pmMatTxt">正磁致伸缩材料</span></span>
@@ -699,13 +729,15 @@
       </div>
       </div>
     </section>
+
+    
   </div>
 
   <div class="vsplit" data-left="colB" data-right="colC" title="拖动可调整两列宽度"></div>
 
   <!-- ================= 右列 ================= -->
   <div class="col" id="colC">
-    <div class="colhead">③ 输出读数 · 公式推导 · 特性曲线 · 压磁式</div>
+    <div class="colhead">③ 公式推导 · 特性曲线 · 本章要点</div>
 
     <section class="card panel" id="diffCard">
       <div class="phead">
@@ -857,7 +889,11 @@
           <text x="112" y="238" font-size="11.5" fill="#5b6b80">转子转动 → 与两次级的耦合面积一增一减 → 差动输出（可测角位移）</text>
         </g>
         <!-- ========== 右侧：输出现象 ========== -->
-        <g transform="translate(470,26)">
+        
+      </svg>
+      <div class="readlabel">输出读数：U̇₂ 与零点残余电压</div>
+      <div class="readwrap"><svg viewBox="0 0 560 300" role="img" aria-label="输出读数 ② 差动变压器：U̇₂ 与零点残余">
+<g transform="translate(140,20)">
           <text x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">输出特性</text>
           <line x1="10" y1="120" x2="200" y2="120" stroke="#9fb2c8" stroke-width="1.4"/>
           <line x1="105" y1="16" x2="105" y2="196" stroke="#9fb2c8" stroke-width="1.4"/>
@@ -868,9 +904,12 @@
           <text id="lvOut" x="0" y="216" font-size="12.5" font-weight="800" fill="#d94a3d">U̇₂ = 0.0 mV</text>
           <text id="lvNote" x="0" y="236" font-size="10.5" fill="#94a3b8">零点残余电压 ≈ 0.5% FS</text>
         </g>
-      </svg>
+      </svg></div>
+
       </div>
     </section>
+
+    
 
     <section class="card panel" id="circCard">
       <div class="phead">
@@ -1619,6 +1658,8 @@
     var isT = (S.eddyMode === 'trans');
     $('eddyRefl').style.display = isT ? 'none' : '';
     $('eddyTrans').style.display = isT ? '' : 'none';
+    $('eddyReadRefl').style.display = isT ? 'none' : '';
+    $('eddyReadTrans').style.display = isT ? '' : 'none';
     var btns = document.querySelectorAll('#segEddy button');
     for (var b = 0; b < btns.length; b++){
       btns[b].classList.toggle('on', btns[b].getAttribute('data-e') === S.eddyMode);
@@ -2134,13 +2175,14 @@
   "use strict";
   var BOARD = document.getElementById('board');
   var COLS  = ['colA','colB','colC'];
-  var IDS   = ['ctrlCard','magCard','fmlCard','readCard','curveCard','eddyCard','diffCard','circCard','ptsCard'];
+  var IDS   = ['ctrlCard','magCard','fmlCard','readCard','curveCard','eddyCard','diffCard','pmCard','circCard','ptsCard'];
   var MINZ = 0.7, MAXZ = 1.6, MINCOL = 260;
-  var KEY = 'jh-inductive-layout-v2';
+  var KEY = 'jh-inductive-layout-v4';
   var DEF = {
-    weight: { colA:3.0, colB:4.6, colC:4.4 },
-    col: { colA:['ctrlCard','ptsCard'], colB:['magCard','diffCard','eddyCard'],
-           colC:['readCard','fmlCard','curveCard','circCard','pmCard'] },
+    weight: { colA:2.9, colB:5.4, colC:3.7 },
+    col: { colA:['ctrlCard'],
+           colB:['magCard','diffCard','eddyCard','pmCard'],
+           colC:['fmlCard','curveCard','ptsCard'] },
     zoom: {}
   };
   var L = null, focused = null;
@@ -2289,6 +2331,52 @@
   document.querySelectorAll('.vsplit').forEach(function(sp){
     sp.addEventListener('pointerdown', function(e){ startSplit(e, sp); });
   });
+  /* ---------- 折叠：滑过上方自动折叠，回到可视区自动展开；可手动锁定 ---------- */
+  function setFold(p, on){
+    p.classList.toggle('folded', on);
+    var b = p.querySelector('.pbody');
+    if (b) b.style.display = on ? 'none' : '';
+    var btn = p.querySelector('.ptool[data-act="fold"]');
+    if (btn) btn.textContent = on ? '▸' : '▾';
+  }
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var tools = p.querySelector('.ptools');
+    if (!tools) return;
+    var fb = document.createElement('button');
+    fb.className = 'ptool';
+    fb.setAttribute('data-act', 'fold');
+    fb.title = '折叠 / 展开本板块（手动折叠后不会被自动展开）';
+    fb.textContent = '▾';
+    tools.insertBefore(fb, tools.firstChild);
+    fb.addEventListener('click', function(e){
+      e.stopPropagation();
+      var folded = p.classList.contains('folded');
+      setFold(p, !folded);
+      if (!folded) p.setAttribute('data-manual', '1'); else p.removeAttribute('data-manual');
+    });
+  });
+  var ticking = false;
+  function autoFold(){
+    ticking = false;
+    var vh = window.innerHeight || 900;
+    IDS.forEach(function(id){
+      var p = el(id); if (!p) return;
+      var r = p.getBoundingClientRect();
+      if (r.bottom < 130){                       /* 已滑过上方 → 折叠 */
+        if (!p.classList.contains('folded')) setFold(p, true);
+      } else if (r.top < vh && r.bottom > 0 && !p.hasAttribute('data-manual')){
+        if (p.classList.contains('folded')) setFold(p, false);   /* 回到可视区 → 展开 */
+      }
+    });
+  }
+  window.addEventListener('scroll', function(){
+    if (!ticking){ ticking = true; requestAnimationFrame(autoFold); }
+  }, { passive:true });
+  window.addEventListener('resize', function(){ if (window.__repack) window.__repack(); });
+  setTimeout(autoFold, 400);
+  window.__autoFold = autoFold;
+
   var lr = document.getElementById('layReset');
   if (lr) lr.addEventListener('click', reset);
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && focused) toggleFocus(focused); });
