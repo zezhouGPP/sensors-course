@@ -70,8 +70,8 @@
   .tiny{font-size:12px; fill:var(--muted); color:var(--muted)}
   /* ---- 控件 ---- */
   .ctrl{display:flex; flex-direction:column; gap:2px; margin-bottom:2px}
-  .ctrl .row{display:flex; align-items:center; gap:9px}
-  .ctrl .name{font-size:13.5px; color:var(--muted); width:126px; flex:none}
+  .ctrl .row{display:flex; align-items:center; gap:7px}
+  .ctrl .name{font-size:12.8px; color:var(--muted); width:118px; flex:none}
   .ctrl .name b{color:var(--ink); font-size:14px}
   .ctrl output{font-size:18px; font-weight:800; min-width:96px; text-align:right; font-variant-numeric:tabular-nums}
   input[type=range]{-webkit-appearance:none; appearance:none; height:8px; border-radius:5px; background:#dce6f2; outline:none; flex:1; min-width:70px}
@@ -87,46 +87,46 @@
   .step{border:1px solid var(--line); background:#fff; color:var(--jhu); width:28px; height:28px;
         border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; line-height:1}
   .actions{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap}
-  .actions button{flex:1 1 104px; padding:7px 4px; border-radius:9px; border:1px solid var(--jhu);
-                  background:var(--jhu); color:#fff; font-size:13.5px; font-weight:700; cursor:pointer;
+  .actions button{flex:1 1 92px; padding:5px 4px; border-radius:9px; border:1px solid var(--jhu);
+                  background:var(--jhu); color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;
                   font-family:inherit; white-space:nowrap}
   .actions button.ghost{background:#fff; color:var(--jhu)}
   .actions button.running{background:var(--hot); border-color:var(--hot); color:#fff}
   .actions button:hover{filter:brightness(1.07)}
   .narrate{margin-top:4px; border-left:5px solid var(--flux); background:#f2fbf9; border-radius:0 10px 10px 0;
-           padding:4px 10px; font-size:13px; line-height:1.4; min-height:30px; color:#0a5f57}
+           padding:3px 10px; font-size:12.4px; line-height:1.34; min-height:26px; color:#0a5f57}
   /* ---- 读数 ---- */
   .big{display:flex; align-items:baseline; gap:9px; background:linear-gradient(90deg,#f2f7ff,#fff);
        border:1px solid #d9e5f5; border-radius:12px; padding:3px 12px}
   .big .cap{font-size:13px; color:var(--muted); margin-right:auto}
-  .big .num{font-size:26px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
+  .big .num{font-size:23px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
   .big .unit{font-size:15px; font-weight:700; color:var(--muted)}
   .kv{display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:5px}
-  .kv .box{border:1px dashed var(--line); border-radius:9px; padding:3px 7px; font-size:11px; color:var(--muted)}
+  .kv .box{border:1px dashed var(--line); border-radius:9px; padding:2px 6px; font-size:10.5px; color:var(--muted)}
   .kv .box b{display:block; font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:1px}
-  .fine{font-size:11px; color:var(--muted); margin-top:5px; line-height:1.5; font-variant-numeric:tabular-nums}
+  .fine{font-size:10.4px; color:var(--muted); margin-top:5px; line-height:1.5; font-variant-numeric:tabular-nums}
   .fine b{color:var(--ink)}
   /* ---- 磁阻条 ---- */
   .rmbar{display:flex; height:15px; border-radius:5px; overflow:hidden; border:1px solid var(--line); background:#f4f8fd; margin-top:3px}
   .rmbar i{display:block; height:100%}
-  .legend{display:flex; gap:10px; flex-wrap:wrap; font-size:11px; color:var(--muted); margin-top:2px}
+  .legend{display:flex; gap:8px; flex-wrap:wrap; font-size:10.4px; color:var(--muted); margin-top:1px}
   .legend i{display:inline-block; width:14px; height:9px; border-radius:2px; margin-right:5px}
   /* ---- 公式 ---- */
-  .fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:12.4px; line-height:1.38; color:#16283d}
+  .fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:10.9px; line-height:1.22; color:#16283d}
   .fml .row{display:block; border-bottom:1px dashed #e7eef7; padding:0}
   .fml .row:last-child{border-bottom:none}
   .fml .tag{display:inline-block; font-family:"Microsoft YaHei",sans-serif; font-size:11px; color:#fff;
             background:var(--jhu); border-radius:5px; padding:0 6px; margin-right:5px; vertical-align:1px}
   .fml .tag.g{background:var(--gapm)} .fml .tag.f{background:var(--flux)}
   .fml b{color:var(--hot)}
-  .fml .note{font-family:"Microsoft YaHei",sans-serif; font-size:11.5px; color:var(--muted); line-height:1.5; margin-top:3px}
+  .fml .note{font-family:"Microsoft YaHei",sans-serif; font-size:10.8px; color:var(--muted); line-height:1.4; margin-top:2px}
   .frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.88em; line-height:1.02; margin:0 .14em}
   .frac i{font-style:normal; padding:0 .3em}
   .frac b{font-weight:400; color:inherit; border-top:1.4px solid currentColor; padding:0 .3em}
   /* ---- 要点 ---- */
   ol.points{margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:4px}
   ol.points li{border:1px solid var(--line); border-left:4px solid #c8d6e6; border-radius:0 9px 9px 0;
-               padding:1px 8px; font-size:12px; line-height:1.38; color:#3c5068; background:#fbfdff; transition:.25s}
+               padding:0 7px; font-size:10.9px; line-height:1.28; color:#3c5068; background:#fbfdff; transition:.25s}
   ol.points li.on{border-left-color:var(--ok); background:#f2fbf5; color:var(--ink); box-shadow:0 0 0 2px rgba(15,157,88,.12)}
   ol.points li .hl{color:var(--ok); font-weight:700}
   .hint{font-size:12px; color:var(--muted); margin-top:5px}
@@ -134,11 +134,13 @@
   footer b{color:var(--jhu)}
   #segLvdt button{min-width:66px; flex:1 1 66px; padding:3px 4px; font-size:11.5px; line-height:1.25}
   #segLvdt button small{font-size:10px}
-  #segCirc button{min-width:74px; flex:1 1 74px; padding:3px 4px; font-size:11.5px; line-height:1.25}
-  #segCirc button small{font-size:10px}
-  .ptsB{flex:0 0 30px; padding:3px 0; font-size:12px; border-radius:7px}
-  #mag{max-height:190px} #curve{max-height:142px} #diff,#lvd{max-height:150px}
-  #eddy{max-height:120px} #cir{max-height:118px}
+  #segCirc button{min-width:66px; flex:1 1 66px; padding:2px 4px; font-size:11px; line-height:1.2}
+  #segCirc button small{font-size:9.5px}
+  #segEddy button, #segPm button{min-width:70px; flex:1 1 70px; padding:2px 4px; font-size:11px; line-height:1.2}
+  #segEddy button small, #segPm button small{font-size:9.5px}
+  .ptsB{flex:0 0 26px; padding:2px 0; font-size:11px; border-radius:6px}
+  #mag{max-height:132px} #curve{max-height:104px} #diff,#lvd{max-height:96px}
+  #eddy{max-height:86px} #cir{max-height:80px} #pm{max-height:78px}
   @media (max-width:1200px){ #boardWrap{min-width:1180px} }
 </style>
 </head>
@@ -215,6 +217,7 @@
         <button id="playTypes" class="ghost">▶ 三种型式</button>
         <button id="playDiff" class="ghost">▶ 差动与变压器</button>
         <button id="playEddy" class="ghost">▶ 电涡流</button>
+        <button id="playPm" class="ghost">▶ 压磁效应</button>
         <button id="playCirc" class="ghost">▶ 转换电路</button>
         <button id="reset" class="ghost" style="flex:0 0 58px">↺ 复位</button>
       </div>
@@ -513,45 +516,84 @@
 
     <section class="card panel" id="eddyCard">
       <div class="phead">
-        <h2>电涡流式传感器 <small>交变磁场在金属板中感应涡流，反过来改变线圈阻抗</small></h2>
+        <h2>电涡流式传感器 <small>§4-3：金属导体置于变化磁场中 → 涡流效应 → 线圈 L/R/Q 改变</small></h2>
         <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
       </div>
       <div class="pbody">
-      <svg id="eddy" viewBox="0 0 700 250" role="img" aria-label="电涡流传感器原理">
-        <g id="eddyCoil">
-          <rect x="150" y="34" width="90" height="26" rx="5" fill="var(--cu)" opacity=".9"/>
-          <line x1="150" y1="42" x2="240" y2="42" stroke="#8c4d22" stroke-width="1.2"/>
-          <line x1="150" y1="52" x2="240" y2="52" stroke="#8c4d22" stroke-width="1.2"/>
-          <text x="252" y="52" font-size="12.5" font-weight="700" fill="#8c4d22">激励线圈（高频）</text>
+      <div class="seg" id="segEddy" style="margin-bottom:4px">
+        <button data-e="refl" class="on">高频反射式<small>测位移 / 振动 / 探伤</small></button>
+        <button data-e="trans">低频透射式<small>测金属厚度</small></button>
+      </div>
+      <svg id="eddy" viewBox="0 0 700 262" role="img" aria-label="电涡流传感器原理与两种型式">
+        <!-- ===== 模式① 高频反射式 ===== -->
+        <g id="eddyRefl">
+          <g id="eddyCoil">
+            <rect x="140" y="30" width="94" height="26" rx="5" fill="var(--cu)" opacity=".9"/>
+            <line x1="140" y1="38" x2="234" y2="38" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="140" y1="48" x2="234" y2="48" stroke="#8c4d22" stroke-width="1.2"/>
+          </g>
+          <text x="240" y="34" font-size="12" font-weight="700" fill="#8c4d22">激励线圈 L₁（高频电流 I₁）</text>
+          <g id="eddyFlux" stroke="var(--flux)" fill="none" stroke-width="1.8">
+            <path d="M187 56 V96"/><path d="M162 56 C142 86, 142 106, 162 126"/>
+            <path d="M212 56 C232 86, 232 106, 212 126"/>
+          </g>
+          <text x="96" y="26" font-size="12" font-weight="700" fill="var(--flux)">H₁</text>
+          <rect id="plate" x="80" y="150" width="240" height="58" rx="4" fill="#cfdae8" stroke="#64748b" stroke-width="2"/>
+          <text x="330" y="186" font-size="12" font-weight="700" fill="#33506f">被测金属导体</text>
+          <text id="h2Txt" x="252" y="146" font-size="12" font-weight="700" fill="var(--eddy)">H₂（反磁场）</text>
+          <g id="eddyRings"></g>
+          <line id="dDim" x1="52" y1="56" x2="52" y2="150" stroke="var(--eddy)" stroke-width="2"/>
+          <text id="dTxt" x="8" y="106" font-size="12" font-weight="700" fill="var(--eddy)">d = 0.0 mm</text>
+          <!-- 因果链 -->
+          <g transform="translate(430,20)">
+            <text x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">涡流效应链</text>
+            <text x="0" y="26" font-size="12" fill="#33506f">① 线圈通高频电流 I₁ → 产生交变磁场 H₁</text>
+            <text x="0" y="48" font-size="12" fill="#33506f">② 金属板中感应出闭合涡流 I₂</text>
+            <text x="0" y="70" font-size="12" fill="#33506f">③ 涡流产生反磁场 H₂，<b>削弱</b> H₁</text>
+            <text x="0" y="92" font-size="12" fill="#33506f">④ 线圈等效 <b>L、R、Q</b> 改变</text>
+            <text id="eddyZ" x="0" y="122" font-size="13" font-weight="700" fill="#d94a3d">Z / Z₀ = 1.000</text>
+            <text id="eddyU" x="0" y="146" font-size="13" font-weight="700" fill="#0e4a8e">输出电压 u₀ = 0.00 V</text>
+            <text id="eddyNote" x="0" y="172" font-size="11" fill="#94a3b8">距离越近 → 涡流越强 → 阻抗变化越大</text>
+            <text x="0" y="196" font-size="11" fill="#94a3b8">应用：位移 · 振动 · 厚度 · 转速 · 温度 · 硬度 · 无损探伤</text>
+          </g>
         </g>
-        <!-- 磁力线 -->
-        <g id="eddyFlux" stroke="var(--flux)" fill="none" stroke-width="1.8">
-          <path d="M195 60 V92"/><path d="M170 60 C150 90, 150 110, 170 130"/>
-          <path d="M220 60 C240 90, 240 110, 220 130"/>
-        </g>
-        <!-- 金属板 -->
-        <rect id="plate" x="90" y="150" width="240" height="60" rx="4" fill="#cfdae8" stroke="#64748b" stroke-width="2"/>
-        <text x="340" y="186" font-size="12.5" font-weight="700" fill="#33506f">被测金属板</text>
-        <!-- 涡流环 -->
-        <g id="eddyRings"></g>
-        <line id="dDim" x1="60" y1="60" x2="60" y2="150" stroke="var(--eddy)" stroke-width="2"/>
-        <text id="dTxt" x="14" y="108" font-size="12.5" font-weight="700" fill="var(--eddy)">d = 0.0 mm</text>
-        <!-- 趋肤深度 -->
-        <g transform="translate(420,30)">
-          <text x="0" y="0" font-size="13" font-weight="700" fill="#0e4a8e">涡流渗透（趋肤效应）</text>
-          <rect x="0" y="14" width="250" height="34" rx="4" fill="#cfdae8" stroke="#64748b"/>
-          <rect id="skinBar" x="0" y="14" width="0" height="34" rx="4" fill="var(--eddy)" opacity=".55"/>
-          <text id="skinTxt" x="0" y="68" font-size="12.5" font-weight="700" fill="var(--eddy)">趋肤深度 δ = —</text>
-          <text id="skinFml" x="0" y="90" font-size="12" fill="#5b6b80">δ = √(2/(ωμσ))</text>
-          <text id="eddyNote" x="0" y="120" font-size="12.5" fill="#33506f">线圈阻抗 Z = R + jωL 随距离 d 变化</text>
-          <text id="eddyZ" x="0" y="142" font-size="13" font-weight="700" fill="#d94a3d">Z / Z₀ = 1.000</text>
-          <text id="eddyU" x="0" y="164" font-size="13" font-weight="700" fill="#0e4a8e">输出电压 u₀ = 0.00 V</text>
-          <text x="0" y="188" font-size="11.5" fill="#94a3b8">距离越近 → 涡流越强 → 等效阻抗变化越大</text>
+        <!-- ===== 模式② 低频透射式 ===== -->
+        <g id="eddyTrans" style="display:none">
+          <rect x="150" y="18" width="110" height="30" rx="5" fill="var(--cu)" opacity=".9"/>
+          <line x1="150" y1="27" x2="260" y2="27" stroke="#8c4d22" stroke-width="1.2"/>
+          <line x1="150" y1="39" x2="260" y2="39" stroke="#8c4d22" stroke-width="1.2"/>
+          <text x="268" y="38" font-size="12" font-weight="700" fill="#8c4d22">发射线圈 L₁（U₁ 激励）</text>
+          <text x="106" y="34" font-size="12" font-weight="700" fill="#2b6cb0">U̇₁</text>
+          <g id="transFlux" stroke="var(--flux)" fill="none" stroke-width="1.8">
+            <path d="M175 50 V92"/><path d="M235 50 V92"/><path d="M205 50 V92"/>
+          </g>
+          <rect id="transPlate" x="90" y="120" width="230" height="30" rx="3" fill="#cfdae8" stroke="#64748b" stroke-width="2"/>
+          <text x="330" y="140" font-size="12" font-weight="700" fill="#33506f">金属板 M（厚度 d）</text>
+          <line id="tDim" x1="70" y1="120" x2="70" y2="150" stroke="var(--eddy)" stroke-width="2.4"/>
+          <text id="tTxt" x="10" y="140" font-size="12" font-weight="700" fill="var(--eddy)">d = 3.0 mm</text>
+          <g id="transFlux2" stroke="var(--flux)" fill="none" stroke-width="1.8" opacity=".9">
+            <path d="M175 152 V192"/><path d="M235 152 V192"/><path d="M205 152 V192"/>
+          </g>
+          <rect x="150" y="196" width="110" height="30" rx="5" fill="var(--cu)" opacity=".9"/>
+          <line x1="150" y1="205" x2="260" y2="205" stroke="#8c4d22" stroke-width="1.2"/>
+          <line x1="150" y1="217" x2="260" y2="217" stroke="#8c4d22" stroke-width="1.2"/>
+          <text x="268" y="216" font-size="12" font-weight="700" fill="#8c4d22">接收线圈 L₂</text>
+          <text x="106" y="212" font-size="12" font-weight="700" fill="#2b6cb0">U̇₂</text>
+          <g transform="translate(430,20)">
+            <text x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">透射式原理链</text>
+            <text x="0" y="26" font-size="12" fill="#33506f">U → L₁ → 同频交变电流 → 交变磁场</text>
+            <text x="0" y="48" font-size="12" fill="#33506f">→ 磁力线切割 M → 产生涡流 i</text>
+            <text x="0" y="70" font-size="12" fill="#33506f">→ 到达 L₂ 的磁力线<b>减少</b> → E 下降</text>
+            <text id="transE" x="0" y="102" font-size="13" font-weight="700" fill="#d94a3d">接收信号 E / E₀ = 0.000</text>
+            <text id="transU" x="0" y="126" font-size="13" font-weight="700" fill="#0e4a8e">U̇₂ = 0.00 V</text>
+            <text id="transNote" x="0" y="152" font-size="11" fill="#94a3b8">降低频率 → 贯穿深度加厚 → 可测更厚的板材</text>
+            <text x="0" y="176" font-size="11" fill="#94a3b8">板越厚 → 涡流吸收越多 → 接收信号越小（测厚度）</text>
+          </g>
         </g>
       </svg>
       <div class="ctrl" style="margin-top:4px">
         <div class="row">
-          <span class="name"><b>线圈—板距离 d</b><br><span class="tiny" id="matTxt">材料：铜</span></span>
+          <span class="name"><b id="eddyLbl">线圈—板距离 d</b><br><span class="tiny" id="matTxt">材料：铜</span></span>
           <input type="range" id="dist" min="0.2" max="6" step="0.1" value="3">
           <output id="distOut">3.0 mm</output>
         </div>
@@ -563,13 +605,88 @@
       </div>
       </div>
     </section>
+
+    <section class="card panel" id="pmCard">
+      <div class="phead">
+        <h2>压磁式传感器 <small>压磁效应：铁磁体受力 → 磁导率改变 → 磁通重新分布 → 输出</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="pm" viewBox="0 0 700 268" role="img" aria-label="压磁式力传感器原理">
+        <!-- 四极铁磁元件：A 上 / B 下 / C 左 / D 右，四个绕组孔 1~4 -->
+        <g>
+          <path d="M150 34 H290 L330 74 V214 L290 254 H150 L110 214 V74 Z"
+                fill="var(--iron)" opacity=".82" stroke="#2f4b68" stroke-width="1.8"/>
+          <circle cx="220" cy="96" r="15" fill="#f4f8fd" stroke="#2f4b68" stroke-width="1.6"/>
+          <circle cx="220" cy="192" r="15" fill="#f4f8fd" stroke="#2f4b68" stroke-width="1.6"/>
+          <circle cx="160" cy="144" r="15" fill="#f4f8fd" stroke="#2f4b68" stroke-width="1.6"/>
+          <circle cx="280" cy="144" r="15" fill="#f4f8fd" stroke="#2f4b68" stroke-width="1.6"/>
+          <text x="220" y="62" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff">A</text>
+          <text x="220" y="240" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff">B</text>
+          <text x="126" y="148" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff">C</text>
+          <text x="314" y="148" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff">D</text>
+          <text x="220" y="100" text-anchor="middle" font-size="10.5" fill="#2f4b68">1</text>
+          <text x="220" y="196" text-anchor="middle" font-size="10.5" fill="#2f4b68">2</text>
+          <text x="160" y="148" text-anchor="middle" font-size="10.5" fill="#2f4b68">3</text>
+          <text x="280" y="148" text-anchor="middle" font-size="10.5" fill="#2f4b68">4</text>
+          <!-- 励磁绕组 A-B -->
+          <path d="M118 96 H86 V196 H118" fill="none" stroke="#2b6cb0" stroke-width="3"/>
+          <text x="70" y="150" font-size="12" font-weight="700" fill="#2b6cb0">A-B 励磁</text>
+          <text x="60" y="132" font-size="12" fill="#2b6cb0">~</text>
+          <!-- 测量绕组 C-D -->
+          <path d="M322 118 H356 V176 H322" fill="none" stroke="#d94a3d" stroke-width="3"/>
+          <circle cx="386" cy="147" r="17" fill="none" stroke="#d94a3d" stroke-width="2"/>
+          <text x="386" y="152" text-anchor="middle" font-size="12" font-weight="700" fill="#d94a3d">V</text>
+          <text x="330" y="106" font-size="12" font-weight="700" fill="#d94a3d">C-D 测量</text>
+          <!-- 磁通分布（随力变化） -->
+          <g id="pmFlux">
+            <ellipse id="pmE1" cx="220" cy="96" rx="34" ry="34" fill="none" stroke="var(--flux)" stroke-width="2.2" opacity=".9"/>
+            <ellipse id="pmE2" cx="220" cy="192" rx="34" ry="34" fill="none" stroke="var(--flux)" stroke-width="2.2" opacity=".9"/>
+            <ellipse id="pmE3" cx="160" cy="144" rx="30" ry="26" fill="none" stroke="var(--flux)" stroke-width="2.2" opacity=".9"/>
+            <ellipse id="pmE4" cx="280" cy="144" rx="30" ry="26" fill="none" stroke="var(--flux)" stroke-width="2.2" opacity=".9"/>
+          </g>
+          <!-- 受力箭头 -->
+          <line id="pmF" x1="428" y1="34" x2="428" y2="86" stroke="#d94a3d" stroke-width="3"/>
+          <polygon id="pmFH" points="428,92 422,78 434,78" fill="#d94a3d"/>
+          <text id="pmFTxt" x="404" y="26" font-size="13" font-weight="700" fill="#d94a3d">F = 0 N</text>
+          <line id="pmF2" x1="428" y1="268" x2="428" y2="224" stroke="#d94a3d" stroke-width="3" opacity="0"/>
+          <polygon id="pmF2H" points="428,218 422,232 434,232" fill="#d94a3d" opacity="0"/>
+        </g>
+        <!-- 右侧：解释与读数 -->
+        <g transform="translate(468,26)">
+          <text x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">压磁效应</text>
+          <text x="0" y="24" font-size="11.5" fill="#33506f">铁磁体磁化时受限制不能伸缩 →</text>
+          <text x="0" y="44" font-size="11.5" fill="#33506f">内部产生应力 → 磁畴界限移动、磁化矢量转动</text>
+          <text x="0" y="64" font-size="11.5" fill="#33506f">→ <b>磁导率改变</b> → 磁通重新分布</text>
+          <text x="0" y="88" font-size="11.5" fill="#0f9d58">正磁致伸缩：拉应力 → 该方向 μ ↑</text>
+          <text x="0" y="108" font-size="11.5" fill="#0f9d58">压应力 → 该方向 μ ↓</text>
+          <text id="pmMu" x="0" y="138" font-size="12.5" font-weight="700" fill="#2b6cb0">μ(受力向)/μ₀ = 1.00</text>
+          <text id="pmMu2" x="0" y="158" font-size="12.5" font-weight="700" fill="#2b6cb0">μ(垂直于力)/μ₀ = 1.00</text>
+          <text id="pmU" x="0" y="186" font-size="14" font-weight="800" fill="#d94a3d">U = 0.0 mV</text>
+          <text id="pmNote" x="0" y="210" font-size="11" fill="#94a3b8">无外力时磁路对称 → 测量绕组无输出</text>
+          <text x="0" y="232" font-size="11" fill="#94a3b8">应用：力 / 压力 / 扭矩 / 转速 · 结构坚固、抗过载</text>
+        </g>
+      </svg>
+      <div class="ctrl" style="margin-top:4px">
+        <div class="row">
+          <span class="name"><b>压力 F</b><br><span class="tiny" id="pmMatTxt">正磁致伸缩材料</span></span>
+          <input type="range" id="force" min="0" max="100" step="1" value="0">
+          <output id="forceOut">0 %</output>
+        </div>
+      </div>
+      <div class="seg" id="segPm" style="margin-top:3px">
+        <button data-pm="pos" class="on">正磁致伸缩<small>拉应力 → μ ↑</small></button>
+        <button data-pm="neg">负磁致伸缩<small>拉应力 → μ ↓</small></button>
+      </div>
+      </div>
+    </section>
   </div>
 
   <div class="vsplit" data-left="colB" data-right="colC" title="拖动可调整两列宽度"></div>
 
   <!-- ================= 右列 ================= -->
   <div class="col" id="colC">
-    <div class="colhead">③ 输出读数 · 公式推导 · 特性曲线</div>
+    <div class="colhead">③ 输出读数 · 公式推导 · 特性曲线 · 压磁式</div>
 
     <section class="card panel" id="diffCard">
       <div class="phead">
@@ -828,7 +945,7 @@
         <button id="ptsB0" class="ghost ptsB">1</button><button id="ptsB1" class="ghost ptsB">2</button>
         <button id="ptsB2" class="ghost ptsB">3</button><button id="ptsB3" class="ghost ptsB">4</button>
         <button id="ptsB4" class="ghost ptsB">5</button><button id="ptsB5" class="ghost ptsB">6</button>
-        <button id="ptsB6" class="ghost ptsB">7</button>
+        <button id="ptsB6" class="ghost ptsB">7</button><button id="ptsB7" class="ghost ptsB">8</button>
       </div>
       <ol class="points" id="points"></ol>
       </div>
@@ -868,6 +985,7 @@
     steel: { name:'钢', sigma:1.0e7, mur:200 }
   };
   var S = { type:'gap', x:0, N:1000, f:5, diff:'single', dist:3, mat:'cu',
+            eddyMode:'refl', thick:3, force:0, pmMat:'pos',
             demoToken:0, playing:null };
 
   var $ = function(id){ return document.getElementById(id); };
@@ -932,6 +1050,21 @@
     var dZ = 0.42*k;                                     /* 阻抗相对变化（感性分量减小为主） */
     var u0 = CFG.u*dZ*0.5;                               /* 用半桥输出量级表示 */
     return { skin:skin, k:k, dZ:dZ, u0:u0, sigma:sigma, mur:mur, mat:m };
+  }
+  /* 低频透射式：发射 L₁ → 穿过金属板 M → 接收 L₂；E/E₀ ≈ exp(−d/δ) */
+  function eddyTransModel(){
+    var m = MATS[S.mat], w = omega();
+    var skin = Math.sqrt(2/(w*m.mur*CFG.mu0*m.sigma));     /* 趋肤深度 m */
+    var E = Math.exp(-S.thick/(skin*1000*1.7));            /* 归一化接收信号 */
+    return { skin:skin, E:E, u:CFG.u*E*0.55 };
+  }
+  /* 压磁式力传感器：F → 磁导率各向异性 → 磁路失衡 → 输出（近似线性） */
+  function pmModel(){
+    var f = S.force/100;                                   /* 0~1 */
+    var sgn = (S.pmMat === 'neg') ? -1 : 1;                /* 正/负磁致伸缩 */
+    var muPara = 1 + sgn*0.45*f, muPerp = 1 - sgn*0.30*f;  /* 受力向 / 垂直于力 */
+    var u = 96*f;                                          /* mV，满量程 96 mV */
+    return { f:f, muPara:muPara, muPerp:muPerp, u:u };
   }
 
   /* ============ 2b. 磁通流动动画 ============ */
@@ -1251,6 +1384,7 @@
     paintLVDT();
     paintCircuit(dZ, u0);
     paintEddy();
+    paintPm();
     paintFormulas(r, R, dL, Q, dZ, u0);
     paintPoints();
     if (window.__repack) window.__repack();
@@ -1457,33 +1591,108 @@
 
   /* ============ 7. 电涡流 ============ */
   function paintEddy(){
-    var e = eddyModel();
-    var d = S.dist;
-    /* 线圈与板的间距（视觉） */
-    var gapPx = 10 + (d/6)*70;
-    $('plate').setAttribute('y', (60 + gapPx).toFixed(1));
-    $('dDim').setAttribute('y2', (60 + gapPx).toFixed(1));
-    $('dTxt').setAttribute('y', (60 + gapPx/2).toFixed(1));
-    $('dTxt').textContent = 'd = ' + d.toFixed(1) + ' mm';
-    $('eddyFlux').setAttribute('opacity', (1 - d/9).toFixed(2));
-    /* 涡流环：大小/亮度随耦合强度变化 */
-    var rings = '', i;
-    var plateY = 60 + gapPx + 28;
-    for (i = 0; i < 3; i++){
-      var rr = (14 + i*11)*(0.5 + e.k);
-      rings += '<ellipse cx="195" cy="' + plateY.toFixed(1) + '" rx="' + rr.toFixed(1) + '" ry="' + (rr*0.42).toFixed(1) +
-               '" fill="none" stroke="var(--eddy)" stroke-width="2" opacity="' + (0.8 - i*0.2)*e.k.toFixed(2) + '"/>';
+    var isT = (S.eddyMode === 'trans');
+    $('eddyRefl').style.display = isT ? 'none' : '';
+    $('eddyTrans').style.display = isT ? '' : 'none';
+    var btns = document.querySelectorAll('#segEddy button');
+    for (var b = 0; b < btns.length; b++){
+      btns[b].classList.toggle('on', btns[b].getAttribute('data-e') === S.eddyMode);
     }
-    $('eddyRings').innerHTML = rings;
-    $('skinBar').setAttribute('width', Math.max(4, Math.min(250, e.skin*1000*12)).toFixed(1));
-    $('skinTxt').textContent = '趋肤深度 δ = ' + (e.skin*1e6).toFixed(1) + ' μm（' + MATS[S.mat].name + '，' + S.f.toFixed(1) + ' kHz）';
-    $('skinFml').textContent = 'δ = √(2/(ωμσ)) = √(2/(2π·' + (S.f*1000).toFixed(0) + '·' +
-      (e.mur*CFG.mu0).toExponential(2) + '·' + e.sigma.toExponential(2) + '))';
-    $('eddyNote').textContent = '线圈阻抗 Z = R + jωL 随距离 d 变化（涡流反作用使等效 L 减小、R 增大）';
-    $('eddyZ').textContent = 'Z / Z₀ = ' + (1 + e.dZ).toFixed(3);
-    $('eddyU').textContent = '输出电压 u₀ = ' + e.u0.toFixed(3) + ' V';
-    $('matTxt').textContent = '材料：' + MATS[S.mat].name + '（σ = ' + e.sigma.toExponential(1) + ' S/m）';
+    $('eddyLbl').textContent = isT ? '金属板厚度 d' : '线圈—板距离 d';
+    $('matTxt').textContent = '材料：' + MATS[S.mat].name + '（σ = ' + MATS[S.mat].sigma.toExponential(1) + ' S/m）';
+
+    if (!isT){
+      /* ---- 高频反射式 ---- */
+      var e = eddyModel(), d = S.dist;
+      var gapPx = 10 + (d/6)*70, plateY = 60 + gapPx;
+      $('plate').setAttribute('y', plateY.toFixed(1));
+      $('dDim').setAttribute('y2', plateY.toFixed(1));
+      $('dTxt').setAttribute('y', (60 + gapPx/2).toFixed(1));
+      $('dTxt').textContent = 'd = ' + d.toFixed(1) + ' mm';
+      $('eddyFlux').setAttribute('opacity', Math.max(0.15, 1 - d/9).toFixed(2));
+      var rings = '', k, cy = plateY + 28;
+      for (k = 0; k < 3; k++){
+        var rr = (14 + k*11)*(0.5 + e.k);
+        rings += '<ellipse cx="187" cy="' + cy.toFixed(1) + '" rx="' + rr.toFixed(1) + '" ry="' + (rr*0.42).toFixed(1) +
+                 '" fill="none" stroke="var(--eddy)" stroke-width="2" opacity="' + Math.max(0.05,(0.8 - k*0.2)*e.k).toFixed(2) + '"/>';
+      }
+      $('eddyRings').innerHTML = rings;
+      $('h2Txt').setAttribute('opacity', Math.min(1, e.k*1.6).toFixed(2));
+      $('eddyZ').textContent = 'Z / Z₀ = ' + (1 + e.dZ).toFixed(3);
+      $('eddyU').textContent = '输出电压 u₀ = ' + e.u0.toFixed(3) + ' V';
+      $('eddyNote').textContent = '距离越近 → 涡流越强 → Z 变化越大（当前耦合 k = ' + e.k.toFixed(2) + '）';
+    } else {
+      /* ---- 低频透射式 ---- */
+      var t = eddyTransModel(), th = S.thick;
+      var hPx = Math.max(8, Math.min(56, 10 + th*4.6));
+      $('transPlate').setAttribute('y', (135 - hPx/2).toFixed(1));
+      $('transPlate').setAttribute('height', hPx.toFixed(1));
+      $('tDim').setAttribute('y1', (135 - hPx/2).toFixed(1));
+      $('tDim').setAttribute('y2', (135 + hPx/2).toFixed(1));
+      $('tTxt').setAttribute('y', (135 + 4).toFixed(1));
+      $('tTxt').textContent = 'd = ' + th.toFixed(1) + ' mm';
+      $('transFlux').setAttribute('opacity', Math.max(0.15, 1 - th/14).toFixed(2));
+      $('transFlux2').setAttribute('opacity', Math.max(0.06, t.E).toFixed(2));
+      $('transE').textContent = '接收信号 E / E₀ = ' + t.E.toFixed(3);
+      $('transU').textContent = 'U̇₂ = ' + t.u.toFixed(3) + ' V';
+      $('transNote').textContent = '趋肤深度 δ = ' + (t.skin*1e6).toFixed(0) + ' μm（' + S.f.toFixed(1) +
+                                   ' kHz，' + MATS[S.mat].name + '）：频率越低 δ 越大、穿透越强';
+    }
   }
+
+  /* 压磁式：力 → 磁通分布畸变 + 输出 */
+  function paintPm(){
+    var p = pmModel(), f = p.f;
+    var sx = 1 + 0.45*f, sy = 1 - 0.32*f;                  /* A-B 方向拉长，C-D 方向压扁 */
+    $('pmE1').setAttribute('rx', (34*sx).toFixed(1)); $('pmE1').setAttribute('ry', (34*sy).toFixed(1));
+    $('pmE2').setAttribute('rx', (34*sx).toFixed(1)); $('pmE2').setAttribute('ry', (34*sy).toFixed(1));
+    $('pmE3').setAttribute('rx', (30/sx).toFixed(1)); $('pmE3').setAttribute('ry', (26/sy).toFixed(1));
+    $('pmE4').setAttribute('rx', (30/sx).toFixed(1)); $('pmE4').setAttribute('ry', (26/sy).toFixed(1));
+    $('pmE1').setAttribute('opacity', (0.35 + 0.6*(1 - f)).toFixed(2));
+    $('pmE2').setAttribute('opacity', (0.35 + 0.6*(1 - f)).toFixed(2));
+    $('pmE3').setAttribute('opacity', (0.25 + 0.7*f).toFixed(2));
+    $('pmE4').setAttribute('opacity', (0.25 + 0.7*f).toFixed(2));
+    $('pmF').setAttribute('y2', (86 - 24*f).toFixed(1));
+    $('pmFH').setAttribute('points', '428,' + (92 - 24*f).toFixed(1) + ' 422,' + (78 - 24*f).toFixed(1) + ' 434,' + (78 - 24*f).toFixed(1));
+    $('pmFTxt').setAttribute('y', (26 - 24*f).toFixed(1));
+    $('pmFTxt').textContent = 'F = ' + (S.force/100*50).toFixed(0) + ' kN';
+    $('pmMu').textContent = 'μ(受力向)/μ₀ = ' + p.muPara.toFixed(2);
+    $('pmMu2').textContent = 'μ(垂直于力)/μ₀ = ' + p.muPerp.toFixed(2);
+    $('pmU').textContent = 'U = ' + p.u.toFixed(1) + ' mV';
+    $('pmNote').textContent = f < 0.02
+      ? '无外力时磁路对称 → 测量绕组无输出'
+      : '受力后磁通被拉向 A-B 方向 → C-D 绕组感应出电压（' + (S.pmMat === 'neg' ? '负磁致伸缩，方向相反' : '正磁致伸缩') + '）';
+    $('pmMatTxt').textContent = (S.pmMat === 'neg' ? '负磁致伸缩材料' : '正磁致伸缩材料');
+    var btns = document.querySelectorAll('#segPm button');
+    for (var b = 0; b < btns.length; b++){
+      btns[b].classList.toggle('on', btns[b].getAttribute('data-pm') === S.pmMat);
+    }
+  }
+  function setEddyMode(m){
+    S.eddyMode = m;
+    var sl = $('dist');
+    if (m === 'trans'){ sl.min = '0.5'; sl.max = '10'; sl.step = '0.1'; S.thick = 3; sl.value = 3; $('distOut').textContent = '3.0 mm'; }
+    else { sl.min = '0.2'; sl.max = '6'; sl.step = '0.1'; S.dist = 3; sl.value = 3; $('distOut').textContent = '3.0 mm'; }
+    stopDemo(); paint();
+  }
+  function setPmMat(m){ S.pmMat = m; stopDemo(); paint(); }
+  function setForce(v){ S.force = Math.max(0, Math.min(100, Math.round(v))); $('force').value = S.force;
+    $('forceOut').textContent = (S.force/100*50).toFixed(0) + ' kN'; paint(); }
+
+  var ebtns = document.querySelectorAll('#segEddy button');
+  for (var eb = 0; eb < ebtns.length; eb++){
+    (function(btn){ btn.addEventListener('click', function(){ setEddyMode(btn.getAttribute('data-e')); }); })(ebtns[eb]);
+  }
+  var pbtns = document.querySelectorAll('#segPm button');
+  for (var pb2 = 0; pb2 < pbtns.length; pb2++){
+    (function(btn){ btn.addEventListener('click', function(){
+      setPmMat(btn.getAttribute('data-pm'));
+      say(btn.getAttribute('data-pm') === 'neg'
+        ? '<b>负磁致伸缩</b>材料：拉应力使磁化方向转向垂直于力的方向 → 受力方向磁导率<b>减小</b>，输出反号。'
+        : '<b>正磁致伸缩</b>材料：拉应力使磁化方向转向拉应力方向 → 该方向磁导率<b>增大</b>，磁通被拉向 A-B。');
+    }); })(pbtns[pb2]);
+  }
+  $('force').addEventListener('input', function(){ stopDemo(); setForce(+this.value); });
 
   /* ============ 8. 公式 ============ */
   function paintFormulas(r, R, dL, Q, dZ, u0){
@@ -1504,7 +1713,7 @@
     html += '<div class="row"><span class="tag g">式 4-4</span><span>铁芯磁导率远大于空气 → L ≈ ' + frac('N²μ₀S', '2δ') +
             ' = <b>' + Lsimple.toFixed(4) + ' H</b>，与精确值相差 <b>' + sfmt(err, 1) + '%</b>' +
             (S.type === 'gap' ? '' : '（本型式不以 δ 为变量，此式仅供对照）') + '</span></div>';
-    html += '<div class="row"><span class="tag f">式 4-5</span><span>Q = ' + frac('ωL', 'R') + ' = ' + frac('2πfL', 'R') + ' = ' +
+    html += '<div class="row" style="display:none"><span class="tag f">式 4-5</span><span>Q = ' + frac('ωL', 'R') + ' = ' + frac('2πfL', 'R') + ' = ' +
             (omega()).toFixed(0) + '×' + r.L.toFixed(4) + '/' + CFG.Rc + ' = <b>' + Q.toFixed(0) + '</b></span></div>';
     html += '<div class="row"><span class="tag">式 4-7</span><span>变压器电桥：u̇₀ = ' + frac('u̇', '2') + '·' + frac('ΔZ', 'Z') +
             ' = ' + (CFG.u/2).toFixed(1) + '×' + (dZ*100).toFixed(2) + '% = <b>' + (u0*1000).toFixed(1) + ' mV</b></span></div>';
@@ -1523,7 +1732,8 @@
     '<b>差动接法</b>两个线圈反向变化、输出取差值：小位移段灵敏度约翻倍，偶次非线性与共模干扰自动抵消。',
     '<b>差动变压器</b>：初级激励、两次级反接，u₀ = u₂ₐ − u₂ᵦ 正比于位移；零点有<b>零点残余电压</b>，需相敏检波并补偿。',
     '<b>电涡流式</b>：高频磁场在金属板中感应涡流，涡流反作用改变线圈阻抗；<b>δ = √(2/(ωμσ))</b>，频率越高、电导率越大，渗透越浅、灵敏度越高。',
-    '转换电路：<b>变压器电桥</b> u₀ = (u/2)(ΔZ/Z)；<b>相敏检波</b>辨方向并抑制干扰；<b>谐振调频</b>用 f₀ = 1/(2π√(LC)) 表示位移。'
+    '转换电路：<b>变压器电桥</b> u₀ = (u/2)(ΔZ/Z)；<b>相敏检波</b>辨方向并抑制干扰；<b>谐振调频</b>用 f₀ = 1/(2π√(LC)) 表示位移。',
+    '<b>电涡流式</b>分两种：<b>高频反射式</b>（测位移/振动/探伤）与<b>低频透射式</b>（磁力线穿过金属板，测厚度）；<b>压磁式</b>利用压磁效应（受力 → 磁导率改变 → 磁路失衡）测力/压力/扭矩，结构坚固、抗过载。'
   ];
   var PTS = { active:-1 };
   function paintPoints(){
@@ -1562,7 +1772,14 @@
   $('x').addEventListener('input', function(){ stopDemo(); setX(+this.value); });
   $('turns').addEventListener('input', function(){ stopDemo(); setN(+this.value); });
   $('freq').addEventListener('input', function(){ stopDemo(); setF(+this.value); });
-  $('dist').addEventListener('input', function(){ stopDemo(); setDist(+this.value); });
+  $('dist').addEventListener('input', function(){
+    stopDemo();
+    if (S.eddyMode === 'trans'){
+      S.thick = Math.round(+this.value*10)/10;
+      $('distOut').textContent = S.thick.toFixed(1) + ' mm';
+      paint();
+    } else setDist(+this.value);
+  });
   $('xM').addEventListener('click', function(){ stopDemo(); setX(S.x - 5); });
   $('xP').addEventListener('click', function(){ stopDemo(); setX(S.x + 5); });
   document.querySelectorAll('#segType button').forEach(function(b){
@@ -1600,6 +1817,7 @@
     types: { btn:'playTypes', label:'▶ 三种型式' },
     diff:  { btn:'playDiff',  label:'▶ 差动与变压器' },
     eddy:  { btn:'playEddy',  label:'▶ 电涡流' },
+    pm:    { btn:'playPm',    label:'▶ 压磁效应' },
     circ:  { btn:'playCirc',  label:'▶ 转换电路' },
     pts:   { btn:'ptsPlay',  label:'▶ 巡览要点' }
   };
@@ -1770,8 +1988,16 @@
     say('④ <b>换材料</b>：钢的电导率比铜小，但 μ_r 大得多 → 趋肤深度与耦合强度都不同。所以电涡流传感器测不同材料必须<b>重新标定</b>。');
     setMat('steel');
     if (!await sleep(2600, tok)) return;
-    setMat('cu'); setF(5); setDist(3);
-    say('【小结】电涡流式属于<b>非接触测量</b>：位移、振动、厚度、转速、探伤都能测，但只能测<b>金属</b>，且结果与材料、频率强相关。');
+    say('⑤ <b>换一种型式</b>：把频率降低、线圈放到金属板两侧，就是<b>低频透射式</b> —— 发射线圈 L₁ 的磁力线穿过板 M 到达接收线圈 L₂，板越厚、涡流吸收越多，接收信号越小，所以专门用来<b>测金属厚度</b>。');
+    setEddyMode('trans'); setF(2);
+    if (!await sleep(3600, tok)) return;
+    say('⑥ 拖动板厚：厚度增加 → 接收信号 E 下降；把频率调得更低，贯穿深度 δ 加厚，就能测更厚的板材（低频透射式的由来）。');
+    if (!await tween(0.5, 8, 2600, function(v){
+        if (S.eddyMode === 'trans'){ S.thick = Math.round(v*10)/10; $('dist').value = v; $('distOut').textContent = S.thick.toFixed(1) + ' mm'; }
+      }, tok)) return;
+    if (!await sleep(2400, tok)) return;
+    setEddyMode('refl'); setF(5); setMat('cu'); setDist(3);
+    say('【小结】电涡流式属于<b>非接触测量</b>：<b>高频反射式</b>测位移/振动/探伤，<b>低频透射式</b>测金属厚度；只能测<b>金属</b>，且结果与材料、频率强相关。');
     endDemo();
   }
 
@@ -1799,6 +2025,27 @@
     endDemo();
   }
 
+  /* 压磁式传感器演示 */
+  async function demoPm(){
+    var tok = beginDemo('pm');
+    setPmMat('pos'); setForce(0); setEddyMode('refl');
+    say('【<b>压磁式传感器</b>】先说机理：铁磁材料被磁化时，如果因受限制<b>不能伸缩</b>，内部就产生应力 → 磁畴界限移动、磁化矢量重新取向 → <b>磁导率改变</b>，这就是<b>压磁效应</b>（磁致伸缩效应的逆效应）。');
+    if (!await sleep(4200, tok)) return;
+    say('① 看结构：四极铁磁元件 A/B/C/D，<b>A-B 绕励磁绕组</b>（通交流）、<b>C-D 绕测量绕组</b>（接电压表）。<b>无外力时</b>磁路完全对称，C-D 方向没有磁通 → 输出电压为 0。');
+    if (!await sleep(4000, tok)) return;
+    say('② <b>施加压力 F</b>：正磁致伸缩材料的受力方向磁导率增大、垂直方向减小，磁通被<b>拉向 A-B 方向</b>（看磁通环被拉长）。原来对称的磁路失衡 → C-D 绕组感应出电压，且随力增大而增大。');
+    if (!await tween(0, 80, 2600, setForce, tok)) return;
+    if (!await sleep(2400, tok)) return;
+    say('③ 输出电压 U = ' + (pmModel().u).toFixed(1) + ' mV（约 96 mV 满量程）。这一路是<b>近似线性</b>的，所以压磁式可以直接做力/压力/扭矩测量。');
+    if (!await sleep(3000, tok)) return;
+    say('④ 换成<b>负磁致伸缩</b>材料：拉应力反而使受力方向磁导率减小，磁通分布与输出电压都<b>反号</b> —— 选材料时要看清正负号。');
+    setPmMat('neg');
+    if (!await sleep(3200, tok)) return;
+    say('⑤ 压磁式的优点：<b>结构坚固、抗过载能力强、输出功率大</b>，常用于冶金、轧机的力与扭矩测量。适合作业：把它和应变式测力传感器做个对比。');
+    setPmMat('pos'); setForce(0);
+    endDemo();
+  }
+
   /* 要点巡览 */
   async function demoPoints(){
     var tok = beginDemo('pts');
@@ -1815,6 +2062,7 @@
   DEMOS.self.fn = demoSelf; DEMOS.types.fn = demoTypes;
   DEMOS.diff.fn = demoDiff; DEMOS.eddy.fn = demoEddy; DEMOS.circ.fn = demoCirc;
   DEMOS.pts.fn = demoPoints;
+  DEMOS.pm.fn = demoPm;
 
   /* ============ 17. 启动 ============ */
   var q = new URLSearchParams(location.search);
@@ -1867,7 +2115,7 @@
   var DEF = {
     weight: { colA:3.0, colB:4.6, colC:4.4 },
     col: { colA:['ctrlCard','ptsCard'], colB:['magCard','diffCard','eddyCard'],
-           colC:['readCard','fmlCard','curveCard','circCard'] },
+           colC:['readCard','fmlCard','curveCard','circCard','pmCard'] },
     zoom: {}
   };
   var L = null, focused = null;
