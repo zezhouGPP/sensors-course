@@ -236,96 +236,178 @@
       </div>
       <div class="pbody">
       <svg id="mag" viewBox="0 0 700 320" role="img" aria-label="自感式传感器磁路示意">
-        <!-- 变气隙型 -->
+        <!-- ============ 自感型 (a) 变隙型：П 形铁芯 + 上轭线圈 + 下方衔铁（δ 竖向变化） ============ -->
         <g id="stGap">
-          <!-- 铁芯：上轭 + 三条腿（腿下沿 y=196，衔铁在其下方随气隙移动） -->
-          <rect x="118" y="18" width="152" height="26" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="118" y="44" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="180" y="44" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="240" y="44" width="30" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <text x="92" y="36" font-size="12.5" font-weight="700" fill="#2f4b68">铁芯</text>
-          <!-- 线圈（套在中腿）＋ 激励脉冲 -->
-          <rect id="coilPulse" x="162" y="66" width="66" height="98" rx="8" fill="none" stroke="var(--cu)" stroke-width="3" opacity="0"/>
+          <rect x="118" y="52" width="184" height="34" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="118" y="86" width="36" height="106" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="266" y="86" width="36" height="106" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <text x="92" y="74" font-size="12.5" font-weight="700" fill="#2f4b68">铁芯 2</text>
+          <rect id="coilPulse" x="152" y="24" width="116" height="52" rx="8" fill="none" stroke="var(--cu)" stroke-width="3" opacity="0"/>
           <g id="coilGap">
-            <rect x="168" y="72" width="54" height="86" rx="5" fill="var(--cu)" opacity=".92"/>
-            <line x1="168" y1="86" x2="222" y2="86" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="168" y1="100" x2="222" y2="100" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="168" y1="114" x2="222" y2="114" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="168" y1="128" x2="222" y2="128" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="168" y1="142" x2="222" y2="142" stroke="#8c4d22" stroke-width="1.2"/>
+            <rect x="156" y="30" width="108" height="44" rx="5" fill="var(--cu)" opacity=".92"/>
+            <line x1="156" y1="42" x2="264" y2="42" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="156" y1="52" x2="264" y2="52" stroke="#8c4d22" stroke-width="1.2"/>
+            <line x1="156" y1="62" x2="264" y2="62" stroke="#8c4d22" stroke-width="1.2"/>
           </g>
-          <text x="230" y="66" font-size="12.5" font-weight="700" fill="#8c4d22">线圈 N（通交流 i）</text>
-          <!-- 衔铁：随气隙上下移动（行程放大约 6 倍） -->
-          <rect id="armGap" x="104" y="204" width="180" height="24" rx="3" fill="var(--iron)" opacity=".72" stroke="#2f4b68" stroke-width="1.5"/>
-          <text id="armTxt" x="292" y="220" font-size="12.5" font-weight="700" fill="#2f4b68">衔铁</text>
-          <!-- 气隙尺寸 -->
-          <line id="gapDim" x1="316" y1="196" x2="316" y2="204" stroke="var(--gapm)" stroke-width="2.5"/>
-          <line id="gapTick1" x1="309" y1="196" x2="323" y2="196" stroke="var(--gapm)" stroke-width="2.5"/>
-          <line id="gapDimB" x1="309" y1="204" x2="323" y2="204" stroke="var(--gapm)" stroke-width="2.5"/>
-          <line id="gapLead" x1="180" y1="292" x2="180" y2="300" stroke="#c9d6e6" stroke-width="1.2"/>
-          <text id="gapTxt" x="180" y="314" text-anchor="middle" font-size="13" font-weight="700" fill="var(--gapm)">气隙 δ = 0.500 mm</text>
+          <text x="272" y="34" font-size="12.5" font-weight="700" fill="#8c4d22">线圈 1</text>
+          <rect id="armGap" x="100" y="214" width="220" height="24" rx="3" fill="#2b6cb0" opacity=".85" stroke="#1b4a7a" stroke-width="1.5"/>
+          <text id="armTxt" x="328" y="232" font-size="12.5" font-weight="700" fill="#2b6cb0">衔铁 3</text>
+          <line id="gapDim" x1="348" y1="192" x2="348" y2="214" stroke="var(--gapm)" stroke-width="2.5"/>
+          <line id="gapTick1" x1="341" y1="192" x2="355" y2="192" stroke="var(--gapm)" stroke-width="2.5"/>
+          <line id="gapDimB" x1="341" y1="214" x2="355" y2="214" stroke="var(--gapm)" stroke-width="2.5"/>
+          <text id="gapTxt" x="362" y="206" font-size="12.5" font-weight="700" fill="var(--gapm)">δ</text>
+          <line id="dMove" x1="76" y1="250" x2="76" y2="214" stroke="#d94a3d" stroke-width="2.5"/>
+          <polygon id="dMoveH" points="76,210 71,220 81,220" fill="#d94a3d"/>
+          <text id="dMoveTxt" x="52" y="246" font-size="12" font-weight="700" fill="#d94a3d">Δδ</text>
         </g>
-        <!-- 变面积型：极面固定，衔铁横向滑移 → 有效覆盖面积改变（气隙 δ 不变） -->
+        <!-- ============ 自感型 (b) 变截面型：E 形铁芯 + 右侧竖向衔铁板（δ 不变、覆盖面积变） ============ -->
         <g id="stArea" style="display:none">
-          <rect x="112" y="18" width="120" height="26" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="112" y="44" width="24" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="160" y="44" width="24" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="208" y="44" width="24" height="152" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <text x="84" y="36" font-size="12.5" font-weight="700" fill="#2f4b68">铁芯</text>
-          <rect x="150" y="72" width="48" height="86" rx="5" fill="var(--cu)" opacity=".92"/>
-          <line x1="150" y1="86" x2="198" y2="86" stroke="#8c4d22" stroke-width="1.2"/>
-          <line x1="150" y1="100" x2="198" y2="100" stroke="#8c4d22" stroke-width="1.2"/>
-          <line x1="150" y1="114" x2="198" y2="114" stroke="#8c4d22" stroke-width="1.2"/>
-          <line x1="150" y1="128" x2="198" y2="128" stroke="#8c4d22" stroke-width="1.2"/>
-          <line x1="150" y1="142" x2="198" y2="142" stroke="#8c4d22" stroke-width="1.2"/>
-          <text x="204" y="64" font-size="12.5" font-weight="700" fill="#8c4d22">线圈 N</text>
-          <!-- 三个极面（腿的底面，固定不动） -->
-          <rect x="112" y="192" width="24" height="6" fill="#2f4b68" opacity=".55"/>
-          <rect x="160" y="192" width="24" height="6" fill="#2f4b68" opacity=".55"/>
-          <rect x="208" y="192" width="24" height="6" fill="#2f4b68" opacity=".55"/>
-          <!-- 气隙平面：橙色＝有效覆盖（磁通穿过），灰色＝失去覆盖 -->
-          <rect id="lostArea" x="112" y="198" width="0" height="9" fill="#94a3b8" opacity=".5"/>
-          <rect id="overlap" x="112" y="198" width="120" height="9" fill="var(--gapm)" opacity=".9"/>
-          <!-- 衔铁：横向滑移 -->
-          <rect id="armArea" x="112" y="207" width="200" height="24" rx="3" fill="var(--iron)" opacity=".72" stroke="#2f4b68" stroke-width="1.5"/>
-          <!-- 滑移方向箭头 -->
-          <line id="armArrow" x1="112" y1="224" x2="112" y2="224" stroke="#d94a3d" stroke-width="2"/>
-          <polygon id="armArrowH" points="112,224 112,224 112,224" fill="#d94a3d"/>
-          <text id="armAreaTxt" x="320" y="222" font-size="12.5" font-weight="700" fill="#2f4b68">衔铁（横向滑移）</text>
-          <!-- 标注：极面总宽 + 有效覆盖 -->
-          <line x1="112" y1="246" x2="232" y2="246" stroke="#8296ad" stroke-width="1.6"/>
-          <line x1="112" y1="242" x2="112" y2="250" stroke="#8296ad" stroke-width="1.6"/>
-          <line x1="232" y1="242" x2="232" y2="250" stroke="#8296ad" stroke-width="1.6"/>
-          <text x="172" y="240" text-anchor="middle" font-size="11.5" fill="#8296ad">极面总宽（S₀）</text>
-          <line id="areaDim" x1="112" y1="272" x2="232" y2="272" stroke="var(--gapm)" stroke-width="2.4"/>
-          <line id="areaDimL" x1="112" y1="267" x2="112" y2="277" stroke="var(--gapm)" stroke-width="2.4"/>
-          <line id="areaDimR" x1="232" y1="267" x2="232" y2="277" stroke="var(--gapm)" stroke-width="2.4"/>
-          <text id="areaTxt" x="172" y="292" text-anchor="middle" font-size="13" font-weight="700" fill="var(--gapm)">有效面积 S = 4.00 cm²</text>
-          <text id="lostTxt" x="140" y="190" text-anchor="middle" font-size="11.5" font-weight="700" fill="#64748b" stroke="#fff" stroke-width="3" paint-order="stroke"></text>
+          <rect x="112" y="60" width="34" height="200" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="146" y="60" width="112" height="56" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="146" y="204" width="112" height="56" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <text x="82" y="46" font-size="12.5" font-weight="700" fill="#2f4b68">铁芯 2</text>
+          <rect x="88" y="120" width="42" height="80" rx="5" fill="var(--cu)" opacity=".92"/>
+          <line x1="88" y1="136" x2="130" y2="136" stroke="#8c4d22" stroke-width="1.2"/>
+          <line x1="88" y1="152" x2="130" y2="152" stroke="#8c4d22" stroke-width="1.2"/>
+          <line x1="88" y1="168" x2="130" y2="168" stroke="#8c4d22" stroke-width="1.2"/>
+          <line x1="88" y1="184" x2="130" y2="184" stroke="#8c4d22" stroke-width="1.2"/>
+          <text x="60" y="222" font-size="12.5" font-weight="700" fill="#8c4d22">线圈 1</text>
+          <!-- 两个极面（固定）：上腿端面 y=60..116，下腿端面 y=204..260 -->
+          <rect id="lostTop" x="258" y="60" width="14" height="0" fill="#94a3b8" opacity=".55"/>
+          <rect id="overlapTop" x="258" y="60" width="14" height="56" fill="var(--gapm)" opacity=".9"/>
+          <rect id="overlapBot" x="258" y="204" width="14" height="56" fill="var(--gapm)" opacity=".9"/>
+          <!-- 衔铁：竖向板，上下滑移改变覆盖面积 -->
+          <rect id="armArea" x="272" y="60" width="26" height="200" rx="3" fill="#2b6cb0" opacity=".85" stroke="#1b4a7a" stroke-width="1.5"/>
+          <text id="armAreaTxt" x="306" y="150" font-size="12.5" font-weight="700" fill="#2b6cb0">衔铁 3</text>
+          <line x1="258" y1="44" x2="272" y2="44" stroke="var(--gapm)" stroke-width="2.5"/>
+          <text id="gapTxtA" x="288" y="38" font-size="12" font-weight="700" fill="var(--gapm)">δ</text>
+          <line id="moveA" x1="312" y1="290" x2="312" y2="250" stroke="#d94a3d" stroke-width="2.5"/>
+          <polygon id="moveAH" points="312,244 307,256 317,256" fill="#d94a3d"/>
+          <text id="moveATxt" x="290" y="300" font-size="12" font-weight="700" fill="#d94a3d">Δa</text>
+          <text id="areaTxt" x="146" y="300" font-size="12.5" font-weight="700" fill="var(--gapm)">有效面积 S = 4.00 cm²</text>
         </g>
-        <!-- 螺管型 -->
+        <!-- ============ 自感型 (c) 螺管型：水平螺管 + 轴向插入衔铁（x, l, r） ============ -->
         <g id="stSol" style="display:none">
-          <rect x="150" y="70" width="120" height="190" rx="8" fill="none" stroke="var(--iron)" stroke-width="2"/>
-          <g>
-            <rect x="150" y="80" width="26" height="170" fill="var(--cu)" opacity=".85"/>
-            <rect x="244" y="80" width="26" height="170" fill="var(--cu)" opacity=".85"/>
-            <line x1="150" y1="96" x2="176" y2="96" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="150" y1="130" x2="176" y2="130" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="150" y1="164" x2="176" y2="164" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="150" y1="198" x2="176" y2="198" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="150" y1="232" x2="176" y2="232" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="244" y1="96" x2="270" y2="96" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="244" y1="130" x2="270" y2="130" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="244" y1="164" x2="270" y2="164" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="244" y1="198" x2="270" y2="198" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="244" y1="232" x2="270" y2="232" stroke="#8c4d22" stroke-width="1.2"/>
+          <rect x="120" y="96" width="260" height="26" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="120" y="198" width="260" height="26" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <text x="386" y="112" font-size="12.5" font-weight="700" fill="#2f4b68">铁芯 2</text>
+          <rect x="180" y="122" width="150" height="80" rx="4" fill="var(--cu)" opacity=".9"/>
+          <g stroke="#8c4d22" stroke-width="1.1">
+            <line x1="190" y1="122" x2="190" y2="202"/><line x1="204" y1="122" x2="204" y2="202"/>
+            <line x1="218" y1="122" x2="218" y2="202"/><line x1="232" y1="122" x2="232" y2="202"/>
+            <line x1="246" y1="122" x2="246" y2="202"/><line x1="260" y1="122" x2="260" y2="202"/>
+            <line x1="274" y1="122" x2="274" y2="202"/><line x1="288" y1="122" x2="288" y2="202"/>
+            <line x1="302" y1="122" x2="302" y2="202"/><line x1="316" y1="122" x2="316" y2="202"/>
           </g>
-          <text x="285" y="120" font-size="12.5" font-weight="700" fill="#8c4d22">螺管线圈</text>
-          <rect id="plunger" x="196" y="60" width="28" height="120" rx="4" fill="var(--iron)" opacity=".8" stroke="#2f4b68" stroke-width="1.5"/>
-          <text id="plungerTxt" x="210" y="52" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2f4b68">衔铁插入深度 x</text>
-          <line id="solDim" x1="330" y1="70" x2="330" y2="190" stroke="var(--gapm)" stroke-width="2"/>
-          <text id="solTxt" x="338" y="134" font-size="12.5" font-weight="700" fill="var(--gapm)">x = 0</text>
-          <text x="150" y="288" font-size="12" fill="#5b6b80">插入越深 → 磁路磁阻越小 → L 越大（中段线性最好）</text>
+          <text x="184" y="238" font-size="12.5" font-weight="700" fill="#8c4d22">线圈 1</text>
+          <rect id="plunger" x="76" y="140" width="164" height="44" rx="4" fill="#2b6cb0" opacity=".88" stroke="#1b4a7a" stroke-width="1.5"/>
+          <text id="plungerTxt" x="76" y="132" font-size="12.5" font-weight="700" fill="#2b6cb0">衔铁 3</text>
+          <line id="solDim" x1="180" y1="262" x2="180" y2="282" stroke="var(--gapm)" stroke-width="2.5"/>
+          <line id="solDimR" x1="180" y1="262" x2="180" y2="262" stroke="var(--gapm)" stroke-width="2.5"/>
+          <line x1="330" y1="262" x2="330" y2="282" stroke="var(--gapm)" stroke-width="2.5"/>
+          <line x1="180" y1="272" x2="330" y2="272" stroke="var(--gapm)" stroke-width="1.6"/>
+          <text x="255" y="292" text-anchor="middle" font-size="12" font-weight="700" fill="var(--gapm)">l（线圈长）</text>
+          <line id="xDim" x1="180" y1="76" x2="180" y2="76" stroke="#d94a3d" stroke-width="2.5"/>
+          <line id="xDimR" x1="180" y1="64" x2="240" y2="64" stroke="#d94a3d" stroke-width="2.5"/>
+          <line x1="180" y1="58" x2="180" y2="70" stroke="#d94a3d" stroke-width="2.5"/>
+          <text id="xTxt2" x="212" y="56" text-anchor="middle" font-size="12" font-weight="700" fill="#d94a3d">x</text>
+          <line id="moveS" x1="60" y1="162" x2="60" y2="162" stroke="#d94a3d" stroke-width="2.5"/>
+          <polygon id="moveSH" points="60,162 60,162 60,162" fill="#d94a3d"/>
+          <text x="34" y="166" font-size="12" font-weight="700" fill="#d94a3d">Δx</text>
+          <text x="180" y="316" font-size="12" fill="#5b6b80">衔铁轴向插入越深 → 空气段越短 → L 越大（中段线性最好）</text>
+        </g>
+        <!-- ============ 差动型 (a) 变隙型：上下两个 П 铁芯（各绕一线圈）+ 中间衔铁，δ₁/δ₂ 反向 ============ -->
+        <g id="stDGap" style="display:none">
+          <!-- 上铁芯（开口向下）+ 上轭线圈 -->
+          <rect x="118" y="24" width="184" height="28" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="118" y="52" width="34" height="46" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="268" y="52" width="34" height="46" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="152" y="14" width="116" height="36" rx="5" fill="var(--cu)" opacity=".92"/>
+          <line x1="152" y1="24" x2="268" y2="24" stroke="#8c4d22" stroke-width="1.1"/>
+          <line x1="152" y1="34" x2="268" y2="34" stroke="#8c4d22" stroke-width="1.1"/>
+          <text x="274" y="22" font-size="12" font-weight="700" fill="#8c4d22">L₁ 线圈</text>
+          <!-- 下铁芯（开口向上）+ 下轭线圈 -->
+          <rect x="118" y="268" width="184" height="28" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="118" y="222" width="34" height="46" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="268" y="222" width="34" height="46" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="152" y="270" width="116" height="36" rx="5" fill="var(--cu)" opacity=".92"/>
+          <line x1="152" y1="280" x2="268" y2="280" stroke="#8c4d22" stroke-width="1.1"/>
+          <line x1="152" y1="290" x2="268" y2="290" stroke="#8c4d22" stroke-width="1.1"/>
+          <text x="274" y="292" font-size="12" font-weight="700" fill="#8c4d22">L₂ 线圈</text>
+          <!-- 中间衔铁（上下移动 Δδ） -->
+          <rect id="armDiff" x="104" y="150" width="212" height="24" rx="3" fill="#2b6cb0" opacity=".85" stroke="#1b4a7a" stroke-width="1.5"/>
+          <text id="armDiffTxt" x="322" y="168" font-size="12" font-weight="700" fill="#2b6cb0">衔铁 2</text>
+          <line id="d1Dim" x1="348" y1="98" x2="348" y2="150" stroke="var(--gapm)" stroke-width="2.5"/>
+          <text id="d1Txt" x="356" y="128" font-size="12" font-weight="700" fill="var(--gapm)">δ₁</text>
+          <line id="d2Dim" x1="348" y1="174" x2="348" y2="222" stroke="var(--gapm)" stroke-width="2.5"/>
+          <text id="d2Txt" x="356" y="204" font-size="12" font-weight="700" fill="var(--gapm)">δ₂</text>
+          <line id="ddMove" x1="76" y1="196" x2="76" y2="150" stroke="#d94a3d" stroke-width="2.5"/>
+          <polygon id="ddMoveH" points="76,144 71,156 81,156" fill="#d94a3d"/>
+          <text id="ddMoveTxt" x="50" y="178" font-size="12" font-weight="700" fill="#d94a3d">Δδ</text>
+          <text id="dOutTxt" x="20" y="322" font-size="12.5" font-weight="700" fill="#0e4a8e">ΔL = L₁ − L₂ = 0.0000 H</text>
+        </g>
+        <!-- ============ 差动型 (b) 变截面型：方框铁芯上下轭各绕线圈 + 中间蝶形衔铁，δ 恒定 ============ -->
+        <g id="stDArea" style="display:none">
+          <rect x="140" y="40" width="150" height="34" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="140" y="256" width="150" height="34" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="140" y="74" width="34" height="182" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <rect x="256" y="74" width="34" height="182" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
+          <text x="104" y="34" font-size="12.5" font-weight="700" fill="#2f4b68">铁芯</text>
+          <g stroke="#8c4d22" stroke-width="1.1">
+            <line x1="176" y1="40" x2="176" y2="74"/><line x1="196" y1="40" x2="196" y2="74"/>
+            <line x1="216" y1="40" x2="216" y2="74"/><line x1="236" y1="40" x2="236" y2="74"/>
+            <line x1="176" y1="256" x2="176" y2="290"/><line x1="196" y1="256" x2="196" y2="290"/>
+            <line x1="216" y1="256" x2="216" y2="290"/><line x1="236" y1="256" x2="236" y2="290"/>
+          </g>
+          <rect x="170" y="42" width="90" height="30" rx="4" fill="var(--cu)" opacity=".92"/>
+          <rect x="170" y="258" width="90" height="30" rx="4" fill="var(--cu)" opacity=".92"/>
+          <text x="292" y="62" font-size="12" font-weight="700" fill="#8c4d22">L₁</text>
+          <text x="292" y="280" font-size="12" font-weight="700" fill="#8c4d22">L₂</text>
+          <!-- 蝶形衔铁（中间） -->
+          <g id="armDArea">
+            <path d="M174 138 L174 116 H232 L256 138 L232 160 H174 Z" fill="#2b6cb0" opacity=".88" stroke="#1b4a7a" stroke-width="1.4"/>
+          </g>
+          <text x="266" y="146" font-size="12" font-weight="700" fill="#2b6cb0">衔铁 2</text>
+          <line id="daGap1" x1="166" y1="104" x2="166" y2="116" stroke="var(--gapm)" stroke-width="2.5"/>
+          <text x="146" y="102" font-size="12" font-weight="700" fill="var(--gapm)">δ</text>
+          <line id="daMove" x1="118" y1="196" x2="118" y2="150" stroke="#d94a3d" stroke-width="2.5"/>
+          <polygon id="daMoveH" points="118,144 113,156 123,156" fill="#d94a3d"/>
+          <text x="92" y="178" font-size="12" font-weight="700" fill="#d94a3d">Δa</text>
+          <text id="daOut" x="140" y="318" font-size="12.5" font-weight="700" fill="#0e4a8e">ΔL = L₁ − L₂ = 0.0000 H</text>
+        </g>
+        <!-- ============ 差动型 (c) 螺管型：两个线圈并列 + 轴向衔铁 + 外壳，差动输出 ============ -->
+        <g id="stDSol" style="display:none">
+          <rect x="120" y="70" width="300" height="30" fill="#7f9d7a" opacity=".85" stroke="#4c6b48" stroke-width="1.5"/>
+          <rect x="120" y="240" width="300" height="30" fill="#7f9d7a" opacity=".85" stroke="#4c6b48" stroke-width="1.5"/>
+          <text x="428" y="92" font-size="12" font-weight="700" fill="#4c6b48">铁心 2</text>
+          <!-- 两个线圈（并列） -->
+          <rect x="136" y="100" width="130" height="140" rx="4" fill="var(--cu)" opacity=".9"/>
+          <rect x="274" y="100" width="130" height="140" rx="4" fill="var(--cu)" opacity=".9"/>
+          <g stroke="#8c4d22" stroke-width="1.1">
+            <line x1="156" y1="100" x2="156" y2="240"/><line x1="176" y1="100" x2="176" y2="240"/>
+            <line x1="196" y1="100" x2="196" y2="240"/><line x1="216" y1="100" x2="216" y2="240"/>
+            <line x1="236" y1="100" x2="236" y2="240"/>
+            <line x1="294" y1="100" x2="294" y2="240"/><line x1="314" y1="100" x2="314" y2="240"/>
+            <line x1="334" y1="100" x2="334" y2="240"/><line x1="354" y1="100" x2="354" y2="240"/>
+            <line x1="374" y1="100" x2="374" y2="240"/>
+          </g>
+          <text x="200" y="122" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">1 线圈 L₁</text>
+          <text x="339" y="122" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">1 线圈 L₂</text>
+          <!-- 轴向衔铁（贯穿两线圈） -->
+          <rect id="rodDSol" x="86" y="152" width="330" height="36" rx="4" fill="#2b6cb0" opacity=".88" stroke="#1b4a7a" stroke-width="1.5"/>
+          <text x="86" y="146" font-size="12" font-weight="700" fill="#2b6cb0">衔铁 3</text>
+          <line id="dsMove" x1="66" y1="212" x2="66" y2="170" stroke="#d94a3d" stroke-width="2.5"/>
+          <polygon id="dsMoveH" points="66,164 61,176 71,176" fill="#d94a3d"/>
+          <text x="40" y="196" font-size="12" font-weight="700" fill="#d94a3d">Δx</text>
+          <line x1="136" y1="292" x2="136" y2="308" stroke="var(--gapm)" stroke-width="2.5"/>
+          <line x1="266" y1="292" x2="266" y2="308" stroke="var(--gapm)" stroke-width="2.5"/>
+          <line x1="136" y1="300" x2="266" y2="300" stroke="var(--gapm)" stroke-width="1.6"/>
+          <text x="201" y="320" text-anchor="middle" font-size="12" font-weight="700" fill="var(--gapm)">l</text>
+          <line x1="274" y1="292" x2="274" y2="308" stroke="var(--gapm)" stroke-width="2.5"/>
+          <line x1="404" y1="292" x2="404" y2="308" stroke="var(--gapm)" stroke-width="2.5"/>
+          <line x1="274" y1="300" x2="404" y2="300" stroke="var(--gapm)" stroke-width="1.6"/>
+          <text x="339" y="320" text-anchor="middle" font-size="12" font-weight="700" fill="var(--gapm)">l</text>
+          <text id="dsOut" x="20" y="342" font-size="12.5" font-weight="700" fill="#0e4a8e">ΔL = L₁ − L₂ = 0.0000 H</text>
         </g>
         <!-- 磁通闭合回路（动画：流动虚线 + 移动粒子） -->
         <path id="loopGap" d="" fill="none" stroke="var(--flux)" stroke-width="3.2" stroke-dasharray="10 8"
@@ -340,44 +422,7 @@
               stroke-linecap="round" opacity=".9" style="display:none"/>
         <g id="fluxDots"></g>
         <!-- 差动式：两个线圈分绕上/下磁芯，衔铁在中间，上下气隙一增一减 -->
-        <g id="stDiff" style="display:none">
-          <!-- 上磁芯（上轭 + 两条腿） -->
-          <rect x="128" y="14" width="136" height="22" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="128" y="36" width="24" height="52" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="240" y="36" width="24" height="52" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <!-- 下磁芯 -->
-          <rect x="128" y="242" width="136" height="22" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="128" y="190" width="24" height="52" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="240" y="190" width="24" height="52" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <!-- 线圈 L₁（绕上轭）／L₂（绕下轭） -->
-          <g id="coilD1"><rect x="168" y="6" width="56" height="38" rx="5" fill="var(--cu)" opacity=".92"/>
-            <line x1="168" y1="14" x2="224" y2="14" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="168" y1="26" x2="224" y2="26" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="168" y1="38" x2="224" y2="38" stroke="#8c4d22" stroke-width="1.2"/></g>
-          <g id="coilD2"><rect x="168" y="234" width="56" height="38" rx="5" fill="var(--cu)" opacity=".92"/>
-            <line x1="168" y1="242" x2="224" y2="242" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="168" y1="254" x2="224" y2="254" stroke="#8c4d22" stroke-width="1.2"/>
-            <line x1="168" y1="266" x2="224" y2="266" stroke="#8c4d22" stroke-width="1.2"/></g>
-          <text x="230" y="18" font-size="12" font-weight="700" fill="#8c4d22">L₁</text>
-          <text x="230" y="264" font-size="12" font-weight="700" fill="#8c4d22">L₂</text>
-          <!-- 衔铁（中间，随被测位移上下移动） -->
-          <rect id="armDiff" x="112" y="128" width="168" height="22" rx="3" fill="#2b6cb0" opacity=".85" stroke="#1b4a7a" stroke-width="1.5"/>
-          <text id="armDiffTxt" x="288" y="144" font-size="12" font-weight="700" fill="#2b6cb0">衔铁</text>
-          <!-- 上下气隙尺寸 -->
-          <line id="d1Dim" x1="288" y1="88" x2="288" y2="128" stroke="var(--gapm)" stroke-width="2.4"/>
-          <line id="d1Tick" x1="281" y1="88" x2="295" y2="88" stroke="var(--gapm)" stroke-width="2.4"/>
-          <text id="d1Txt" x="304" y="112" font-size="12" font-weight="700" fill="var(--gapm)">δ₁</text>
-          <line id="d2Dim" x1="288" y1="150" x2="288" y2="190" stroke="var(--gapm)" stroke-width="2.4"/>
-          <line id="d2Tick" x1="281" y1="190" x2="295" y2="190" stroke="var(--gapm)" stroke-width="2.4"/>
-          <text id="d2Txt" x="304" y="176" font-size="12" font-weight="700" fill="var(--gapm)">δ₂</text>
-          <!-- 位移 Δa -->
-          <line id="dMove" x1="96" y1="150" x2="96" y2="120" stroke="#d94a3d" stroke-width="2.4"/>
-          <polygon id="dMoveH" points="96,116 91,126 101,126" fill="#d94a3d"/>
-          <text id="dMoveTxt" x="70" y="112" font-size="11.5" font-weight="700" fill="#d94a3d">Δa</text>
-          <!-- 输出 -->
-          <text id="dOutTxt" x="20" y="296" font-size="12.5" font-weight="700" fill="#0e4a8e">ΔL = L₁ − L₂ = 0.0000 H</text>
-          <text id="dOutSub" x="20" y="312" font-size="11.5" fill="#5b6b80">一个气隙减小、另一个增大 → 两线圈电感反向变化</text>
-        </g>
+
         <!-- 右侧：磁阻分解 + 磁通量 -->
         <g transform="translate(420,12)">
           <text x="0" y="0" font-size="13" font-weight="700" fill="#0e4a8e">磁阻分解（串联）</text>
@@ -891,52 +936,72 @@
 
   /* ============ 2b. 磁通流动动画 ============ */
   var FLUX = { L:0, t:0, target:1, els:null, path:null, paths:[] };
-  /* 闭合磁通回路：中腿下行 → 穿气隙 → 衔铁 → 外腿 → 上轭 → 回中腿 */
+  /* 闭合磁通回路（按各结构几何生成） */
+  /* 自感·变隙型：左腿下行 → 穿气隙 → 衔铁 → 右腿 → 上轭 */
   function gapLoop(yArm){
-    var y1 = 196, yA = yArm + 5, yB = yArm + 17;
-    return 'M195 44 V' + y1 + ' L195 ' + yA + ' L133 ' + yA + ' L133 30 L257 30 L257 ' + yB +
-           ' L203 ' + yB + ' L203 ' + y1 + ' V44 Z';
+    return 'M136 100 V192 L136 ' + (yArm + 6).toFixed(0) + ' L284 ' + (yArm + 6).toFixed(0) + ' L284 192 V100 Z';
   }
-  /* 变面积型回路：有效覆盖变窄 → 磁通回路随之变窄（失去覆盖的极面不再参与） */
-  function areaLoop(dx, yArm){
-    var left = Math.max(124, 112 + dx);
-    var yA = yArm + 6, yB = yArm + 18;
-    return 'M172 44 V196 L172 ' + yA + ' L' + left + ' ' + yA + ' L' + left + ' 30 L220 30 L220 ' + yB +
-           ' L176 ' + yB + ' L176 196 V44 Z';
+  /* 自感·变截面型：背板 → 上腿 → 穿气隙 → 衔铁板 → 穿气隙 → 下腿 → 背板 */
+  function areaLoop(){
+    return 'M240 88 H129 V232 H240 L265 232 L265 88 Z';
   }
-  function solLoop(yTop, depth){
-    var yb = yTop + depth - 6;
-    return 'M206 ' + (yTop - 6) + ' V' + yb + ' L180 ' + yb + ' L180 86 L240 86 L240 ' + yb +
-           ' L214 ' + yb + ' L214 ' + (yTop - 6) + ' Z';
+  /* 自感·螺管型：绕线圈与衔铁的外围磁路 */
+  function solLoop(){
+    return 'M120 108 H340 V212 H120 Z';
+  }
+  /* 差动·变隙型：上下两条独立回路 */
+  function dGapLoop(yT, yB){
+    return ['M136 40 V98 L136 ' + (yT + 6).toFixed(0) + ' L284 ' + (yT + 6).toFixed(0) + ' L284 98 V40 Z',
+            'M136 280 V222 L136 ' + (yB - 6).toFixed(0) + ' L284 ' + (yB - 6).toFixed(0) + ' L284 222 V280 Z'];
+  }
+  /* 差动·变截面型：绕方框铁芯一条回路 */
+  function dAreaLoop(){
+    return 'M157 57 H273 V273 H157 Z';
+  }
+  /* 差动·螺管型：两个线圈各一条回路 */
+  function dSolLoop(){
+    return ['M160 108 H246 V232 H160 Z', 'M298 108 H384 V232 H298 Z'];
   }
   function activeLoopEl(){
     return S.type === 'solenoid' ? $('loopSol') : (S.type === 'area' ? $('loopArea') : $('loopGap'));
   }
   function setFluxPath(){
-    var yArm = parseFloat($('armGap').getAttribute('y')) || 204;
-    var yTop = parseFloat($('plunger').getAttribute('y')) || 70;
-    var depth = parseFloat($('plunger').getAttribute('height')) || 120;
     var isD = (S.diff === 'differ');
-    $('loopGap').style.display  = (!isD && S.type === 'gap') ? '' : 'none';
-    $('loopArea').style.display = (!isD && S.type === 'area') ? '' : 'none';
-    $('loopSol').style.display  = (!isD && S.type === 'solenoid') ? '' : 'none';
-    $('loopD1').style.display = isD ? '' : 'none';
-    $('loopD2').style.display = isD ? '' : 'none';
-    var paths = [];
-    if (isD){
-      /* 差动：两个线圈各自独立回路，各有一个气隙 */
-      var armTop = parseFloat($('armDiff').getAttribute('y')) || 118, armBot = armTop + 22;
-      $('loopD1').setAttribute('d', 'M140 20 V88 L140 ' + (armTop + 5) + ' L252 ' + (armTop + 5) + ' L252 20 Z');
-      $('loopD2').setAttribute('d', 'M140 256 V190 L140 ' + (armBot - 5) + ' L252 ' + (armBot - 5) + ' L252 256 Z');
-      var dP = diffPair(S.type, S.x/100, S.N), L0 = selfL('gap', 0, S.N).L;
+    ['loopGap','loopArea','loopSol','loopD1','loopD2'].forEach(function(id){
+      var el = $(id); if (el) el.style.display = 'none';
+    });
+    var yArm = parseFloat($('armGap').getAttribute('y')) || 214;
+    var yT = parseFloat($('armDiff').getAttribute('y')) || 128;
+    var L0 = selfL('gap', 0, S.N).L, paths = [];
+    if (isD && S.type === 'gap'){
+      var d = dGapLoop(yT, yT + 24), dP = diffPair(S.type, S.x/100, S.N);
+      $('loopD1').style.display = $('loopD2').style.display = '';
+      $('loopD1').setAttribute('d', d[0]); $('loopD2').setAttribute('d', d[1]);
       paths.push({ el:$('loopD1'), L:0, f:dP.up.L/L0 });
       paths.push({ el:$('loopD2'), L:0, f:dP.down.L/L0 });
+    } else if (isD && S.type === 'area'){
+      $('loopD1').style.display = '';
+      $('loopD1').setAttribute('d', dAreaLoop());
+      var dPa = diffPair(S.type, S.x/100, S.N);
+      paths.push({ el:$('loopD1'), L:0, f:dPa.up.L/L0 });
+    } else if (isD && S.type === 'solenoid'){
+      var dPs = diffPair(S.type, S.x/100, S.N), ds = dSolLoop();
+      $('loopD1').style.display = $('loopD2').style.display = '';
+      $('loopD1').setAttribute('d', ds[0]); $('loopD2').setAttribute('d', ds[1]);
+      paths.push({ el:$('loopD1'), L:0, f:dPs.up.L/L0 });
+      paths.push({ el:$('loopD2'), L:0, f:dPs.down.L/L0 });
+    } else if (S.type === 'gap'){
+      $('loopGap').style.display = '';
+      $('loopGap').setAttribute('d', gapLoop(yArm));
+      paths.push({ el:$('loopGap'), L:0, f:fluxRatio() });
+    } else if (S.type === 'area'){
+      $('loopArea').style.display = '';
+      $('loopArea').setAttribute('d', areaLoop());
+      paths.push({ el:$('loopArea'), L:0, f:fluxRatio() });
     } else {
-      var dxA = 120*0.6*(S.x/100);
-      var el = S.type === 'solenoid' ? $('loopSol') : (S.type === 'area' ? $('loopArea') : $('loopGap'));
-      el.setAttribute('d', S.type === 'solenoid' ? solLoop(yTop, depth)
-                      : (S.type === 'area' ? areaLoop(dxA, 207) : gapLoop(yArm)));
-      paths.push({ el:el, L:0, f:fluxRatio() });
+      $('loopSol').style.display = '';
+      $('loopSol').setAttribute('d', solLoop());
+      paths.push({ el:$('loopSol'), L:0, f:fluxRatio() });
     }
     paths.forEach(function(o){ try { o.L = o.el.getTotalLength(); } catch (e) { o.L = 0; } });
     FLUX.paths = paths;
@@ -1054,73 +1119,87 @@
     $('turnsOut').textContent = S.N;
     $('freqOut').textContent = S.f.toFixed(1) + ' kHz';
 
-    /* --- 结构图切换 --- */
-    var isD = (S.diff === 'differ');
-    $('stGap').style.display = (!isD && S.type === 'gap') ? '' : 'none';
-    $('stArea').style.display = (!isD && S.type === 'area') ? '' : 'none';
-    $('stSol').style.display = (!isD && S.type === 'solenoid') ? '' : 'none';
-    $('stDiff').style.display = isD ? '' : 'none';
-    if (isD){
-      /* 差动式：衔铁上移 → δ₁ 减小、δ₂ 增大（视觉 20 ~ 40 px，围绕中位 30） */
-      var gx = S.x/100, dP = diffPair(S.type, gx, S.N);
-      var gap1 = 30 - 10*gx, gap2 = 50 + 10*gx;      /* 视觉：δ₁ 由 30→20，δ₂ 由 50→60 */
-      var armTop = 88 + gap1, armBot = armTop + 22;
-      $('armDiff').setAttribute('y', armTop.toFixed(1));
-      $('armDiffTxt').setAttribute('y', (armTop + 15).toFixed(1));
-      $('d1Dim').setAttribute('y2', armTop.toFixed(1));
-      $('d2Dim').setAttribute('y1', armBot.toFixed(1));
-      $('d1Txt').setAttribute('y', (88 + gap1/2 + 4).toFixed(1));
-      $('d1Txt').textContent = 'δ₁ = ' + ((S.type === 'gap') ? ((CFG.d0 - gx*(CFG.d0-CFG.dMin))*1000).toFixed(3) : (CFG.d0*1000).toFixed(3)) + ' mm';
-      $('d2Txt').setAttribute('y', (armBot + gap2/2 + 4).toFixed(1));
-      $('d2Txt').textContent = 'δ₂ = ' + ((S.type === 'gap') ? ((CFG.d0 + gx*(CFG.d0-CFG.dMin))*1000).toFixed(3) : (CFG.d0*1000).toFixed(3)) + ' mm';
-      $('dMove').setAttribute('y1', (armTop + 20).toFixed(1)); $('dMove').setAttribute('y2', (armTop - 12).toFixed(1));
-      $('dMoveH').setAttribute('points', '96,' + (armTop - 16).toFixed(1) + ' 91,' + (armTop - 6).toFixed(1) + ' 101,' + (armTop - 6).toFixed(1));
-      $('dMoveTxt').setAttribute('y', (armTop - 22).toFixed(1));
-      $('dMoveTxt').textContent = 'Δa = ' + (S.x*2.5).toFixed(0) + ' μm';
+    /* --- 结构图切换：自感型三选一 / 差动型三选一（对应教材图） --- */
+    var isD = (S.diff === 'differ'), gx = S.x/100;
+    $('stGap').style.display   = (!isD && S.type === 'gap') ? '' : 'none';
+    $('stArea').style.display  = (!isD && S.type === 'area') ? '' : 'none';
+    $('stSol').style.display   = (!isD && S.type === 'solenoid') ? '' : 'none';
+    $('stDGap').style.display  = (isD && S.type === 'gap') ? '' : 'none';
+    $('stDArea').style.display = (isD && S.type === 'area') ? '' : 'none';
+    $('stDSol').style.display  = (isD && S.type === 'solenoid') ? '' : 'none';
+
+    if (!isD && S.type === 'gap'){
+      /* 自感·变隙型：铁芯腿下端 y=192，衔铁随 δ 下移（视觉 8~66 px） */
+      var gapPx = 8 + 58*(r.delta/CFG.d0), yA = 192 + gapPx;
+      $('armGap').setAttribute('y', yA.toFixed(1));
+      $('armTxt').setAttribute('y', (yA + 16).toFixed(1));
+      $('gapDim').setAttribute('y2', yA.toFixed(1));
+      $('gapDimB').setAttribute('y1', yA.toFixed(1)); $('gapDimB').setAttribute('y2', yA.toFixed(1));
+      $('gapTxt').setAttribute('y', (192 + gapPx/2 + 4).toFixed(1));
+      $('gapTxt').textContent = 'δ = ' + (r.delta*1000).toFixed(3) + ' mm';
+      $('dMove').setAttribute('y1', (yA + 18).toFixed(1)); $('dMove').setAttribute('y2', (yA - 2).toFixed(1));
+      $('dMoveH').setAttribute('points', '76,' + (yA - 8).toFixed(1) + ' 71,' + (yA + 2).toFixed(1) + ' 81,' + (yA + 2).toFixed(1));
+      $('dMoveTxt').setAttribute('y', (yA - 12).toFixed(1));
+      $('dMoveTxt').textContent = 'Δδ = ' + (S.x*2.5).toFixed(0) + ' μm';
+    } else if (!isD && S.type === 'area'){
+      /* 自感·变截面型：极面高 56，衔铁板下滑 0.6·56·x，有效覆盖=上极面剩余 */
+      var slide = 33.6*gx, yP = 60 + slide;
+      $('armArea').setAttribute('y', yP.toFixed(1));
+      $('armAreaTxt').setAttribute('y', (yP + 92).toFixed(1));
+      $('lostTop').setAttribute('height', slide.toFixed(1));
+      $('overlapTop').setAttribute('y', yP.toFixed(1));
+      $('overlapTop').setAttribute('height', Math.max(0, 56 - slide).toFixed(1));
+      $('areaTxt').textContent = '有效覆盖 S = ' + (r.Sarea*1e4).toFixed(2) + ' cm²（' + (r.Sarea/CFG.S*100).toFixed(0) + '% S₀）';
+      $('moveA').setAttribute('y1', (yP + 30).toFixed(1)); $('moveA').setAttribute('y2', (yP - 2).toFixed(1));
+      $('moveAH').setAttribute('points', '312,' + (yP - 8).toFixed(1) + ' 307,' + (yP + 2).toFixed(1) + ' 317,' + (yP + 2).toFixed(1));
+      $('moveATxt').setAttribute('y', (yP + 48).toFixed(1));
+      $('moveATxt').textContent = 'Δa = ' + (S.x*2.5).toFixed(0) + ' μm';
+    } else if (!isD && S.type === 'solenoid'){
+      /* 自感·螺管型：衔铁轴向插入 0~150 px（右端从线圈左端 180 深入） */
+      var wRod = 104 + 150*gx, tip = 76 + wRod;
+      $('plunger').setAttribute('width', wRod.toFixed(1));
+      $('xDimR').setAttribute('x2', tip.toFixed(1));
+      $('xDim').setAttribute('x1', '180'); $('xDim').setAttribute('x2', '180');
+      $('xTxt2').setAttribute('x', ((180 + tip)/2).toFixed(1));
+      $('xTxt2').textContent = 'x = ' + (S.x*0.9).toFixed(0) + ' mm';
+      $('moveSH').setAttribute('points', '60,162 55,172 65,172');
+      $('moveS').setAttribute('opacity', gx > 0.02 ? 1 : 0);
+      $('moveSH').setAttribute('opacity', gx > 0.02 ? 1 : 0);
+    } else if (isD && S.type === 'gap'){
+      /* 差动·变隙型：上腿下端 y=98、下腿下端 y=222；衔铁上移使 δ₁↓、δ₂↑ */
+      var dP = diffPair(S.type, gx, S.N), d1 = 30 - 10*gx, d2 = 50 + 10*gx;
+      var yT = 98 + d1, yB = yT + 24;
+      $('armDiff').setAttribute('y', yT.toFixed(1));
+      $('armDiffTxt').setAttribute('y', (yT + 16).toFixed(1));
+      $('d1Dim').setAttribute('y2', yT.toFixed(1));
+      $('d1Txt').setAttribute('y', (98 + d1/2 + 4).toFixed(1));
+      $('d1Txt').textContent = 'δ₁ = ' + ((CFG.d0 - gx*(CFG.d0-CFG.dMin))*1000).toFixed(3) + ' mm';
+      $('d2Dim').setAttribute('y1', yB.toFixed(1));
+      $('d2Txt').setAttribute('y', (yB + d2/2 + 4).toFixed(1));
+      $('d2Txt').textContent = 'δ₂ = ' + ((CFG.d0 + gx*(CFG.d0-CFG.dMin))*1000).toFixed(3) + ' mm';
+      $('ddMove').setAttribute('y1', (yT + 22).toFixed(1)); $('ddMove').setAttribute('y2', (yT - 2).toFixed(1));
+      $('ddMoveH').setAttribute('points', '76,' + (yT - 8).toFixed(1) + ' 71,' + (yT + 2).toFixed(1) + ' 81,' + (yT + 2).toFixed(1));
+      $('ddMoveTxt').setAttribute('y', (yT - 14).toFixed(1));
+      $('ddMoveTxt').textContent = 'Δδ = ' + (S.x*2.5).toFixed(0) + ' μm';
       $('dOutTxt').textContent = 'L₁ = ' + dP.up.L.toFixed(4) + ' H　L₂ = ' + dP.down.L.toFixed(4) +
                                  ' H　ΔL = ' + (dP.up.L - dP.down.L).toFixed(4) + ' H';
-      $('dOutSub').textContent = 'δ₁ 减小 → L₁ 增大；δ₂ 增大 → L₂ 减小（ΔL ≈ 2L₀·Δδ/δ₀，灵敏度约翻倍）';
-    } else if (S.type === 'gap'){
-      /* 视觉气隙：8 ~ 66 px（放大约 6 倍，便于观察） */
-      var gapPx = 8 + 58*(r.delta/CFG.d0);
-      var yArm = 196 + gapPx, yArmB = yArm + 24;
-      $('armGap').setAttribute('y', yArm.toFixed(1));
-      $('armTxt').setAttribute('y', (yArm + 16).toFixed(1));
-      $('gapDim').setAttribute('y1', '196'); $('gapDim').setAttribute('y2', yArm.toFixed(1));
-      $('gapTick1').setAttribute('y1', '196'); $('gapTick1').setAttribute('y2', '196');
-      $('gapDimB').setAttribute('y1', yArm.toFixed(1)); $('gapDimB').setAttribute('y2', yArm.toFixed(1));
-      $('gapLead').setAttribute('y1', (yArmB + 4).toFixed(1));
-      $('gapLead').setAttribute('y2', '300');
-      $('gapTxt').textContent = '气隙 δ = ' + (r.delta*1000).toFixed(3) + ' mm';
-    } else if (S.type === 'area'){
-      /* 极面总宽 120 px（对应 S₀ = 4 cm²）；衔铁右移 dx，失去的覆盖由灰色表示 */
-      var dx = 120*0.6*(S.x/100), wOver = Math.max(4, 120 - dx), xL = 112 + dx;
-      $('armArea').setAttribute('x', xL.toFixed(1));
-      $('lostArea').setAttribute('x', '112');
-      $('lostArea').setAttribute('width', dx.toFixed(1));
-      $('overlap').setAttribute('x', xL.toFixed(1));
-      $('overlap').setAttribute('width', wOver.toFixed(1));
-      $('areaDim').setAttribute('x1', xL.toFixed(1));
-      $('areaDimL').setAttribute('x1', xL.toFixed(1)); $('areaDimL').setAttribute('x2', xL.toFixed(1));
-      $('areaTxt').setAttribute('x', (xL + wOver/2).toFixed(1));
-      $('areaTxt').textContent = '有效面积 S = ' + (r.Sarea*1e4).toFixed(2) + ' cm²（' + (r.Sarea/CFG.S*100).toFixed(0) + '% S₀）';
-      $('lostTxt').setAttribute('x', (112 + dx/2).toFixed(1));
-      $('lostTxt').textContent = dx > 10 ? '失去覆盖' : '';
-      /* 滑移箭头：从初始位置指向当前位置 */
-      $('armArrow').setAttribute('x1', '112'); $('armArrow').setAttribute('x2', Math.max(112, (xL - 6)).toFixed(1));
-      $('armArrow').setAttribute('y1', '232'); $('armArrow').setAttribute('y2', '232');
-      $('armArrow').setAttribute('opacity', dx > 4 ? 1 : 0);
-      $('armArrowH').setAttribute('points', (xL - 6).toFixed(1) + ',232 ' + (xL - 14).toFixed(1) + ',228 ' + (xL - 14).toFixed(1) + ',236');
-      $('armArrowH').setAttribute('opacity', dx > 4 ? 1 : 0);
-      $('armAreaTxt').setAttribute('x', '296');   /* 固定，避免碰到右侧磁阻块 */
+    } else if (isD && S.type === 'area'){
+      /* 差动·变截面型：蝶形衔铁在方框内上下移动（δ 恒定、面积反向变化） */
+      var dPa = diffPair(S.type, gx, S.N), dy = 10*gx;
+      $('armDArea').setAttribute('transform', 'translate(0,' + dy.toFixed(1) + ')');
+      $('daGap1').setAttribute('y1', (104 - dy).toFixed(1)); $('daGap1').setAttribute('y2', (116 - dy).toFixed(1));
+      $('daMove').setAttribute('y1', (200 - dy).toFixed(1)); $('daMove').setAttribute('y2', (156 - dy).toFixed(1));
+      $('daMoveH').setAttribute('points', '118,' + (150 - dy).toFixed(1) + ' 113,' + (162 - dy).toFixed(1) + ' 123,' + (162 - dy).toFixed(1));
+      $('daOut').textContent = 'L₁ = ' + dPa.up.L.toFixed(4) + ' H　L₂ = ' + dPa.down.L.toFixed(4) +
+                               ' H　ΔL = ' + (dPa.up.L - dPa.down.L).toFixed(4) + ' H';
     } else {
-      var depth = 20 + 170*(S.x/100);
-      $('plunger').setAttribute('y', '70');
-      $('plunger').setAttribute('height', depth.toFixed(1));
-      $('solDim').setAttribute('y2', (70 + depth).toFixed(1));
-      $('solTxt').setAttribute('y', (70 + depth/2).toFixed(1));
-      $('plungerTxt').setAttribute('y', '64');
-      $('solTxt').textContent = 'x = ' + (S.x*0.9).toFixed(0) + ' mm';
+      /* 差动·螺管型：衔铁轴向移动，两线圈耦合差动 */
+      var dPs = diffPair(S.type, gx, S.N);
+      $('rodDSol').setAttribute('x', (86 + 60*gx).toFixed(1));
+      $('dsMove').setAttribute('y1', '218'); $('dsMove').setAttribute('y2', '170');
+      $('dsMoveH').setAttribute('points', '66,164 61,176 71,176');
+      $('dsOut').textContent = 'L₁ = ' + dPs.up.L.toFixed(4) + ' H　L₂ = ' + dPs.down.L.toFixed(4) +
+                               ' H　ΔL = ' + (dPs.up.L - dPs.down.L).toFixed(4) + ' H';
     }
     setFluxPath();
     paintFluxGauge();
@@ -1411,12 +1490,17 @@
     var N = S.N, d = r.delta, Sa = r.Sarea;
     var Lsimple = Math.pow(N,2)*CFG.mu0*Sa/(2*d);
     var err = (Lsimple - r.L)/r.L*100;
+    var Rm = R.iron + R.air, isSol = (S.type === 'solenoid');
     var html = '';
     html += '<div class="row"><span class="tag">式 4-1</span><span>L = ' + frac('dΦ_N', 'dI') + ' = ' + frac('N²', 'R_m') +
-            ' = ' + (N*N).toExponential(2) + ' / ' + (R.Rm).toExponential(3) + ' = <b>' + r.L.toFixed(4) + ' H</b></span></div>';
-    html += '<div class="row"><span class="tag">式 4-2</span><span>R_m = ' + frac('l₁', 'μ₁S₁') + ' + ' + frac('l₂', 'μ₂S₂') + ' + ' +
-            frac('2δ', 'μ₀S') + ' = ' + (R.Rfe/1e5).toFixed(2) + ' + ' + (R.Rgap/1e5).toFixed(2) + ' = <b>' +
-            (R.Rm/1e5).toFixed(2) + '×10⁵ H⁻¹</b>　（气隙占 <b>' + (R.Rgap/R.Rm*100).toFixed(1) + '%</b>）</span></div>';
+            ' = ' + (N*N).toExponential(2) + ' / ' + Rm.toExponential(3) + ' = <b>' + r.L.toFixed(4) + ' H</b></span></div>';
+    html += isSol
+      ? ('<div class="row"><span class="tag">式 4-2</span><span>R_m = R衔铁 + R空气段 = ' + (R.iron/1e5).toFixed(2) + ' + ' +
+         (R.air/1e5).toFixed(2) + ' = <b>' + (Rm/1e5).toFixed(2) + '×10⁵ H⁻¹</b>　（空气段占 <b>' +
+         (R.air/Rm*100).toFixed(1) + '%</b>；插入越深空气段越短 → R_空气 ↓、L ↑）</span></div>')
+      : ('<div class="row"><span class="tag">式 4-2</span><span>R_m = ' + frac('l₁', 'μ₁S₁') + ' + ' + frac('l₂', 'μ₂S₂') + ' + ' +
+         frac('2δ', 'μ₀S') + ' = ' + (R.iron/1e5).toFixed(2) + ' + ' + (R.air/1e5).toFixed(2) + ' = <b>' +
+         (Rm/1e5).toFixed(2) + '×10⁵ H⁻¹</b>　（气隙占 <b>' + (R.air/Rm*100).toFixed(1) + '%</b>）</span></div>');
     html += '<div class="row"><span class="tag g">式 4-4</span><span>铁芯磁导率远大于空气 → L ≈ ' + frac('N²μ₀S', '2δ') +
             ' = <b>' + Lsimple.toFixed(4) + ' H</b>，与精确值相差 <b>' + sfmt(err, 1) + '%</b>' +
             (S.type === 'gap' ? '' : '（本型式不以 δ 为变量，此式仅供对照）') + '</span></div>';
