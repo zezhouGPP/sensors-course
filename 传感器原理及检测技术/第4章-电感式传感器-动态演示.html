@@ -112,7 +112,7 @@
   .legend{display:flex; gap:10px; flex-wrap:wrap; font-size:11px; color:var(--muted); margin-top:2px}
   .legend i{display:inline-block; width:14px; height:9px; border-radius:2px; margin-right:5px}
   /* ---- 公式 ---- */
-  .fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:13.2px; line-height:1.5; color:#16283d}
+  .fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:12.4px; line-height:1.38; color:#16283d}
   .fml .row{display:block; border-bottom:1px dashed #e7eef7; padding:0}
   .fml .row:last-child{border-bottom:none}
   .fml .tag{display:inline-block; font-family:"Microsoft YaHei",sans-serif; font-size:11px; color:#fff;
@@ -137,8 +137,8 @@
   #segCirc button{min-width:74px; flex:1 1 74px; padding:3px 4px; font-size:11.5px; line-height:1.25}
   #segCirc button small{font-size:10px}
   .ptsB{flex:0 0 30px; padding:3px 0; font-size:12px; border-radius:7px}
-  #mag{max-height:196px} #curve{max-height:170px} #diff,#lvd{max-height:146px}
-  #eddy{max-height:132px} #cir{max-height:140px}
+  #mag{max-height:190px} #curve{max-height:142px} #diff,#lvd{max-height:150px}
+  #eddy{max-height:120px} #cir{max-height:118px}
   @media (max-width:1200px){ #boardWrap{min-width:1180px} }
 </style>
 </head>
@@ -159,7 +159,7 @@
 
   <!-- ================= 左列 ================= -->
   <div class="col" id="colA">
-    <div class="colhead">① 型式与参数 + 磁路原理</div>
+    <div class="colhead">① 型式与输入量</div>
 
     <section class="card panel" id="ctrlCard">
       <div class="phead">
@@ -203,9 +203,9 @@
       </div>
       <div class="ctrl">
         <div class="row" style="align-items:flex-start">
-          <span class="name" style="padding-top:4px"><b>接法</b><br><span class="tiny">单端 / 差动</span></span>
+          <span class="name" style="padding-top:4px"><b>结构</b><br><span class="tiny">自感 / 差动</span></span>
           <div class="seg" id="segDiff" style="flex:1">
-            <button data-diff="single" class="on">单线圈<small>灵敏度低、非线性大</small></button>
+            <button data-diff="single" class="on">自感（单线圈）<small>灵敏度低、非线性大</small></button>
             <button data-diff="differ">差动（两线圈）<small>灵敏度×2、非线性改善</small></button>
           </div>
         </div>
@@ -407,7 +407,7 @@
 
   <!-- ================= 中列 ================= -->
   <div class="col" id="colB">
-    <div class="colhead">② 公式与读数 + 特性曲线</div>
+    <div class="colhead">② 结构动态（自感 · 差动 · 电涡流）</div>
 
     <section class="card panel" id="fmlCard">
       <div class="phead">
@@ -524,7 +524,7 @@
 
   <!-- ================= 右列 ================= -->
   <div class="col" id="colC">
-    <div class="colhead">③ 差动变压器 + 转换电路 + 要点</div>
+    <div class="colhead">③ 输出读数 · 公式推导 · 特性曲线</div>
 
     <section class="card panel" id="diffCard">
       <div class="phead">
@@ -1163,7 +1163,7 @@
     var nl = nonlinearity(S.type);
     $('nlOut').textContent = nl.toFixed(2) + ' %';
     $('readFine').innerHTML = '满量程 ' + stroke + ' mm（' + TYPES[S.type].name + '）；' +
-      (S.diff === 'differ' ? '差动' : '单端') + '电桥输出 u₀ = (u/2)·(ΔZ/Z)：ΔZ/Z = <b>' + (dZ*100).toFixed(2) +
+      (S.diff === 'differ' ? '差动' : '自感') + '电桥输出 u₀ = (u/2)·(ΔZ/Z)：ΔZ/Z = <b>' + (dZ*100).toFixed(2) +
       '%</b> → u₀ = <b>' + (u0*1000).toFixed(1) + ' mV</b>（u = ' + CFG.u.toFixed(1) + ' V 有效值）。';
 
     /* --- 曲线 --- */
@@ -1426,8 +1426,8 @@
             ' = ' + (CFG.u/2).toFixed(1) + '×' + (dZ*100).toFixed(2) + '% = <b>' + (u0*1000).toFixed(1) + ' mV</b></span></div>';
     html += '<div class="note">' + (S.diff === 'differ'
       ? '当前为<b>差动接法</b>：两个线圈一个电感增大、一个减小，ΔZ/Z 取两者之差 → 灵敏度提高约 1 倍，且偶次非线性项互相抵消。'
-      : '当前为<b>单线圈</b>接法：输出直接由 ΔL/L 决定，灵敏度较低、非线性较大 —— 切到差动看差别。') + '</div>';
-    $('fmlTitle').textContent = TYPES[S.type].name + (S.diff === 'differ' ? ' · 差动' : ' · 单端');
+      : '当前为<b>自感（单线圈）</b>接法：输出直接由 ΔL/L 决定，灵敏度较低、非线性较大 —— 切到差动看差别。') + '</div>';
+    $('fmlTitle').textContent = TYPES[S.type].name + (S.diff === 'differ' ? ' · 差动' : ' · 自感');
     $('fmlBody').innerHTML = html;
   }
 
@@ -1489,7 +1489,7 @@
       stopDemo(); setDiff(b.getAttribute('data-diff'));
       say(S.diff === 'differ'
         ? '<b>差动接法</b>：两个线圈反向变化，输出取差值 → 灵敏度约翻倍，且偶次非线性项与共模温漂互相抵消。'
-        : '<b>单线圈接法</b>：输出直接反映 ΔL/L，灵敏度较低、非线性较大 —— 对比一下曲线上的紫色虚线。');
+        : '<b>自感（单线圈）接法</b>：输出直接反映 ΔL/L，灵敏度较低、非线性较大 —— 对比一下曲线上的紫色虚线。');
     });
   });
   document.querySelectorAll('#segMat button').forEach(function(b){
@@ -1502,7 +1502,7 @@
   });
   $('reset').addEventListener('click', function(){
     stopDemo(); setType('gap'); setDiff('single'); setX(0); setN(1000); setF(5); setDist(3); setMat('cu'); paint();
-    say('已复位：变气隙型、单线圈、x = 0、N = 1000、f = 5 kHz、距离 3 mm、材料铜。');
+    say('已复位：变气隙型、自感式结构、x = 0、N = 1000、f = 5 kHz、距离 3 mm、材料铜。');
   });
 
   /* ============ 11. 演示框架（含速度控制，无语音） ============ */
@@ -1567,7 +1567,7 @@
     var tok = beginDemo('self');
     setType('gap'); setDiff('single'); setX(0); setN(1000);
     var r = selfL('gap', 0, S.N), R = reluc(r.delta, r.Sarea, S.N);
-    say('【<b>自感式原理</b>】先看磁路：R_m = R铁芯 + R衔铁 + R气隙。铁芯 μ_r = 2000，空气 μ₀ 只有它的 1/2000，所以气隙磁阻占了 <b>' +
+    say('【<b>自感式原理</b>】先看磁路：R_m = R铁芯 + R衔铁 + R气隙。铁芯 μ_r = 5000，空气 μ₀ 只有它的 1/5000，所以气隙磁阻占了 <b>' +
         (R.Rgap/R.Rm*100).toFixed(1) + '%</b>。L = N²/R_m = <b>' + r.L.toFixed(4) + ' H</b>。');
     if (!await sleep(3400, tok)) return;
     say('① 注意看：<b>绿色小点就是磁通</b>，它沿铁芯 → 气隙 → 衔铁 → 闭合回路不断流动，流动越快表示磁通越强。现在<b>衔铁靠近、气隙减小</b>（δ ' +
@@ -1631,14 +1631,14 @@
   async function demoDiff(){
     var tok = beginDemo('diff');
     setType('gap'); setDiff('single'); setX(0);
-    say('【<b>差动接法</b>】先用单线圈：L–x 曲线是双曲线，位移一大就明显弯曲。');
+    say('【<b>差动接法</b>】先看<b>自感式（单线圈）</b>：L–x 曲线是双曲线，位移一大就明显弯曲。');
     if (!await sleep(2200, tok)) return;
     if (!await tween(0, 70, 2200, setX, tok)) return;
     if (!await sleep(1600, tok)) return;
-    say('① 单线圈在 x = 70% 处，ΔL/L 已经偏离直线很多（非线性误差 ' + nonlinearity('gap').toFixed(1) +
+    say('① 自感式在 x = 70% 处，ΔL/L 已经偏离直线很多（非线性误差 ' + nonlinearity('gap').toFixed(1) +
         '%）。原因是 L ≈ N²μ₀S/(2δ) 里 δ 在<b>分母</b>上。');
     if (!await sleep(2600, tok)) return;
-    say('② <b>改成差动</b>：看结构图变了 —— 上、下两个磁芯各绕一个线圈 L₁、L₂，衔铁夹在中间，上下各有一个气隙。衔铁上移时 <b>δ₁ 减小、δ₂ 增大</b>，于是 L₁ 增大、L₂ 减小，输出取<b>两者之差</b> (Z₁−Z₂)/(Z₁+Z₂)（紫色虚线）。上下两条磁通回路的速度一个变快、一个变慢，正是这个意思。小位移段灵敏度约为单端的 <b>2 倍</b>，且偶次项相消 → 非线性从 ' +
+    say('② <b>改成差动</b>：看结构图变了 —— 上、下两个磁芯各绕一个线圈 L₁、L₂，衔铁夹在中间，上下各有一个气隙。衔铁上移时 <b>δ₁ 减小、δ₂ 增大</b>，于是 L₁ 增大、L₂ 减小，输出取<b>两者之差</b> (Z₁−Z₂)/(Z₁+Z₂)（紫色虚线）。上下两条磁通回路的速度一个变快、一个变慢，正是这个意思。小位移段灵敏度约为自感式的 <b>2 倍</b>，且偶次项相消 → 非线性从 ' +
         (function(){ var s0=(selfL('gap',0,1000).L-selfL('gap',0,1000).L), d=0;
            var L0=selfL('gap',0,1000).L; var t0=(selfL('gap',0,1000).L-L0)/(selfL('gap',0,1000).L+L0), t1=(selfL('gap',1,1000).L-L0)/(selfL('gap',1,1000).L+L0);
            for (var i=0;i<=100;i++){ var x=i/100, v=(selfL('gap',x,1000).L-L0)/(selfL('gap',x,1000).L+L0);
@@ -1779,11 +1779,11 @@
   var COLS  = ['colA','colB','colC'];
   var IDS   = ['ctrlCard','magCard','fmlCard','readCard','curveCard','eddyCard','diffCard','circCard','ptsCard'];
   var MINZ = 0.7, MAXZ = 1.6, MINCOL = 260;
-  var KEY = 'jh-inductive-layout-v1';
+  var KEY = 'jh-inductive-layout-v2';
   var DEF = {
-    weight: { colA:4.6, colB:4.0, colC:3.4 },
-    col: { colA:['ctrlCard','magCard'], colB:['fmlCard','curveCard','eddyCard','circCard'],
-           colC:['readCard','diffCard','ptsCard'] },
+    weight: { colA:3.0, colB:4.6, colC:4.4 },
+    col: { colA:['ctrlCard','ptsCard'], colB:['magCard','diffCard','eddyCard'],
+           colC:['readCard','fmlCard','curveCard','circCard'] },
     zoom: {}
   };
   var L = null, focused = null;
