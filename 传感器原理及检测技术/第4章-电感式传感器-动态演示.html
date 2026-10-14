@@ -139,10 +139,13 @@
   #segEddy button, #segPm button{min-width:70px; flex:1 1 70px; padding:2px 4px; font-size:11px; line-height:1.2}
   #segEddy button small, #segPm button small{font-size:9.5px}
   .ptsB{flex:0 0 26px; padding:2px 0; font-size:11px; border-radius:6px}
-  /* 左列（型式与输入量）吸附固定，右侧滚动时始终可见 */
-  #colA{position:sticky; top:6px; align-self:flex-start; max-height:calc(100vh - 16px); overflow-y:auto}
-  #colA::-webkit-scrollbar{width:6px}
-  #colA::-webkit-scrollbar-thumb{background:#c3d3e6; border-radius:3px}
+  /* 左右两列都吸附固定；只有中间列（结构+读数）随页面滚动 */
+  #colA, #colC{position:sticky; top:4px; align-self:flex-start;
+               max-height:calc(100vh - 10px); overflow-y:auto; overscroll-behavior:contain}
+  #colA::-webkit-scrollbar, #colC::-webkit-scrollbar{width:6px}
+  #colA::-webkit-scrollbar-thumb, #colC::-webkit-scrollbar-thumb{background:#c3d3e6; border-radius:3px}
+  /* 中间列底部留白：让最后一张卡片也能滚动到屏幕中间 */
+  #colB{padding-bottom:52vh}
   .panel > .pbody{max-height:2600px; overflow:hidden; transition:max-height .22s ease, opacity .18s ease}
   .panel.folded > .pbody{max-height:0 !important; opacity:0}
   .panel.folded{border-color:#bcd0e5; background:#f8fbff}
@@ -164,7 +167,7 @@
 <div id="laybar">
   <span style="font-weight:700;color:#0e4a8e">板块布局</span>
   <button id="layReset">↺ 恢复默认（一屏）</button>
-  <span class="hint">左列<b>型式与输入量</b>固定吸附，右侧滚动查看各结构；每块标题栏的 <b>▾</b> 可折叠该板块；<b>滚轮下滑时滑过上方的那几块会自动收起、滚回来自动展开</b>（手动折起的不会被自动展开）；拖动<b>标题栏</b>可换列换位、拖<b>竖条</b>调列宽、<b>＋ －</b> 缩放、<b>⛶</b> 全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
+  <span class="hint"><b>左右两列固定不动</b>（左＝型式与输入量＋要点，右＝读数/公式/曲线/电路），只有<b>中间列</b>随页面滚动；每块标题栏的 <b>▾</b> 可折叠该板块；<b>滚轮下滑时滑过上方的那几块会自动收起、滚回来自动展开</b>（手动折起的不会被自动展开）；拖动<b>标题栏</b>可换列换位、拖<b>竖条</b>调列宽、<b>＋ －</b> 缩放、<b>⛶</b> 全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
 </div>
 
 <div id="boardWrap">
@@ -2361,7 +2364,7 @@
     var vh = window.innerHeight || 900;
     IDS.forEach(function(id){
       var p = el(id); if (!p) return;
-      if (p.parentNode && p.parentNode.id === 'colA') return;      /* 左列吸附列：始终展开 */
+      if (!p.parentNode || p.parentNode.id !== 'colB') return;    /* 只有中间列参与自动折叠（左右两列固定不动） */
       var r = p.getBoundingClientRect();
       if (r.bottom < 90){                                          /* 整块滑到上方之外 → 收起 */
         if (!p.classList.contains('folded')) setFold(p, true);
