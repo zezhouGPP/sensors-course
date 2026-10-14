@@ -265,29 +265,38 @@
         </g>
         <!-- ============ 自感型 (b) 变截面型：E 形铁芯 + 右侧竖向衔铁板（δ 不变、覆盖面积变） ============ -->
         <g id="stArea" style="display:none">
-          <rect x="112" y="60" width="34" height="200" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="146" y="60" width="112" height="56" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="146" y="204" width="112" height="56" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <text x="82" y="46" font-size="12.5" font-weight="700" fill="#2f4b68">铁芯 2</text>
-          <rect x="88" y="120" width="42" height="80" rx="5" fill="var(--cu)" opacity=".92"/>
-          <line x1="88" y1="136" x2="130" y2="136" stroke="#8c4d22" stroke-width="1.2"/>
-          <line x1="88" y1="152" x2="130" y2="152" stroke="#8c4d22" stroke-width="1.2"/>
-          <line x1="88" y1="168" x2="130" y2="168" stroke="#8c4d22" stroke-width="1.2"/>
-          <line x1="88" y1="184" x2="130" y2="184" stroke="#8c4d22" stroke-width="1.2"/>
-          <text x="60" y="222" font-size="12.5" font-weight="700" fill="#8c4d22">线圈 1</text>
-          <!-- 两个极面（固定）：上腿端面 y=60..116，下腿端面 y=204..260 -->
-          <rect id="lostTop" x="258" y="60" width="14" height="0" fill="#94a3b8" opacity=".55"/>
-          <rect id="overlapTop" x="258" y="60" width="14" height="56" fill="var(--gapm)" opacity=".9"/>
-          <rect id="overlapBot" x="258" y="204" width="14" height="56" fill="var(--gapm)" opacity=".9"/>
-          <!-- 衔铁：竖向板，上下滑移改变覆盖面积 -->
-          <rect id="armArea" x="272" y="60" width="26" height="200" rx="3" fill="#2b6cb0" opacity=".85" stroke="#1b4a7a" stroke-width="1.5"/>
-          <text id="armAreaTxt" x="306" y="150" font-size="12.5" font-weight="700" fill="#2b6cb0">衔铁 3</text>
-          <line x1="258" y1="44" x2="272" y2="44" stroke="var(--gapm)" stroke-width="2.5"/>
-          <text id="gapTxtA" x="288" y="38" font-size="12" font-weight="700" fill="var(--gapm)">δ</text>
-          <line id="moveA" x1="312" y1="290" x2="312" y2="250" stroke="#d94a3d" stroke-width="2.5"/>
-          <polygon id="moveAH" points="312,244 307,256 317,256" fill="#d94a3d"/>
-          <text id="moveATxt" x="290" y="300" font-size="12" font-weight="700" fill="#d94a3d">Δa</text>
-          <text id="areaTxt" x="146" y="300" font-size="12.5" font-weight="700" fill="var(--gapm)">有效面积 S = 4.00 cm²</text>
+          <!-- C 形铁芯（开口向右）+ 背轭线圈 -->
+          <rect x="112" y="52" width="34" height="216" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.6"/>
+          <rect x="146" y="52" width="112" height="58" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.6"/>
+          <rect x="146" y="210" width="112" height="58" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.6"/>
+          <text x="86" y="42" font-size="12.5" font-weight="700" fill="#2f4b68">铁芯 1</text>
+          <!-- 线圈：绕在背轭上的线圈带 -->
+          <rect x="84" y="118" width="48" height="84" rx="6" fill="var(--cu)" opacity=".92"/>
+          <line x1="84" y1="134" x2="132" y2="134" stroke="#8c4d22" stroke-width="1.2"/>
+          <line x1="84" y1="152" x2="132" y2="152" stroke="#8c4d22" stroke-width="1.2"/>
+          <line x1="84" y1="170" x2="132" y2="170" stroke="#8c4d22" stroke-width="1.2"/>
+          <line x1="84" y1="188" x2="132" y2="188" stroke="#8c4d22" stroke-width="1.2"/>
+          <circle cx="74" cy="118" r="4" fill="none" stroke="#8c4d22" stroke-width="1.8"/>
+          <circle cx="74" cy="202" r="4" fill="none" stroke="#8c4d22" stroke-width="1.8"/>
+          <text x="46" y="238" font-size="12.5" font-weight="700" fill="#8c4d22">线圈</text>
+          <!-- 两个极面（固定）与有效覆盖 -->
+          <rect id="lostTop" x="258" y="52" width="16" height="0" fill="#94a3b8" opacity=".55"/>
+          <rect id="overlapTop" x="258" y="52" width="16" height="58" fill="var(--gapm)" opacity=".9"/>
+          <rect id="overlapBot" x="258" y="210" width="16" height="58" fill="var(--gapm)" opacity=".9"/>
+          <text x="196" y="44" font-size="11.5" fill="#94a3b8">极面（固定）</text>
+          <!-- 衔铁极板（竖向，上下平移改变覆盖面积） -->
+          <rect id="armArea" x="274" y="52" width="30" height="216" rx="3" fill="#2b6cb0" opacity=".88" stroke="#1b4a7a" stroke-width="1.6"/>
+          <text id="armAreaTxt" x="312" y="164" font-size="12.5" font-weight="700" fill="#2b6cb0">衔铁 2</text>
+          <!-- 气隙 δ（水平，恒定） -->
+          <line x1="258" y1="36" x2="274" y2="36" stroke="var(--gapm)" stroke-width="2.6"/>
+          <line x1="258" y1="30" x2="258" y2="42" stroke="var(--gapm)" stroke-width="2.6"/>
+          <line x1="274" y1="30" x2="274" y2="42" stroke="var(--gapm)" stroke-width="2.6"/>
+          <text id="gapTxtA" x="292" y="34" font-size="12" font-weight="700" fill="var(--gapm)">δ</text>
+          <!-- 位移 Δa -->
+          <line id="moveA" x1="334" y1="292" x2="334" y2="248" stroke="#d94a3d" stroke-width="2.6"/>
+          <polygon id="moveAH" points="334,242 329,254 339,254" fill="#d94a3d"/>
+          <text id="moveATxt" x="312" y="304" font-size="12" font-weight="700" fill="#d94a3d">Δa</text>
+          <text id="areaTxt" x="112" y="304" font-size="12.5" font-weight="700" fill="var(--gapm)">有效覆盖 S = 4.00 cm²</text>
         </g>
         <!-- ============ 自感型 (c) 螺管型：水平螺管 + 轴向插入衔铁（x, l, r） ============ -->
         <g id="stSol" style="display:none">
@@ -351,32 +360,42 @@
         </g>
         <!-- ============ 差动型 (b) 变截面型：方框铁芯上下轭各绕线圈 + 中间蝶形衔铁，δ 恒定 ============ -->
         <g id="stDArea" style="display:none">
-          <rect x="140" y="40" width="150" height="34" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="140" y="256" width="150" height="34" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="140" y="74" width="34" height="182" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <rect x="256" y="74" width="34" height="182" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.5"/>
-          <text x="104" y="34" font-size="12.5" font-weight="700" fill="#2f4b68">铁芯</text>
-          <g stroke="#8c4d22" stroke-width="1.1">
-            <line x1="176" y1="40" x2="176" y2="74"/><line x1="196" y1="40" x2="196" y2="74"/>
-            <line x1="216" y1="40" x2="216" y2="74"/><line x1="236" y1="40" x2="236" y2="74"/>
-            <line x1="176" y1="256" x2="176" y2="290"/><line x1="196" y1="256" x2="196" y2="290"/>
-            <line x1="216" y1="256" x2="216" y2="290"/><line x1="236" y1="256" x2="236" y2="290"/>
-          </g>
-          <rect x="170" y="42" width="90" height="30" rx="4" fill="var(--cu)" opacity=".92"/>
-          <rect x="170" y="258" width="90" height="30" rx="4" fill="var(--cu)" opacity=".92"/>
-          <text x="292" y="62" font-size="12" font-weight="700" fill="#8c4d22">L₁</text>
-          <text x="292" y="280" font-size="12" font-weight="700" fill="#8c4d22">L₂</text>
-          <!-- 蝶形衔铁（中间） -->
+          <!-- 方框铁芯：上下轭 + 左右柱 -->
+          <rect x="160" y="40" width="140" height="32" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.6"/>
+          <rect x="160" y="248" width="140" height="32" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.6"/>
+          <rect x="160" y="72" width="32" height="176" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.6"/>
+          <rect x="268" y="72" width="32" height="176" fill="var(--iron)" opacity=".88" stroke="#2f4b68" stroke-width="1.6"/>
+          <text x="118" y="32" font-size="12.5" font-weight="700" fill="#2f4b68">铁芯 1</text>
+          <!-- 上下轭各绕线圈（线圈带 + 端子） -->
+          <rect x="182" y="26" width="96" height="60" rx="6" fill="var(--cu)" opacity=".92"/>
+          <line x1="182" y1="40" x2="278" y2="40" stroke="#8c4d22" stroke-width="1.1"/>
+          <line x1="182" y1="54" x2="278" y2="54" stroke="#8c4d22" stroke-width="1.1"/>
+          <line x1="182" y1="68" x2="278" y2="68" stroke="#8c4d22" stroke-width="1.1"/>
+          <rect x="182" y="234" width="96" height="60" rx="6" fill="var(--cu)" opacity=".92"/>
+          <line x1="182" y1="248" x2="278" y2="248" stroke="#8c4d22" stroke-width="1.1"/>
+          <line x1="182" y1="262" x2="278" y2="262" stroke="#8c4d22" stroke-width="1.1"/>
+          <line x1="182" y1="276" x2="278" y2="276" stroke="#8c4d22" stroke-width="1.1"/>
+          <circle cx="150" cy="40" r="4" fill="none" stroke="#8c4d22" stroke-width="1.8"/>
+          <circle cx="310" cy="40" r="4" fill="none" stroke="#8c4d22" stroke-width="1.8"/>
+          <circle cx="150" cy="280" r="4" fill="none" stroke="#8c4d22" stroke-width="1.8"/>
+          <circle cx="310" cy="280" r="4" fill="none" stroke="#8c4d22" stroke-width="1.8"/>
+          <text x="300" y="30" font-size="12" font-weight="700" fill="#8c4d22">L₁</text>
+          <text x="300" y="296" font-size="12" font-weight="700" fill="#8c4d22">L₂</text>
+          <!-- 蝶形衔铁（中间，上下移动 Δa） -->
           <g id="armDArea">
-            <path d="M174 138 L174 116 H232 L256 138 L232 160 H174 Z" fill="#2b6cb0" opacity=".88" stroke="#1b4a7a" stroke-width="1.4"/>
+            <path d="M196 160 L212 138 H248 L264 160 L248 182 H212 Z" fill="#2b6cb0" opacity=".9" stroke="#1b4a7a" stroke-width="1.6"/>
           </g>
-          <text x="266" y="146" font-size="12" font-weight="700" fill="#2b6cb0">衔铁 2</text>
-          <line id="daGap1" x1="166" y1="104" x2="166" y2="116" stroke="var(--gapm)" stroke-width="2.5"/>
-          <text x="146" y="102" font-size="12" font-weight="700" fill="var(--gapm)">δ</text>
-          <line id="daMove" x1="118" y1="196" x2="118" y2="150" stroke="#d94a3d" stroke-width="2.5"/>
-          <polygon id="daMoveH" points="118,144 113,156 123,156" fill="#d94a3d"/>
-          <text x="92" y="178" font-size="12" font-weight="700" fill="#d94a3d">Δa</text>
-          <text id="daOut" x="140" y="318" font-size="12.5" font-weight="700" fill="#0e4a8e">ΔL = L₁ − L₂ = 0.0000 H</text>
+          <text id="daArmTxt" x="288" y="164" font-size="12" font-weight="700" fill="#2b6cb0">衔铁 2</text>
+          <!-- δ（衔铁与上轭之间的气隙） -->
+          <line id="daGap1" x1="146" y1="96" x2="146" y2="138" stroke="var(--gapm)" stroke-width="2.6"/>
+          <line x1="140" y1="96" x2="152" y2="96" stroke="var(--gapm)" stroke-width="2.6"/>
+          <line id="daGap1b" x1="140" y1="138" x2="152" y2="138" stroke="var(--gapm)" stroke-width="2.6"/>
+          <text id="daGapTxt" x="120" y="122" font-size="12" font-weight="700" fill="var(--gapm)">δ</text>
+          <!-- Δa（位移） -->
+          <line id="daMove" x1="146" y1="230" x2="146" y2="186" stroke="#d94a3d" stroke-width="2.6"/>
+          <polygon id="daMoveH" points="146,180 141,192 151,192" fill="#d94a3d"/>
+          <text id="daMoveTxt" x="120" y="212" font-size="12" font-weight="700" fill="#d94a3d">Δa</text>
+          <text id="daOut" x="160" y="308" font-size="12.5" font-weight="700" fill="#0e4a8e">ΔL = L₁ − L₂ = 0.0000 H</text>
         </g>
         <!-- ============ 差动型 (c) 螺管型：两个线圈并列 + 轴向衔铁 + 外壳，差动输出 ============ -->
         <g id="stDSol" style="display:none">
@@ -696,7 +715,7 @@
       <div class="pbody">
       <div class="seg" id="segLvdt" style="margin-bottom:4px">
         <button data-lv="gap1" class="on">变气隙型1<small>图4-8(a)</small></button>
-        <button data-lv="gap2">变气隙型2<small>图4-8(b)</small></button>
+        <button data-lv="gap2">变面积型<small>图4-8(b) 横向平移</small></button>
         <button data-lv="sol1">螺管型1<small>图4-8(c)</small></button>
         <button data-lv="sol2">螺管型2<small>图4-8(d)</small></button>
         <button data-lv="area1">变面积型1<small>图4-8(e)</small></button>
@@ -753,7 +772,7 @@
           <polygon id="lvMove2H" points="120,176 120,176 120,176" fill="#d94a3d"/>
           <text id="lvMove2Txt" x="120" y="196" font-size="11" font-weight="700" fill="#d94a3d" text-anchor="middle">横向平移</text>
           <text x="130" y="220" font-size="11.5" fill="#5b6b80">衔铁平移 → 两路耦合一增一减 → 次级差动输出</text>
-          <text x="130" y="16" font-size="11.5" font-weight="700" fill="#233b57">U̇₁ 加在两腿初级 w₁；两次级 w₂ 反接输出 U̇₂</text>
+          <text x="130" y="16" font-size="11.5" font-weight="700" fill="#233b57">δ 不变，改变覆盖面积：U̇₁ 加在两腿初级 w₁，两次级 w₂ 反接输出 U̇₂</text>
         </g>
         <!-- ========== (c) 螺管型1 ========== -->
         <g id="lvSol1" style="display:none">
@@ -1076,7 +1095,8 @@
   }
   /* 自感·变截面型：背板 → 上腿 → 穿气隙 → 衔铁板 → 穿气隙 → 下腿 → 背板 */
   function areaLoop(){
-    return 'M240 88 H129 V232 H240 L265 232 L265 88 Z';
+    /* 背轭 → 上腿 → 穿气隙 → 衔铁极板 → 穿气隙 → 下腿 → 背轭 */
+    return 'M240 81 H129 V239 H240 L289 239 V81 Z';
   }
   /* 自感·螺管型：绕线圈与衔铁的外围磁路 */
   function solLoop(){
@@ -1089,7 +1109,8 @@
   }
   /* 差动·变截面型：绕方框铁芯一条回路 */
   function dAreaLoop(){
-    return 'M157 57 H273 V273 H157 Z';
+    /* 上轭 → 穿气隙 → 蝶形衔铁 → 下轭 → 右柱 → 回上轭 */
+    return 'M220 56 V264 H284 V56 Z';
   }
   /* 差动·螺管型：两个线圈各一条回路 */
   function dSolLoop(){
@@ -1276,16 +1297,16 @@
       $('dMoveTxt').textContent = 'Δδ = ' + (S.x*2.5).toFixed(0) + ' μm';
     } else if (!isD && S.type === 'area'){
       /* 自感·变截面型：极面高 56，衔铁板下滑 0.6·56·x，有效覆盖=上极面剩余 */
-      var slide = 33.6*gx, yP = 60 + slide;
+      var slide = 34.8*gx, yP = 52 + slide;          /* 0.6×58×x */
       $('armArea').setAttribute('y', yP.toFixed(1));
-      $('armAreaTxt').setAttribute('y', (yP + 92).toFixed(1));
+      $('armAreaTxt').setAttribute('y', (yP + 108).toFixed(1));
       $('lostTop').setAttribute('height', slide.toFixed(1));
       $('overlapTop').setAttribute('y', yP.toFixed(1));
-      $('overlapTop').setAttribute('height', Math.max(0, 56 - slide).toFixed(1));
+      $('overlapTop').setAttribute('height', Math.max(0, 58 - slide).toFixed(1));
       $('areaTxt').textContent = '有效覆盖 S = ' + (r.Sarea*1e4).toFixed(2) + ' cm²（' + (r.Sarea/CFG.S*100).toFixed(0) + '% S₀）';
-      $('moveA').setAttribute('y1', (yP + 30).toFixed(1)); $('moveA').setAttribute('y2', (yP - 2).toFixed(1));
-      $('moveAH').setAttribute('points', '312,' + (yP - 8).toFixed(1) + ' 307,' + (yP + 2).toFixed(1) + ' 317,' + (yP + 2).toFixed(1));
-      $('moveATxt').setAttribute('y', (yP + 48).toFixed(1));
+      $('moveA').setAttribute('y1', (yP + 36).toFixed(1)); $('moveA').setAttribute('y2', (yP - 2).toFixed(1));
+      $('moveAH').setAttribute('points', '334,' + (yP - 8).toFixed(1) + ' 329,' + (yP + 2).toFixed(1) + ' 339,' + (yP + 2).toFixed(1));
+      $('moveATxt').setAttribute('y', (yP + 56).toFixed(1));
       $('moveATxt').textContent = 'Δa = ' + (S.x*2.5).toFixed(0) + ' μm';
     } else if (!isD && S.type === 'solenoid'){
       /* 自感·螺管型：衔铁轴向插入 0~150 px（右端从线圈左端 180 深入） */
@@ -1318,11 +1339,15 @@
                                  ' H　ΔL = ' + (dP.up.L - dP.down.L).toFixed(4) + ' H';
     } else if (isD && S.type === 'area'){
       /* 差动·变截面型：蝶形衔铁在方框内上下移动（δ 恒定、面积反向变化） */
-      var dPa = diffPair(S.type, gx, S.N), dy = 10*gx;
+      var dPa = diffPair(S.type, gx, S.N), dy = 12*gx;
       $('armDArea').setAttribute('transform', 'translate(0,' + dy.toFixed(1) + ')');
-      $('daGap1').setAttribute('y1', (104 - dy).toFixed(1)); $('daGap1').setAttribute('y2', (116 - dy).toFixed(1));
-      $('daMove').setAttribute('y1', (200 - dy).toFixed(1)); $('daMove').setAttribute('y2', (156 - dy).toFixed(1));
-      $('daMoveH').setAttribute('points', '118,' + (150 - dy).toFixed(1) + ' 113,' + (162 - dy).toFixed(1) + ' 123,' + (162 - dy).toFixed(1));
+      $('daGap1').setAttribute('y2', (138 + dy).toFixed(1));
+      $('daGap1b').setAttribute('y1', (138 + dy).toFixed(1)); $('daGap1b').setAttribute('y2', (138 + dy).toFixed(1));
+      $('daGapTxt').setAttribute('y', (117 + dy/2).toFixed(1));
+      $('daArmTxt').setAttribute('y', (164 + dy).toFixed(1));
+      $('daMove').setAttribute('y1', (230 + dy).toFixed(1)); $('daMove').setAttribute('y2', (186 + dy).toFixed(1));
+      $('daMoveH').setAttribute('points', '146,' + (180 + dy).toFixed(1) + ' 141,' + (192 + dy).toFixed(1) + ' 151,' + (192 + dy).toFixed(1));
+      $('daMoveTxt').setAttribute('y', (212 + dy).toFixed(1));
       $('daOut').textContent = 'L₁ = ' + dPa.up.L.toFixed(4) + ' H　L₂ = ' + dPa.down.L.toFixed(4) +
                                ' H　ΔL = ' + (dPa.up.L - dPa.down.L).toFixed(4) + ' H';
     } else {
@@ -1457,7 +1482,7 @@
   var LVDT_IDS = { gap1:'lvGap1', gap2:'lvGap2', sol1:'lvSol1', sol2:'lvSol2', area1:'lvArea1', area2:'lvArea2' };
   var LVDT_INFO = {
     gap1:  { n:'变气隙型1·图4-8(a)', d:'口形铁芯：初级 w₁ 居中、两次级 w₂ₐ/w₂ᵦ 上下反接。衔铁上下移动 → δₐ 减小、δᵦ 增大，两路互感一增一减。灵敏度最高，量程仅几十~几百微米，非线性较大。' },
-    gap2:  { n:'变气隙型2·图4-8(b)', d:'П 形铁芯：两腿各绕初级与次级，衔铁横向平移使两路耦合一增一减。灵敏度高、量程小，结构紧凑。' },
+    gap2:  { n:'变面积型·图4-8(b)', d:'П 形铁芯：两腿各绕初级与次级，气隙 δ 不变，衔铁<b>横向平移</b>改变与两腿极面的<b>耦合覆盖面积</b> —— 一路覆盖增大、另一路减小，两次级差动输出。按改变量分类属于<b>变面积型</b>。' },
     sol1:  { n:'螺管型1·图4-8(c)', d:'同轴螺管：次级分列两端、初级居中，活动衔铁在骨架内插入。插入越深，与两次级的耦合差越大。量程大（可达数百毫米）、中段线性最好，工程上最常用。' },
     sol2:  { n:'螺管型2·图4-8(d)', d:'与 (c) 同原理：两次级分列两端、初级居中，外加导磁外壳屏蔽，磁场更集中、灵敏度更均匀。' },
     area1: { n:'变面积型1·图4-8(e)', d:'衔铁绕支点摆动：两腿气隙一个减小、一个增大 → 差动输出。适合测微小位移/角位移，线性较好。' },
