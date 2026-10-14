@@ -143,7 +143,8 @@
   #colA{position:sticky; top:6px; align-self:flex-start; max-height:calc(100vh - 16px); overflow-y:auto}
   #colA::-webkit-scrollbar{width:6px}
   #colA::-webkit-scrollbar-thumb{background:#c3d3e6; border-radius:3px}
-  .panel.folded > .pbody{display:none}
+  .panel > .pbody{max-height:2600px; overflow:hidden; transition:max-height .22s ease, opacity .18s ease}
+  .panel.folded > .pbody{max-height:0 !important; opacity:0}
   .panel.folded{border-color:#bcd0e5; background:#f8fbff}
   .panel.folded > .phead h2{color:#5b6b80}
   .ptool[data-act="fold"]{font-size:11px}
@@ -163,7 +164,7 @@
 <div id="laybar">
   <span style="font-weight:700;color:#0e4a8e">板块布局</span>
   <button id="layReset">↺ 恢复默认（一屏）</button>
-  <span class="hint">左列<b>型式与输入量</b>固定吸附，右侧滚动查看各结构；每块标题栏的 <b>▾</b> 可折叠该板块（<b>滑过上方会自动折叠</b>、回到可视区自动展开）；拖动<b>标题栏</b>可换列换位、拖<b>竖条</b>调列宽、<b>＋ －</b> 缩放、<b>⛶</b> 全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
+  <span class="hint">左列<b>型式与输入量</b>固定吸附，右侧滚动查看各结构；每块标题栏的 <b>▾</b> 可折叠该板块；<b>滚轮下滑时滑过上方的那几块会自动收起、滚回来自动展开</b>（手动折起的不会被自动展开）；拖动<b>标题栏</b>可换列换位、拖<b>竖条</b>调列宽、<b>＋ －</b> 缩放、<b>⛶</b> 全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
 </div>
 
 <div id="boardWrap">
@@ -2177,12 +2178,12 @@
   var COLS  = ['colA','colB','colC'];
   var IDS   = ['ctrlCard','magCard','fmlCard','readCard','curveCard','eddyCard','diffCard','pmCard','circCard','ptsCard'];
   var MINZ = 0.7, MAXZ = 1.6, MINCOL = 260;
-  var KEY = 'jh-inductive-layout-v4';
+  var KEY = 'jh-inductive-layout-v5';
   var DEF = {
-    weight: { colA:2.9, colB:5.4, colC:3.7 },
-    col: { colA:['ctrlCard'],
+    weight: { colA:2.9, colB:5.2, colC:3.9 },
+    col: { colA:['ctrlCard','ptsCard'],
            colB:['magCard','diffCard','eddyCard','pmCard'],
-           colC:['fmlCard','curveCard','ptsCard'] },
+           colC:['readCard','fmlCard','curveCard','circCard'] },
     zoom: {}
   };
   var L = null, focused = null;
@@ -2334,8 +2335,6 @@
   /* ---------- 折叠：滑过上方自动折叠，回到可视区自动展开；可手动锁定 ---------- */
   function setFold(p, on){
     p.classList.toggle('folded', on);
-    var b = p.querySelector('.pbody');
-    if (b) b.style.display = on ? 'none' : '';
     var btn = p.querySelector('.ptool[data-act="fold"]');
     if (btn) btn.textContent = on ? '▸' : '▾';
   }
@@ -2362,17 +2361,21 @@
     var vh = window.innerHeight || 900;
     IDS.forEach(function(id){
       var p = el(id); if (!p) return;
+      if (p.parentNode && p.parentNode.id === 'colA') return;      /* 左列吸附列：始终展开 */
       var r = p.getBoundingClientRect();
-      if (r.bottom < 130){                       /* 已滑过上方 → 折叠 */
+      if (r.bottom < 90){                                          /* 整块滑到上方之外 → 收起 */
         if (!p.classList.contains('folded')) setFold(p, true);
-      } else if (r.top < vh && r.bottom > 0 && !p.hasAttribute('data-manual')){
-        if (p.classList.contains('folded')) setFold(p, false);   /* 回到可视区 → 展开 */
+      } else if (r.top < vh - 30 && r.bottom > 60 && !p.hasAttribute('data-manual')){
+        if (p.classList.contains('folded')) setFold(p, false);      /* 回到可视区 → 展开 */
       }
     });
   }
-  window.addEventListener('scroll', function(){
+  function onScrollOrWheel(){
     if (!ticking){ ticking = true; requestAnimationFrame(autoFold); }
-  }, { passive:true });
+  }
+  window.addEventListener('scroll', onScrollOrWheel, { passive:true });
+  window.addEventListener('wheel', onScrollOrWheel, { passive:true });
+  window.addEventListener('touchmove', onScrollOrWheel, { passive:true });
   window.addEventListener('resize', function(){ if (window.__repack) window.__repack(); });
   setTimeout(autoFold, 400);
   window.__autoFold = autoFold;
