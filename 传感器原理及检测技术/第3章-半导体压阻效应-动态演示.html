@@ -3,166 +3,191 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>半导体压阻效应 · 动态演示｜传感器原理与技术</title>
+<title>第3章 半导体材料的压阻效应 · 动态演示｜传感器原理与技术</title>
 <style>
-  :root{
-    --jhu:#0e4a8e; --jhu2:#0a2f5c; --ink:#12233a; --muted:#5b6b80;
-    --line:#d5dfec; --bg:#eef3f9; --card:#ffffff;
-    --geo:#e08a1e;        /* 几何(应变)效应 1+2μ */
-    --piezo:#7c3aed;      /* 压阻效应 πE       */
-    --metal:#64748b;      /* 金属              */
-    --semi:#0d8b7f;       /* 半导体            */
-    --hot:#d94a3d; --ok:#0f9d58;
-    --grid:rgba(14,74,142,.10);
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
-  body{
-    font-family:"Microsoft YaHei","PingFang SC","Source Han Sans SC","Hiragino Sans GB",system-ui,sans-serif;
-    background:
-      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/26px 26px,
-      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/26px 26px,
-      var(--bg);
-    color:var(--ink); font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
-  }
-  header{
-    background:linear-gradient(120deg,var(--jhu) 0%,var(--jhu2) 100%);
-    color:#fff; padding:8px 24px; display:flex; align-items:center; gap:16px;
-    box-shadow:0 3px 14px rgba(10,47,92,.28);
-  }
-  header h1{font-size:22px; margin:0; letter-spacing:1px; font-weight:700}
-  header .sub{font-size:13px; opacity:.9; border-left:1px solid rgba(255,255,255,.45); padding-left:13px}
-  header .right{margin-left:auto; text-align:right; font-size:12.5px; opacity:.92; line-height:1.3}
-  header .right b{font-size:15px; letter-spacing:2px}
-  #laybar{display:flex; align-items:center; gap:10px; padding:3px 20px; font-size:12px; color:#41566f;
-          background:#e4edf8; border-bottom:1px solid #cfdcec}
-  #laybar button{border:1px solid #a9c1dd; background:#fff; color:var(--jhu); border-radius:7px;
-                 font-size:12px; font-weight:700; padding:2px 10px; cursor:pointer; font-family:inherit}
-  #laybar button:hover{background:#f2f7fd}
-  #laybar .hint{color:#6b7d92}
-  #boardWrap{padding:8px 14px 4px}
-  #board{display:flex; align-items:flex-start}
-  .col{display:flex; flex-direction:column; gap:8px; min-width:0; flex-grow:1; flex-basis:0}
-  .colhead{font-size:11.5px; font-weight:700; color:#8296ad; letter-spacing:.4px; padding:0 3px 2px; border-bottom:1px dashed #dbe5f0}
-  .vsplit{flex:0 0 13px; align-self:stretch; cursor:col-resize; position:relative; touch-action:none}
-  .vsplit::before{content:""; position:absolute; left:5.5px; top:8px; bottom:8px; width:2px; border-radius:2px; background:#cfdcec}
-  .vsplit:hover::before{background:var(--jhu); width:3px; left:5px}
-  .card{background:var(--card); border:1px solid var(--line); border-radius:13px;
-        box-shadow:0 2px 10px rgba(18,35,58,.06); padding:8px 11px}
-  .card h2{margin:0 0 4px; font-size:14.5px; color:var(--jhu); font-weight:700; display:flex; align-items:center; gap:7px}
-  .card h2::before{content:""; width:4px; height:15px; border-radius:3px; background:var(--jhu)}
-  .card h2 small{font-weight:400; color:var(--muted); font-size:12px}
-  .panel{position:relative; box-sizing:border-box}
-  .panel > .phead{display:flex; align-items:center; gap:6px; cursor:move; touch-action:none; user-select:none; margin:-1px 0 4px}
-  .panel > .phead h2{margin:0; flex:1; min-width:0; cursor:move}
-  .ptools{display:flex; gap:3px; flex:none}
-  .ptool{width:21px; height:21px; padding:0; line-height:1; border:1px solid var(--line); background:#fff;
-         color:var(--jhu); border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit}
-  .ptool:hover{background:#eef4fc; border-color:#9fbedd}
-  .panel.sorting{opacity:.6; outline:2px dashed var(--jhu); outline-offset:2px; pointer-events:none}
-  .panel.focused{position:fixed; left:14px; right:14px; top:80px; bottom:14px; z-index:300; overflow:auto;
-                 box-shadow:0 18px 50px rgba(10,47,92,.38); border-color:var(--jhu)}
-  #focusBack{position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(10,30,55,.34); z-index:290; display:none}
-  body.has-focus #focusBack{display:block}
-  body.layout-dragging{user-select:none}
-  svg{display:block; width:100%; height:auto}
-  .tiny{font-size:12px; fill:var(--muted); color:var(--muted)}
-  /* ---- 控件 ---- */
-  .ctrl{display:flex; flex-direction:column; gap:3px; margin-bottom:5px}
-  .ctrl .row{display:flex; align-items:center; gap:9px}
-  .ctrl .name{font-size:13.5px; color:var(--muted); width:118px; flex:none}
-  .ctrl .name b{color:var(--ink); font-size:14px}
-  .ctrl output{font-size:18px; font-weight:800; min-width:96px; text-align:right; font-variant-numeric:tabular-nums}
-  input[type=range]{-webkit-appearance:none; appearance:none; height:8px; border-radius:5px; background:#dce6f2; outline:none; flex:1; min-width:70px}
-  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:21px; height:21px; border-radius:50%;
-        background:#fff; border:3px solid var(--jhu); cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.25)}
-  .seg{display:flex; gap:6px; flex-wrap:wrap}
-  .seg button{flex:1 1 0; min-width:96px; padding:5px 8px; border-radius:9px; border:1px solid var(--line);
-              background:#fff; cursor:pointer; font-size:13px; font-weight:700; color:#33506f; font-family:inherit; line-height:1.3}
-  .seg button small{display:block; font-weight:400; font-size:11px; color:var(--muted)}
-  .seg button:hover{border-color:#9fbedd}
-  .seg button.on{background:var(--jhu); border-color:var(--jhu); color:#fff}
-  .seg button.on small{color:rgba(255,255,255,.85)}
-  .seg button.on.semi{background:var(--semi); border-color:var(--semi)}
-  .seg button.on.metal{background:var(--metal); border-color:var(--metal)}
-  .actions{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap}
-  .actions button{flex:1 1 108px; padding:7px 4px; border-radius:9px; border:1px solid var(--jhu);
-                  background:var(--jhu); color:#fff; font-size:13.5px; font-weight:700; cursor:pointer;
-                  font-family:inherit; white-space:nowrap}
-  .actions button.ghost{background:#fff; color:var(--jhu)}
-  .actions button.running{background:var(--hot); border-color:var(--hot); color:#fff}
-  .actions button:hover{filter:brightness(1.07)}
-  .narrate{margin-top:5px; border-left:5px solid var(--piezo); background:#faf7ff; border-radius:0 10px 10px 0;
-           padding:5px 11px; font-size:13.5px; line-height:1.5; min-height:40px; color:#4c2a80; cursor:pointer}
-  .narrate:hover{background:#f6f1ff}
-  #voiceToggle{border:1px solid var(--jhu); background:#fff; color:var(--jhu); border-radius:9px;
-               font-size:13px; font-weight:700; padding:5px 11px; cursor:pointer; font-family:inherit; white-space:nowrap}
-  #voiceToggle.on{background:var(--jhu); color:#fff}
-  #voiceToggle:hover{filter:brightness(1.06)}
-  #voiceSel{border:1px solid var(--line); background:#fff; color:#33506f; border-radius:8px;
-            padding:4px 6px; font-size:12.5px; font-family:inherit; max-width:190px}
-  /* ---- 读数 ---- */
-  .big{display:flex; align-items:baseline; gap:9px; background:linear-gradient(90deg,#f2f7ff,#fff);
-       border:1px solid #d9e5f5; border-radius:12px; padding:4px 12px}
-  .big .cap{font-size:13px; color:var(--muted); margin-right:auto}
-  .big .num{font-size:32px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
-  .big .unit{font-size:15px; font-weight:700; color:var(--muted)}
-  .kv{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px}
-  .kv .box{border:1px dashed var(--line); border-radius:9px; padding:4px 8px; font-size:11.5px; color:var(--muted)}
-  .kv .box b{display:block; font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:1px}
-  .fine{font-size:11.5px; color:var(--muted); margin-top:5px; line-height:1.5; font-variant-numeric:tabular-nums}
-  .fine b{color:var(--ink)}
-  /* ---- K 构成条 ---- */
-  .krow{margin-top:5px}
-  .krow .lab{display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:2px}
-  .kbar{display:flex; height:16px; border-radius:5px; overflow:hidden; border:1px solid var(--line); background:#f4f8fd}
-  .kbar i{display:block; height:100%}
-  .kbar .g{background:var(--geo)}
-  .kbar .p{background:var(--piezo)}
-  .klegend{display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--muted); margin-top:4px}
-  .klegend i{display:inline-block; width:14px; height:9px; border-radius:2px; margin-right:5px; vertical-align:0}
-  /* ---- 公式 ---- */
-  .fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:14.5px; line-height:1.62; color:#16283d}
-  .fml .row{display:block; border-bottom:1px dashed #e7eef7; padding:1px 0}
-  .fml .row:last-child{border-bottom:none}
-  .fml .tag{display:inline-block; font-family:"Microsoft YaHei",sans-serif; font-size:11px; color:#fff;
-            background:var(--jhu); border-radius:5px; padding:0 6px; margin-right:5px; vertical-align:1px}
-  .fml .tag.p{background:var(--piezo)} .fml .tag.g{background:var(--geo)}
-  .fml b{color:var(--hot)}
-  .fml .note{font-family:"Microsoft YaHei",sans-serif; font-size:11.5px; color:var(--muted); line-height:1.5; margin-top:3px}
-  .frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.9em; line-height:1.14; margin:0 .16em}
-  .frac i{font-style:normal; padding:0 .3em}
-  .frac b{font-weight:400; color:inherit; border-top:1.4px solid currentColor; padding:0 .3em}
-  /* ---- 要点 ---- */
-  ol.points{margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:4px}
-  ol.points li{border:1px solid var(--line); border-left:4px solid #c8d6e6; border-radius:0 9px 9px 0;
-               padding:3px 9px; font-size:12.8px; line-height:1.45; color:#3c5068; background:#fbfdff; transition:.25s}
-  ol.points li.on{border-left-color:var(--ok); background:#f2fbf5; color:var(--ink); box-shadow:0 0 0 2px rgba(15,157,88,.12)}
-  ol.points li .hl{color:var(--ok); font-weight:700}
-  .hint{font-size:12px; color:var(--muted); margin-top:5px}
-  footer{padding:5px 18px 8px; font-size:11.5px; color:var(--muted); line-height:1.55}
-  footer b{color:var(--jhu)}
-  @media (max-width:1200px){ #boardWrap{min-width:1180px} }
+/* =====================================================================
+   公共样式（各章通用）· 由 _build/build.js 注入到每个单文件 HTML 的样式表顶部
+   与第4章保持同一套类名与观感；章节特有的语义色 / 版式写在章节模块的 extraCss 里
+   ===================================================================== */
+:root{
+  --jhu:#0e4a8e; --jhu2:#0a2f5c; --ink:#12233a; --muted:#5b6b80;
+  --line:#d5dfec; --bg:#eef3f9; --card:#ffffff;
+  --flux:#0d8b7f;      /* 磁通 / 场线（第4章起沿用） */
+  --cu:#c2703a;        /* 线圈 / 铜 */
+  --iron:#4b6b8f;      /* 铁芯 / 铁磁体 */
+  --gapm:#e08a1e;      /* 气隙 / 有效量 */
+  --eddy:#7c3aed;      /* 涡流 / 强调（紫） */
+  --hot:#d94a3d; --ok:#0f9d58;
+  --grid:rgba(14,74,142,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Source Han Sans SC","Hiragino Sans GB",system-ui,sans-serif;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    var(--bg);
+  color:var(--ink); font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+header{
+  background:linear-gradient(120deg,var(--jhu) 0%,var(--jhu2) 100%);
+  color:#fff; padding:8px 24px; display:flex; align-items:center; gap:16px;
+  box-shadow:0 3px 14px rgba(10,47,92,.28);
+}
+header h1{font-size:22px; margin:0; letter-spacing:1px; font-weight:700}
+header .sub{font-size:13px; opacity:.9; border-left:1px solid rgba(255,255,255,.45); padding-left:13px}
+header .right{margin-left:auto; text-align:right; font-size:12.5px; opacity:.92; line-height:1.3}
+header .right b{font-size:15px; letter-spacing:2px}
+#laybar{display:flex; align-items:center; gap:10px; padding:3px 20px; font-size:12px; color:#41566f;
+        background:#e4edf8; border-bottom:1px solid #cfdcec}
+#laybar button{border:1px solid #a9c1dd; background:#fff; color:var(--jhu); border-radius:7px;
+               font-size:12px; font-weight:700; padding:2px 10px; cursor:pointer; font-family:inherit}
+#laybar button:hover{background:#f2f7fd}
+#laybar .hint{color:#6b7d92}
+#boardWrap{padding:6px 14px 2px}
+#board{display:flex; align-items:flex-start}
+.col{display:flex; flex-direction:column; gap:6px; min-width:0; flex-grow:1; flex-basis:0}
+.colhead{font-size:11.5px; font-weight:700; color:#8296ad; letter-spacing:.4px; padding:0 3px 2px; border-bottom:1px dashed #dbe5f0}
+.vsplit{flex:0 0 13px; align-self:stretch; cursor:col-resize; position:relative; touch-action:none}
+.vsplit::before{content:""; position:absolute; left:5.5px; top:8px; bottom:8px; width:2px; border-radius:2px; background:#cfdcec}
+.vsplit:hover::before{background:var(--jhu); width:3px; left:5px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:13px;
+      box-shadow:0 2px 10px rgba(18,35,58,.06); padding:5px 9px}
+.card h2{margin:0 0 4px; font-size:14.5px; color:var(--jhu); font-weight:700; display:flex; align-items:center; gap:7px}
+.card h2::before{content:""; width:4px; height:15px; border-radius:3px; background:var(--jhu)}
+.card h2 small{font-weight:400; color:var(--muted); font-size:12px}
+.panel{position:relative; box-sizing:border-box}
+.panel > .phead{display:flex; align-items:center; gap:6px; cursor:move; touch-action:none; user-select:none; margin:-1px 0 4px}
+.panel > .phead h2{margin:0; flex:1; min-width:0; cursor:move}
+.ptools{display:flex; gap:3px; flex:none}
+.ptool{width:21px; height:21px; padding:0; line-height:1; border:1px solid var(--line); background:#fff;
+       color:var(--jhu); border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit}
+.ptool:hover{background:#eef4fc; border-color:#9fbedd}
+.panel.sorting{opacity:.6; outline:2px dashed var(--jhu); outline-offset:2px; pointer-events:none}
+.panel.focused{position:fixed; left:14px; right:14px; top:80px; bottom:14px; z-index:300; overflow:auto;
+               box-shadow:0 18px 50px rgba(10,47,92,.38); border-color:var(--jhu)}
+#focusBack{position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(10,30,55,.34); z-index:290; display:none}
+body.has-focus #focusBack{display:block}
+body.layout-dragging{user-select:none}
+svg{display:block; width:100%; height:auto}
+.tiny{font-size:12px; fill:var(--muted); color:var(--muted)}
+/* ---- 控件 ---- */
+.ctrl{display:flex; flex-direction:column; gap:2px; margin-bottom:2px}
+.ctrl .row{display:flex; align-items:center; gap:7px}
+.ctrl .name{font-size:12.8px; color:var(--muted); width:118px; flex:none}
+.ctrl .name b{color:var(--ink); font-size:14px}
+.ctrl output{font-size:18px; font-weight:800; min-width:96px; text-align:right; font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none; appearance:none; height:8px; border-radius:5px; background:#dce6f2; outline:none; flex:1; min-width:70px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:21px; height:21px; border-radius:50%;
+      background:#fff; border:3px solid var(--jhu); cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.seg{display:flex; gap:6px; flex-wrap:wrap}
+.seg button{flex:1 1 0; min-width:96px; padding:5px 8px; border-radius:9px; border:1px solid var(--line);
+            background:#fff; cursor:pointer; font-size:13px; font-weight:700; color:#33506f; font-family:inherit; line-height:1.3}
+.seg button small{display:block; font-weight:400; font-size:11px; color:var(--muted)}
+.seg button:hover{border-color:#9fbedd}
+.seg button.on{background:var(--jhu); border-color:var(--jhu); color:#fff}
+.seg button.on small{color:rgba(255,255,255,.85)}
+/* 紧凑小按钮（章节里的型式/模式细分按钮） */
+.seg.tight button{min-width:66px; flex:1 1 66px; padding:3px 4px; font-size:11.5px; line-height:1.25}
+.seg.tight button small{font-size:10px}
+.step{border:1px solid var(--line); background:#fff; color:var(--jhu); width:28px; height:28px;
+      border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; line-height:1}
+.actions{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap}
+.actions button{flex:1 1 92px; padding:5px 4px; border-radius:9px; border:1px solid var(--jhu);
+                background:var(--jhu); color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;
+                font-family:inherit; white-space:nowrap}
+.actions button.ghost{background:#fff; color:var(--jhu)}
+.actions button.running{background:var(--hot); border-color:var(--hot); color:#fff}
+.actions button:hover{filter:brightness(1.07)}
+.narrate{margin-top:4px; border-left:5px solid var(--flux); background:#f2fbf9; border-radius:0 10px 10px 0;
+         padding:3px 10px; font-size:12.4px; line-height:1.34; min-height:26px; color:#0a5f57}
+/* ---- 读数 ---- */
+.big{display:flex; align-items:baseline; gap:9px; background:linear-gradient(90deg,#f2f7ff,#fff);
+     border:1px solid #d9e5f5; border-radius:12px; padding:3px 12px}
+.big .cap{font-size:13px; color:var(--muted); margin-right:auto}
+.big .num{font-size:23px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
+.big .unit{font-size:15px; font-weight:700; color:var(--muted)}
+.kv{display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:5px}
+.kv .box{border:1px dashed var(--line); border-radius:9px; padding:2px 6px; font-size:10.5px; color:var(--muted)}
+.kv .box b{display:block; font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:1px}
+.fine{font-size:10.4px; color:var(--muted); margin-top:5px; line-height:1.5; font-variant-numeric:tabular-nums}
+.fine b{color:var(--ink)}
+/* ---- 比例条 / 图例 ---- */
+.rmbar{display:flex; height:15px; border-radius:5px; overflow:hidden; border:1px solid var(--line); background:#f4f8fd; margin-top:3px}
+.rmbar i{display:block; height:100%}
+.legend{display:flex; gap:8px; flex-wrap:wrap; font-size:10.4px; color:var(--muted); margin-top:1px}
+.legend i{display:inline-block; width:14px; height:9px; border-radius:2px; margin-right:5px}
+/* ---- 公式 ---- */
+.fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:10.9px; line-height:1.22; color:#16283d}
+.fml .row{display:block; border-bottom:1px dashed #e7eef7; padding:0}
+.fml .row:last-child{border-bottom:none}
+.fml .tag{display:inline-block; font-family:"Microsoft YaHei",sans-serif; font-size:11px; color:#fff;
+          background:var(--jhu); border-radius:5px; padding:0 6px; margin-right:5px; vertical-align:1px}
+.fml .tag.g{background:var(--gapm)} .fml .tag.f{background:var(--flux)} .fml .tag.v{background:var(--eddy)}
+.fml b{color:var(--hot)}
+.fml .note{font-family:"Microsoft YaHei",sans-serif; font-size:10.8px; color:var(--muted); line-height:1.4; margin-top:2px}
+.frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.88em; line-height:1.02; margin:0 .14em}
+.frac i{font-style:normal; padding:0 .3em}
+.frac b{font-weight:400; color:inherit; border-top:1.4px solid currentColor; padding:0 .3em}
+/* ---- 要点 ---- */
+ol.points{margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:4px}
+ol.points li{border:1px solid var(--line); border-left:4px solid #c8d6e6; border-radius:0 9px 9px 0;
+             padding:0 7px; font-size:10.9px; line-height:1.28; color:#3c5068; background:#fbfdff; transition:.25s}
+ol.points li.on{border-left-color:var(--ok); background:#f2fbf5; color:var(--ink); box-shadow:0 0 0 2px rgba(15,157,88,.12)}
+ol.points li .hl{color:var(--ok); font-weight:700}
+.hint{font-size:12px; color:var(--muted); margin-top:5px}
+footer{padding:3px 18px 5px; font-size:11px; color:var(--muted); line-height:1.5}
+footer b{color:var(--jhu)}
+.actions button.ptsB{flex:0 0 26px; padding:2px 0; font-size:11px; border-radius:6px}   /* 要点编号按钮：特异性需高于 .actions button */
+/* 左右两列都吸附固定；只有中间列（结构+读数）随页面滚动 */
+#colA, #colC{position:sticky; top:4px; align-self:flex-start;
+             max-height:calc(100vh - 10px); overflow-y:auto; overscroll-behavior:contain}
+#colA::-webkit-scrollbar, #colC::-webkit-scrollbar{width:6px}
+#colA::-webkit-scrollbar-thumb, #colC::-webkit-scrollbar-thumb{background:#c3d3e6; border-radius:3px}
+/* 中间列底部留白：让最后一张卡片也能滚动到屏幕中间 */
+#colB{padding-bottom:52vh}
+.panel > .pbody{max-height:2600px; overflow:hidden; transition:max-height .22s ease, opacity .18s ease}
+.panel.folded > .pbody{max-height:0 !important; opacity:0}
+.panel.folded{border-color:#bcd0e5; background:#f8fbff}
+.panel.folded > .phead h2{color:#5b6b80}
+.ptool[data-act="fold"]{font-size:11px}
+.readlabel{font-size:12.5px; font-weight:700; color:#5b6b80; margin:7px 0 3px; padding-top:6px; border-top:1px dashed #dbe5f0}
+.readwrap svg{max-height:196px}
+.pbody > svg{max-height:300px}
+.pbody > svg + svg{max-height:196px}
+@media (max-width:1200px){ #boardWrap{min-width:1180px} }
+
+  /* ---- 第3章b（半导体压阻）语义色 ---- */
+  :root{ --geo:#e08a1e; --piezo:#7c3aed; --metal:#64748b; --semi:#0d8b7f; }
+  #segMat button.on.semi{background:var(--semi); border-color:var(--semi)}
+  #segMat button.on.metal{background:var(--metal); border-color:var(--metal)}
+  .kctx{display:flex; justify-content:space-between; gap:8px; font-size:10.5px; color:var(--muted); margin-top:5px}
+  .kctx b{color:var(--ink)}
+  #ctrlCard .actions{gap:5px}
+  #ctrlCard .actions button{flex:1 1 78px; padding:5px 3px}
+  .actions button.ptsB{flex:0 0 24px; padding:2px 0; font-size:11px}
 </style>
 </head>
 <body>
 <header>
-  <h1>半导体材料的压阻效应</h1>
-  <div class="sub">压阻式传感器 · 工作原理 dρ/ρ = πσ = πEε　→　dR/R = (1+2μ+πE)ε = Kε　|&nbsp;动态演示</div>
+  <h1>第 3 章 半导体材料的压阻效应</h1>
+  <div class="sub">压阻式传感器 → 原理 dρ/ρ = πσ = πEε · dR/R = (1+2μ+πE)ε = Kε | 动态演示</div>
   <div class="right"><b>江汉大学</b><br>传感器原理与技术</div>
 </header>
 <div id="laybar">
   <span style="font-weight:700;color:#0e4a8e">板块布局</span>
   <button id="layReset">↺ 恢复默认（一屏）</button>
-  <span class="hint">拖动板块<b>标题栏</b>可移到任意列、任意位置；拖动列间<b>竖条</b>可调整列宽；标题栏 <b>＋ －</b> 缩放该板块内容；<b>⛶</b> 或双击标题栏全屏放大（<b>Esc</b> 退出）。布局自动记住。<b>语音讲解</b>在「材料与输入量」面板里开启，语速跟随演示速度。</span>
+  <span class="hint"><b>左右两列固定不动</b>（左＝型式与输入量＋要点，右＝数据/曲线/公式），只有<b>中间列</b>随页面滚动；每块标题栏的 <b>▾</b> 可折叠该板块；<b>滚轮下滑时滑过上方的那几块会自动收起、滚回来自动展开</b>（手动折起的不会被自动展开）；拖动<b>标题栏</b>可换列换位、拖<b>竖条</b>调列宽、<b>＋ －</b> 缩放、<b>⛶</b> 全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
 </div>
 
 <div id="boardWrap">
 <main id="board">
 
-  <!-- ============ 左列：材料与输入量 + 微观机制 ============ -->
+  <!-- ================= 左列 ================= -->
   <div class="col" id="colA">
-    <div class="colhead">① 输入与材料 + 微观机制</div>
+    <div class="colhead">① 材料与输入量 · 本章要点</div>
+
 
     <section class="card panel" id="ctrlCard">
       <div class="phead">
@@ -172,21 +197,21 @@
       <div class="pbody">
       <div class="ctrl">
         <div class="row" style="align-items:flex-start">
-          <span class="name" style="padding-top:4px"><b>材料</b></span>
-          <div class="seg" id="segMat" style="flex:1">
-            <button data-mat="metal" class="on metal">金属应变片<small>康铜 π≈0</small></button>
-            <button data-mat="siP" class="semi">半导体 硅 P型<small>π=60×10⁻¹¹</small></button>
-            <button data-mat="siN" class="semi">半导体 硅 N型<small>π=−100×10⁻¹¹</small></button>
-            <button data-mat="ge" class="semi">半导体 锗<small>π=50×10⁻¹¹</small></button>
+          <span class="name" style="padding-top:4px"><b>材料</b><br><span class="tiny" id="matTxt">金属应变片</span></span>
+          <div class="seg tight" id="segMat" style="flex:1">
+            <button data-mat="metal" class="on metal">金属应变片<small>π≈0</small></button>
+            <button data-mat="siP" class="semi">硅 P 型<small>π=60×10⁻¹¹</small></button>
+            <button data-mat="siN" class="semi">硅 N 型<small>π=−100×10⁻¹¹</small></button>
+            <button data-mat="ge" class="semi">锗<small>π=50×10⁻¹¹</small></button>
           </div>
         </div>
       </div>
       <div class="ctrl">
         <div class="row">
-          <span class="name"><b>轴向应变 ε</b><br><span class="tiny" id="sigTxt">σ = 0.0 MPa</span></span>
-          <button class="step" id="epsM" style="border:1px solid var(--line);background:#fff;color:var(--jhu);width:28px;height:28px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">−</button>
+          <span class="name"><b>轴向应变 ε</b><br><span class="tiny" id="sigTxt">σ = Eε = 0.00 MPa</span></span>
+          <button class="step" id="epsM" title="减小 10 με">−</button>
           <input type="range" id="eps" min="-500" max="1000" step="10" value="0">
-          <button class="step" id="epsP" style="border:1px solid var(--line);background:#fff;color:var(--jhu);width:28px;height:28px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">＋</button>
+          <button class="step" id="epsP" title="增大 10 με">＋</button>
           <output id="epsOut">0 με</output>
         </div>
       </div>
@@ -206,99 +231,199 @@
       </div>
       <div class="ctrl">
         <div class="row" style="align-items:flex-start">
-          <span class="name" style="padding-top:4px"><b>掺杂浓度</b><br><span class="tiny">越大 ρ 越小</span></span>
-          <div class="seg" id="segDope" style="flex:1">
+          <span class="name" style="padding-top:4px"><b>掺杂浓度</b><br><span class="tiny" id="dopeTxt">越重 ρ 越小</span></span>
+          <div class="seg tight" id="segDope" style="flex:1">
             <button data-dope="light" class="on">轻掺杂<small>π 大、ρ 大</small></button>
-            <button data-dope="mid">中等</button>
-            <button data-dope="heavy">重掺杂<small>π 小、ρ 小</small></button>
+            <button data-dope="mid">中等<small>π×0.75</small></button>
+            <button data-dope="heavy">重掺杂<small>π×0.50、ρ 小</small></button>
           </div>
         </div>
       </div>
       <div class="actions">
-        <button id="playMain" class="ghost">▶ 压阻效应演示</button>
+        <button id="playMain" class="ghost">▶ 压阻效应</button>
         <button id="playMicro" class="ghost">▶ 微观机制</button>
-        <button id="playCmp" class="ghost">▶ 金属 vs 半导体</button>
+        <button id="playCmp" class="ghost">▶ 金属/半导体</button>
         <button id="playChip" class="ghost">▶ 膜片全桥应用</button>
-        <button id="reset" class="ghost" style="flex:0 0 62px">↺ 复位</button>
+        <button id="reset" class="ghost" style="flex:0 0 54px">↺ 复位</button>
       </div>
-      <div class="ctrl" style="margin-top:7px">
+      <div class="ctrl" style="margin-top:5px">
         <div class="row">
           <span class="name"><b>演示速度</b><br><span class="tiny">0.4× 慢 ～ 2.5× 快</span></span>
           <input type="range" id="speed" min="0.4" max="2.5" step="0.1" value="1">
           <output id="speedOut">1.0×</output>
         </div>
       </div>
-      <div class="ctrl">
-        <div class="row">
-          <span class="name"><b>语音讲解</b><br><span class="tiny" id="voiceHint">演示时自动朗读旁白</span></span>
-          <button id="voiceToggle">🔊 开启朗读</button>
-          <select id="voiceSel" title="选择朗读音色"></select>
-        </div>
-      </div>
-      <div class="narrate" id="narration" title="点一下可重听这一条">初始状态：金属应变片、ε = 0，电阻率与电阻都不变。四个演示按钮分别讲：压阻效应本体 / 微观机制 / 金属与半导体对比 / 硅膜片全桥应用。</div>
+      <div class="narrate" id="narration">初始状态：金属应变片、ε = 0，π ≈ 0 → 电阻率与电阻都不变（K = 1+2μ = 1.60）。四个演示按钮分别讲：压阻效应 / 微观机制 / 金属·半导体对比 / 膜片全桥应用；右上「本章要点」里点「▶ 巡览要点」可逐条过结论。</div>
       </div>
     </section>
 
-    <section class="card panel" id="lattice">
+    <section class="card panel" id="ptsCard">
       <div class="phead">
-        <h2>微观机制 <small>应力 → 晶格变形 → 散射变化 → 迁移率 → 电阻率</small></h2>
+        <h2>本章要点</h2>
         <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
       </div>
       <div class="pbody">
-      <svg id="lat" viewBox="0 0 700 350" role="img" aria-label="应力改变晶格、散射与电阻率的对照示意">
+      <div class="actions" style="margin-top:0">
+        <button id="ptsPlay" class="ghost" style="flex:0 0 92px">▶ 巡览要点</button>
+        <button id="ptsB0" class="ghost ptsB">1</button><button id="ptsB1" class="ghost ptsB">2</button>
+        <button id="ptsB2" class="ghost ptsB">3</button><button id="ptsB3" class="ghost ptsB">4</button>
+        <button id="ptsB4" class="ghost ptsB">5</button><button id="ptsB5" class="ghost ptsB">6</button>
+        <button id="ptsB6" class="ghost ptsB">7</button><button id="ptsB7" class="ghost ptsB">8</button>
+        <button id="ptsB8" class="ghost ptsB">9</button><button id="ptsB9" class="ghost ptsB">10</button>
+      </div>
+      <ol class="points" id="points"></ol>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colA" data-right="colB" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 中列 ================= -->
+  <div class="col" id="colB">
+    <div class="colhead">② 微观机制 ＋ 硅膜片全桥（成对显示）</div>
+
+
+    <section class="card panel" id="lattice">
+      <div class="phead">
+        <h2>微观机制 <small>应力 → 晶格变形 → 散射变化 → 迁移率 μ_c → 电阻率 ρ</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="lat" viewBox="0 0 700 352" role="img" aria-label="应力改变晶格、散射与电阻率的对照示意">
         <g id="chain"></g>
-        <!-- ① 基准 -->
-        <text x="12" y="82" font-size="13" font-weight="700" fill="#5b6b80">① 无应力（基准）</text>
-        <text id="roA" x="688" y="82" text-anchor="end" font-size="12.5" fill="#5b6b80">μ_c = 1.00　ρ = 1.00</text>
+        <text x="12" y="84" font-size="13" font-weight="700" fill="#5b6b80">① 无应力（基准）</text>
+        <text id="roA" x="688" y="84" text-anchor="end" font-size="12.5" fill="#5b6b80">μ_c = 1.000　ρ = 1.000</text>
         <g id="atomsA"></g><g id="carsA"></g><g id="flashA"></g>
         <g id="dimA">
           <line x1="150" y1="142" x2="150" y2="148" stroke="#9fb2c8" stroke-width="1.2"/>
           <line x1="212" y1="142" x2="212" y2="148" stroke="#9fb2c8" stroke-width="1.2"/>
           <line x1="150" y1="145" x2="212" y2="145" stroke="#9fb2c8" stroke-width="1.2"/>
-          <text x="181" y="140" text-anchor="middle" font-size="11" fill="#8296ad">间距 a</text>
+          <text x="181" y="139" text-anchor="middle" font-size="11" fill="#8296ad">间距 a</text>
         </g>
-        <text id="scA" x="688" y="142" text-anchor="end" font-size="12" fill="#94a3b8">散射 ≈ — 次/秒</text>
-        <!-- ② 当前 -->
-        <text id="laB" x="12" y="180" font-size="13" font-weight="700" fill="#0d8b7f">② 当前：ε = 0 με</text>
-        <text id="roB" x="688" y="180" text-anchor="end" font-size="12.5" fill="#0d8b7f">μ_c = 1.00　ρ = 1.00</text>
+        <text id="scA" x="688" y="142" text-anchor="end" font-size="11.5" fill="#94a3b8">散射 ≈ 5 次/秒</text>
+        <text id="laB" x="12" y="182" font-size="13" font-weight="700" fill="#0d8b7f">② 当前：ε = 0 με（无应力）</text>
+        <text id="roB" x="688" y="182" text-anchor="end" font-size="12.5" fill="#0d8b7f">μ_c = 1.000　ρ = 1.000</text>
         <g id="atomsB"></g><g id="carsB"></g><g id="flashB"></g>
         <g id="dimB">
           <line id="dimB1" x1="150" y1="240" x2="150" y2="246" stroke="#0d8b7f" stroke-width="1.2"/>
           <line id="dimB2" x1="212" y1="240" x2="212" y2="246" stroke="#0d8b7f" stroke-width="1.2"/>
           <line id="dimB3" x1="150" y1="243" x2="212" y2="243" stroke="#0d8b7f" stroke-width="1.2"/>
-          <text id="dimBt" x="181" y="238" text-anchor="middle" font-size="11" font-weight="700" fill="#0d8b7f">间距 a ×1.00</text>
+          <text id="dimBt" x="181" y="237" text-anchor="middle" font-size="11" font-weight="700" fill="#0d8b7f">间距 a ×1.000</text>
         </g>
-        <text id="scB" x="688" y="240" text-anchor="end" font-size="12" fill="#94a3b8">散射 ≈ — 次/秒</text>
-        <!-- 结论 -->
-        <line x1="12" y1="256" x2="688" y2="256" stroke="#e2e8f0"/>
+        <text id="scB" x="688" y="240" text-anchor="end" font-size="11.5" fill="#94a3b8">散射 ≈ 5 次/秒（示意 ×1.00）</text>
+        <line x1="12" y1="258" x2="688" y2="258" stroke="#e2e8f0"/>
         <text x="12" y="282" font-size="15" font-weight="700" fill="#0e4a8e">ρ = 1 / (n q μ_c)</text>
-        <text id="rhoLine" x="178" y="282" font-size="13.5" fill="#33506f">应力使迁移率 μ_c 变化 → 电阻率 ρ 反向变化</text>
-        <text id="whyLine" x="12" y="302" font-size="12.5" fill="#5b6b80">机理：应力改变晶格的对称性与原子间距 → 半导体能带结构（能谷位置、有效质量、散射几率）随之变化 → μ_c 改变。</text>
-        <text id="whyLine2" x="12" y="322" font-size="12.5" fill="#5b6b80">金属缺少这个“杠杆”：晶格同样会变形，但 ρ 几乎不变，只能靠尺寸变化（1+2μ）—— 对比一下 ② 行。</text>
-        <text x="12" y="342" font-size="11.5" fill="#94a3b8">动画示意：晶格变形放大 300 倍，漂移速度与散射频率放大 12 倍；右侧 μ_c、ρ 为真实比例。</text>
+        <text id="rhoLine" x="196" y="282" font-size="13" fill="#33506f">应力使迁移率 μ_c 变化 → 电阻率 ρ 反向变化</text>
+        <text id="whyLine" x="12" y="302" font-size="11.5" fill="#5b6b80">机理：应力改变晶格的对称性与原子间距 → 半导体能带结构（能谷位置、有效质量、散射几率）随之变化 → μ_c 改变。</text>
+        <text id="whyLine2" x="12" y="320" font-size="11.5" fill="#5b6b80">金属缺少这个“杠杆”：晶格同样会变形，但 ρ 几乎不变，只能靠尺寸变化（1+2μ）。</text>
+        <text x="12" y="342" font-size="11" fill="#94a3b8">动画示意：晶格变形放大 240 倍、漂移速度与散射频率放大 12 倍；右侧 μ_c、ρ 为真实比例。</text>
       </svg>
-      <div class="hint" id="latHint">紫色圆点＝载流子，虚线圆＝它被晶格散射一次（撞一下、失去定向速度）：散射越频繁 → 漂移越慢 → 迁移率越小 → 电阻率越大。这就是“应力让晶格变形之后，宏观上量到 ρ 变化”的全过程。</div>
+      <div class="readlabel">输出读数：晶格间距 · 迁移率 · 电阻率</div>
+      <div class="readwrap"><svg viewBox="0 0 620 178" role="img" aria-label="微观机制输出读数">
+        <g transform="translate(16,18)">
+          <text id="latRO1" x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">晶格间距 a = 1.000 a₀（变形 ×1.000，示意放大 240 倍）</text>
+          <text id="latRO2" x="0" y="22" font-size="12" fill="#5b6b80">迁移率 μ_c = 1.000 μ_c0　电阻率 ρ = 1.000 ρ₀　（ρ = 1/(nqμ_c)，n 基本不变）</text>
+          <text id="latRO3" x="0" y="44" font-size="12" fill="#5b6b80">Δρ/ρ = +0.000 %　→　Δμ_c/μ_c = −0.000 %（迁移率与电阻率反向）</text>
+          <rect x="0" y="58" width="560" height="16" rx="5" fill="#f4f8fd" stroke="#d5dfec"/>
+          <rect id="latBar" x="0" y="58" width="280" height="16" rx="5" fill="#0d8b7f"/>
+          <line x1="280" y1="54" x2="280" y2="78" stroke="#9fb2c8" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text id="latBarTxt" x="0" y="96" font-size="12.5" font-weight="700" fill="#0d8b7f">ρ / ρ₀ = 1.000（条长 = ρ/ρ₀ ÷ 2，虚线处为 ρ₀；散射频率示意 ×1.00）</text>
+          <text id="latRO4" x="0" y="122" font-size="12" fill="#5b6b80">散射越频繁 → 定向漂移越慢 → μ_c 越小 → ρ 越大；散射圈闪一次＝载流子被晶格撞一下。</text>
+          <text id="latRO5" x="0" y="144" font-size="11" fill="#94a3b8">金属（π ≈ 0）：同样应变下 ρ/ρ₀ ≈ 1.000、μ_c 几乎不变 —— 切换「材料」按钮对比 ① ② 两行。</text>
+        </g>
+      </svg></div>
+      <div class="hint" id="latHint">紫色圆点＝载流子，紫色虚线圈＝它被晶格散射一次（撞一下、失去定向速度）：散射越频繁 → 漂移越慢 → 迁移率越小 → 电阻率越大。这就是“应力让晶格变形之后，宏观上量到 ρ 变化”的全过程。</div>
       </div>
     </section>
-  </div>
 
-  <div class="vsplit" data-left="colA" data-right="colB" title="拖动可调整两列宽度"></div>
-
-  <!-- ============ 中列：公式 + 读数 ============ -->
-  <div class="col" id="colB">
-    <div class="colhead">② 公式推导 + 输出读数</div>
-
-    <section class="card panel" id="fmlCard">
+    <section class="card panel" id="chipCard">
       <div class="phead">
-        <h2>工作原理推导 <small id="fmlTitle">半导体：πE ≫ 1+2μ</small></h2>
+        <h2>应用：硅膜片压阻全桥 <small>扩散电阻两拉两压，接成全桥，U₀ = E·ΔR/R</small></h2>
         <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
       </div>
-      <div class="pbody"><div class="fml" id="fmlBody"></div></div>
+      <div class="pbody">
+      <svg id="chip" viewBox="0 0 700 288" role="img" aria-label="硅膜片压阻全桥结构与应用">
+        <rect x="14" y="10" width="672" height="268" rx="14" fill="#f7fbff" stroke="#d5dfec"/>
+        <text x="24" y="30" font-size="11.5" fill="#94a3b8">硅杯剖面（膜片受压变形，示意放大）</text>
+        <text x="380" y="30" font-size="11.5" fill="#94a3b8">全桥电路：四个扩散电阻两拉两压</text>
+        <g id="pressG">
+          <line id="pArr" x1="150" y1="44" x2="150" y2="72" stroke="#d94a3d" stroke-width="3"/>
+          <polygon id="pHead" points="150,82 143,70 157,70" fill="#d94a3d"/>
+          <text x="164" y="60" font-size="13" font-weight="700" fill="#d94a3d">压力 P</text>
+        </g>
+        <rect x="70" y="92" width="160" height="18" rx="3" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/>
+        <rect x="70" y="152" width="160" height="18" rx="3" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/>
+        <rect x="62" y="92" width="16" height="78" rx="3" fill="#94a3b8" stroke="#64748b" stroke-width="1.5"/>
+        <rect x="222" y="92" width="16" height="78" rx="3" fill="#94a3b8" stroke="#64748b" stroke-width="1.5"/>
+        <path id="mem" d="M86 110 Q150 110 214 110" stroke="#0e4a8e" stroke-width="4" fill="none"/>
+        <path id="mem2" d="M86 152 Q150 152 214 152" stroke="#0e4a8e" stroke-width="4" fill="none"/>
+        <text x="150" y="204" text-anchor="middle" font-size="12.5" fill="#5b6b80">硅杯膜片（受压变形）</text>
+        <text x="150" y="222" text-anchor="middle" font-size="12.5" fill="#0d8b7f">边缘（r &gt; 0.635r₀）：受拉 ＋ΔR</text>
+        <text x="150" y="240" text-anchor="middle" font-size="12.5" fill="#2b6cb0">中心（r &lt; 0.635r₀）：受压 −ΔR</text>
+        <circle id="r1" cx="100" cy="110" r="7" fill="#0d8b7f" stroke="#0a5f57" stroke-width="1.5"/>
+        <circle id="r2" cx="200" cy="110" r="7" fill="#0d8b7f" stroke="#0a5f57" stroke-width="1.5"/>
+        <circle id="r3" cx="100" cy="152" r="7" fill="#2b6cb0" stroke="#1d4f85" stroke-width="1.5"/>
+        <circle id="r4" cx="200" cy="152" r="7" fill="#2b6cb0" stroke="#1d4f85" stroke-width="1.5"/>
+        <text x="100" y="88" text-anchor="middle" font-size="11" font-weight="700" fill="#0d8b7f">R₁＋</text>
+        <text x="200" y="88" text-anchor="middle" font-size="11" font-weight="700" fill="#0d8b7f">R₃＋</text>
+        <text x="100" y="184" text-anchor="middle" font-size="11" font-weight="700" fill="#2b6cb0">R₂−</text>
+        <text x="200" y="184" text-anchor="middle" font-size="11" font-weight="700" fill="#2b6cb0">R₄−</text>
+        <g transform="translate(360,44)">
+          <polygon points="80,10 145,78 80,146 15,78" fill="none" stroke="#233b57" stroke-width="2.2"/>
+          <line x1="80" y1="4" x2="80" y2="10" stroke="#233b57" stroke-width="2"/>
+          <line x1="80" y1="146" x2="80" y2="176" stroke="#233b57" stroke-width="2"/>
+          <line x1="15" y1="78" x2="-6" y2="78" stroke="#233b57" stroke-width="2"/>
+          <line x1="145" y1="78" x2="166" y2="78" stroke="#233b57" stroke-width="2"/>
+          <circle cx="80" cy="10" r="3" fill="#233b57"/><circle cx="80" cy="146" r="3" fill="#233b57"/>
+          <circle cx="15" cy="78" r="3" fill="#233b57"/><circle cx="145" cy="78" r="3" fill="#233b57"/>
+          <text x="58" y="28" text-anchor="end" font-size="11.5" fill="#0d8b7f">R₁＋</text>
+          <text x="102" y="28" font-size="11.5" fill="#0d8b7f">R₃＋</text>
+          <text x="38" y="108" text-anchor="end" font-size="11.5" fill="#2b6cb0">R₄−</text>
+          <text x="122" y="108" font-size="11.5" fill="#2b6cb0">R₂−</text>
+          <text x="80" y="190" text-anchor="middle" font-size="12" font-weight="700" fill="#0e4a8e">恒压源 E = 5 V</text>
+          <text id="u0chip" x="80" y="82" text-anchor="middle" font-size="17" font-weight="800" fill="#d94a3d">0.0 mV</text>
+        </g>
+        <text x="566" y="52" text-anchor="middle" font-size="12" font-weight="700" fill="#0e4a8e">全桥输出 U₀</text>
+        <text id="chipNote" x="350" y="266" text-anchor="middle" font-size="11.5" fill="#5b6b80">压力 0 MPa：ΔR = 0，电桥平衡（U₀ = 0）</text>
+      </svg>
+      <div class="ctrl" style="margin-top:3px">
+        <div class="row">
+          <span class="name"><b>被测压力 P</b><br><span class="tiny">膜片边缘应变 ∝ P</span></span>
+          <input type="range" id="press" min="0" max="1" step="0.02" value="0">
+          <output id="pressOut">0.00 MPa</output>
+        </div>
+      </div>
+      <div class="readlabel">输出读数：压力 → 边缘应变 → ΔR/R → 全桥输出 U₀</div>
+      <div class="readwrap"><svg viewBox="0 0 620 178" role="img" aria-label="硅膜片压阻全桥输出读数">
+        <g transform="translate(16,18)">
+          <text id="chipRO1" x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">压力 P = 0.00 MPa（满量程 1.00 MPa）</text>
+          <text id="chipRO2" x="0" y="22" font-size="12" fill="#5b6b80">膜片边缘应变 ε = 0 με（1.00 MPa ≈ 400 με）</text>
+          <text id="chipRO3" x="0" y="44" font-size="12" fill="#5b6b80">ΔR/R = K·ε = 101.8 × 0 × 10⁻⁶ = 0.000 %（硅 P 型轻掺杂，π = 60×10⁻¹¹ m²/N）</text>
+          <text id="chipRO4" x="0" y="66" font-size="12" fill="#5b6b80">U₀ = E·ΔR/R = 5 V × 0.000 % = 0.0 mV</text>
+          <rect x="0" y="82" width="560" height="16" rx="5" fill="#f4f8fd" stroke="#d5dfec"/>
+          <rect id="chipBar" x="0" y="82" width="0" height="16" rx="5" fill="#d94a3d"/>
+          <text id="chipBarTxt" x="0" y="116" font-size="12.5" font-weight="700" fill="#d94a3d">U₀ / U₀FS = 0.0 %（输出与压力差成正比）</text>
+          <text id="chipRO5" x="0" y="142" font-size="11" fill="#94a3b8">四个扩散电阻两拉两压接成全桥：灵敏度是单臂的 4 倍，温度变化时四个电阻同向漂移、互相抵消。</text>
+          <text id="chipRO6" x="0" y="164" font-size="11" fill="#94a3b8">恒压源供电输出与 ΔR/R 成正比；恒流源供电 U₀ = I·ΔR，与温度变化无关（教材 3.2.3）。</text>
+        </g>
+      </svg></div>
+      <div class="fine" id="chipFine">U₀ = E·(ΔR/R)：E = 5 V，硅 P 型轻掺杂 K = 1+2μ+πE = 101.8；1.00 MPa → ε = 400 με → ΔR/R = 4.072% → U₀ = 203.6 mV。</div>
+      </div>
     </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colB" data-right="colC" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 右列 ================= -->
+  <div class="col" id="colC">
+    <div class="colhead">③ 输出读数 · 公式推导 · 对比曲线</div>
+
 
     <section class="card panel" id="readCard">
       <div class="phead">
-        <h2>输出读数</h2>
+        <h2>输出读数 <small id="readSub">金属应变片 · 几何形变主导</small></h2>
         <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
       </div>
       <div class="pbody">
@@ -307,42 +432,36 @@
         <span class="num" id="dRnum">0.000</span><span class="unit">%</span>
       </div>
       <div class="kv">
-        <div class="box">电阻率相对变化 dρ/ρ<b id="dRho">0.000 %</b></div>
+        <div class="box">电阻率变化 Δρ/ρ = πEε<b id="dRho">+ 0.000 %</b></div>
+        <div class="box">压阻效应 πEε<b id="piezoOut">+ 0.000 %</b></div>
+        <div class="box">几何效应 (1+2μ)ε<b id="geoOut">+ 0.0000 %</b></div>
         <div class="box">灵敏度系数 K = 1+2μ+πE<b id="kOut">1.60</b></div>
-        <div class="box">轴向应力 σ<b id="sigOut">0.00 MPa</b></div>
-        <div class="box">几何效应 (1+2μ)ε<b id="geoOut">0.0000 %</b></div>
+        <div class="box">轴向应力 σ = Eε<b id="sigOut">0.00 MPa</b></div>
+        <div class="box">压阻 / 几何 = |πE| / (1+2μ)<b id="ratioOut">0.0 : 1</b></div>
       </div>
-      <div class="krow">
-        <div class="lab"><span>K 的两个来源（按 ε = <span id="epsRef">300</span> με 归一化）</span><span id="kSplit">1+2μ = 1.60　πE = 0.0</span></div>
-        <div class="kbar"><i class="g" id="barG" style="width:100%"></i><i class="p" id="barP" style="width:0%"></i></div>
-        <div class="klegend"><span><i style="background:#e08a1e"></i>应变效应 1+2μ（几何形变）</span><span><i style="background:#7c3aed"></i>压阻效应 πE（电阻率变化）</span></div>
-      </div>
-      <div class="fine" id="ratioNote">金属：ΔR/R 几乎全部来自几何形变。</div>
+      <div class="kctx"><span>K 的两个来源（按 |1+2μ| 与 |πE| 的比例）</span><span id="kSplit">1+2μ = 1.60　πE = 0.0</span></div>
+      <div class="rmbar"><i id="barG" style="width:100%;background:#e08a1e"></i><i id="barP" style="width:0%;background:#7c3aed"></i></div>
+      <div class="legend"><span><i style="background:#e08a1e"></i>应变效应 1+2μ（几何形变）</span><span><i style="background:#7c3aed"></i>压阻效应 πE（电阻率变化）</span></div>
+      <div class="fine" id="ratioNote">金属：ΔR/R 几乎全部来自几何形变（πE ≈ 0）。</div>
+      <div class="fine" id="readFine">K = 1 + 2×0.30 + 0.0 = 1.60；ΔR/R = Kε = 1.60 × 0 × 10⁻⁶ = 0.000%。</div>
       </div>
     </section>
 
-    <section class="card panel" id="ptsCard">
+    <section class="card panel" id="fmlCard">
       <div class="phead">
-        <h2>要点</h2>
+        <h2>公式推导 <small id="fmlTitle">金属应变片：几何形变主导</small></h2>
         <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
       </div>
-      <div class="pbody"><ol class="points" id="points"></ol></div>
+      <div class="pbody"><div class="fml" id="fmlBody"></div></div>
     </section>
-  </div>
-
-  <div class="vsplit" data-left="colB" data-right="colC" title="拖动可调整两列宽度"></div>
-
-  <!-- ============ 右列：对比 + 应用 ============ -->
-  <div class="col" id="colC">
-    <div class="colhead">③ 对比曲线 + 硅膜片应用</div>
 
     <section class="card panel" id="cmpCard">
       <div class="phead">
-        <h2>灵敏度对比 <small>同一应变下，半导体比金属大 1～2 个数量级</small></h2>
+        <h2>灵敏度对比 <small>ΔR/R–ε：半导体比金属大 1～2 个数量级</small></h2>
         <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
       </div>
       <div class="pbody">
-      <svg id="cmp" viewBox="0 0 700 260" role="img" aria-label="ΔR/R 与应变的关系曲线">
+      <svg id="cmp" viewBox="0 0 700 262" role="img" aria-label="ΔR/R 与轴向应变的关系曲线">
         <g id="cmpGrid"></g>
         <line x1="66" y1="220" x2="680" y2="220" stroke="#9fb2c8" stroke-width="1.5"/>
         <line x1="66" y1="22" x2="66" y2="220" stroke="#9fb2c8" stroke-width="1.5"/>
@@ -351,194 +470,147 @@
         <line id="mkLine" x1="0" y1="22" x2="0" y2="220" stroke="#0e4a8e" stroke-width="1.5" stroke-dasharray="5 4"/>
         <circle id="mkM" r="5" fill="#64748b" stroke="#fff" stroke-width="2"/>
         <circle id="mkS" r="5.5" fill="#0d8b7f" stroke="#fff" stroke-width="2"/>
-        <text x="680" y="242" text-anchor="end" font-size="12.5" fill="#5b6b80">轴向应变 ε / με</text>
-        <text x="20" y="18" font-size="12.5" fill="#5b6b80">ΔR/R / %</text>
+        <text x="680" y="254" text-anchor="end" font-size="12.5" fill="#5b6b80">轴向应变 ε / με</text>
+        <text x="14" y="14" font-size="12.5" fill="#5b6b80">ΔR/R / %</text>
       </svg>
-      <div class="klegend" style="margin-top:2px">
-        <span><i style="background:#64748b"></i>金属（K ≈ 1.6）</span>
-        <span><i style="background:#0d8b7f"></i>半导体硅（K ≈ 100）</span>
-        <span style="margin-left:auto" id="cmpNote">同为 300 με：金属 0.048%　半导体 3.05%（约 63 倍）</span>
+      <div class="legend">
+        <span><i style="background:#64748b"></i><span id="lgMetal">金属应变片（K = 1.60）</span></span>
+        <span><i style="background:#0d8b7f"></i><span id="lgSemi">半导体硅 P 型（K = 101.8）</span></span>
+        <span style="margin-left:auto" id="cmpNote">同为 300 με：金属 0.048 %　半导体 3.054 %（约 64 倍）</span>
       </div>
+      <div class="hint" id="cmpHint">纵轴量程随所选半导体材料的 |K| 自动调整：金属曲线几乎贴在横轴上（K ≈ 1.6），半导体 K ≈ 50~100 —— 这就是压阻式传感器输出常常不必放大的原因。</div>
       </div>
     </section>
 
-    <section class="card panel" id="chipCard">
-      <div class="phead">
-        <h2>应用：硅膜片压阻全桥 <small>扩散电阻两拉两压，接成全桥</small></h2>
-        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
-      </div>
-      <div class="pbody">
-      <svg id="chip" viewBox="0 0 700 290" role="img" aria-label="硅膜片压阻全桥">
-        <rect x="14" y="12" width="672" height="266" rx="14" fill="#f7fbff" stroke="#d5dfec"/>
-        <!-- 压力箭头 -->
-        <g id="press">
-          <line id="pArr" x1="150" y1="30" x2="150" y2="70" stroke="#d94a3d" stroke-width="3"/>
-          <polygon id="pHead" points="150,80 143,68 157,68" fill="#d94a3d"/>
-          <text x="166" y="52" font-size="14" font-weight="700" fill="#d94a3d">压力 P</text>
-        </g>
-        <!-- 硅杯剖面 -->
-        <rect x="70" y="86" width="160" height="20" rx="3" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/>
-        <rect x="70" y="150" width="160" height="20" rx="3" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/>
-        <rect x="62" y="86" width="16" height="84" rx="3" fill="#94a3b8" stroke="#64748b" stroke-width="1.5"/>
-        <rect x="222" y="86" width="16" height="84" rx="3" fill="#94a3b8" stroke="#64748b" stroke-width="1.5"/>
-        <path id="mem" d="M86 106 Q150 106 214 106" stroke="#0e4a8e" stroke-width="4" fill="none"/>
-        <path id="mem2" d="M86 150 Q150 150 214 150" stroke="#0e4a8e" stroke-width="4" fill="none"/>
-        <text x="150" y="196" text-anchor="middle" font-size="12.5" fill="#5b6b80">硅杯膜片（受压变形）</text>
-        <text x="150" y="214" text-anchor="middle" font-size="12.5" fill="#0d8b7f">边缘：受拉 ＋ΔR</text>
-        <text x="150" y="232" text-anchor="middle" font-size="12.5" fill="#2b6cb0">中心：受压 −ΔR</text>
-        <!-- 四个电阻 -->
-        <circle id="r1" cx="100" cy="106" r="7" fill="#0d8b7f" stroke="#0a5f57" stroke-width="1.5"/>
-        <circle id="r2" cx="200" cy="106" r="7" fill="#0d8b7f" stroke="#0a5f57" stroke-width="1.5"/>
-        <circle id="r3" cx="100" cy="150" r="7" fill="#2b6cb0" stroke="#1d4f85" stroke-width="1.5"/>
-        <circle id="r4" cx="200" cy="150" r="7" fill="#2b6cb0" stroke="#1d4f85" stroke-width="1.5"/>
-        <text x="100" y="96" text-anchor="middle" font-size="11" font-weight="700" fill="#0d8b7f">R₁＋</text>
-        <text x="200" y="96" text-anchor="middle" font-size="11" font-weight="700" fill="#0d8b7f">R₃＋</text>
-        <text x="100" y="172" text-anchor="middle" font-size="11" font-weight="700" fill="#2b6cb0">R₂−</text>
-        <text x="200" y="172" text-anchor="middle" font-size="11" font-weight="700" fill="#2b6cb0">R₄−</text>
-        <!-- 全桥 -->
-        <g transform="translate(360,30)">
-          <polygon points="80,10 145,78 80,146 15,78" fill="none" stroke="#233b57" stroke-width="2.2"/>
-          <line x1="80" y1="4" x2="80" y2="10" stroke="#233b57" stroke-width="2"/>
-          <line x1="80" y1="146" x2="80" y2="176" stroke="#233b57" stroke-width="2"/>
-          <line x1="15" y1="78" x2="-6" y2="78" stroke="#233b57" stroke-width="2"/>
-          <line x1="145" y1="78" x2="166" y2="78" stroke="#233b57" stroke-width="2"/>
-          <circle cx="80" cy="10" r="3" fill="#233b57"/><circle cx="80" cy="146" r="3" fill="#233b57"/>
-          <circle cx="15" cy="78" r="3" fill="#233b57"/><circle cx="145" cy="78" r="3" fill="#233b57"/>
-          <text x="46" y="44" text-anchor="end" font-size="11.5" fill="#0d8b7f">R₁＋</text>
-          <text x="114" y="44" font-size="11.5" fill="#0d8b7f">R₃＋</text>
-          <text x="46" y="120" text-anchor="end" font-size="11.5" fill="#2b6cb0">R₄−</text>
-          <text x="114" y="120" font-size="11.5" fill="#2b6cb0">R₂−</text>
-          <text x="80" y="196" text-anchor="middle" font-size="12" font-weight="700" fill="#0e4a8e">恒压源 E = 5 V</text>
-          <text id="u0chip" x="80" y="84" text-anchor="middle" font-size="17" font-weight="800" fill="#d94a3d">0.0 mV</text>
-        </g>
-        <text x="520" y="70" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0e4a8e">全桥输出 U₀</text>
-        <text id="chipNote" x="520" y="252" text-anchor="middle" font-size="12.5" fill="#5b6b80">压力 0 MPa：ΔR = 0，电桥平衡</text>
-      </svg>
-      <div class="ctrl" style="margin-top:4px">
-        <div class="row">
-          <span class="name"><b>被测压力 P</b><br><span class="tiny">膜片边缘应变 ∝ P</span></span>
-          <input type="range" id="press" min="0" max="1" step="0.02" value="0">
-          <output id="pressOut">0.00 MPa</output>
-        </div>
-      </div>
-      <div class="fine" id="chipFine">U₀ = E·(ΔR/R)　满量程 1 MPa 时约 200 mV（压阻式压力传感器的典型输出）。</div>
-      </div>
-    </section>
   </div>
 </main>
 </div><!-- /#boardWrap -->
 
 <footer>
-  <b>模型与参数：</b>材料参数取教材 3.2.1 节量级 —— 金属：π≈0、E = 2.0×10¹¹ N/m²、μ = 0.30（K = 1+2μ ≈ 1.6）；半导体硅：π = 60×10⁻¹¹ m²/N、E = 1.67×10¹¹ N/m²、μ = 0.30（πE ≈ 100，即 K ≈ 100）；锗 π = 50×10⁻¹¹、E = 1.30×10¹¹。
-  关系式：ε = σ/E，dρ/ρ = πσ = πEε，dR/R = (1+2μ+πE)ε = Kε；半导体因 πE ≫ 1+2μ，可近似 dR/R ≈ dρ/ρ。
-  &nbsp;<b>三个课堂提问：</b>① 为什么金属应变片的 K 只有 1.5~2.0，而半导体能到 50~100？② 半导体的 ρ 为什么会随应力变化？③ 压阻式传感器的输出为什么可以不用放大就直接测量？
+<b>参数（教材 3.2.1 节量级）：</b>金属应变片（康铜）π ≈ 0、E = 2.00×10¹¹ N/m²、μ = 0.30（K = 1+2μ ≈ 1.6）；半导体硅 π<sub>P</sub> = 60×10⁻¹¹ m²/N、π<sub>N</sub> = −100×10⁻¹¹ m²/N，锗 π = 50×10⁻¹¹ m²/N；硅 E = 1.67×10¹¹ N/m²（锗 1.30×10¹¹）、μ = 0.30；掺杂轻/中/重：π ×1.00 / ×0.75 / ×0.50。全桥：恒压源 E = 5 V，1 MPa ≈ 膜片边缘应变 400 με。<b>关系式：</b>σ = Eε，dρ/ρ = πσ = πEε（式 3-34）；dR/R = (1+2μ+πE)ε = Kε（式 3-35）；半导体 πE ≫ 1+2μ → dR/R ≈ dρ/ρ = πEε（式 3-36）；ρ = 1/(nqμ_c)；全桥 U₀ = E·ΔR/R。<b>课堂提问：</b>① 为什么金属应变片的 K 只有 1.5~2.0，而半导体能到 50~100？② 半导体的 ρ 为什么会随应力变化？③ 压阻式压力传感器的输出为什么常常不需要放大？
 </footer>
 
 <script>
 (function(){
   "use strict";
-  /* ============ 1. 材料参数（量级取自教材 3.2.1 节） ============ */
-  var MATS = {
-    metal: { name:'金属应变片（康铜）', pi:0,      E:2.00e11, mu:0.30, kind:'metal', rho:'≈0.5 μΩ·m',  note:'几何形变主导' },
-    siP:   { name:'半导体硅（P 型）',   pi:60e-11, E:1.67e11, mu:0.30, kind:'semi',  rho:'≈0.01 Ω·m',  note:'压阻效应主导' },
-    siN:   { name:'半导体硅（N 型）',   pi:-100e-11,E:1.67e11, mu:0.30, kind:'semi',  rho:'≈0.01 Ω·m',  note:'压阻系数为负' },
-    ge:    { name:'半导体锗',           pi:50e-11, E:1.30e11, mu:0.28, kind:'semi',  rho:'≈0.05 Ω·m',  note:'压阻效应主导' }
+/* =====================================================================
+   公共运行时（各章通用）· 由 _build/build.js 注入到主脚本的最前面
+   章节代码直接使用：$ / sfmt / frac / clamp / say / sleep / tween /
+   beginDemo / stopDemo / endDemo / bindDemos
+   约定：章节必须定义 var S = { ..., demoToken:0 }；
+        演示函数写成 async，每个 await 判断返回值，结尾 endDemo()；
+        章节 jsB 里用 DEMOS.<key> = {btn:'...', label:'...', fn:demoXxx} 注册，
+        随后调用 bindDemos() 绑定按钮点击。
+   注意：不内置任何语音朗读；演示按钮只由 bindDemos() 绑定一次。
+   ===================================================================== */
+var $ = function(id){ return document.getElementById(id); };
+function sfmt(a, d){ return (a >= 0 ? '+' : '−') + Math.abs(a).toFixed(d); }
+function frac(a, b){ return '<span class="frac"><i>' + a + '</i><b>' + b + '</b></span>'; }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+var DEMOS = {}, SPEED = 1, playingKey = null;
+function say(t){ $('narration').innerHTML = t; }
+function sleep(ms, tok){
+  return new Promise(function(res){ setTimeout(function(){ res(S.demoToken === tok); }, Math.max(60, ms/SPEED)); });
+}
+function tween(from, to, dur, set, tok){
+  dur = Math.max(160, dur/SPEED);
+  return new Promise(function(res){
+    var t0 = performance.now();
+    (function step(now){
+      if (S.demoToken !== tok) return res(false);
+      var p = (now - t0)/dur;
+      if (!isFinite(p)) p = 1;
+      p = clamp(p, 0, 1);
+      var e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
+      var v = from + (to - from)*e;
+      v = (from <= to) ? Math.min(to, Math.max(from, v)) : Math.max(to, Math.min(from, v));
+      set(v);
+      if (p < 1) requestAnimationFrame(step); else res(true);
+    })(performance.now());
+  });
+}
+function resetDemoButtons(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b){ b.textContent = DEMOS[k].label; b.classList.remove('running'); }
+  });
+}
+function stopDemo(){ S.demoToken++; playingKey = null; resetDemoButtons(); }
+function beginDemo(key){
+  stopDemo(); playingKey = key;
+  var d = DEMOS[key], b = d && $(d.btn);
+  if (b){ b.textContent = '⏸ 暂停演示'; b.classList.add('running'); }
+  return ++S.demoToken;
+}
+function endDemo(){ playingKey = null; resetDemoButtons(); }
+function bindDemos(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b) b.addEventListener('click', function(){
+      if (playingKey === k){ stopDemo(); say('演示已暂停。可继续拖动滑块手动观察，或点其它演示按钮。'); }
+      else if (DEMOS[k].fn){ DEMOS[k].fn(); }
+    });
+  });
+}
+(function(){
+  var spd = $('speed');
+  if (spd) spd.addEventListener('input', function(){
+    SPEED = parseFloat(this.value) || 1;
+    $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  });
+})();
+
+
+  /* ============ 1. 材料参数与状态（量级取自教材 3.2.1 节） ============ */
+  var CFG = {
+    supply: 5.0,          /* 硅膜片全桥恒压源 E = 5 V */
+    epsEdge: 400,         /* 满量程 1 MPa 时的膜片边缘应变 400 με */
+    gainA: 240,           /* 晶格变形示意放大倍数 */
+    gainB: 12,            /* 散射频率 / 漂移速度示意放大倍数 */
+    v0: 1.15,             /* 基准漂移速度 px/帧 */
+    i0: 620               /* 基准散射间隔 ms */
   };
-  var DOPE = { light:{ k:1.0, pi:1.0, rho:'大' }, mid:{ k:0.75, pi:0.75, rho:'中' }, heavy:{ k:0.5, pi:0.5, rho:'小' } };
-  var EPS_SUPPLY = 5.0;          /* 膜片全桥电源 V */
-  var EPS_EDGE = 400;            /* 满量程 1 MPa 时的边缘应变 με */
+  var MATS = {
+    metal: { name:'金属应变片（康铜）', pi:0,        E:2.00e11, mu:0.30, kind:'metal', rho:'ρ ≈ 0.5 μΩ·m',  note:'几何形变主导' },
+    siP:   { name:'半导体硅（P 型）',   pi:60e-11,  E:1.67e11, mu:0.30, kind:'semi',  rho:'ρ ≈ 0.01 Ω·m',  note:'压阻效应主导' },
+    siN:   { name:'半导体硅（N 型）',   pi:-100e-11,E:1.67e11, mu:0.30, kind:'semi',  rho:'ρ ≈ 0.01 Ω·m',  note:'压阻系数为负' },
+    ge:    { name:'半导体锗',           pi:50e-11,  E:1.30e11, mu:0.28, kind:'semi',  rho:'ρ ≈ 0.05 Ω·m',  note:'压阻效应主导' }
+  };
+  var DOPE = {
+    light: { k:1.00, txt:'轻掺杂', piTxt:'π 取满值', rhoTxt:'ρ 大' },
+    mid:   { k:0.75, txt:'中等掺杂', piTxt:'π×0.75', rhoTxt:'ρ 中' },
+    heavy: { k:0.50, txt:'重掺杂', piTxt:'π×0.50', rhoTxt:'ρ 小' }
+  };
+  var S = { mat:'metal', eps:0, pi:0, mu:0.30, dope:'light', press:0, demoToken:0 };
 
-  var S = { mat:'metal', eps:0, pi:0, mu:0.30, dope:'light', press:0, demoToken:0, playing:null };
-
-  var $ = function(id){ return document.getElementById(id); };
-
-  /* ============ 2. 模型 ============ */
+  /* ============ 2. 模型（纯函数，不碰 DOM） ============ */
   function model(epsUe, matKey, piVal, muVal, dope){
     var m = MATS[matKey], d = DOPE[dope || 'light'];
-    var eps = epsUe*1e-6;                       /* 应变            */
-    var pi  = (piVal === null || piVal === undefined ? m.pi : piVal*1e-11) * d.pi;
+    var eps = epsUe*1e-6;                                    /* 应变        */
+    var pi  = (piVal === null || piVal === undefined ? m.pi : piVal*1e-11)*d.k;   /* m²/N，掺杂越重越小 */
     var mu  = (muVal === null || muVal === undefined ? m.mu : muVal);
-    var sig = m.E*eps;                          /* σ = Eε          */
-    var piezo = pi*m.E*eps;                     /* 压阻效应 πEε     */
-    var geo   = (1 + 2*mu)*eps;                 /* 应变效应 (1+2μ)ε */
-    return { mat:m, pi:pi, piE:pi*m.E, mu:mu, eps:eps, sigma:sig,
+    var sig   = m.E*eps;                                     /* σ = Eε      */
+    var piezo = pi*m.E*eps;                                  /* 压阻效应 πEε */
+    var geo   = (1 + 2*mu)*eps;                              /* 应变效应 (1+2μ)ε */
+    return { mat:m, dope:d, pi:pi, pi11:pi*1e11, piE:pi*m.E, mu:mu, eps:eps, sigma:sig,
              piezo:piezo, geo:geo, dRho:pi*sig, dR:geo + piezo, K:1 + 2*mu + pi*m.E };
   }
-  function pct(x, d){ return (x*100).toFixed(d === undefined ? 3 : d); }
+  function val(matKey, piVal, epsUe){ return model(epsUe === undefined ? S.eps : epsUe, matKey, piVal, S.mu, S.dope); }
+  function pct(x, d){ return (x*100).toFixed(d === undefined ? 3 : d); }      /* 小数 → 百分数 */
   function sgn(x, d){ return (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(d); }
+  function setAttr(el, k, v){ if (el && el.setAttribute) el.setAttribute(k, String(v)); }
+  function f1(x){ return (Math.round(x*10)/10).toFixed(1); }
+  function f2(x){ return (Math.round(x*100)/100).toFixed(2); }
 
-  /* ============ 3. 工具 ============ */
-  function frac(a, b){ return '<span class="frac"><i>' + a + '</i><b>' + b + '</b></span>'; }
-
-  /* ============ 4. 主刷新 ============ */
-  function paint(){
-    var m = model(S.eps, S.mat, S.pi, S.mu, S.dope);
-    var metal = model(S.eps, 'metal', 0, S.mu, S.dope);
-
-    /* --- 材料按钮 --- */
-    document.querySelectorAll('#segMat button').forEach(function(b){
-      b.classList.toggle('on', b.getAttribute('data-mat') === S.mat);
-    });
-    document.querySelectorAll('#segDope button').forEach(function(b){
-      b.classList.toggle('on', b.getAttribute('data-dope') === S.dope);
-    });
-
-    /* --- 读数 --- */
-    $('dRnum').textContent = pct(m.dR);
-    $('dRnum').style.color = m.dR > 1e-9 ? '#d94a3d' : (m.dR < -1e-9 ? '#2b6cb0' : '#12233a');
-    $('dRho').textContent  = sgn(m.dRho*100, 3) + ' %';
-    $('kOut').textContent  = m.K.toFixed(2);
-    $('sigOut').textContent = (m.sigma/1e6).toFixed(2) + ' MPa';
-    $('geoOut').textContent = sgn(m.geo*100, 4) + ' %';
-    $('sigTxt').textContent = 'σ = ' + (m.sigma/1e6).toFixed(1) + ' MPa';
-    $('epsOut').textContent = S.eps + ' με';
-    $('piOut').textContent  = String(S.pi);
-    $('muOut').textContent  = S.mu.toFixed(2);
-
-    /* --- K 构成条（几何 vs 压阻） --- */
-    var aG = Math.abs(1 + 2*m.mu), aP = Math.abs(m.piE), tot = aG + aP || 1;
-    $('barG').style.width = (aG/tot*100).toFixed(1) + '%';
-    $('barP').style.width = (aP/tot*100).toFixed(1) + '%';
-    $('kSplit').textContent = '1+2μ = ' + aG.toFixed(2) + '　πE = ' + aP.toFixed(1) + (m.piE < 0 ? '（负）' : '');
-    var r = m.mat.kind === 'metal'
-      ? '金属：K = 1+2μ = ' + m.K.toFixed(2) + '，ΔR/R 几乎全部来自几何形变（πE 可忽略）。'
-      : '半导体：K = 1+2μ+πE = ' + m.K.toFixed(1) + '，其中 πE = ' + m.piE.toFixed(1) +
-        ' 占 ' + (aP/tot*100).toFixed(1) + '%，' + (1 + 2*m.mu).toFixed(2) + ' 可以忽略 → 式(3-36) dR/R ≈ dρ/ρ。';
-    $('ratioNote').textContent = r;
-
-    /* --- 微观机制 --- */
-    paintLattice(m);
-
-    /* --- 公式 --- */
-    paintFormulas(m, metal);
-
-    /* --- 对比曲线 --- */
-    drawCmp(m, metal);
-
-    /* --- 膜片全桥 --- */
-    paintChip();
-
-    /* --- 要点 --- */
-    paintPoints(m);
-    if (window.__repack) window.__repack();
-  }
-
-  /* ============ 5. 微观机制：双行对照动画（基准 vs 当前） ============ */
-  /* 说明：晶格变形放大 GAIN_A 倍、漂移速度与散射频率放大 GAIN_B 倍，右侧数字为真实比例 */
-  var GAIN_A = 300, GAIN_B = 12;
-  var V0 = 1.15;                 /* 基准漂移速度 px/帧 */
-  var INTERVAL0 = 620;           /* 基准散射间隔 ms */
+  /* ============ 3. 微观机制动画：① 基准 / ② 当前 双行对照 ============ */
   var MICRO = { lanes:{}, last:0 };
+  var X0 = 150, NA = 8, SP = 62;                             /* 晶格：8 个原子列，列距 62 px */
 
   function buildLane(key, gAtoms, gCars, gFlash, yTop, yBot, yCar){
-    var atoms = [], cars = [], html = '', fh = '', i;
-    var X0 = 150, N = 8, SP = 62;
-    /* 晶格：两行原子 + 竖向/横向键 */
-    for (i = 0; i < N; i++){
-      atoms.push({ bx:X0 + i*SP, y1:yTop, y2:yBot });
-    }
-    for (i = 0; i < N; i++){
-      if (i < N-1){
+    var cars = [], html = '', fh = '', i;
+    for (i = 0; i < NA; i++){
+      if (i < NA - 1){
         html += '<line class="bA" x1="' + (X0+i*SP) + '" y1="' + yTop + '" x2="' + (X0+(i+1)*SP) + '" y2="' + yTop + '" stroke="#c3d5e8" stroke-width="2"/>';
         html += '<line class="bA" x1="' + (X0+i*SP) + '" y1="' + yBot + '" x2="' + (X0+(i+1)*SP) + '" y2="' + yBot + '" stroke="#c3d5e8" stroke-width="2"/>';
       }
@@ -547,558 +619,551 @@
       html += '<circle class="aA" cx="' + (X0+i*SP) + '" cy="' + yBot + '" r="7" fill="#0e4a8e" opacity=".85"/>';
     }
     $(gAtoms).innerHTML = html;
-    /* 载流子 + 散射闪烁圈 */
     for (i = 0; i < 3; i++){
       var x = 205 + i*175;
-      cars.push({ x:x, timer:INTERVAL0*(0.4 + 0.3*i), flash:0 });
+      cars.push({ x:x, timer:CFG.i0*(0.4 + 0.3*i), flash:0 });
       fh += '<circle class="fA" cx="' + x + '" cy="' + yCar + '" r="6" fill="none" stroke="#7c3aed" stroke-width="2" opacity="0"/>';
     }
     $(gCars).innerHTML = cars.map(function(c){
       return '<circle class="cA" cx="' + c.x + '" cy="' + yCar + '" r="6" fill="#7c3aed"/>';
     }).join('');
     $(gFlash).innerHTML = fh;
+    $(key === 'A' ? 'scA' : 'scB').textContent = '散射 ≈ ' + Math.round(3*1000/CFG.i0) + ' 次/秒';
     MICRO.lanes[key] = {
-      cars: cars, yCar: yCar, x0:X0, x1:X0 + (N-1)*SP, yTop:yTop, yBot:yBot, N:N, SP:SP,
-      els: $(gCars).querySelectorAll('.cA'), flashEls: $(gFlash).querySelectorAll('.fA'),
-      atomEls: $(gAtoms).querySelectorAll('.aA'), bondEls: $(gAtoms).querySelectorAll('.bA'),
-      factor:1, scatter:0, acc:0, rate:null, rateEl: key === 'A' ? 'scA' : 'scB'
+      cars:cars, yCar:yCar, x0:X0, x1:X0 + (NA-1)*SP, yTop:yTop, yBot:yBot, N:NA, SP:SP,
+      els:$(gCars).querySelectorAll('.cA'), flashEls:$(gFlash).querySelectorAll('.fA'),
+      atomEls:$(gAtoms).querySelectorAll('.aA'), bondEls:$(gAtoms).querySelectorAll('.bA'),
+      factor:1
     };
   }
 
   function initMicro(){
-    /* 顶部流程链 */
+    /* 顶部流程链：应力 → 晶格间距 → 散射频率 → 迁移率 → 电阻率 */
     var chain = [
-      { t:'轴向应力 ε', id:'cv0', c:'#0e4a8e' },
+      { t:'轴向应变 ε', id:'cv0', c:'#0e4a8e' },
       { t:'晶格间距 a', id:'cv1', c:'#0e4a8e' },
       { t:'散射频率',   id:'cv2', c:'#7c3aed' },
       { t:'迁移率 μ_c', id:'cv3', c:'#7c3aed' },
       { t:'电阻率 ρ',   id:'cv4', c:'#d94a3d' }
     ];
-    var html = '';
-    chain.forEach(function(c, i){
-      var x = 11 + i*138;
+    var html = '', i, c, x;
+    for (i = 0; i < chain.length; i++){
+      c = chain[i]; x = 11 + i*138;
       html += '<rect x="' + x + '" y="12" width="126" height="36" rx="9" fill="#f6faff" stroke="#d9e5f5"/>' +
               '<text x="' + (x+63) + '" y="26" text-anchor="middle" font-size="11" fill="#8296ad">' + c.t + '</text>' +
               '<text id="' + c.id + '" x="' + (x+63) + '" y="42" text-anchor="middle" font-size="13" font-weight="700" fill="' + c.c + '">—</text>';
-      if (i < 4){
-        html += '<line x1="' + (x+128) + '" y1="30" x2="' + (x+136) + '" y2="30" stroke="#9fb2c8" stroke-width="1.6"/>';
-        html += '<polygon points="' + (x+140) + ',30 ' + (x+132) + ',26 ' + (x+132) + ',34" fill="#9fb2c8"/>';
+      if (i < chain.length - 1){
+        html += '<line x1="' + (x+128) + '" y1="30" x2="' + (x+136) + '" y2="30" stroke="#9fb2c8" stroke-width="1.6"/>' +
+                '<polygon points="' + (x+140) + ',30 ' + (x+132) + ',26 ' + (x+132) + ',34" fill="#9fb2c8"/>';
       }
-    });
+    }
     $('chain').innerHTML = html;
-    buildLane('A', 'atomsA', 'carsA', 'flashA', 98, 126, 112);
-    buildLane('B', 'atomsB', 'carsB', 'flashB', 196, 224, 210);
-    microLoop();
+    buildLane('A', 'atomsA', 'carsA', 'flashA', 96, 124, 110);
+    buildLane('B', 'atomsB', 'carsB', 'flashB', 194, 222, 208);
   }
 
-  function microLoop(){
-    var now = performance.now();
-    var dt = Math.min(60, MICRO.last ? now - MICRO.last : 16.7);
-    MICRO.last = now;
-    ['A','B'].forEach(function(k){
-      var L = MICRO.lanes[k];
-      var f = L.factor;
-      L.cars.forEach(function(c, i){
-        /* 漂移（速度 ∝ 1/散射频率） */
-        c.x += V0/f * dt/16.7;
-        if (c.x > 645) c.x = 148;
-        L.els[i].setAttribute('cx', c.x.toFixed(1));
-        /* 散射闪烁 */
-        if (c.flash > 0){
-          c.flash -= dt/700;
-          var t = Math.max(0, c.flash);
-          L.flashEls[i].setAttribute('cx', c.x.toFixed(1));
-          L.flashEls[i].setAttribute('r', (6 + (1-t)*13).toFixed(1));
-          L.flashEls[i].setAttribute('opacity', (t*0.9).toFixed(2));
+  function runMicro(){
+    var last = performance.now();
+    (function loop(now){
+      var dt = Math.min(60, last ? now - last : 16.7);
+      last = now;
+      ['A','B'].forEach(function(k){
+        var L = MICRO.lanes[k];
+        if (!L) return;
+        var f = L.factor || 1, i, car, t;
+        for (i = 0; i < L.cars.length; i++){
+          car = L.cars[i];
+          car.x += CFG.v0/f * dt/16.7;                       /* 漂移速度 ∝ 1/散射频率 */
+          if (car.x > 640) car.x = 150;
+          setAttr(L.els[i], 'cx', car.x.toFixed(1));
+          if (car.flash > 0){                                 /* 散射闪烁圈 */
+            car.flash -= dt/700;
+            t = Math.max(0, car.flash);
+            setAttr(L.flashEls[i], 'cx', car.x.toFixed(1));
+            setAttr(L.flashEls[i], 'r', (6 + (1-t)*13).toFixed(1));
+            setAttr(L.flashEls[i], 'opacity', (t*0.9).toFixed(2));
+          }
+          car.timer -= dt;                                   /* 散射计时：间隔 ∝ 1/散射频率 */
+          if (car.timer <= 0){ car.timer = CFG.i0/f; car.flash = 1; }
         }
-        /* 散射计时：间隔 ∝ 1/散射频率 */
-        c.timer -= dt;
-        if (c.timer <= 0){ c.timer = INTERVAL0/f; c.flash = 1; L.scatter++; }
       });
-      L.acc += dt;
-      if (L.acc >= 1000){
-        L.rate = L.scatter; L.scatter = 0; L.acc = 0;
-        $(L.rateEl).textContent = '散射 ≈ ' + L.rate + ' 次/秒';
-      }
-    });
-    requestAnimationFrame(microLoop);
+      requestAnimationFrame(loop);
+    })(performance.now());
   }
 
-  function paintLattice(m){
-    /* 晶格位移：变形量按 ε 放大 GAIN_A 倍（金属同样会变形） */
-    var vis = Math.max(-0.18, Math.min(0.45, m.eps*GAIN_A));
-    var L = MICRO.lanes.B;
-    for (var i = 0; i < L.N; i++){
-      var ax = L.x0 + i*L.SP*(1 + vis);
-      L.atomEls[2*i].setAttribute('cx', ax.toFixed(1));
-      L.atomEls[2*i+1].setAttribute('cx', ax.toFixed(1));
-    }
-    var b = 0;
-    for (i = 0; i < L.N; i++){
-      if (i < L.N-1){
-        L.bondEls[b++].setAttribute('x1', (L.x0 + i*L.SP*(1+vis)).toFixed(1));
-        L.bondEls[b++].setAttribute('x2', (L.x0 + (i+1)*L.SP*(1+vis)).toFixed(1));
-      }
-    }
-    /* 散射因子：Δρ/ρ > 0 → 散射变频繁、漂移变慢（放大 GAIN_B 倍显示） */
-    var factor = Math.max(0.4, Math.min(2.5, 1 + m.dRho*GAIN_B));
-    MICRO.lanes.A.factor = 1;
-    MICRO.lanes.B.factor = factor;
-    /* ② 行的间距标注（跟着变形一起动） */
-    var x2 = L.x0 + L.SP*(1 + vis);
-    $('dimB2').setAttribute('x1', x2.toFixed(1)); $('dimB2').setAttribute('x2', x2.toFixed(1));
-    $('dimB3').setAttribute('x2', x2.toFixed(1));
-    $('dimBt').setAttribute('x', ((L.x0 + x2)/2).toFixed(1));
-    $('dimBt').textContent = '间距 a ×' + (1 + vis).toFixed(2);
+  /* ============ 4. 主刷新（唯一入口） ============ */
+  function paint(){
+    var m = model(S.eps, S.mat, S.pi, S.mu, S.dope);
+    var metal = model(S.eps, 'metal', 0, S.mu, S.dope);       /* 同应变下的金属对照 */
+    var aG = Math.abs(1 + 2*m.mu), aP = Math.abs(m.piE), tot = (aG + aP) || 1;
+    var piEDom = aP >= aG;                                    /* πE 是否主导 */
 
-    /* 文字读数（真实比例） */
+    /* --- 按钮态 --- */
+    document.querySelectorAll('#segMat button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-mat') === S.mat);
+    });
+    document.querySelectorAll('#segDope button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-dope') === S.dope);
+    });
+
+    /* --- 控件文字 --- */
+    $('epsOut').textContent = S.eps + ' με';
+    $('piOut').textContent = String(S.pi);
+    $('muOut').textContent = S.mu.toFixed(2);
+    $('sigTxt').textContent = 'σ = Eε = ' + f2(m.sigma/1e6) + ' MPa';
+    $('matTxt').textContent = 'π = ' + m.pi11.toFixed(1) + '×10⁻¹¹ m²/N';
+    $('dopeTxt').textContent = DOPE[S.dope].piTxt + '、' + DOPE[S.dope].rhoTxt;
+    $('pressOut').textContent = S.press.toFixed(2) + ' MPa';
+
+    /* --- 读数 --- */
+    $('dRnum').textContent = pct(m.dR);
+    $('dRnum').style.color = m.dR > 1e-9 ? '#d94a3d' : (m.dR < -1e-9 ? '#2b6cb0' : '#12233a');
+    $('dRho').textContent    = sgn(m.dRho*100, 3) + ' %';
+    $('piezoOut').textContent = sgn(m.piezo*100, 3) + ' %';
+    $('geoOut').textContent  = sgn(m.geo*100, 4) + ' %';
+    $('kOut').textContent    = m.K.toFixed(2);
+    $('sigOut').textContent  = f2(m.sigma/1e6) + ' MPa';
+    $('ratioOut').textContent = (aP/aG).toFixed(2) + ' : 1';
+    $('readSub').textContent = MATS[S.mat].name + ' · ' + (piEDom ? '压阻效应主导（πE ≫ 1+2μ）' : '几何形变主导（πE 可忽略）');
+
+    /* --- K 构成条（几何 1+2μ vs 压阻 πE） --- */
+    $('barG').style.width = (aG/tot*100).toFixed(1) + '%';
+    $('barP').style.width = (aP/tot*100).toFixed(1) + '%';
+    $('kSplit').textContent = '1+2μ = ' + aG.toFixed(2) + '　πE = ' + f1(aP) + (m.piE < 0 ? '（负）' : '');
+    $('ratioNote').textContent = piEDom
+      ? (MATS[S.mat].name + '：K = 1+2μ+πE = ' + m.K.toFixed(1) + '，其中 πE = ' + f1(m.piE) + ' 占 ' +
+         (aP/tot*100).toFixed(1) + '%，' + aG.toFixed(2) + ' 可忽略 → 式(3-36) dR/R ≈ dρ/ρ。')
+      : (MATS[S.mat].name + '：K = 1+2μ = ' + m.K.toFixed(2) + '，ΔR/R 几乎全部来自几何形变（πE = ' + f1(aP) + ' 可忽略）。');
+    $('readFine').innerHTML = 'K = 1 + 2×' + m.mu.toFixed(2) + ' + ' + f1(m.piE) + ' = <b>' + m.K.toFixed(2) +
+      '</b>；ΔR/R = Kε = ' + m.K.toFixed(2) + ' × (' + S.eps + '×10⁻⁶) = <b>' + pct(m.dR) + ' %</b>。' +
+      'σ = Eε = ' + (m.mat.E/1e11).toFixed(2) + '×10¹¹ × ' + S.eps + '×10⁻⁶ = ' + f2(m.sigma/1e6) + ' MPa；' +
+      'Δρ/ρ = πσ = ' + sgn(m.dRho*100, 3) + ' %。';
+
+    /* --- 联动刷新 --- */
+    paintLattice(m);
+    paintChip();
+    drawCmp(m, metal);
+    paintFormulas(m, metal);
+    paintPoints();
+    if (window.__repack) window.__repack();
+  }
+
+  /* ============ 5. 微观机制数值刷新 ============ */
+  function paintLattice(m){
+    var L = MICRO.lanes.B, vis, i, xa, xb, b, e1;
+    var metal = (m.mat.kind === 'metal');
+    if (L){
+      vis = clamp(m.eps*CFG.gainA, -0.16, 0.24);             /* 变形示意（放大 240 倍，限幅） */
+      if (L.atomEls && L.atomEls.length){
+        for (i = 0; i < L.N; i++){
+          xa = L.x0 + i*L.SP*(1 + vis);
+          setAttr(L.atomEls[2*i], 'cx', xa.toFixed(1));
+          setAttr(L.atomEls[2*i+1], 'cx', xa.toFixed(1));
+        }
+        b = 0;
+        for (i = 0; i < L.N; i++){
+          xa = L.x0 + i*L.SP*(1 + vis);
+          if (i < L.N - 1){
+            xb = L.x0 + (i+1)*L.SP*(1 + vis);
+            e1 = L.bondEls[b++]; setAttr(e1, 'x1', xa.toFixed(1)); setAttr(e1, 'x2', xb.toFixed(1));
+            e1 = L.bondEls[b++]; setAttr(e1, 'x1', xa.toFixed(1)); setAttr(e1, 'x2', xb.toFixed(1));
+            e1 = L.bondEls[b++]; setAttr(e1, 'x1', xa.toFixed(1)); setAttr(e1, 'x2', xa.toFixed(1));
+          } else {
+            e1 = L.bondEls[b++]; setAttr(e1, 'x1', xa.toFixed(1)); setAttr(e1, 'x2', xa.toFixed(1));
+          }
+        }
+      }
+      var factor = clamp(1 + m.dRho*CFG.gainB, 0.4, 2.5);
+      MICRO.lanes.A.factor = 1;
+      L.factor = factor;
+      $('scA').textContent = '散射 ≈ ' + Math.round(3*1000/CFG.i0) + ' 次/秒（基准）';
+      $('scB').textContent = '散射 ≈ ' + Math.round(3*1000*factor/CFG.i0) + ' 次/秒（示意 ×' + factor.toFixed(2) + '）';
+      xb = L.x0 + L.SP*(1 + vis);
+      $('dimB2').setAttribute('x1', xb.toFixed(1)); $('dimB2').setAttribute('x2', xb.toFixed(1));
+      $('dimB3').setAttribute('x2', xb.toFixed(1));
+      $('dimBt').setAttribute('x', ((L.x0 + xb)/2).toFixed(1));
+      $('dimBt').textContent = '间距 a ×' + (1 + vis).toFixed(3);
+      $('cv1').textContent = '×' + (1 + vis).toFixed(3);
+      $('cv2').textContent = (factor - 1 >= 0 ? '+' : '−') + Math.abs((factor - 1)*100).toFixed(0) + '%';
+      $('latRO1').textContent = '晶格间距 a = ' + (1 + vis).toFixed(3) + ' a₀（变形 ×' + (1 + vis).toFixed(3) + '，示意放大 240 倍）';
+      $('latRO4').textContent = '散射频率（示意）×' + factor.toFixed(2) + (factor > 1.001
+        ? '：散射变密 → 定向漂移变慢 → μ_c 减小 → ρ 增大。'
+        : (factor < 0.999 ? '：散射变疏 → 定向漂移变快 → μ_c 增大 → ρ 减小。'
+                          : '：无应力时散射频次不变，μ_c 与 ρ 都保持基准值。'));
+      $('latBar').setAttribute('width', (clamp(1 + m.dRho, 0, 2)/2*560).toFixed(1));
+      $('latBar').setAttribute('fill', Math.abs(m.dRho) < 1e-6 ? '#0d8b7f' : (m.dRho > 0 ? '#d94a3d' : '#2b6cb0'));
+      $('latBarTxt').setAttribute('fill', Math.abs(m.dRho) < 1e-6 ? '#0d8b7f' : (m.dRho > 0 ? '#d94a3d' : '#2b6cb0'));
+      $('latBarTxt').textContent = 'ρ / ρ₀ = ' + (1 + m.dRho).toFixed(3) + '（散射频率示意 ×' + factor.toFixed(2) + '）';
+    }
+    /* 真实比例读数（不依赖动画元素） */
     var muRel = 1/(1 + m.dRho), rhoRel = 1 + m.dRho;
-    $('roA').textContent = 'μ_c = 1.00　ρ = 1.00';
+    var col = Math.abs(m.dRho) < 1e-6 ? '#5b6b80' : (m.dRho > 0 ? '#d94a3d' : '#2b6cb0');
+    $('roA').textContent = 'μ_c = 1.000　ρ = 1.000';
     $('roB').textContent = 'μ_c = ' + muRel.toFixed(3) + '　ρ = ' + rhoRel.toFixed(3);
-    $('roB').setAttribute('fill', Math.abs(m.dRho) < 1e-6 ? '#5b6b80' : (m.dRho > 0 ? '#d94a3d' : '#2b6cb0'));
+    $('roB').setAttribute('fill', col);
     var stateTxt = Math.abs(m.eps) < 1e-9 ? 'ε = 0 με（无应力）'
                  : (m.eps > 0 ? 'ε = ' + S.eps + ' με（受拉）' : 'ε = ' + S.eps + ' με（受压）');
-    $('laB').textContent = '② 当前：' + stateTxt + (m.mat.kind === 'metal' ? '　金属：ρ 几乎不变' : '');
-    $('laB').setAttribute('fill', m.mat.kind === 'metal' ? '#64748b' : '#0d8b7f');
+    $('laB').textContent = '② 当前：' + stateTxt + (metal ? '　金属：ρ 几乎不变' : '');
+    $('laB').setAttribute('fill', metal ? '#64748b' : '#0d8b7f');
+    $('latRO2').textContent = '迁移率 μ_c = ' + muRel.toFixed(3) + ' μ_c0　电阻率 ρ = ' + rhoRel.toFixed(3) +
+      ' ρ₀　（ρ = 1/(nqμ_c)，载流子浓度 n 基本不变）';
+    $('latRO3').textContent = 'Δρ/ρ = ' + sgn(m.dRho*100, 3) + ' %　→　Δμ_c/μ_c = ' + sgn(-m.dRho*100, 3) + ' %（迁移率与电阻率反向）';
     $('rhoLine').textContent = 'Δρ/ρ = ' + sgn(m.dRho*100, 2) + '%　→　Δμ_c/μ_c = ' + sgn(-m.dRho*100, 2) + '%';
-    $('rhoLine').setAttribute('fill', Math.abs(m.dRho) < 1e-6 ? '#5b6b80' : (m.dRho > 0 ? '#d94a3d' : '#2b6cb0'));
-    /* 顶部流程链取值 */
+    $('rhoLine').setAttribute('fill', col);
     $('cv0').textContent = S.eps + ' με';
-    $('cv1').textContent = '×' + (1 + vis).toFixed(2);
-    $('cv2').textContent = (factor - 1 >= 0 ? '+' : '−') + Math.abs((factor - 1)*100).toFixed(0) + '%';
     $('cv3').textContent = sgn(-m.dRho*100, 2) + '%';
     $('cv4').textContent = sgn(m.dRho*100, 2) + '%';
-    $('cv4').setAttribute('fill', Math.abs(m.dRho) < 1e-6 ? '#5b6b80' : (m.dRho > 0 ? '#d94a3d' : '#2b6cb0'));
-    /* 金属时给一句针对性提示 */
-    $('whyLine2').textContent = m.mat.kind === 'metal'
-      ? '金属缺少这个“杠杆”：看 ② 行——晶格明明也被拉长了，但 ρ 与 μ_c 几乎不变，金属的 K 只能来自尺寸变化（1+2μ）。'
+    $('cv4').setAttribute('fill', col);
+    $('whyLine2').textContent = metal
+      ? '金属缺少这个“杠杆”：看 ② 行 —— 晶格明明也被拉长了，但 ρ 与 μ_c 几乎不变，金属的 K 只能来自尺寸变化（1+2μ）。'
       : '对比 ① 行与 ② 行：同样一段时间里 ② 行被散射的次数更多、跑得更慢，这就是 μ_c 下降、ρ 上升的直观来源。';
+    $('latRO5').textContent = metal
+      ? '金属（π ≈ 0）：ρ/ρ₀ = ' + rhoRel.toFixed(3) + '、μ_c 几乎不变 —— 换「硅 P 型」再对比 ① ② 两行。'
+      : '半导体：Δρ/ρ = ' + sgn(m.dRho*100, 3) + ' % 全部来自压阻效应（π = ' + m.pi11.toFixed(1) + '×10⁻¹¹ m²/N）。';
+    var semi = val('siP', 60);
+    $('latHint').textContent = metal
+      ? '金属没有能带“杠杆”：晶格同样变形，但 ρ 几乎不变（μ_c 不变）—— 右边 ② 行的散射频率与 μ_c 都是 1.000。换成半导体看差别。'
+      : '紫色圆点＝载流子，紫色虚线圈＝它被晶格散射一次：散射越频繁 → 漂移越慢 → μ_c 越小 → ρ 越大（当前 ρ/ρ₀ = ' +
+        rhoRel.toFixed(3) + '）。对照：同样 ε 下硅 P 型 Δρ/ρ = ' + sgn(semi.dRho*100, 2) + '%。';
   }
 
-  /* ============ 6. 公式推导 ============ */
-  function paintFormulas(m, metal){
-    var pi = m.pi, pi11 = (pi*1e11).toFixed(0), E = (m.mat.E/1e11).toFixed(2);
-    var sig = (m.sigma/1e6);
-    var html = '';
-    html += '<div class="row"><span class="tag">式 3-34</span><span>' + frac('dρ', 'ρ') +
-            ' = πσ = πEε = (' + pi11 + '×10⁻¹¹ m²/N) × (' + sig.toFixed(2) + '×10⁶ N/m²) = <b>' +
-            sgn(m.dRho*100, 3) + '%</b></span></div>';
-    html += '<div class="row"><span class="tag">式 3-35</span><span>' + frac('dR', 'R') +
-            ' = (1 + 2μ + πE)ε = Kε = (1 + 2×' + m.mu.toFixed(2) + ' + ' + m.piE.toFixed(1) + ') × ' +
-            S.eps + '×10⁻⁶ = <b>' + sgn(m.dR*100, 3) + '%</b>　（K = ' + m.K.toFixed(1) + '）</span></div>';
-    if (m.mat.kind === 'metal'){
-      html += '<div class="row"><span class="tag g">金属</span><span>πE ≈ 0，于是 ' + frac('dR', 'R') +
-              ' ≈ (1 + 2μ)ε = ' + sgn(m.geo*100, 4) + '%，K = 1+2μ = <b>' + m.K.toFixed(2) +
-              '</b> —— 全部来自几何形变</span></div>';
-      html += '<div class="row"><span class="tag p">对比</span><span>若换成半导体硅（π = 60×10⁻¹¹）：同一 ε = ' + S.eps +
-              ' με 下 ΔR/R = <b>' + sgn(model(S.eps,'siP',60,m.mu,S.dope).dR*100, 3) + '%</b>，是金属的 <b>' +
-              (Math.abs(model(S.eps,'siP',60,m.mu,S.dope).dR)/Math.max(1e-12, Math.abs(m.dR))).toFixed(0) + ' 倍</b></span></div>';
-    } else {
-      html += '<div class="row"><span class="tag p">式 3-36</span><span>半导体 πE ≫ 1+2μ：' + frac('dR', 'R') +
-              ' ≈ ' + frac('dρ', 'ρ') + ' = πEε = ' + (Math.abs(m.dRho)*100).toFixed(3) + '%，与精确值相差仅 ' +
-              (Math.abs(m.geo*100)).toFixed(4) + '%（就是被忽略的 1+2μ 项）</span></div>';
-      html += '<div class="row"><span class="tag g">对比</span><span>金属（π≈0）在同一 ε 下只有 <b>' +
-              sgn(metal.dR*100, 4) + '%</b>，半导体是它的 <b>' +
-              (Math.abs(m.dR)/Math.max(1e-12, Math.abs(metal.dR))).toFixed(0) + ' 倍</b></span></div>';
-    }
-    html += '<div class="note">π 与材料种类、应力方向与晶轴方向的夹角有关；' +
-            (m.mat.kind === 'metal' ? '金属的 πE 远小于 1+2μ，可以忽略。' : '半导体的 1+2μ 远小于 πE，可以忽略 —— 这正是式(3-36)的由来。') +
-            '　掺杂：' + ({light:'轻掺杂',mid:'中等掺杂',heavy:'重掺杂'}[S.dope]) + '（掺杂越重，π 越小、ρ 也越小）。</div>';
-    $('fmlTitle').textContent = m.mat.name + '：' + (m.mat.kind === 'metal' ? '几何形变主导' : 'πE ≫ 1+2μ');
-    $('fmlBody').innerHTML = html;
+  /* ============ 6. 硅膜片压阻全桥（应用） ============ */
+  function paintChip(){
+    var P = S.press;                                          /* MPa */
+    var epsEdge = CFG.epsEdge*P;                              /* με  */
+    var mm = model(epsEdge, 'siP', 60, 0.30, 'light');         /* 膜片上扩散电阻：硅 P 型轻掺杂 */
+    var dRel = Math.abs(mm.dR);
+    var u0 = CFG.supply*dRel*1000;                            /* mV：全桥 U₀ = E·ΔR/R */
+    $('u0chip').textContent = u0.toFixed(1) + ' mV';
+    $('chipNote').textContent = P < 0.005
+      ? '压力 0 MPa：ΔR = 0，电桥平衡（U₀ = 0）'
+      : 'P = ' + P.toFixed(2) + ' MPa → ε = ' + epsEdge.toFixed(0) + ' με → ΔR/R = ' + (dRel*100).toFixed(2) + '% → U₀ = ' + u0.toFixed(1) + ' mV';
+    var sag = Math.min(26, P*26), lift = Math.min(22, P*22);
+    $('mem').setAttribute('d', 'M86 110 Q150 ' + (110 + sag).toFixed(1) + ' 214 110');
+    $('mem2').setAttribute('d', 'M86 152 Q150 ' + (152 - sag).toFixed(1) + ' 214 152');
+    $('pArr').setAttribute('y2', (72 - lift).toFixed(1));
+    $('pHead').setAttribute('points', '150,' + (82 - lift).toFixed(1) + ' 143,' + (70 - lift).toFixed(1) +
+      ' 157,' + (70 - lift).toFixed(1));
+    var glow = 1 + dRel*8;
+    $('r1').setAttribute('r', (7*glow).toFixed(1));
+    $('r2').setAttribute('r', (7*glow).toFixed(1));
+    $('r3').setAttribute('r', (7/Math.max(1, glow*0.8)).toFixed(1));
+    $('r4').setAttribute('r', (7/Math.max(1, glow*0.8)).toFixed(1));
+    $('chipRO1').textContent = '压力 P = ' + P.toFixed(2) + ' MPa（满量程 1.00 MPa，恒压源 E = ' + CFG.supply.toFixed(1) + ' V）';
+    $('chipRO2').textContent = '膜片边缘应变 ε = ' + epsEdge.toFixed(0) + ' με（1.00 MPa ≈ ' + CFG.epsEdge + ' με，边缘应变 ∝ P）';
+    $('chipRO3').textContent = 'ΔR/R = K·ε = ' + mm.K.toFixed(1) + ' × (' + epsEdge.toFixed(0) + '×10⁻⁶) = ' + (dRel*100).toFixed(3) +
+      ' %（四电阻两拉两压：R₁、R₃ 受拉，R₂、R₄ 受压）';
+    $('chipRO4').textContent = 'U₀ = E·ΔR/R = ' + CFG.supply.toFixed(1) + ' V × ' + (dRel*100).toFixed(3) + ' % = ' + u0.toFixed(1) + ' mV';
+    $('chipBar').setAttribute('width', (clamp(P, 0, 1)*560).toFixed(1));
+    $('chipBarTxt').textContent = 'U₀ / U₀FS = ' + (P*100).toFixed(1) + ' %（输出与膜片两侧压力差成正比）';
+    $('chipFine').innerHTML = 'U₀ = E·(ΔR/R)：E = ' + CFG.supply.toFixed(1) + ' V，硅 P 型轻掺杂（π = 60×10⁻¹¹、K = ' +
+      mm.K.toFixed(1) + '）；1.00 MPa → ε = ' + CFG.epsEdge + ' με → ΔR/R = ' + (Math.abs(model(CFG.epsEdge,'siP',60,0.30,'light').dR)*100).toFixed(3) +
+      ' % → U₀ = <b>' + (CFG.supply*Math.abs(model(CFG.epsEdge,'siP',60,0.30,'light').dR)*1000).toFixed(1) +
+      ' mV</b>；当前 P = ' + S.press.toFixed(2) + ' MPa → U₀ = ' + u0.toFixed(1) + ' mV。';
   }
 
   /* ============ 7. 对比曲线 ΔR/R – ε ============ */
-  var CH = { x0:66, x1:680, y0:220, y1:22, xmax:600, ymax:6 };
-  function cpx(v){ return CH.x0 + Math.min(CH.xmax, v)/CH.xmax*(CH.x1 - CH.x0); }
-  function cpy(v){ return CH.y0 - Math.max(-CH.ymax, Math.min(CH.ymax, v))/CH.ymax*(CH.y0 - CH.y1); }
-  function drawCmp(m, metal){
-    if (!CH.grid){
-      var t = '', i, v;
-      for (v = 0; v <= 6; v += 1.5){
-        t += '<line x1="' + CH.x0 + '" y1="' + cpy(v).toFixed(1) + '" x2="' + CH.x1 + '" y2="' + cpy(v).toFixed(1) + '" stroke="#e6edf6"/>';
-        t += '<text x="58" y="' + (cpy(v)+4).toFixed(1) + '" text-anchor="end" font-size="12" fill="#5b6b80">' + v + '</text>';
-      }
-      for (i = 0; i <= CH.xmax; i += 100){
-        t += '<line x1="' + cpx(i).toFixed(1) + '" y1="' + CH.y1 + '" x2="' + cpx(i).toFixed(1) + '" y2="' + CH.y0 + '" stroke="#e6edf6"/>';
-        t += '<text x="' + cpx(i).toFixed(1) + '" y="' + (CH.y0+18) + '" text-anchor="middle" font-size="12" fill="#5b6b80">' + i + '</text>';
-      }
-      $('cmpGrid').innerHTML = t; CH.grid = true;
+  var CH = { x0:66, x1:680, y0:220, y1:22, xmin:-300, xmax:600, ymax:6 };
+  function cpx(v){ return CH.x0 + (clamp(v, CH.xmin, CH.xmax) - CH.xmin)/(CH.xmax - CH.xmin)*(CH.x1 - CH.x0); }
+  function cpy(v){ return CH.y0 - clamp(v, -CH.ymax, CH.ymax)/CH.ymax*(CH.y0 - CH.y1); }
+  function semiRef(){                                          /* 半导体参照：选金属时用硅 P 型 */
+    if (MATS[S.mat].kind === 'metal') return { key:'siP', pi:60, name:'半导体硅（P 型）' };
+    return { key:S.mat, pi:S.pi, name:MATS[S.mat].name };
+  }
+  function drawGrid(){
+    var t = '', i, v;
+    for (i = 0; i <= 4; i++){
+      v = -CH.ymax + 2*CH.ymax*i/4;
+      t += '<line x1="' + CH.x0 + '" y1="' + cpy(v).toFixed(1) + '" x2="' + CH.x1 + '" y2="' + cpy(v).toFixed(1) +
+           '" stroke="' + (Math.abs(v) < 1e-9 ? '#cbd8e8' : '#e6edf6') + '" stroke-width="' + (Math.abs(v) < 1e-9 ? 1.4 : 1) + '"/>';
+      t += '<text x="58" y="' + (cpy(v)+4).toFixed(1) + '" text-anchor="end" font-size="11.5" fill="#5b6b80">' + v.toFixed(1) + '</text>';
     }
+    for (i = CH.xmin; i <= CH.xmax; i += 100){
+      t += '<line x1="' + cpx(i).toFixed(1) + '" y1="' + CH.y1 + '" x2="' + cpx(i).toFixed(1) + '" y2="' + CH.y0 +
+           '" stroke="' + (i === 0 ? '#cbd8e8' : '#e6edf6') + '" stroke-width="' + (i === 0 ? 1.4 : 1) + '"/>';
+      t += '<text x="' + cpx(i).toFixed(1) + '" y="' + (CH.y0+18) + '" text-anchor="middle" font-size="11.5" fill="#5b6b80">' + i + '</text>';
+    }
+    $('cmpGrid').innerHTML = t;
+  }
+  function drawCmp(m, metal){
+    var ref = semiRef();
+    var mSemi = model(0, ref.key, ref.pi, S.mu, S.dope);
+    var need = Math.abs(mSemi.K)*Math.max(Math.abs(CH.xmin), CH.xmax)*1e-6*100;   /* 显示范围内 |ΔR/R| 峰值 */
+    var ym = clamp(Math.ceil(Math.max(6, need*1.15)/1.5)*1.5, 6, 30);
+    if (ym !== CH.ymax){ CH.ymax = ym; drawGrid(); }
+    else if (!$('cmpGrid').children.length) drawGrid();
     function path(matKey, piVal){
-      var d = '', first = true;
-      for (var e = 0; e <= CH.xmax; e += 10){
-        var y = model(e, matKey, piVal, S.mu, S.dope).dR*100;
-        d += (first ? 'M' : 'L') + cpx(e).toFixed(1) + ' ' + cpy(y).toFixed(1) + ' ';
+      var d = '', first = true, i, y;
+      for (i = CH.xmin; i <= CH.xmax; i += 10){
+        y = model(i, matKey, piVal, S.mu, S.dope).dR*100;
+        d += (first ? 'M' : 'L') + cpx(i).toFixed(1) + ' ' + cpy(y).toFixed(1) + ' ';
         first = false;
       }
       return d;
     }
-    /* 硅曲线固定用 π = 60×10⁻¹¹ 作参照，便于与金属对比 */
-    var refPi = (S.mat === 'metal' || S.mat === 'siN') ? 60 : S.pi;
     $('cMetal').setAttribute('d', path('metal', 0));
-    $('cSemi').setAttribute('d', path(S.mat === 'metal' ? 'siP' : S.mat, refPi));
-    $('cMetal').setAttribute('stroke-dasharray', S.mat === 'metal' ? '' : '6 4');
-    var e0 = Math.max(0, S.eps);
-    var refSemi = model(e0, S.mat === 'metal' ? 'siP' : S.mat, refPi, S.mu, S.dope);
-    $('mkLine').setAttribute('x1', cpx(e0)); $('mkLine').setAttribute('x2', cpx(e0));
-    $('mkM').setAttribute('cx', cpx(e0)); $('mkM').setAttribute('cy', cpy(metal.dR*100));
-    $('mkS').setAttribute('cx', cpx(e0)); $('mkS').setAttribute('cy', cpy(refSemi.dR*100));
-    $('cmpNote').textContent = '同为 ' + e0 + ' με：金属 ' + (Math.abs(metal.dR)*100).toFixed(3) + '%，半导体 ' +
-      (Math.abs(refSemi.dR)*100).toFixed(2) + '%（约 ' + (Math.abs(refSemi.dR)/Math.max(1e-12, Math.abs(metal.dR))).toFixed(0) + ' 倍）';
+    $('cMetal').setAttribute('stroke-dasharray', MATS[S.mat].kind === 'metal' ? '' : '6 4');
+    $('cSemi').setAttribute('d', path(ref.key, ref.pi));
+    $('cSemi').setAttribute('stroke-dasharray', MATS[S.mat].kind === 'metal' ? '6 4' : '');
+    var e0 = clamp(S.eps, CH.xmin, CH.xmax);
+    $('mkLine').setAttribute('x1', cpx(e0).toFixed(1)); $('mkLine').setAttribute('x2', cpx(e0).toFixed(1));
+    $('mkM').setAttribute('cx', cpx(e0).toFixed(1)); $('mkM').setAttribute('cy', cpy(metal.dR*100).toFixed(1));
+    $('mkS').setAttribute('cx', cpx(e0).toFixed(1)); $('mkS').setAttribute('cy', cpy(mSemi.dR*100).toFixed(1));
+    $('lgMetal').textContent = '金属应变片（K = ' + (1 + 2*metal.mu).toFixed(2) + '）';
+    $('lgSemi').textContent = ref.name + '（K = ' + mSemi.K.toFixed(1) + '）';
+    var pSemi = model(e0, ref.key, ref.pi, S.mu, S.dope);
+    var kRatio = Math.abs(mSemi.K)/Math.max(1e-12, 1 + 2*metal.mu);
+    var eRef = (Math.abs(e0) < 10) ? 300 : e0;
+    var pSemiR = model(eRef, ref.key, ref.pi, S.mu, S.dope);
+    var pMetalR = model(eRef, 'metal', 0, S.mu, S.dope);
+    $('cmpNote').textContent = (eRef === e0 ? '同为 ' + e0 + ' με：' : '参考 ' + eRef + ' με：') + '金属 ' +
+      (Math.abs(pMetalR.dR)*100).toFixed(3) + ' %　' + ref.name + ' ' + (Math.abs(pSemiR.dR)*100).toFixed(3) +
+      ' %（约 ' + (Math.abs(pSemiR.dR)/Math.max(1e-12, Math.abs(pMetalR.dR))).toFixed(0) + ' 倍）';
+    $('cmpHint').textContent = '纵轴量程 ±' + CH.ymax.toFixed(1) + ' %（随所选材料自动调整）：金属 K = ' + (1 + 2*metal.mu).toFixed(2) +
+      '、半导体 |K| = ' + Math.abs(mSemi.K).toFixed(1) + ' → 半导体比金属大 ' + Math.round(kRatio) + ' 倍（1~2 个数量级）。';
   }
 
-  /* ============ 8. 硅膜片全桥 ============ */
-  function paintChip(){
-    var P = S.press;                                   /* MPa */
-    var epsEdge = EPS_EDGE*P;                          /* με  */
-    var mm = model(epsEdge, 'siP', 60, 0.30, 'light');
-    var dRel = Math.abs(mm.dR);
-    var u0 = EPS_SUPPLY*dRel*1000;                     /* mV，全桥 U₀ = E·ΔR/R */
-    $('u0chip').textContent = u0.toFixed(1) + ' mV';
-    $('chipNote').textContent = P < 0.005
-      ? '压力 0 MPa：ΔR = 0，电桥平衡'
-      : 'P = ' + P.toFixed(2) + ' MPa → 边缘应变 ' + epsEdge.toFixed(0) + ' με → ΔR/R = ' + (dRel*100).toFixed(2) +
-        '% → U₀ = E·ΔR/R = ' + u0.toFixed(1) + ' mV';
-    var sag = Math.min(26, P*26);
-    $('mem').setAttribute('d', 'M86 106 Q150 ' + (106 + sag).toFixed(1) + ' 214 106');
-    $('mem2').setAttribute('d', 'M86 150 Q150 ' + (150 - sag).toFixed(1) + ' 214 150');
-    $('pArr').setAttribute('y2', (70 - Math.min(24, P*24)).toFixed(1));
-    $('pHead').setAttribute('points', '150,' + (80 - Math.min(24, P*24)).toFixed(1) + ' 143,' +
-        (68 - Math.min(24, P*24)).toFixed(1) + ' 157,' + (68 - Math.min(24, P*24)).toFixed(1));
-    var glow = 1 + dRel*8;
-    ['r1','r2'].forEach(function(id){ $(id).setAttribute('r', (7*glow).toFixed(1)); });
-    ['r3','r4'].forEach(function(id){ $(id).setAttribute('r', (7/Math.max(1, glow*0.8)).toFixed(1)); });
+  /* ============ 8. 公式推导 ============ */
+  function paintFormulas(m, metal){
+    var pi11 = m.pi11, piE = m.piE, sig = m.sigma/1e6, html = '';
+    var piEDom = Math.abs(m.piE) >= (1 + 2*m.mu);
+    var eRef = (Math.abs(S.eps) < 10) ? 300 : S.eps;                 /* ε = 0 时用 300 με 作对比参考点 */
+    var tagRef = (eRef === S.eps) ? ('同一 ε = ' + S.eps + ' με 下') : ('参考 ε = ' + eRef + ' με 下');
+    var mSemiRef = model(eRef, 'siP', 60, S.mu, S.dope);
+    var mGeoRef = model(eRef, 'metal', 0, S.mu, S.dope);
+    html += '<div class="row"><span class="tag">式 3-34</span><span>' + frac('dρ', 'ρ') + ' = πσ = πEε = (' +
+            pi11.toFixed(1) + '×10⁻¹¹ m²/N) × (' + f2(sig) + '×10⁶ N/m²) = <b>' + sgn(m.dRho*100, 3) +
+            ' %</b>　（σ = Eε = ' + (m.mat.E/1e11).toFixed(2) + '×10¹¹ × ' + S.eps + '×10⁻⁶）</span></div>';
+    html += '<div class="row"><span class="tag">式 3-35</span><span>' + frac('dR', 'R') +
+            ' = (1 + 2μ + πE)ε = Kε = (1 + 2×' + m.mu.toFixed(2) + ' + ' + f1(piE) + ') × ' + S.eps +
+            '×10⁻⁶ = <b>' + sgn(m.dR*100, 3) + ' %</b>　（K = ' + m.K.toFixed(2) + '）</span></div>';
+    if (piEDom){
+      html += '<div class="row"><span class="tag p">式 3-36</span><span>半导体 πE ≫ 1+2μ → ' + frac('dR', 'R') + ' ≈ ' +
+              frac('dρ', 'ρ') + ' = πEε = ' + sgn(m.piezo*100, 3) + ' %；与精确值相差 ' + (Math.abs(m.geo*100)).toFixed(4) +
+              ' %，正是被忽略的 (1+2μ)ε 项</span></div>';
+      html += '<div class="row"><span class="tag g">对比</span><span>金属（π ≈ 0）在' + tagRef + '只有 <b>' + sgn(mGeoRef.dR*100, 4) +
+              ' %</b>，本材料是它的 <b>' + (Math.abs(model(eRef, S.mat, S.pi, S.mu, S.dope).dR)/Math.max(1e-12, Math.abs(mGeoRef.dR))).toFixed(0) +
+              ' 倍</b></span></div>';
+    } else {
+      html += '<div class="row"><span class="tag g">几何项</span><span>πE ≈ 0 → ' + frac('dR', 'R') + ' ≈ (1+2μ)ε = ' +
+              sgn(metal.dR*100, 4) + ' %，K = 1+2μ = <b>' + m.K.toFixed(2) + '</b>（教材：金属 K = 1.5~2.0）</span></div>';
+      html += '<div class="row"><span class="tag p">对比</span><span>若换成半导体硅 P 型（π = 60×10⁻¹¹）：' + tagRef + 'ΔR/R = <b>' +
+              sgn(mSemiRef.dR*100, 3) + ' %</b>，是它的 <b>' +
+              (Math.abs(mSemiRef.dR)/Math.max(1e-12, Math.abs(mGeoRef.dR))).toFixed(0) + ' 倍</b></span></div>';
+    }
+    html += '<div class="row"><span class="tag v">微观</span><span>ρ = 1/(n q μ_c)：应力改变晶格对称性与原子间距 → 能带结构与散射几率变化 → ' +
+            'μ_c ' + (piEDom ? '反向变化 ' : '基本不变 ') + sgn(-m.dRho*100, 3) + ' % → ρ ' + sgn(m.dRho*100, 3) + ' %</span></div>';
+    html += '<div class="note">π 与材料种类、应力方向与晶轴方向的夹角有关（E 亦与晶向有关）。掺杂：' + DOPE[S.dope].txt +
+            '（π ' + DOPE[S.dope].piTxt + '，' + DOPE[S.dope].rhoTxt + '）—— 掺硼/铝/镓/铟为 P 型，掺磷/砷/锑为 N 型；' +
+            '掺杂越重 ρ 越低、π 也越小（灵敏度↓、温度稳定性↑）。数字口径：π 以 10⁻¹¹ m²/N、应变以 με、应力以 MPa 显示。</div>';
+    $('fmlTitle').textContent = MATS[S.mat].name + '：' + (piEDom ? 'πE ≫ 1+2μ（式 3-36）' : '几何形变主导');
+    $('fmlBody').innerHTML = html;
   }
 
   /* ============ 9. 要点 ============ */
-  function paintPoints(m){
-    var semi = m.mat.kind !== 'metal';
-    var list = [
-      { t:'固体受作用力后<b>电阻率</b>发生变化称为压阻效应，以<b>半导体</b>最为显著。', c:'' },
-      { t:'式(3-34)：<b>dρ/ρ = πσ = πEε</b>。π 与材料种类、应力方向与晶轴方向的夹角有关。', c:'' },
-      { t:'式(3-35)：<b>dR/R = (1+2μ+πE)ε = Kε</b>，其中 1+2μ 来自应变（几何形变），πE 来自压阻效应。', c:'' },
-      { t:'半导体 <b>πE ≫ 1+2μ</b>（πE ≈ 50~100，1+2μ ≈ 1.5~2.0）→ 式(3-36)：<b>dR/R ≈ dρ/ρ = πEε</b>。', c:'semi' },
-      { t:'金属则相反：πE 可忽略，K = 1+2μ 只有 1.5~2.0，比半导体小 1~2 个数量级。', c:'metal' },
-      { t:'ρ = 1/(nqμ_c)：应力改变载流子迁移率 μ_c（能带结构变化），这就是 ρ 变化的微观来源。', c:'semi' },
-      { t:'常用材料：硅、锗（最常用）、锑化铟、砷化镓；掺硼/铝/镓/铟为 P 型，掺磷/砷/锑为 N 型；<b>掺杂越重，ρ 越低</b>。', c:'' }
-    ];
-    var html = '';
-    list.forEach(function(b){
-      var on = (b.c === '') || (b.c === 'semi' && semi) || (b.c === 'metal' && !semi);
-      html += '<li class="' + (on ? 'on' : '') + '">' + b.t + '</li>';
-    });
-    $('points').innerHTML = html;
+  var PTS_TEXT = [
+    '固体受作用力后<b>电阻率</b>发生变化，称为<b>压阻效应</b>，以半导体材料最为显著；基于它制成的传感器叫<b>压阻式传感器</b>。',
+    '式(3-34)：<b>dρ/ρ = πσ = πEε</b>。π 是压阻系数，与材料种类以及应力方向与晶轴方向的夹角有关；E 为弹性模量（与晶向有关）。',
+    '式(3-35)：<b>dR/R = (1+2μ+πE)ε = Kε</b>，K 是灵敏度系数；<b>1+2μ</b> 由应变效应（几何形变）引起，<b>πE</b> 由压阻效应引起。',
+    '金属：1+2μ 明显、πE 可忽略 → K = 1+2μ = <b>1.5~2.0</b>，ΔR/R 几乎全部来自尺寸变化。',
+    '半导体：πE 远大于 1+2μ（πE 通常 <b>50~100</b>，1+2μ 仅 1.5~2.0）→ 式(3-36)：<b>dR/R ≈ dρ/ρ = πEε</b>，比金属大 1~2 个数量级。',
+    '微观来源：<b>ρ = 1/(n q μ_c)</b>。应力改变能带结构（能谷位置、有效质量、散射几率）→ 载流子迁移率 μ_c 变化 → ρ 变化；金属没有这个“杠杆”。',
+    '材料与参数：硅 E = 1.67×10¹¹ N/m²、泊松比 μ = 0.30；硅 P 型 π = 60×10⁻¹¹、N 型 π = −100×10⁻¹¹ m²/N（符号决定受拉时 ΔR 的正负）、锗 π = 50×10⁻¹¹（E = 1.30×10¹¹）。',
+    '掺杂：掺硼/铝/镓/铟得 P 型，掺磷/砷/锑得 N 型；<b>掺杂越重 → ρ 越低、π 越小</b>（灵敏度↓、温度稳定性↑）→ 实际要在灵敏度与温漂之间折中。',
+    '结构两类：粘贴式半导体应变计（体电阻）与<b>扩散型压阻传感器</b>（硅杯膜片上扩散四个电阻并接成桥）；弹性范围内硅的压阻效应<b>可逆</b>。',
+    '应用：硅膜片压阻全桥 —— 压力 → 边缘应变（1 MPa ≈ 400 με）→ ΔR/R = Kε ≈ 4.07% → <b>U₀ = E·ΔR/R = 5 V × 4.07% ≈ 204 mV</b>，不必放大即可直接测量；两拉两压使灵敏度为单臂的 4 倍。'
+  ];
+  var PTS = { active:-1 };
+  function paintPoints(){
+    if (!$('points').children.length){
+      var html = '', k;
+      for (k = 0; k < PTS_TEXT.length; k++) html += '<li data-pi="' + k + '">' + PTS_TEXT[k] + '</li>';
+      $('points').innerHTML = html;
+    }
   }
+  function setPt(i){
+    PTS.active = i;
+    var lis = $('points').children, k;
+    for (k = 0; k < lis.length; k++) lis[k].classList.toggle('on', k === i);
+    for (k = 0; k < PTS_TEXT.length; k++){
+      var bb = $('ptsB' + k);
+      if (bb) bb.classList.toggle('on', k === i);
+    }
+    if (i >= 0) say('<b>要点 ' + (i+1) + '/' + PTS_TEXT.length + '</b>：' + PTS_TEXT[i]);
+  }
+  for (var pb = 0; pb < PTS_TEXT.length; pb++){
+    (function(k){ $('ptsB' + k).addEventListener('click', function(){ stopDemo(); setPt(k); }); })(pb);
+  }
+  /* 注意：ptsPlay 的点击由 jsB 的 bindDemos()（DEMOS.pts）统一绑定，这里不要再手动绑定 */
 
   /* ============ 10. 交互 ============ */
   function setEps(v){
     if (!isFinite(v)) v = 0;
-    S.eps = Math.max(-500, Math.min(1000, Math.round(v/10)*10));
+    S.eps = clamp(Math.round(v/10)*10, -500, 1000);
     $('eps').value = S.eps; paint();
   }
-  function setPi(v){ S.pi = Math.round(v/5)*5; $('pi').value = S.pi; paint(); }
-  function setMu(v){ S.mu = Math.round(v*100)/100; $('mu').value = S.mu; paint(); }
+  function setPi(v){ S.pi = clamp(Math.round(v/5)*5, -120, 120); $('pi').value = S.pi; paint(); }
+  function setMu(v){ S.mu = clamp(Math.round(v*100)/100, 0.20, 0.50); $('mu').value = S.mu; paint(); }
   function setMat(k){
+    if (!MATS[k]) return;
     S.mat = k;
-    S.pi = Math.round(MATS[k].pi*1e11);
-    $('pi').value = S.pi;
-    S.mu = MATS[k].mu; $('mu').value = S.mu;
+    S.pi = Math.round(MATS[k].pi*1e11);                       /* 滑块回到该材料的名义 π */
+    S.mu = MATS[k].mu;
+    $('pi').value = S.pi; $('mu').value = S.mu;
     paint();
   }
-  function setDope(d){ S.dope = d; paint(); }
-  function setPress(v){ S.press = Math.max(0, Math.min(1, v)); $('press').value = S.press;
-    $('pressOut').textContent = S.press.toFixed(2) + ' MPa'; paint(); }
-
+  function setDope(d){ if (DOPE[d]){ S.dope = d; paint(); } }
+  function setPress(v){
+    if (!isFinite(v)) v = 0;
+    S.press = clamp(Math.round(v*100)/100, 0, 1);
+    $('press').value = S.press;
+    paint();
+  }
   $('eps').addEventListener('input', function(){ stopDemo(); setEps(+this.value); });
   $('pi').addEventListener('input', function(){ stopDemo(); setPi(+this.value); });
   $('mu').addEventListener('input', function(){ stopDemo(); setMu(+this.value); });
   $('press').addEventListener('input', function(){ stopDemo(); setPress(+this.value); });
-  $('epsM').addEventListener('click', function(){ stopDemo(); setEps(S.eps - 50); });
-  $('epsP').addEventListener('click', function(){ stopDemo(); setEps(S.eps + 50); });
+  $('epsM').addEventListener('click', function(){ stopDemo(); setEps(S.eps - 10); });
+  $('epsP').addEventListener('click', function(){ stopDemo(); setEps(S.eps + 10); });
   document.querySelectorAll('#segMat button').forEach(function(b){
     b.addEventListener('click', function(){
       stopDemo(); setMat(b.getAttribute('data-mat'));
-      var m = MATS[S.mat];
-      say('<b>' + m.name + '</b>：π = ' + (m.pi*1e11).toFixed(0) + '×10⁻¹¹ m²/N，E = ' + (m.E/1e11).toFixed(2) +
-          '×10¹¹ N/m² → πE = ' + (m.pi*m.E).toFixed(1) + '，K = ' + (1 + 2*m.mu + m.pi*m.E).toFixed(1) + '。' + m.note + '。');
+      var mm = MATS[S.mat];
+      say('<b>' + mm.name + '</b>：π = ' + (mm.pi*1e11).toFixed(0) + '×10⁻¹¹ m²/N，E = ' + (mm.E/1e11).toFixed(2) +
+          '×10¹¹ N/m² → πE = ' + (mm.pi*mm.E).toFixed(1) + '，K = 1+2μ+πE = ' + (1 + 2*mm.mu + mm.pi*mm.E).toFixed(1) +
+          '。' + mm.note + '（' + mm.rho + '）');
     });
   });
   document.querySelectorAll('#segDope button').forEach(function(b){
     b.addEventListener('click', function(){
       stopDemo(); setDope(b.getAttribute('data-dope'));
-      say('掺杂浓度改为 <b>' + b.textContent.replace(/[轻中重]掺杂?/, '') + '</b>：掺杂越重，载流子浓度越高、电阻率 ρ 越低，同时压阻系数 π 也变小（灵敏度下降）—— 实际传感器要在灵敏度与温度稳定性之间折中。');
+      say('掺杂浓度改为 <b>' + DOPE[S.dope].txt + '</b>：掺杂越重，载流子浓度越高、电阻率 ρ 越低，同时压阻系数 π 也变小（' +
+          DOPE[S.dope].piTxt + '）→ 灵敏度下降，但温度稳定性提高 —— 实际传感器要在两者之间折中。');
     });
   });
   $('reset').addEventListener('click', function(){
-    stopDemo(); setMat('metal'); setDope('light'); S.eps = 0; $('eps').value = 0; setPress(0); paint();
-    say('已复位：金属应变片、ε = 0、压力 0 MPa，电阻率与电阻都不变。');
+    stopDemo();
+    setMat('metal'); setDope('light'); S.eps = 0; $('eps').value = 0;
+    setPress(0); paint();
+    say('已复位：金属应变片、轻掺杂、ε = 0、压力 0 MPa —— πE ≈ 0，电阻率与电阻都不变（K = 1+2μ = 1.60）。');
   });
 
-  /* ============ 11. 演示框架（含速度控制） ============ */
-  var SPEED = 1, playingKey = null;
-  $('speed').addEventListener('input', function(){
-    SPEED = parseFloat(this.value) || 1;
-    $('speedOut').textContent = SPEED.toFixed(1) + '×';
-  });
-  var DEMOS = {
-    main:  { btn:'playMain',  label:'▶ 压阻效应演示' },
-    micro: { btn:'playMicro', label:'▶ 微观机制' },
-    cmp:   { btn:'playCmp',   label:'▶ 金属 vs 半导体' },
-    chip:  { btn:'playChip',  label:'▶ 膜片全桥应用' }
-  };
-  function resetDemoButtons(){
-    Object.keys(DEMOS).forEach(function(k){
-      var b = $(DEMOS[k].btn);
-      if (b){ b.textContent = DEMOS[k].label; b.classList.remove('running'); }
-    });
-  }
-  function stopDemo(){ S.demoToken++; playingKey = null; resetDemoButtons(); stopSpeak(); }
-  function beginDemo(key){
-    stopDemo(); playingKey = key;
-    var b = $(DEMOS[key].btn);
-    if (b){ b.textContent = '⏸ 暂停演示'; b.classList.add('running'); }
-    return ++S.demoToken;
-  }
-  function endDemo(){ playingKey = null; resetDemoButtons(); }
-
-  /* ---------- 语音讲解（浏览器内置 TTS，无需音频文件） ---------- */
-  var synth = window.speechSynthesis || null;
-  var VOICE = { on:false, name:'', ready:false };
-  function plain(html){
-    return String(html).replace(/<[^>]*>/g, ' ')
-                       .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
-                       .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ').trim();
-  }
-  function zhVoices(){
-    var all = (synth && synth.getVoices()) || [];
-    var zh = all.filter(function(v){ return /^zh/i.test(v.lang) || /Chinese|中文|普通话|Huihui|Yaoyao|Kangkang|Xiaoxiao|Yunxi/i.test(v.name); });
-    return zh.length ? zh : all;
-  }
-  function loadVoices(){
-    if (!synth){ $('voiceHint').textContent = '此浏览器不支持朗读'; $('voiceToggle').disabled = true; return; }
-    var list = zhVoices();
-    if (!list.length){ $('voiceHint').textContent = '未找到语音包'; return; }
-    var natural = '', common = '', i;
-    for (i = 0; i < list.length; i++){
-      if (!natural && /Natural|Online|Xiaoxiao|Yunxi|Xiaoyi/i.test(list[i].name)) natural = list[i].name;
-      if (!common && /Huihui|Yaoyao|Kangkang|慧慧|瑶瑶|康康/i.test(list[i].name)) common = list[i].name;
-    }
-    if (!VOICE.name || !list.some(function(v){ return v.name === VOICE.name; }))
-      VOICE.name = natural || common || list[0].name;
-    var sel = $('voiceSel');
-    sel.innerHTML = list.map(function(v){
-      return '<option value="' + v.name + '"' + (v.name === VOICE.name ? ' selected' : '') + '>' + v.name + '</option>';
-    }).join('');
-    VOICE.ready = true;
-    if (!VOICE.on) $('voiceHint').textContent = list.length + ' 个音色可选';
-  }
-  function makeUtterance(text){
-    var u = new SpeechSynthesisUtterance(plain(text));
-    var list = zhVoices(), v = null, i;
-    for (i = 0; i < list.length; i++){ if (list[i].name === VOICE.name){ v = list[i]; break; } }
-    if (v){ u.voice = v; u.lang = v.lang; } else { u.lang = 'zh-CN'; }
-    u.rate = Math.max(0.6, Math.min(1.9, 0.95*SPEED));
-    u.pitch = 1;
-    u.volume = 1;
-    return u;
-  }
-  function speak(text){
-    if (!synth || !VOICE.on || !plain(text)) return;
-    try { synth.cancel(); synth.speak(makeUtterance(text)); } catch (e) {}
-  }
-  function stopSpeak(){ if (synth){ try { synth.cancel(); } catch (e) {} } }
-  function speaking(){ return !!(synth && VOICE.on && (synth.speaking || synth.pending)); }
-
-  $('voiceToggle').addEventListener('click', function(){
-    VOICE.on = !VOICE.on;
-    this.textContent = VOICE.on ? '🔊 朗读已开启' : '🔊 开启朗读';
-    this.classList.toggle('on', VOICE.on);
-    if (VOICE.on){
-      stopSpeak();
-      $('voiceHint').textContent = '语速跟随演示速度';
-      speak($('narration').innerHTML);
-    } else {
-      stopSpeak();
-      $('voiceHint').textContent = '演示时自动朗读旁白';
-    }
-  });
-  $('voiceSel').addEventListener('change', function(){
-    VOICE.name = this.value; stopSpeak(); if (VOICE.on) speak($('narration').innerHTML);
-  });
-  $('narration').addEventListener('click', function(){
-    if (!VOICE.on){ $('voiceHint').textContent = '先点「开启朗读」'; return; }
-    stopSpeak(); speak(this.innerHTML);
-  });
-  if (synth){
-    loadVoices();
-    if (typeof synth.addEventListener === 'function') synth.addEventListener('voiceschanged', loadVoices);
-    else synth.onvoiceschanged = loadVoices;
-    setTimeout(loadVoices, 600);
-  } else {
-    $('voiceHint').textContent = '此浏览器不支持朗读';
-  }
-
-  function say(t){ $('narration').innerHTML = t; speak(t); }
-  /* 等待：开启朗读时，等旁白读完再继续；未开启时与原逻辑完全一致 */
-  function sleep(ms, tok){
-    var base = Math.max(50, ms/SPEED);
-    if (!VOICE.on || !synth){
-      return new Promise(function(res){ setTimeout(function(){ res(S.demoToken === tok); }, base); });
-    }
-    return new Promise(function(res){
-      var t0 = performance.now();
-      (function poll(){
-        if (S.demoToken !== tok){ stopSpeak(); return res(false); }
-        var waited = performance.now() - t0;
-        if (waited >= base && !speaking()) return res(true);
-        if (waited >= base + 45000) return res(true);       /* 兜底，避免卡死 */
-        setTimeout(poll, 100);
-      })();
-    });
-  }
-  function tween(from, to, dur, set, tok){
-    dur = Math.max(150, dur/SPEED);
-    return new Promise(function(res){
-      var t0 = performance.now();
-      (function step(now){
-        if (S.demoToken !== tok) return res(false);
-        var p = (now - t0)/dur;
-        if (!isFinite(p)) p = 1;
-        p = Math.max(0, Math.min(1, p));
-        var e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
-        var v = from + (to - from)*e;
-        /* 双保险：无论时钟如何跳变，动画值都不越出 [from, to] */
-        v = (from <= to) ? Math.min(to, Math.max(from, v)) : Math.max(to, Math.min(from, v));
-        set(v);
-        if (p < 1) requestAnimationFrame(step); else res(true);
-      })(performance.now());
-    });
-  }
-  function val(matKey, piVal, epsUe){ return model(epsUe === undefined ? S.eps : epsUe, matKey, piVal, S.mu, S.dope); }
-
-  /* ============ 12. 演示 1：压阻效应本体 ============ */
+  /* ============ 11. 演示 ============ */
   async function demoMain(){
     var tok = beginDemo('main');
     setMat('metal'); setEps(0);
-    say('【<b>压阻效应</b>】先看金属，再看半导体，同一应变下比一比。');
-    if (!await sleep(2200, tok)) return;
-    say('① <b>金属应变片，ε → 300 με</b>：K = 1+2μ = ' + (1 + 2*S.mu).toFixed(2) +
-        '，ΔR/R = (1+2μ)ε = <b>' + sgn(val('metal',0,300).dR*100, 3) + '%</b> —— 很小，而且全部来自几何形变（电阻率几乎不变）。');
+    say('【<b>压阻效应</b>】先用金属、再用半导体，同一应变下比一比：dρ/ρ = πσ = πEε，dR/R = (1+2μ+πE)ε = Kε。');
+    if (!await sleep(2600, tok)) return;
+    say('① <b>金属应变片，ε → 300 με</b>：π ≈ 0 → K = 1+2μ = ' + (1 + 2*S.mu).toFixed(2) +
+        '，ΔR/R = (1+2μ)ε = <b>' + sgn(val('metal',0,300).dR*100, 3) + ' %</b> —— 很小，而且全部来自几何形变（电阻率几乎不变）。');
     if (!await tween(0, 300, 2200, setEps, tok)) return;
     if (!await sleep(2200, tok)) return;
-    say('② <b>换成半导体硅（P 型，π = 60×10⁻¹¹）</b>：应变仍是 300 με，但 πE = ' + val('siP',60,300).piE.toFixed(1) +
-        ' ≫ 1+2μ，于是 ΔR/R = <b>' + sgn(val('siP',60,300).dR*100, 3) + '%</b>，是金属的 <b>' +
+    say('② <b>换成半导体硅（P 型，π = 60×10⁻¹¹）</b>：应变仍是 300 με，但 πE = ' + f1(val('siP',60,300).piE) +
+        ' ≫ 1+2μ = 1.60，于是 ΔR/R = <b>' + sgn(val('siP',60,300).dR*100, 3) + ' %</b>，是金属的 <b>' +
         (Math.abs(val('siP',60,300).dR)/Math.abs(val('metal',0,300).dR)).toFixed(0) + ' 倍</b>。');
     setMat('siP');
     if (!await sleep(2600, tok)) return;
-    say('③ <b>看 K 的构成</b>：金属 1+2μ = ' + (1 + 2*S.mu).toFixed(2) + ' 占 100%，πE ≈ 0；半导体 πE = ' +
-        val('siP',60,300).piE.toFixed(1) + ' 占 ' + (val('siP',60,300).piE/(1 + 2*S.mu + val('siP',60,300).piE)*100).toFixed(1) +
+    say('③ <b>看 K 的构成</b>（右侧读数卡的比例条）：金属 1+2μ = 1.60 占 100%、πE ≈ 0；半导体 πE = ' +
+        f1(val('siP',60,300).piE) + ' 占 ' + (val('siP',60,300).piE/(1 + 2*S.mu + val('siP',60,300).piE)*100).toFixed(1) +
         '%，(1+2μ) 反而可以忽略 —— 这就是式(3-36) dR/R ≈ dρ/ρ 的来历。');
-    if (!await sleep(3000, tok)) return;
-    say('④ <b>关键区别</b>：金属靠"尺寸变化"，半导体靠"电阻率变化"。dρ/ρ = πσ = πEε，而 π 与材料、晶向、应力方向都有关。');
+    if (!await sleep(3200, tok)) return;
+    say('④ <b>关键区别</b>：金属靠“尺寸变化”，半导体靠“电阻率变化”。dρ/ρ = πσ = πEε，而 π 与材料、晶向、应力方向都有关 —— 换个晶向，灵敏度可能差很多。');
     if (!await sleep(2800, tok)) return;
-    say('⑤ 卸载应变：ΔR/R 回到 0。压阻效应是<b>可逆</b>的，这也是它能做传感器的前提。');
+    say('⑤ 卸载应变：ΔR/R 回到 0。压阻效应是<b>可逆</b>的（弹性范围内），这正是它能做传感器的前提。');
     if (!await tween(300, 0, 1800, setEps, tok)) return;
-    say('【演示结束】半导体灵敏度系数 K ≈ ' + val('siP',60,300).K.toFixed(0) + '，比金属的 ' + (1 + 2*S.mu).toFixed(1) + ' 大约两个数量级。');
+    if (!await sleep(1600, tok)) return;
+    say('【演示结束】半导体灵敏度系数 K ≈ ' + val('siP',60,300).K.toFixed(0) + '，比金属的 ' + (1 + 2*S.mu).toFixed(1) +
+        ' 大约两个数量级 —— 压阻式传感器因此常常不必放大就能直接测量。');
     endDemo();
   }
 
-  /* ============ 13. 演示 2：微观机制 ============ */
   async function demoMicro(){
     var tok = beginDemo('micro');
     setMat('siP'); setEps(0);
-    say('【<b>微观机制</b>】看左边晶格怎么变、载流子跑得快慢怎么变 —— 这是"电阻率为什么会变"的答案。');
-    if (!await sleep(2600, tok)) return;
-    say('① <b>无应力</b>：晶格规则排列，载流子在电场下以正常迁移率漂移，ρ 不变。');
-    if (!await sleep(2000, tok)) return;
-    say('② <b>加拉应变 ε → 300 με</b>：晶格沿轴向被拉长（示意放大了 60 倍），能带结构随之改变 → 载流子迁移率 μ_c 下降 → 电阻率 ρ 上升。');
-    if (!await tween(0, 300, 2400, setEps, tok)) return;
-    if (!await sleep(2400, tok)) return;
-    say('③ 定量关系：ρ = 1/(nqμ_c)，载流子浓度 n 基本不变，所以 <b>Δμ/μ_c = −Δρ/ρ</b>。当前 Δρ/ρ = ' +
-        sgn(val('siP',60,S.eps).dRho*100, 2) + '%，迁移率就<b>反向</b>变化同样比例 —— 看载流子滑动速度的变化。');
+    say('【<b>微观机制</b>】看中间卡片的 ① ② 两行晶格与载流子：这是“电阻率为什么会随应力变化”的答案（ρ = 1/(nqμ_c)）。');
     if (!await sleep(3000, tok)) return;
-    say('④ <b>反过来加压应变</b>（ε → −300 με）：晶格被压缩，ρ 与 μ_c 的变化方向也随之反转。');
+    say('① <b>无应力</b>：晶格规则排列，载流子在电场下按正常迁移率漂移，ρ 不变（① 行为基准）。');
+    if (!await sleep(2400, tok)) return;
+    say('② <b>加拉应变 ε → 300 με</b>：晶格沿轴向被拉长（示意放大 240 倍），能带结构与散射几率随之改变 → 载流子迁移率 μ_c 下降 → 电阻率 ρ 上升。');
+    if (!await tween(0, 300, 2400, setEps, tok)) return;
+    if (!await sleep(2600, tok)) return;
+    say('③ 定量关系：ρ = 1/(nqμ_c)，载流子浓度 n 基本不变 → <b>Δμ_c/μ_c = −Δρ/ρ</b>。当前 Δρ/ρ = ' +
+        sgn(val('siP',60,S.eps).dRho*100, 3) + ' %，迁移率就反向变化同样比例 —— 看紫色载流子被散射圈“撞”的频率与滑动速度。');
+    if (!await sleep(3200, tok)) return;
+    say('④ <b>反过来加压应变</b>（ε → −300 με）：晶格被压短，ρ 与 μ_c 的变化方向也随之反转。');
     if (!await tween(300, -300, 2400, setEps, tok)) return;
-    if (!await sleep(2200, tok)) return;
-    say('⑤ 结论：<b>应力 → 晶格变形 → 能带/迁移率变化 → 电阻率变化</b>，这就是压阻效应；金属没有这个机制，只能靠几何尺寸变化。');
+    if (!await sleep(2400, tok)) return;
+    say('⑤ 结论：<b>应力 → 晶格变形 → 能带/散射变化 → 迁移率变化 → 电阻率变化</b>，这就是压阻效应；金属没有这个机制，只能靠几何尺寸变化（切到金属看 ② 行的 ρ 与 μ_c 都不动）。');
+    if (!await sleep(3200, tok)) return;
     if (!await tween(-300, 0, 1800, setEps, tok)) return;
     endDemo();
   }
 
-  /* ============ 14. 演示 3：金属 vs 半导体 ============ */
   async function demoCmp(){
     var tok = beginDemo('cmp');
     setEps(300); setMat('metal');
-    say('【<b>金属 vs 半导体</b>】固定 ε = 300 με，依次切换材料，看 K 与 ΔR/R 差多少。');
-    if (!await sleep(2400, tok)) return;
-    say('① <b>金属应变片</b>：π ≈ 0，K = 1+2μ = ' + (1 + 2*S.mu).toFixed(2) + '，ΔR/R = ' + sgn(val('metal',0).dR*100, 3) + '%（教材：金属 K = 1.5~2.0）。');
+    say('【<b>金属 vs 半导体</b>】固定 ε = 300 με，依次切换材料，看 K 与 ΔR/R 差多少（右下曲线同步显示）。');
     if (!await sleep(2600, tok)) return;
-    say('② <b>半导体硅 P 型</b>：π = 60×10⁻¹¹，πE = ' + val('siP',60).piE.toFixed(0) + '，K ≈ ' + val('siP',60).K.toFixed(0) +
-        '，ΔR/R = ' + sgn(val('siP',60).dR*100, 2) + '% —— 放大 ' + (val('siP',60).K/(1 + 2*S.mu)).toFixed(0) + ' 倍。');
+    say('① <b>金属应变片</b>：π ≈ 0，K = 1+2μ = ' + (1 + 2*S.mu).toFixed(2) + '，ΔR/R = ' + sgn(val('metal',0).dR*100, 3) +
+        ' %（教材：金属 K = 1.5~2.0）。');
+    if (!await sleep(2600, tok)) return;
+    say('② <b>半导体硅 P 型</b>：π = 60×10⁻¹¹，πE = ' + f1(val('siP',60).piE) + '，K ≈ ' + val('siP',60).K.toFixed(0) +
+        '，ΔR/R = ' + sgn(val('siP',60).dR*100, 2) + ' % —— 放大 ' + (val('siP',60).K/(1 + 2*S.mu)).toFixed(0) + ' 倍。');
     setMat('siP');
-    if (!await sleep(2600, tok)) return;
-    say('③ <b>半导体硅 N 型</b>：π = −100×10⁻¹¹，压阻系数是<b>负</b>的 → 同样受拉，ΔR/R 反而变负（' +
-        val('siN',-100).dR.toExponential(2) + '）。这说明 π 的符号由掺杂类型和晶向决定。');
+    if (!await sleep(2800, tok)) return;
+    say('③ <b>半导体硅 N 型</b>：π = −100×10⁻¹¹，压阻系数为<b>负</b> → 同样受拉，ΔR/R 反而变负（' +
+        sgn(val('siN',-100).dR*100, 2) + ' %）。说明 π 的符号由掺杂类型和晶向决定。');
     setMat('siN');
-    if (!await sleep(3000, tok)) return;
+    if (!await sleep(3200, tok)) return;
     say('④ <b>锗</b>：π = 50×10⁻¹¹、E = 1.30×10¹¹ → K ≈ ' + val('ge',50).K.toFixed(0) + '，与硅同一量级，所以硅、锗最常用。');
     setMat('ge');
-    if (!await sleep(2600, tok)) return;
-    say('⑤ <b>掺杂浓度的影响</b>：轻掺杂 π 大而 ρ 大（灵敏度高），重掺杂 π 小、ρ 小（温度稳定性好）—— 实际设计要点。');
+    if (!await sleep(2800, tok)) return;
+    say('⑤ <b>掺杂浓度的影响</b>：轻掺杂 π 大、ρ 大（灵敏度高）；重掺杂 π 小、ρ 小（温度稳定性好）—— 这是压阻式传感器的设计要点。');
     setDope('heavy');
-    if (!await sleep(2600, tok)) return;
+    if (!await sleep(2800, tok)) return;
     setDope('light'); setMat('siP'); setEps(0);
-    say('【对比结束】K 的量级：金属 1.5~2.0 ＜ 半导体 50~100，差 1~2 个数量级；而且半导体输出大，常常不需要放大就能直接测量。');
+    say('【对比结束】K 的量级：金属 1.5~2.0 ≪ 半导体 50~100，差 1~2 个数量级；而且半导体输出大，常常不需要放大就能直接测量。');
+    if (!await sleep(2800, tok)) return;
     endDemo();
   }
 
-  /* ============ 15. 演示 4：硅膜片压阻全桥（应用） ============ */
   async function demoChip(){
     var tok = beginDemo('chip');
     setMat('siP'); setDope('light'); setPress(0);
-    say('【<b>应用：硅膜片压阻全桥</b>】在硅杯膜片上扩散四个电阻：边缘两个受拉（＋ΔR），中心两个受压（−ΔR），接成全桥。');
-    if (!await sleep(3000, tok)) return;
+    say('【<b>应用：硅膜片压阻全桥</b>】在硅杯膜片上扩散四个电阻：边缘两个受拉（＋ΔR）、中心两个受压（−ΔR），接成全桥。');
+    if (!await sleep(3200, tok)) return;
     say('① 压力 0 MPa：四个电阻相等，电桥平衡，U₀ = 0。');
-    if (!await sleep(1800, tok)) return;
-    say('② <b>加压到 1.00 MPa</b>：膜片变形，边缘应变约 ' + EPS_EDGE + ' με → ΔR/R = πEε ≈ ' +
-        (Math.abs(model(EPS_EDGE,'siP',60,0.30,'light').dR)*100).toFixed(2) + '%。');
+    if (!await sleep(2000, tok)) return;
+    say('② <b>加压到 1.00 MPa</b>：膜片变形，边缘应变约 ' + CFG.epsEdge + ' με → ΔR/R = Kε ≈ ' +
+        (Math.abs(model(CFG.epsEdge,'siP',60,0.30,'light').dR)*100).toFixed(3) + ' %（K = 1+2μ+πE = 101.8）。');
     if (!await tween(0, 1, 2600, setPress, tok)) return;
-    if (!await sleep(2400, tok)) return;
-    say('③ 全桥输出 U₀ = E·(ΔR/R) = 5 V × ' + (Math.abs(model(EPS_EDGE,'siP',60,0.30,'light').dR)*100).toFixed(2) +
-        '% = <b>' + (5*Math.abs(model(EPS_EDGE,'siP',60,0.30,'light').dR)*1000).toFixed(1) + ' mV</b> —— 这就是压阻式压力传感器的典型满量程输出，<b>不需要放大</b>就能直接测量。');
+    if (!await sleep(2600, tok)) return;
+    say('③ 全桥输出 U₀ = E·(ΔR/R) = 5 V × ' + (Math.abs(model(CFG.epsEdge,'siP',60,0.30,'light').dR)*100).toFixed(3) +
+        ' % = <b>' + (5*Math.abs(model(CFG.epsEdge,'siP',60,0.30,'light').dR)*1000).toFixed(1) +
+        ' mV</b> —— 这是压阻式压力传感器的典型满量程输出，<b>不需要放大</b>就能直接测量。');
+    if (!await sleep(3200, tok)) return;
+    say('④ 两拉两压接在全桥里：灵敏度是单臂的 4 倍，而且温度变化时四个电阻同向漂移、互相抵消（恒压源供电时输出与 ΔR/R 成正比）。');
     if (!await sleep(3000, tok)) return;
-    say('④ 两拉两压接在全桥里，灵敏度是单臂的 4 倍，而且温度变化时四个电阻同向漂移、互相抵消（回看第 3 章电桥）。');
-    if (!await sleep(2800, tok)) return;
-    say('⑤ 卸载压力：U₀ 回到 0，输出与压力成正比 —— 硅膜片 + 全桥 = 最常用的压阻式压力传感器。');
+    say('⑤ 卸载压力：U₀ 回到 0 —— 输出与膜片两侧的压力差成正比。硅膜片 + 全桥 = 最常用的压阻式压力传感器。');
     if (!await tween(1, 0, 2200, setPress, tok)) return;
-    say('【演示结束】压阻式传感器灵敏度高、分辨率高、动态响应快，还能与电路集成在同一硅片上，做成智能传感器。');
+    if (!await sleep(1600, tok)) return;
+    say('【演示结束】压阻式传感器灵敏度高、分辨率高、动态响应快，还能与电路集成在同一硅片上，做成智能型传感器。');
     endDemo();
   }
 
-  /* ============ 16. 启动 ============ */
-  initMicro();
-  setMat('metal');
-  DEMOS.main.fn = demoMain; DEMOS.micro.fn = demoMicro;
-  DEMOS.cmp.fn = demoCmp;   DEMOS.chip.fn = demoChip;
-  Object.keys(DEMOS).forEach(function(k){
-    var b = $(DEMOS[k].btn);
-    if (b) b.addEventListener('click', function(){
-      if (playingKey === k){ stopDemo(); say('演示已暂停。可继续拖动滑块手动观察，或点其它演示按钮。'); }
-      else if (DEMOS[k].fn){ DEMOS[k].fn(); }
-    });
-  });
+  async function demoPoints(){
+    var tok = beginDemo('pts');
+    say('【<b>本章要点</b>】共 ' + PTS_TEXT.length + ' 条，逐条过一遍；也可点编号按钮单独回看。');
+    if (!await sleep(2000, tok)) return;
+    for (var i = 0; i < PTS_TEXT.length; i++){
+      setPt(i);
+      if (!await sleep(PTS_TEXT[i].length > 60 ? 3000 : 2400, tok)) return;
+    }
+    setPt(-1);
+    endDemo();
+  }
 
-  var q = new URLSearchParams(location.search);
-  if (q.has('mat') && MATS[q.get('mat')]) setMat(q.get('mat'));
-  if (q.has('eps')) setEps(parseFloat(q.get('eps')) || 0);
-  if (q.has('dope') && DOPE[q.get('dope')]) setDope(q.get('dope'));
-  if (q.has('press')) setPress(parseFloat(q.get('press')) || 0);
-  if (q.has('speed')){ SPEED = Math.max(0.4, Math.min(2.5, parseFloat(q.get('speed')) || 1));
-    $('speed').value = SPEED; $('speedOut').textContent = SPEED.toFixed(1) + '×'; }
-  paint();
-  var AUTO = { '1':'main', '2':'micro', '3':'cmp', '4':'chip' };
-  if (AUTO[q.get('auto')]) DEMOS[AUTO[q.get('auto')]].fn();
+  /* ============ 12. 键盘 ============ */
   document.addEventListener('keydown', function(e){
     var tag = (e.target.tagName || '').toLowerCase();
     if (tag === 'input') return;
@@ -1108,30 +1173,63 @@
     else if (e.key === '2'){ stopDemo(); setMat('siP'); }
     else if (e.key === '3'){ stopDemo(); setMat('siN'); }
     else if (e.key === '4'){ stopDemo(); setMat('ge'); }
+    else if (e.key === 'd'){ stopDemo(); setDope(S.dope === 'light' ? 'mid' : (S.dope === 'mid' ? 'heavy' : 'light')); }
     else if (e.key === ' '){
       e.preventDefault();
       if (playingKey){ stopDemo(); say('演示已暂停。'); }
-      else { var k = S.mat === 'metal' ? 'main' : 'micro'; if (DEMOS[k].fn) DEMOS[k].fn(); }
+      else { var k = (S.mat === 'metal') ? 'main' : 'micro'; if (DEMOS[k] && DEMOS[k].fn) DEMOS[k].fn(); }
     }
     else if (e.key === 'r' || e.key === 'R'){ $('reset').click(); }
   });
+
+
+  DEMOS.main  = { btn:'playMain',  label:'▶ 压阻效应',      fn:demoMain };
+  DEMOS.micro = { btn:'playMicro', label:'▶ 微观机制',      fn:demoMicro };
+  DEMOS.cmp   = { btn:'playCmp',   label:'▶ 金属 vs 半导体', fn:demoCmp };
+  DEMOS.chip  = { btn:'playChip',  label:'▶ 膜片全桥应用',   fn:demoChip };
+  DEMOS.pts   = { btn:'ptsPlay',   label:'▶ 巡览要点',      fn:demoPoints };
+  bindDemos();
+
+  /* ============ 启动：URL 参数（兼容旧版书签：?mat=siP/si_p …） ============ */
+  var MAT_ALIAS = { metal:'metal', siP:'siP', si_p:'siP', sip:'siP', siN:'siN', si_n:'siN', sin:'siN', ge:'ge' };
+  var q = new URLSearchParams(location.search);
+  if (q.has('mat')){
+    var mk = MAT_ALIAS[q.get('mat')];
+    if (mk){ S.mat = mk; S.pi = Math.round(MATS[mk].pi*1e11); S.mu = MATS[mk].mu; }
+  }
+  if (q.has('eps')) S.eps = clamp(Math.round((parseFloat(q.get('eps')) || 0)/10)*10, -500, 1000);
+  if (q.has('dope') && DOPE[q.get('dope')]) S.dope = q.get('dope');
+  if (q.has('press')) S.press = clamp(Math.round((parseFloat(q.get('press')) || 0)*100)/100, 0, 1);
+  if (q.has('pi')) S.pi = clamp(Math.round((parseFloat(q.get('pi')) || 0)/5)*5, -120, 120);
+  if (q.has('mu')) S.mu = clamp(Math.round((parseFloat(q.get('mu')) || 0.3)*100)/100, 0.20, 0.50);
+  if (q.has('speed')) SPEED = clamp(parseFloat(q.get('speed')) || 1, 0.4, 2.5);
+  $('eps').value = S.eps; $('pi').value = S.pi; $('mu').value = S.mu; $('press').value = S.press;
+  $('epsOut').textContent = S.eps + ' με';
+  $('piOut').textContent = String(S.pi);
+  $('muOut').textContent = S.mu.toFixed(2);
+  $('pressOut').textContent = S.press.toFixed(2) + ' MPa';
+  $('speed').value = SPEED; $('speedOut').textContent = SPEED.toFixed(1) + '×';
+
+  initMicro();
+  paint();
+  runMicro();
+  var AUTO = { '1':'main', '2':'micro', '3':'cmp', '4':'chip', '5':'pts' };
+  if (AUTO[q.get('auto')] && DEMOS[AUTO[q.get('auto')]].fn) DEMOS[AUTO[q.get('auto')]].fn();
+
 })();
 </script>
 
 <script>
-/* ==================== 板块布局引擎：拖动 / 缩放 / 记忆 ==================== */
+/* ==================== 板块布局引擎：拖动 / 缩放 / 记忆 ====================
+   由 _build/build.js 注入；章节的面板清单 / 记忆键 / 默认布局在构建时替换。 */
 (function(){
   "use strict";
   var BOARD = document.getElementById('board');
   var COLS  = ['colA','colB','colC'];
-  var IDS   = ['ctrlCard','lattice','fmlCard','readCard','ptsCard','cmpCard','chipCard'];
+  var IDS   = ["ctrlCard","ptsCard","lattice","chipCard","readCard","fmlCard","cmpCard"];
   var MINZ = 0.7, MAXZ = 1.6, MINCOL = 260;
-  var KEY = 'jh-piezo-layout-v1';
-  var DEF = {
-    weight: { colA:4.7, colB:3.9, colC:3.4 },
-    col: { colA:['ctrlCard','lattice'], colB:['fmlCard','readCard','ptsCard'], colC:['cmpCard','chipCard'] },
-    zoom: {}
-  };
+  var KEY = 'jh-pzr-layout-v1';
+  var DEF = {"weight":{"colA":2.9,"colB":5.2,"colC":3.9},"col":{"colA":["ctrlCard","ptsCard"],"colB":["lattice","chipCard"],"colC":["readCard","fmlCard","cmpCard"]},"zoom":{}};
   var L = null, focused = null;
   function el(id){ return document.getElementById(id); }
   function clone(o){ return JSON.parse(JSON.stringify(o)); }
@@ -1175,7 +1273,7 @@
         document.body.classList.add('layout-dragging');
         p.classList.add('sorting');
       }
-      var col = null, i, c, r;
+      var col = null, i, r;
       for (i = 0; i < COLS.length; i++){
         r = el(COLS[i]).getBoundingClientRect();
         if (e.clientX >= r.left - 6 && e.clientX <= r.right + 6){ col = COLS[i]; break; }
@@ -1278,6 +1376,54 @@
   document.querySelectorAll('.vsplit').forEach(function(sp){
     sp.addEventListener('pointerdown', function(e){ startSplit(e, sp); });
   });
+  /* ---------- 折叠：滑过上方自动折叠，回到可视区自动展开；可手动锁定 ---------- */
+  function setFold(p, on){
+    p.classList.toggle('folded', on);
+    var btn = p.querySelector('.ptool[data-act="fold"]');
+    if (btn) btn.textContent = on ? '▸' : '▾';
+  }
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var tools = p.querySelector('.ptools');
+    if (!tools) return;
+    var fb = document.createElement('button');
+    fb.className = 'ptool';
+    fb.setAttribute('data-act', 'fold');
+    fb.title = '折叠 / 展开本板块（手动折叠后不会被自动展开）';
+    fb.textContent = '▾';
+    tools.insertBefore(fb, tools.firstChild);
+    fb.addEventListener('click', function(e){
+      e.stopPropagation();
+      var folded = p.classList.contains('folded');
+      setFold(p, !folded);
+      if (!folded) p.setAttribute('data-manual', '1'); else p.removeAttribute('data-manual');
+    });
+  });
+  var ticking = false;
+  function autoFold(){
+    ticking = false;
+    var vh = window.innerHeight || 900;
+    IDS.forEach(function(id){
+      var p = el(id); if (!p) return;
+      if (!p.parentNode || p.parentNode.id !== 'colB') return;    /* 只有中间列参与自动折叠（左右两列固定不动） */
+      var r = p.getBoundingClientRect();
+      if (r.bottom < 90){                                          /* 整块滑到上方之外 → 收起 */
+        if (!p.classList.contains('folded')) setFold(p, true);
+      } else if (r.top < vh - 30 && r.bottom > 60 && !p.hasAttribute('data-manual')){
+        if (p.classList.contains('folded')) setFold(p, false);      /* 回到可视区 → 展开 */
+      }
+    });
+  }
+  function onScrollOrWheel(){
+    if (!ticking){ ticking = true; requestAnimationFrame(autoFold); }
+  }
+  window.addEventListener('scroll', onScrollOrWheel, { passive:true });
+  window.addEventListener('wheel', onScrollOrWheel, { passive:true });
+  window.addEventListener('touchmove', onScrollOrWheel, { passive:true });
+  window.addEventListener('resize', function(){ if (window.__repack) window.__repack(); });
+  setTimeout(autoFold, 400);
+  window.__autoFold = autoFold;
+
   var lr = document.getElementById('layReset');
   if (lr) lr.addEventListener('click', reset);
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && focused) toggleFocus(focused); });
@@ -1286,6 +1432,7 @@
   applyAll();
   window.addEventListener('load', applyAll);
 })();
+
 </script>
 </body>
 </html>

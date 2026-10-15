@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第11章 数字式传感器 · 动态演示｜传感器原理与技术</title>
+<style>
+/* =====================================================================
+   公共样式（各章通用）· 由 _build/build.js 注入到每个单文件 HTML 的样式表顶部
+   与第4章保持同一套类名与观感；章节特有的语义色 / 版式写在章节模块的 extraCss 里
+   ===================================================================== */
+:root{
+  --jhu:#0e4a8e; --jhu2:#0a2f5c; --ink:#12233a; --muted:#5b6b80;
+  --line:#d5dfec; --bg:#eef3f9; --card:#ffffff;
+  --flux:#0d8b7f;      /* 磁通 / 场线（第4章起沿用） */
+  --cu:#c2703a;        /* 线圈 / 铜 */
+  --iron:#4b6b8f;      /* 铁芯 / 铁磁体 */
+  --gapm:#e08a1e;      /* 气隙 / 有效量 */
+  --eddy:#7c3aed;      /* 涡流 / 强调（紫） */
+  --hot:#d94a3d; --ok:#0f9d58;
+  --grid:rgba(14,74,142,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Source Han Sans SC","Hiragino Sans GB",system-ui,sans-serif;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    var(--bg);
+  color:var(--ink); font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+header{
+  background:linear-gradient(120deg,var(--jhu) 0%,var(--jhu2) 100%);
+  color:#fff; padding:8px 24px; display:flex; align-items:center; gap:16px;
+  box-shadow:0 3px 14px rgba(10,47,92,.28);
+}
+header h1{font-size:22px; margin:0; letter-spacing:1px; font-weight:700}
+header .sub{font-size:13px; opacity:.9; border-left:1px solid rgba(255,255,255,.45); padding-left:13px}
+header .right{margin-left:auto; text-align:right; font-size:12.5px; opacity:.92; line-height:1.3}
+header .right b{font-size:15px; letter-spacing:2px}
+#laybar{display:flex; align-items:center; gap:10px; padding:3px 20px; font-size:12px; color:#41566f;
+        background:#e4edf8; border-bottom:1px solid #cfdcec}
+#laybar button{border:1px solid #a9c1dd; background:#fff; color:var(--jhu); border-radius:7px;
+               font-size:12px; font-weight:700; padding:2px 10px; cursor:pointer; font-family:inherit}
+#laybar button:hover{background:#f2f7fd}
+#laybar .hint{color:#6b7d92}
+#boardWrap{padding:6px 14px 2px}
+#board{display:flex; align-items:flex-start}
+.col{display:flex; flex-direction:column; gap:6px; min-width:0; flex-grow:1; flex-basis:0}
+.colhead{font-size:11.5px; font-weight:700; color:#8296ad; letter-spacing:.4px; padding:0 3px 2px; border-bottom:1px dashed #dbe5f0}
+.vsplit{flex:0 0 13px; align-self:stretch; cursor:col-resize; position:relative; touch-action:none}
+.vsplit::before{content:""; position:absolute; left:5.5px; top:8px; bottom:8px; width:2px; border-radius:2px; background:#cfdcec}
+.vsplit:hover::before{background:var(--jhu); width:3px; left:5px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:13px;
+      box-shadow:0 2px 10px rgba(18,35,58,.06); padding:5px 9px}
+.card h2{margin:0 0 4px; font-size:14.5px; color:var(--jhu); font-weight:700; display:flex; align-items:center; gap:7px}
+.card h2::before{content:""; width:4px; height:15px; border-radius:3px; background:var(--jhu)}
+.card h2 small{font-weight:400; color:var(--muted); font-size:12px}
+.panel{position:relative; box-sizing:border-box}
+.panel > .phead{display:flex; align-items:center; gap:6px; cursor:move; touch-action:none; user-select:none; margin:-1px 0 4px}
+.panel > .phead h2{margin:0; flex:1; min-width:0; cursor:move}
+.ptools{display:flex; gap:3px; flex:none}
+.ptool{width:21px; height:21px; padding:0; line-height:1; border:1px solid var(--line); background:#fff;
+       color:var(--jhu); border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit}
+.ptool:hover{background:#eef4fc; border-color:#9fbedd}
+.panel.sorting{opacity:.6; outline:2px dashed var(--jhu); outline-offset:2px; pointer-events:none}
+.panel.focused{position:fixed; left:14px; right:14px; top:80px; bottom:14px; z-index:300; overflow:auto;
+               box-shadow:0 18px 50px rgba(10,47,92,.38); border-color:var(--jhu)}
+#focusBack{position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(10,30,55,.34); z-index:290; display:none}
+body.has-focus #focusBack{display:block}
+body.layout-dragging{user-select:none}
+svg{display:block; width:100%; height:auto}
+.tiny{font-size:12px; fill:var(--muted); color:var(--muted)}
+/* ---- 控件 ---- */
+.ctrl{display:flex; flex-direction:column; gap:2px; margin-bottom:2px}
+.ctrl .row{display:flex; align-items:center; gap:7px}
+.ctrl .name{font-size:12.8px; color:var(--muted); width:118px; flex:none}
+.ctrl .name b{color:var(--ink); font-size:14px}
+.ctrl output{font-size:18px; font-weight:800; min-width:96px; text-align:right; font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none; appearance:none; height:8px; border-radius:5px; background:#dce6f2; outline:none; flex:1; min-width:70px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:21px; height:21px; border-radius:50%;
+      background:#fff; border:3px solid var(--jhu); cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.seg{display:flex; gap:6px; flex-wrap:wrap}
+.seg button{flex:1 1 0; min-width:96px; padding:5px 8px; border-radius:9px; border:1px solid var(--line);
+            background:#fff; cursor:pointer; font-size:13px; font-weight:700; color:#33506f; font-family:inherit; line-height:1.3}
+.seg button small{display:block; font-weight:400; font-size:11px; color:var(--muted)}
+.seg button:hover{border-color:#9fbedd}
+.seg button.on{background:var(--jhu); border-color:var(--jhu); color:#fff}
+.seg button.on small{color:rgba(255,255,255,.85)}
+/* 紧凑小按钮（章节里的型式/模式细分按钮） */
+.seg.tight button{min-width:66px; flex:1 1 66px; padding:3px 4px; font-size:11.5px; line-height:1.25}
+.seg.tight button small{font-size:10px}
+.step{border:1px solid var(--line); background:#fff; color:var(--jhu); width:28px; height:28px;
+      border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; line-height:1}
+.actions{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap}
+.actions button{flex:1 1 92px; padding:5px 4px; border-radius:9px; border:1px solid var(--jhu);
+                background:var(--jhu); color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;
+                font-family:inherit; white-space:nowrap}
+.actions button.ghost{background:#fff; color:var(--jhu)}
+.actions button.running{background:var(--hot); border-color:var(--hot); color:#fff}
+.actions button:hover{filter:brightness(1.07)}
+.narrate{margin-top:4px; border-left:5px solid var(--flux); background:#f2fbf9; border-radius:0 10px 10px 0;
+         padding:3px 10px; font-size:12.4px; line-height:1.34; min-height:26px; color:#0a5f57}
+/* ---- 读数 ---- */
+.big{display:flex; align-items:baseline; gap:9px; background:linear-gradient(90deg,#f2f7ff,#fff);
+     border:1px solid #d9e5f5; border-radius:12px; padding:3px 12px}
+.big .cap{font-size:13px; color:var(--muted); margin-right:auto}
+.big .num{font-size:23px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
+.big .unit{font-size:15px; font-weight:700; color:var(--muted)}
+.kv{display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:5px}
+.kv .box{border:1px dashed var(--line); border-radius:9px; padding:2px 6px; font-size:10.5px; color:var(--muted)}
+.kv .box b{display:block; font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:1px}
+.fine{font-size:10.4px; color:var(--muted); margin-top:5px; line-height:1.5; font-variant-numeric:tabular-nums}
+.fine b{color:var(--ink)}
+/* ---- 比例条 / 图例 ---- */
+.rmbar{display:flex; height:15px; border-radius:5px; overflow:hidden; border:1px solid var(--line); background:#f4f8fd; margin-top:3px}
+.rmbar i{display:block; height:100%}
+.legend{display:flex; gap:8px; flex-wrap:wrap; font-size:10.4px; color:var(--muted); margin-top:1px}
+.legend i{display:inline-block; width:14px; height:9px; border-radius:2px; margin-right:5px}
+/* ---- 公式 ---- */
+.fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:10.9px; line-height:1.22; color:#16283d}
+.fml .row{display:block; border-bottom:1px dashed #e7eef7; padding:0}
+.fml .row:last-child{border-bottom:none}
+.fml .tag{display:inline-block; font-family:"Microsoft YaHei",sans-serif; font-size:11px; color:#fff;
+          background:var(--jhu); border-radius:5px; padding:0 6px; margin-right:5px; vertical-align:1px}
+.fml .tag.g{background:var(--gapm)} .fml .tag.f{background:var(--flux)} .fml .tag.v{background:var(--eddy)}
+.fml b{color:var(--hot)}
+.fml .note{font-family:"Microsoft YaHei",sans-serif; font-size:10.8px; color:var(--muted); line-height:1.4; margin-top:2px}
+.frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.88em; line-height:1.02; margin:0 .14em}
+.frac i{font-style:normal; padding:0 .3em}
+.frac b{font-weight:400; color:inherit; border-top:1.4px solid currentColor; padding:0 .3em}
+/* ---- 要点 ---- */
+ol.points{margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:4px}
+ol.points li{border:1px solid var(--line); border-left:4px solid #c8d6e6; border-radius:0 9px 9px 0;
+             padding:0 7px; font-size:10.9px; line-height:1.28; color:#3c5068; background:#fbfdff; transition:.25s}
+ol.points li.on{border-left-color:var(--ok); background:#f2fbf5; color:var(--ink); box-shadow:0 0 0 2px rgba(15,157,88,.12)}
+ol.points li .hl{color:var(--ok); font-weight:700}
+.hint{font-size:12px; color:var(--muted); margin-top:5px}
+footer{padding:3px 18px 5px; font-size:11px; color:var(--muted); line-height:1.5}
+footer b{color:var(--jhu)}
+.actions button.ptsB{flex:0 0 26px; padding:2px 0; font-size:11px; border-radius:6px}   /* 要点编号按钮：特异性需高于 .actions button */
+/* 左右两列都吸附固定；只有中间列（结构+读数）随页面滚动 */
+#colA, #colC{position:sticky; top:4px; align-self:flex-start;
+             max-height:calc(100vh - 10px); overflow-y:auto; overscroll-behavior:contain}
+#colA::-webkit-scrollbar, #colC::-webkit-scrollbar{width:6px}
+#colA::-webkit-scrollbar-thumb, #colC::-webkit-scrollbar-thumb{background:#c3d3e6; border-radius:3px}
+/* 中间列底部留白：让最后一张卡片也能滚动到屏幕中间 */
+#colB{padding-bottom:52vh}
+.panel > .pbody{max-height:2600px; overflow:hidden; transition:max-height .22s ease, opacity .18s ease}
+.panel.folded > .pbody{max-height:0 !important; opacity:0}
+.panel.folded{border-color:#bcd0e5; background:#f8fbff}
+.panel.folded > .phead h2{color:#5b6b80}
+.ptool[data-act="fold"]{font-size:11px}
+.readlabel{font-size:12.5px; font-weight:700; color:#5b6b80; margin:7px 0 3px; padding-top:6px; border-top:1px dashed #dbe5f0}
+.readwrap svg{max-height:196px}
+.pbody > svg{max-height:300px}
+.pbody > svg + svg{max-height:196px}
+@media (max-width:1200px){ #boardWrap{min-width:1180px} }
+
+  /* ---- 第11章语义色 ---- */
+  :root{ --disk:#7d8fa6; --gr:#2b6cb0; --grv:#e08a1e; --mo:#0d8b7f; }
+</style>
+</head>
+<body>
+<header>
+  <h1>第 11 章 数字式传感器</h1>
+  <div class="sub">光电编码器（增量 / 绝对）· 光栅莫尔条纹 · 磁栅 · 感应同步器 | 动态演示</div>
+  <div class="right"><b>江汉大学</b><br>传感器原理与技术</div>
+</header>
+<div id="laybar">
+  <span style="font-weight:700;color:#0e4a8e">板块布局</span>
+  <button id="layReset">↺ 恢复默认（一屏）</button>
+  <span class="hint"><b>左右两列固定不动</b>（左＝型式与输入量＋要点，右＝数据/曲线/公式），只有<b>中间列</b>随页面滚动；每块标题栏的 <b>▾</b> 可折叠该板块；<b>滚轮下滑时滑过上方的那几块会自动收起、滚回来自动展开</b>（手动折起的不会被自动展开）；拖动<b>标题栏</b>可换列换位、拖<b>竖条</b>调列宽、<b>＋ －</b> 缩放、<b>⛶</b> 全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
+</div>
+
+<div id="boardWrap">
+<main id="board">
+
+  <!-- ================= 左列 ================= -->
+  <div class="col" id="colA">
+    <div class="colhead">① 型式与输入量</div>
+
+
+    <section class="card panel" id="ctrlCard">
+      <div class="phead">
+        <h2>器件与输入量</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="ctrl">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>器件型式</b></span>
+          <div class="seg tight" id="segType" style="flex:1">
+            <button data-type="incr" class="on">增量编码器<small>A/B/Z 脉冲</small></button>
+            <button data-type="abs">绝对编码器<small>码盘定码</small></button>
+            <button data-type="grating">光栅<small>莫尔条纹</small></button>
+            <button data-type="mag">磁栅<small>磁尺＋磁头</small></button>
+            <button data-type="sync">感应同步器<small>互感随位置变</small></button>
+          </div>
+        </div>
+        <div class="hint" id="typeHint">增量式：外圈计脉冲、内圈辨向（内外圈错开半缝宽）、零位狭缝计圈；输出 A/B 两相（相差 π/2）与零位 C 相。分辨力 α = 360°/(m·n)。</div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b id="xName">转角 φ</b><br><span class="tiny" id="xTxt">一圈 360°（可转 2 圈）</span></span>
+          <button class="step" id="xM" title="减小">−</button>
+          <input type="range" id="x" min="0" max="100" step="1" value="0">
+          <button class="step" id="xP" title="增大">＋</button>
+          <output id="xOut">0.0°</output>
+        </div>
+      </div>
+      <div class="ctrl" id="rowTh" style="display:none">
+        <div class="row">
+          <span class="name"><b>栅线夹角 θ</b><br><span class="tiny" id="thTxt">放大 28.6×</span></span>
+          <input type="range" id="th" min="0.2" max="6" step="0.1" value="2">
+          <output id="thOut">2.0°</output>
+        </div>
+      </div>
+      <div class="ctrl" id="rowDiv" style="display:none">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>细分倍频 n</b><br><span class="tiny">一个栅距内发 n 个脉冲</span></span>
+          <div class="seg tight" id="segDiv" style="flex:1">
+            <button data-div="1" class="on">×1<small id="divS1">当量 0.0879°</small></button>
+            <button data-div="2">×2<small id="divS2">当量 0.0440°</small></button>
+            <button data-div="4">×4<small id="divS4">四倍频 0.0220°</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="ctrl" id="rowCode" style="display:none">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>编码方式</b><br><span class="tiny">图11-2 两种码盘</span></span>
+          <div class="seg tight" id="segCode" style="flex:1">
+            <button data-code="bin" class="on">二进制 8-4-2-1<small>直观；交界处可能多位同翻</small></button>
+            <button data-code="gray">格雷码（循环码）<small>每次只翻 1 位</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="ctrl" id="rowProc" style="display:none">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>信号处理</b><br><span class="tiny">式 11-17 / 11-20</span></span>
+          <div class="seg tight" id="segProc" style="flex:1">
+            <button data-proc="phase" class="on">鉴相型<small>E ∝ sin(ωt+θ)</small></button>
+            <button data-proc="amp">鉴幅型<small>E ∝ cos(φ−θ)</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="ctrl" id="rowHead" style="display:none">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>磁头类型</b><br><span class="tiny">图11-19 / 11-20</span></span>
+          <div class="seg tight" id="segHead" style="flex:1">
+            <button data-head="dyn">动态磁头<small>速度响应式：静止无输出</small></button>
+            <button data-head="st" class="on">静态磁头<small>磁通响应式：静止也有输出</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="playCap" class="ghost">▶ 编码器原理</button>
+        <button id="playMoire" class="ghost">▶ 光栅莫尔条纹</button>
+        <button id="playSync" class="ghost">▶ 感应同步器</button>
+        <button id="playMag" class="ghost">▶ 磁栅与信号处理</button>
+        <button id="reset" class="ghost" style="flex:0 0 58px">↺ 复位</button>
+      </div>
+      <div class="ctrl" style="margin-top:5px">
+        <div class="row">
+          <span class="name"><b>演示速度</b><br><span class="tiny">0.4× 慢 ～ 2.5× 快</span></span>
+          <input type="range" id="speed" min="0.4" max="2.5" step="0.1" value="1">
+          <output id="speedOut">1.0×</output>
+        </div>
+      </div>
+      <div class="narrate" id="narration">初始状态：增量式光电编码器，φ = 0。四个演示按钮依次讲：编码器原理 / 光栅莫尔条纹 / 感应同步器 / 磁栅与信号处理。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="ptsCard">
+      <div class="phead">
+        <h2>本章要点</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="actions" style="margin-top:0">
+        <button id="ptsPlay" class="ghost" style="flex:0 0 98px">▶ 巡览要点</button>
+        <button id="ptsB0" class="ghost ptsB">1</button><button id="ptsB1" class="ghost ptsB">2</button>
+        <button id="ptsB2" class="ghost ptsB">3</button><button id="ptsB3" class="ghost ptsB">4</button>
+        <button id="ptsB4" class="ghost ptsB">5</button><button id="ptsB5" class="ghost ptsB">6</button>
+        <button id="ptsB6" class="ghost ptsB">7</button><button id="ptsB7" class="ghost ptsB">8</button>
+        <button id="ptsB8" class="ghost ptsB">9</button><button id="ptsB9" class="ghost ptsB">10</button>
+      </div>
+      <ol class="points" id="points"></ol>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colA" data-right="colB" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 中列 ================= -->
+  <div class="col" id="colB">
+    <div class="colhead">② 结构动态 ＋ 输出读数（成对显示）</div>
+
+
+    <section class="card panel" id="structCard">
+      <div class="phead">
+        <h2>结构动态 <small id="stSub">增量式光电编码器：码盘 A/B/Z</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="st" viewBox="0 0 700 300" role="img" aria-label="数字式传感器结构动态">
+        <line x1="404" y1="16" x2="404" y2="286" stroke="#e6edf6" stroke-width="1.5" stroke-dasharray="4 5"/>
+        <text id="stL" x="24" y="18" font-size="12" font-weight="700" fill="#0e4a8e">结构（示意）</text>
+        <text id="stR" x="416" y="18" font-size="12" font-weight="700" fill="#0e4a8e">信号与读数</text>
+        <!-- ================= 增量式编码器 ================= -->
+        <g id="stIncr">
+          <rect x="30" y="126" width="24" height="42" rx="5" fill="#fde68a" stroke="#c9a227" stroke-width="1.4"/>
+          <text x="42" y="184" text-anchor="middle" font-size="11" fill="#a07c14">光源</text>
+          <line x1="56" y1="146" x2="262" y2="112" stroke="#e0b52e" stroke-width="1.2" stroke-dasharray="5 4" opacity=".75"/>
+          <line x1="56" y1="152" x2="262" y2="208" stroke="#e0b52e" stroke-width="1.2" stroke-dasharray="5 4" opacity=".75"/>
+          <line x1="56" y1="140" x2="120" y2="40" stroke="#e0b52e" stroke-width="1.2" stroke-dasharray="5 4" opacity=".75"/>
+          <circle cx="150" cy="160" r="112" fill="#f7fbff" stroke="#cfdcec" stroke-width="1.4"/>
+          <g id="incDisc">
+            <g id="incRingA"></g>
+            <g id="incRingB"></g>
+            <line x1="150" y1="48" x2="150" y2="32" stroke="#d94a3d" stroke-width="5"/>
+            <line id="incPtr" x1="150" y1="160" x2="150" y2="74" stroke="#b9c9dc" stroke-width="1" stroke-dasharray="3 3"/>
+            <circle cx="150" cy="160" r="5" fill="#233b57"/>
+          </g>
+          <text x="150" y="172" text-anchor="middle" font-size="10.5" fill="#94a3b8">码盘</text>
+          <polygon points="150,28 143,16 157,16" fill="#d94a3d" opacity=".85"/>
+          <text x="164" y="26" font-size="10.5" font-weight="700" fill="#d94a3d">零位基准</text>
+          <rect x="264" y="98" width="26" height="24" rx="4" fill="#dbeafe" stroke="#2b6cb0" stroke-width="1.3"/>
+          <circle id="incLampA" cx="277" cy="110" r="4" fill="#2b6cb0"/>
+          <text x="296" y="114" font-size="11" font-weight="700" fill="#2b6cb0">A 相</text>
+          <rect x="264" y="196" width="26" height="24" rx="4" fill="#dbeafe" stroke="#2b6cb0" stroke-width="1.3"/>
+          <circle id="incLampB" cx="277" cy="208" r="4" fill="#c2703a"/>
+          <text x="296" y="212" font-size="11" font-weight="700" fill="#c2703a">B 相</text>
+          <rect x="110" y="26" width="26" height="22" rx="4" fill="#fdecec" stroke="#d94a3d" stroke-width="1.3"/>
+          <circle id="incLampZ" cx="123" cy="37" r="4" fill="#c9d6e4"/>
+          <text x="102" y="41" text-anchor="end" font-size="11" font-weight="700" fill="#d94a3d">Z 相</text>
+          <text x="24" y="250" font-size="10.5" fill="#5b6b80">外圈＝计数码道（4096 缝，图中 48 缝示意）</text>
+          <text x="24" y="266" font-size="10.5" fill="#5b6b80">内圈＝辨向码道（错开半缝宽 → B 相滞后 90°）</text>
+          <text x="416" y="44" font-size="11.5" font-weight="700" fill="#0e4a8e">全周时序（24 个方波周期示意，实际 4096）</text>
+          <text x="416" y="66" font-size="11" font-weight="700" fill="#2b6cb0">A 相</text>
+          <path id="tA" fill="none" stroke="#2b6cb0" stroke-width="2.2"/>
+          <text x="416" y="112" font-size="11" font-weight="700" fill="#c2703a">B 相</text>
+          <path id="tB" fill="none" stroke="#c2703a" stroke-width="2.2"/>
+          <text x="416" y="158" font-size="11" font-weight="700" fill="#d94a3d">Z 相</text>
+          <path id="tZ" fill="none" stroke="#d94a3d" stroke-width="2.2"/>
+          <line x1="456" y1="186" x2="686" y2="186" stroke="#9fb2c8" stroke-width="1.2"/>
+          <text x="456" y="200" font-size="10.5" fill="#5b6b80">0°</text>
+          <text x="571" y="200" text-anchor="middle" font-size="10.5" fill="#5b6b80">180°</text>
+          <text x="686" y="200" text-anchor="end" font-size="10.5" fill="#5b6b80">360°</text>
+          <line id="tCursor" x1="456" y1="36" x2="456" y2="186" stroke="#0e4a8e" stroke-width="1.4" stroke-dasharray="4 3"/>
+          <text id="incCursorTxt" x="456" y="216" font-size="11" font-weight="700" fill="#0e4a8e">φ = 0.0°</text>
+          <text id="incCnt" x="416" y="240" font-size="11.5" font-weight="700" fill="#0e4a8e">N = 0 个脉冲</text>
+          <text id="incCnt2" x="416" y="258" font-size="10.5" fill="#5b6b80">α = 360°/(m·n) = 0.0879°</text>
+        </g>
+        <!-- ================= 绝对式编码器 ================= -->
+        <g id="stAbs" style="display:none">
+          <circle cx="150" cy="164" r="116" fill="#f7fbff" stroke="#cfdcec" stroke-width="1.4"/>
+          <g id="absDisc">
+            <g id="absTracks"></g>
+            <line x1="150" y1="164" x2="150" y2="52" stroke="#b9c9dc" stroke-width="1" stroke-dasharray="3 3"/>
+            <circle cx="150" cy="164" r="5" fill="#233b57"/>
+          </g>
+          <rect x="136" y="52" width="28" height="104" rx="7" fill="#ffffff" opacity=".93" stroke="#9fbedd" stroke-width="1.2"/>
+          <circle id="absL0" cx="150" cy="68" r="5.5" fill="#c9d6e4" stroke="#5b6b80" stroke-width="1"/>
+          <circle id="absL1" cx="150" cy="90" r="5.5" fill="#c9d6e4" stroke="#5b6b80" stroke-width="1"/>
+          <circle id="absL2" cx="150" cy="112" r="5.5" fill="#c9d6e4" stroke="#5b6b80" stroke-width="1"/>
+          <circle id="absL3" cx="150" cy="134" r="5.5" fill="#c9d6e4" stroke="#5b6b80" stroke-width="1"/>
+          <text x="150" y="44" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2b6cb0">固定读出头：4 个光电元件（每位一个）</text>
+          <text x="24" y="262" font-size="10.5" fill="#5b6b80">深色扇区＝该码位为 1；码盘转过一个扇区，读出的码字就换一组</text>
+          <text x="416" y="44" font-size="11.5" font-weight="700" fill="#0e4a8e">读出头处各码位的输出</text>
+          <circle id="absR0" cx="430" cy="72" r="8" fill="#c9d6e4" stroke="#5b6b80" stroke-width="1.1"/>
+          <text x="446" y="77" font-size="12" font-weight="700" fill="#33506f">位权 8</text>
+          <text id="absB0" x="504" y="77" font-size="12.5" font-weight="800" fill="#0e4a8e">0</text>
+          <circle id="absR1" cx="430" cy="100" r="8" fill="#c9d6e4" stroke="#5b6b80" stroke-width="1.1"/>
+          <text x="446" y="105" font-size="12" font-weight="700" fill="#33506f">位权 4</text>
+          <text id="absB1" x="504" y="105" font-size="12.5" font-weight="800" fill="#0e4a8e">0</text>
+          <circle id="absR2" cx="430" cy="128" r="8" fill="#c9d6e4" stroke="#5b6b80" stroke-width="1.1"/>
+          <text x="446" y="133" font-size="12" font-weight="700" fill="#33506f">位权 2</text>
+          <text id="absB2" x="504" y="133" font-size="12.5" font-weight="800" fill="#0e4a8e">0</text>
+          <circle id="absR3" cx="430" cy="156" r="8" fill="#c9d6e4" stroke="#5b6b80" stroke-width="1.1"/>
+          <text x="446" y="161" font-size="12" font-weight="700" fill="#33506f">位权 1</text>
+          <text id="absB3" x="504" y="161" font-size="12.5" font-weight="800" fill="#0e4a8e">0</text>
+          <rect x="560" y="62" width="120" height="106" rx="8" fill="#f2f7fd" stroke="#d5dfec"/>
+          <text x="620" y="82" text-anchor="middle" font-size="10.5" fill="#5b6b80">码字（4 位）</text>
+          <text id="absBin" x="620" y="108" text-anchor="middle" font-size="15" font-weight="800" fill="#0e4a8e">0000</text>
+          <text x="620" y="124" text-anchor="middle" font-size="10" fill="#94a3b8">二进制 8-4-2-1</text>
+          <text id="absGray" x="620" y="148" text-anchor="middle" font-size="15" font-weight="800" fill="#c2703a">0000</text>
+          <text x="620" y="164" text-anchor="middle" font-size="10" fill="#94a3b8">格雷码（循环码）</text>
+          <text id="absInfo" x="416" y="214" font-size="11.5" font-weight="700" fill="#0e4a8e">φ = 0.0°，扇区 k = 0 / 16（每扇区 22.5°）</text>
+          <text id="absInfo2" x="416" y="238" font-size="11" fill="#5b6b80">α = 360°/2ⁿ：n = 4 → 22.5°</text>
+          <text id="absInfo3" x="416" y="260" font-size="10.5" fill="#94a3b8">当前按二进制 8-4-2-1 绘制</text>
+        </g>
+        <!-- ================= 光栅传感器 ================= -->
+        <g id="stGrating" style="display:none">
+          <text x="24" y="34" font-size="10.5" fill="#5b6b80">莫尔条纹：亮带＝两光栅栅线重合处，暗带＝栅线错开半栅距（栅线已放大示意）</text>
+          <rect x="56" y="42" width="282" height="212" rx="8" fill="#fbfdff" stroke="#cfdcec" stroke-width="1.3"/>
+          <g id="grBands"></g>
+          <g id="grScale"></g>
+          <g id="grInd"></g>
+          <rect x="30" y="52" width="22" height="22" rx="4" fill="#fde68a" stroke="#c9a227" stroke-width="1.3"/>
+          <text x="41" y="88" text-anchor="middle" font-size="10.5" fill="#a07c14">光源</text>
+          <line x1="52" y1="66" x2="300" y2="152" stroke="#e0b52e" stroke-width="1.2" stroke-dasharray="5 4" opacity=".7"/>
+          <rect id="grPD1" x="300" y="150" width="26" height="18" rx="4" fill="#dbeafe" stroke="#2b6cb0" stroke-width="1.2"/>
+          <text x="312" y="188" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2b6cb0">1</text>
+          <rect id="grPD2" x="300" y="182" width="26" height="18" rx="4" fill="#dbeafe" stroke="#2b6cb0" stroke-width="1.2"/>
+          <text x="312" y="220" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2b6cb0">2</text>
+          <line x1="344" y1="100" x2="344" y2="180" stroke="#e08a1e" stroke-width="2"/>
+          <line id="grDimT1" x1="337" y1="100" x2="351" y2="100" stroke="#e08a1e" stroke-width="2"/>
+          <line id="grDimT2" x1="337" y1="180" x2="351" y2="180" stroke="#e08a1e" stroke-width="2"/>
+          <text x="356" y="144" font-size="10.5" font-weight="700" fill="#e08a1e">B_H</text>
+          <text x="356" y="158" font-size="10" fill="#94a3b8">两个光电元件</text>
+          <text x="356" y="170" font-size="10" fill="#94a3b8">相隔 B_H/4</text>
+          <text id="grBH" x="196" y="272" text-anchor="middle" font-size="11.5" font-weight="700" fill="#e08a1e">B_H = 0.573 mm（放大 28.6×）</text>
+          <text x="416" y="44" font-size="11.5" font-weight="700" fill="#0e4a8e">光电元件输出电压与位移（图11-12）</text>
+          <line x1="424" y1="120" x2="686" y2="120" stroke="#e6edf6" stroke-width="1.2"/>
+          <path id="grU0" fill="none" stroke="#0d8b7f" stroke-width="2.6"/>
+          <line id="grCur" x1="424" y1="60" x2="424" y2="150" stroke="#0e4a8e" stroke-width="1.4" stroke-dasharray="4 3"/>
+          <circle id="grDot" cx="424" cy="120" r="5" fill="#d94a3d" stroke="#fff" stroke-width="1.6"/>
+          <text id="grUTxt" x="416" y="172" font-size="12" font-weight="800" fill="#0d8b7f">u₀ = U₀ + U_m sin(2πx/W)</text>
+          <text id="grUTxt2" x="416" y="196" font-size="11" fill="#5b6b80">相位 2πx/W = 0°</text>
+          <text id="grUTxt3" x="416" y="220" font-size="11" fill="#5b6b80">移动一个栅距 W → 光强变化一个周期</text>
+          <text id="grUTxt4" x="416" y="244" font-size="10.5" fill="#94a3b8">细分：一个周期内发 n 个脉冲 → 当量 W/n</text>
+          <text id="grUTxt5" x="416" y="266" font-size="10.5" fill="#94a3b8">脉冲数 n = x/W（可逆计数器计数）</text>
+        </g>
+        <!-- ================= 磁栅传感器 ================= -->
+        <g id="stMag" style="display:none">
+          <text x="24" y="34" font-size="10.5" fill="#5b6b80">磁尺（局部放大：非导磁尺基＋磁性涂层，录制交替 N/S 磁信号，节距 W）</text>
+          <rect x="38" y="150" width="344" height="36" rx="5" fill="#eef4fb" stroke="#cfdcec" stroke-width="1.2"/>
+          <g id="magStrip"></g>
+          <rect x="38" y="150" width="344" height="36" rx="5" fill="none" stroke="#cfdcec" stroke-width="1.2"/>
+          <line x1="120" y1="194" x2="120" y2="208" stroke="#e08a1e" stroke-width="2"/>
+          <line x1="154" y1="194" x2="154" y2="208" stroke="#e08a1e" stroke-width="2"/>
+          <line x1="120" y1="201" x2="154" y2="201" stroke="#e08a1e" stroke-width="2"/>
+          <text x="162" y="207" font-size="10.5" font-weight="700" fill="#e08a1e">W = 0.2 mm</text>
+          <g id="magHeadSt">
+            <rect x="186" y="64" width="36" height="58" rx="5" fill="#dfe9f5" stroke="#4b6b8f" stroke-width="1.4"/>
+            <rect x="228.5" y="64" width="36" height="58" rx="5" fill="#dfe9f5" stroke="#4b6b8f" stroke-width="1.4"/>
+            <rect x="191" y="76" width="26" height="10" rx="3" fill="#c2703a" opacity=".9"/>
+            <rect x="191" y="96" width="26" height="10" rx="3" fill="#0d8b7f" opacity=".9"/>
+            <rect x="233.5" y="76" width="26" height="10" rx="3" fill="#c2703a" opacity=".9"/>
+            <rect x="233.5" y="96" width="26" height="10" rx="3" fill="#0d8b7f" opacity=".9"/>
+            <text x="204" y="58" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4b6b8f">磁头 1</text>
+            <text x="246" y="58" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4b6b8f">磁头 2</text>
+            <line x1="178" y1="72" x2="190" y2="80" stroke="#c2703a" stroke-width="1.2"/>
+            <text x="174" y="74" text-anchor="end" font-size="10" fill="#c2703a">激励绕组</text>
+            <line x1="178" y1="100" x2="190" y2="100" stroke="#0d8b7f" stroke-width="1.2"/>
+            <text x="174" y="103" text-anchor="end" font-size="10" fill="#0d8b7f">输出绕组</text>
+          </g>
+          <g id="magHeadDyn" style="display:none">
+            <rect x="186" y="64" width="36" height="58" rx="5" fill="#dfe9f5" stroke="#4b6b8f" stroke-width="1.4"/>
+            <rect x="191" y="86" width="26" height="10" rx="3" fill="#0d8b7f" opacity=".9"/>
+            <text x="204" y="58" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4b6b8f">动态磁头</text>
+            <line x1="178" y1="90" x2="190" y2="90" stroke="#0d8b7f" stroke-width="1.2"/>
+            <text x="174" y="93" text-anchor="end" font-size="10" fill="#0d8b7f">一组绕组</text>
+          </g>
+          <line x1="196" y1="122" x2="196" y2="150" stroke="#d94a3d" stroke-width="1.6"/>
+          <text x="192" y="140" text-anchor="end" font-size="9.5" fill="#d94a3d">气隙</text>
+          <line x1="204" y1="134" x2="246" y2="134" stroke="#7c3aed" stroke-width="1.6" stroke-dasharray="4 3"/>
+          <line x1="204" y1="129" x2="204" y2="139" stroke="#7c3aed" stroke-width="1.4"/>
+          <line x1="246" y1="129" x2="246" y2="139" stroke="#7c3aed" stroke-width="1.4"/>
+          <text x="252" y="138" font-size="9.5" fill="#7c3aed">两磁头相距 (m+1/4)W → 输出相差 π/2</text>
+          <text x="24" y="252" font-size="10.5" fill="#5b6b80">漏磁通 φ = φ_m sin(2πx/W)：磁尺移过一个节距 → 磁通变化一个周期</text>
+          <text x="416" y="44" font-size="11.5" font-weight="700" fill="#0e4a8e">两磁头输出（去载波后，式 11-15）</text>
+          <line x1="424" y1="112" x2="686" y2="112" stroke="#e6edf6" stroke-width="1.2"/>
+          <line x1="424" y1="176" x2="686" y2="176" stroke="#e6edf6" stroke-width="1.2"/>
+          <path id="mgE1" fill="none" stroke="#0e4a8e" stroke-width="2.6"/>
+          <path id="mgE2" fill="none" stroke="#c2703a" stroke-width="2.6"/>
+          <line id="mgC1" x1="424" y1="80" x2="424" y2="144" stroke="#0e4a8e" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <line id="mgC2" x1="424" y1="144" x2="424" y2="208" stroke="#c2703a" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text id="mgT1" x="416" y="230" font-size="11.5" font-weight="700" fill="#0e4a8e">e₁ = U_m sin(2πx/W) = 0.000</text>
+          <text id="mgT2" x="416" y="252" font-size="11.5" font-weight="700" fill="#c2703a">e₂ = U_m cos(2πx/W) = 1.000</text>
+          <text id="mgT3" x="416" y="272" font-size="10.5" fill="#94a3b8">鉴相 u₀ = U_m sin(2πx/W ± 2ωt)；鉴幅用 e₁、e₂</text>
+        </g>
+        <!-- ================= 感应同步器 ================= -->
+        <g id="stSync" style="display:none">
+          <line x1="40" y1="36" x2="380" y2="36" stroke="#cfdcec" stroke-width="1.2"/>
+          <g id="syTicks"></g>
+          <line id="syMark" x1="40" y1="26" x2="40" y2="46" stroke="#0e4a8e" stroke-width="2.4"/>
+          <text id="syMarkTxt" x="40" y="22" font-size="10.5" font-weight="700" fill="#0e4a8e">x = 0.00 mm（第 1 个节距）</text>
+          <rect x="52" y="94" width="316" height="32" rx="6" fill="#eaf2fc" stroke="#9fbedd" stroke-width="1.2"/>
+          <g id="sySlide">
+            <g id="sySin"></g>
+            <g id="syCos"></g>
+          </g>
+          <text x="52" y="86" font-size="10.5" fill="#5b6b80">滑尺：分段绕组——正弦（蓝）/ 余弦（橙）空间相差 W/4 → π/2</text>
+          <path id="syScale" fill="none" stroke="#c2703a" stroke-width="2.4"/>
+          <text x="40" y="248" font-size="10.5" fill="#5b6b80">定尺：连续绕组（一个节距 W = 2 mm 为一个周期）</text>
+          <line x1="86" y1="232" x2="86" y2="240" stroke="#e08a1e" stroke-width="2"/>
+          <line x1="154" y1="232" x2="154" y2="240" stroke="#e08a1e" stroke-width="2"/>
+          <line x1="86" y1="236" x2="154" y2="236" stroke="#e08a1e" stroke-width="2"/>
+          <text x="120" y="232" text-anchor="middle" font-size="10.5" font-weight="700" fill="#e08a1e">W = 2 mm</text>
+          <text x="24" y="272" font-size="10.5" fill="#94a3b8">定尺与滑尺互不接触；滑尺移动一个节距，互感变化一个周期</text>
+          <text id="sySigT" x="416" y="44" font-size="11.5" font-weight="700" fill="#0e4a8e">定尺感应电动势 E（鉴相：幅值不变、相位随 θ 移动）</text>
+          <line x1="424" y1="112" x2="686" y2="112" stroke="#e6edf6" stroke-width="1.2"/>
+          <text x="416" y="60" font-size="10.5" font-weight="700" fill="#5b6b80">u_s = U_m sin ωt（滑尺正弦绕组激励）</text>
+          <path id="syUs" fill="none" stroke="#9fb2c8" stroke-width="1.8" stroke-dasharray="5 4"/>
+          <text x="416" y="146" font-size="10.5" font-weight="700" fill="#5b6b80">E = kωU_m sin(ωt + θ)</text>
+          <path id="syE" fill="none" stroke="#0d8b7f" stroke-width="2.6"/>
+          <text id="syTh" x="416" y="196" font-size="12" font-weight="800" fill="#0d8b7f">θ = 0°</text>
+          <text id="syTh2" x="416" y="220" font-size="11" fill="#5b6b80">θ = 2πx/W</text>
+          <text id="syTh3" x="416" y="244" font-size="11" fill="#5b6b80">一个节距内绝对测量</text>
+          <text id="syTh4" x="416" y="266" font-size="10.5" fill="#94a3b8">鉴幅：E = kωU_m sinωt·cos(φ−θ)，φ = θ 时 E = 0</text>
+        </g>
+        <g id="beamDots"></g>
+        <text id="stNote" x="24" y="294" font-size="10.5" fill="#94a3b8">黄点＝光路 / 磁通示意（不断流动）；拖动滑块或点演示按钮看结构变化。</text>
+      </svg>
+      </div>
+    </section>
+
+    <section class="card panel" id="readCard">
+      <div class="phead">
+        <h2>输出读数 <small id="readSub">增量式：脉冲计数</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="big">
+        <span class="cap" id="bigCap">转角 φ</span>
+        <span class="num" id="bigNum">0.0</span><span class="unit" id="bigUnit">°</span>
+      </div>
+      <div class="kv">
+        <div class="box"><span id="kv1l">计数脉冲 N</span><b id="kv1v">0</b></div>
+        <div class="box"><span id="kv2l">分辨力 α</span><b id="kv2v">0.0879°</b></div>
+        <div class="box"><span id="kv3l">零位（C 相）脉冲</span><b id="kv3v">1</b></div>
+        <div class="box"><span id="kv4l">辨向（A/B）</span><b id="kv4v">A 超前 B 90°</b></div>
+      </div>
+      <div class="fine" id="readFine">N = φ/α = 0/0.0879° = 0 个脉冲；一圈 4096 个脉冲（m = 4096 线，n = 1）。</div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colB" data-right="colC" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 右列 ================= -->
+  <div class="col" id="colC">
+    <div class="colhead">③ 公式推导 · 特性曲线 · 本章要点</div>
+
+
+    <section class="card panel" id="fmlCard">
+      <div class="phead">
+        <h2>公式推导 <small id="fmlTitle">增量式光电编码器</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody"><div class="fml" id="fmlBody"></div></div>
+    </section>
+
+    <section class="card panel" id="waveCard">
+      <div class="phead">
+        <h2>波形与辨向逻辑 <small id="wvSub">A/B 两相方波与计数脉冲</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="seg tight" id="segWave" style="margin-bottom:4px">
+        <button data-wm="ab" class="on">A/B 相与辨向<small>图11-5/11-13</small></button>
+        <button data-wm="moire">莫尔条纹四倍频<small>图11-15</small></button>
+        <button data-wm="phase">鉴相/鉴幅波形<small>式11-17/11-20</small></button>
+      </div>
+      <svg id="wv" viewBox="0 0 700 270" role="img" aria-label="波形与辨向逻辑">
+        <g id="wvAB">
+          <text x="12" y="56" font-size="11" font-weight="700" fill="#2b6cb0">u₁（A 相）</text>
+          <path id="abA" fill="none" stroke="#2b6cb0" stroke-width="2.4"/>
+          <text x="12" y="108" font-size="11" font-weight="700" fill="#c2703a">u₂（B 相）</text>
+          <path id="abB" fill="none" stroke="#c2703a" stroke-width="2.4"/>
+          <text x="12" y="160" font-size="11" font-weight="700" fill="#0f9d58">Y₁ 正向计数</text>
+          <path id="abY1" fill="none" stroke="#0f9d58" stroke-width="2.4"/>
+          <text x="12" y="212" font-size="11" font-weight="700" fill="#d94a3d">Y₂ 反向计数</text>
+          <path id="abY2" fill="none" stroke="#d94a3d" stroke-width="2.4"/>
+          <line x1="64" y1="232" x2="686" y2="232" stroke="#e6edf6" stroke-width="1.2"/>
+          <text id="abDir" x="64" y="250" font-size="11.5" font-weight="700" fill="#0e4a8e">当前：正转（滑块右移）→ 脉冲落在 u₂ 高电平上，由 Y₁ 输出</text>
+          <text id="abNote" x="64" y="266" font-size="10.5" fill="#94a3b8">u₁、u₂ 由相隔 B_H/4 的两个光电元件得到，相位差 π/2；u₂ 作与门控制电平</text>
+        </g>
+        <g id="wvMoire" style="display:none">
+          <text x="12" y="48" font-size="11" font-weight="700" fill="#0e4a8e">U_m sin φ</text>
+          <path id="moS1" fill="none" stroke="#0e4a8e" stroke-width="2.2"/>
+          <text x="12" y="86" font-size="11" font-weight="700" fill="#7c3aed">−U_m sin φ</text>
+          <path id="moS2" fill="none" stroke="#7c3aed" stroke-width="2.2"/>
+          <text x="12" y="124" font-size="11" font-weight="700" fill="#0d8b7f">U_m cos φ</text>
+          <path id="moC1" fill="none" stroke="#0d8b7f" stroke-width="2.2"/>
+          <text x="12" y="162" font-size="11" font-weight="700" fill="#c2703a">−U_m cos φ</text>
+          <path id="moC2" fill="none" stroke="#c2703a" stroke-width="2.2"/>
+          <text x="12" y="208" font-size="11" font-weight="700" fill="#d94a3d">计数脉冲</text>
+          <path id="moP" fill="none" stroke="#d94a3d" stroke-width="2.4"/>
+          <line x1="64" y1="228" x2="686" y2="228" stroke="#e6edf6" stroke-width="1.2"/>
+          <text id="moNote" x="64" y="248" font-size="11.5" font-weight="700" fill="#0e4a8e">一个栅距 W（φ = 0~2π）内发 4 个脉冲 → 四倍频，当量 W/4</text>
+          <text id="moNote2" x="64" y="266" font-size="10.5" fill="#94a3b8">φ = 2πx/W；n 倍频则一个周期发 n 个脉冲，精度提高 n 倍</text>
+        </g>
+        <g id="wvPhase" style="display:none">
+          <text x="12" y="52" font-size="11" font-weight="700" fill="#5b6b80">u_s = U_m sin ωt</text>
+          <path id="phUs" fill="none" stroke="#9fb2c8" stroke-width="2"/>
+          <text x="12" y="102" font-size="11" font-weight="700" fill="#c2703a">u_c = U_m cos ωt</text>
+          <path id="phUc" fill="none" stroke="#c2703a" stroke-width="2"/>
+          <text id="phELab" x="12" y="162" font-size="11" font-weight="700" fill="#0d8b7f">E = kωU_m sin(ωt+θ)</text>
+          <path id="phE" fill="none" stroke="#0d8b7f" stroke-width="2.8"/>
+          <line x1="64" y1="190" x2="686" y2="190" stroke="#e6edf6" stroke-width="1.2"/>
+          <text id="phT" x="64" y="212" font-size="12.5" font-weight="800" fill="#0d8b7f">θ = 2πx/W = 0°</text>
+          <text id="phT2" x="64" y="236" font-size="11" fill="#5b6b80">θ = 0 时 E 与 u_s 同相；θ = 90° 时 E 与 u_c 同相 → 相位鉴别位移</text>
+          <text id="phT3" x="64" y="258" font-size="10.5" fill="#94a3b8">比较 u_s 与 E 的过零点，即可读出 θ（一个节距内绝对测量）</text>
+        </g>
+      </svg>
+      <div class="hint" id="wvHint">单路信号只有明暗交替，无法判向；两路相差 π/2 才能辨向＋四倍频细分。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="curveCard">
+      <div class="phead">
+        <h2>特性曲线 <small id="cvSub">莫尔条纹宽度 B_H 与夹角 θ</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="seg tight" id="segCv" style="margin-bottom:4px">
+        <button data-cv="moire" class="on">B_H – θ（放大作用）<small>式11-1</small></button>
+        <button data-cv="resol">分辨角 α – 位数 n<small>360°/2ⁿ</small></button>
+      </div>
+      <svg id="cv" viewBox="0 0 700 300" role="img" aria-label="数字式传感器特性曲线">
+        <g id="cvGrid"></g>
+        <line x1="66" y1="246" x2="660" y2="246" stroke="#9fb2c8" stroke-width="1.5"/>
+        <line x1="66" y1="36" x2="66" y2="246" stroke="#9fb2c8" stroke-width="1.5"/>
+        <path id="cv1" fill="none" stroke="#d94a3d" stroke-width="3"/>
+        <path id="cv2" fill="none" stroke="#0e4a8e" stroke-width="2.2" stroke-dasharray="7 5"/>
+        <line id="cvH" x1="66" y1="246" x2="660" y2="246" stroke="#0f9d58" stroke-width="1.6" stroke-dasharray="6 4"/>
+        <line id="cvV" x1="66" y1="36" x2="66" y2="246" stroke="#0f9d58" stroke-width="1.6" stroke-dasharray="6 4"/>
+        <circle id="cvDot" r="5.5" fill="#0f9d58" stroke="#fff" stroke-width="2"/>
+        <circle id="cvDot2" r="5" fill="none" stroke="#7c3aed" stroke-width="2.4"/>
+        <text id="cvXLab" x="660" y="286" text-anchor="end" font-size="12" fill="#5b6b80">栅线夹角 θ /（°）</text>
+        <text id="cvYLab" x="18" y="30" font-size="12" fill="#5b6b80">B_H / mm</text>
+        <text id="cvMark" x="80" y="60" font-size="12" font-weight="800" fill="#0f9d58">θ = 2.0°, B_H = 0.573 mm</text>
+      </svg>
+      <div class="legend">
+        <span><i style="background:#d94a3d"></i><span id="lg1">B_H = W/(2 sin(θ/2))</span></span>
+        <span><i style="background:#0e4a8e"></i><span id="lg2">B_H ≈ W/θ（教材式 11-1）</span></span>
+        <span><i style="background:#7c3aed"></i><span id="lg3">θ = 0.1° → 放大 573×</span></span>
+        <span style="margin-left:auto" id="cvNote"></span>
+      </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+</div><!-- /#boardWrap -->
+
+<footer>
+<b>参数：</b>增量式码盘 m = 4096 缝（360°/4096 = 0.0879°），细分 n = 1/2/4；绝对式演示码盘 4 码道（360°/2⁴ = 22.5°，n = 12 → 0.0879°）；光栅栅距 W = 0.02 mm（50 线/mm）、θ = 0.2°~6°、λ = 0.9 μm；磁栅节距 W = 0.2 mm（教材只给符号 W，此处取常用值）；感应同步器节距 W = 2 mm（直线式常用值）、间隙 0.2~0.3 mm。<b>关系式：</b>α = 360°/(m·n)（增量）、α = 360°/2ⁿ（绝对）、B_H = W/(2sin(θ/2)) ≈ W/θ、x = nW、Δ = ±δ/√n、d = W²/λ、u₀ = U₀+U_m sin(2πx/W)、e₀ = kφ_m sin(2πx/W)cos2ωt、E = kωU_m sin(ωt+θ)、E = kωU_m sinωt·cos(φ−θ)。<b>课堂提问：</b>① 绝对式与增量式各适合什么场合？② 为什么辨向必须要两路相差 π/2 的信号？③ θ 越小莫尔条纹为什么越宽、放大倍数怎么算？④ 鉴相与鉴幅两种信号处理方式的区别是什么？
+</footer>
+
+<script>
+(function(){
+  "use strict";
+/* =====================================================================
+   公共运行时（各章通用）· 由 _build/build.js 注入到主脚本的最前面
+   章节代码直接使用：$ / sfmt / frac / clamp / say / sleep / tween /
+   beginDemo / stopDemo / endDemo / bindDemos
+   约定：章节必须定义 var S = { ..., demoToken:0 }；
+        演示函数写成 async，每个 await 判断返回值，结尾 endDemo()；
+        章节 jsB 里用 DEMOS.<key> = {btn:'...', label:'...', fn:demoXxx} 注册，
+        随后调用 bindDemos() 绑定按钮点击。
+   注意：不内置任何语音朗读；演示按钮只由 bindDemos() 绑定一次。
+   ===================================================================== */
+var $ = function(id){ return document.getElementById(id); };
+function sfmt(a, d){ return (a >= 0 ? '+' : '−') + Math.abs(a).toFixed(d); }
+function frac(a, b){ return '<span class="frac"><i>' + a + '</i><b>' + b + '</b></span>'; }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+var DEMOS = {}, SPEED = 1, playingKey = null;
+function say(t){ $('narration').innerHTML = t; }
+function sleep(ms, tok){
+  return new Promise(function(res){ setTimeout(function(){ res(S.demoToken === tok); }, Math.max(60, ms/SPEED)); });
+}
+function tween(from, to, dur, set, tok){
+  dur = Math.max(160, dur/SPEED);
+  return new Promise(function(res){
+    var t0 = performance.now();
+    (function step(now){
+      if (S.demoToken !== tok) return res(false);
+      var p = (now - t0)/dur;
+      if (!isFinite(p)) p = 1;
+      p = clamp(p, 0, 1);
+      var e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
+      var v = from + (to - from)*e;
+      v = (from <= to) ? Math.min(to, Math.max(from, v)) : Math.max(to, Math.min(from, v));
+      set(v);
+      if (p < 1) requestAnimationFrame(step); else res(true);
+    })(performance.now());
+  });
+}
+function resetDemoButtons(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b){ b.textContent = DEMOS[k].label; b.classList.remove('running'); }
+  });
+}
+function stopDemo(){ S.demoToken++; playingKey = null; resetDemoButtons(); }
+function beginDemo(key){
+  stopDemo(); playingKey = key;
+  var d = DEMOS[key], b = d && $(d.btn);
+  if (b){ b.textContent = '⏸ 暂停演示'; b.classList.add('running'); }
+  return ++S.demoToken;
+}
+function endDemo(){ playingKey = null; resetDemoButtons(); }
+function bindDemos(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b) b.addEventListener('click', function(){
+      if (playingKey === k){ stopDemo(); say('演示已暂停。可继续拖动滑块手动观察，或点其它演示按钮。'); }
+      else if (DEMOS[k].fn){ DEMOS[k].fn(); }
+    });
+  });
+}
+(function(){
+  var spd = $('speed');
+  if (spd) spd.addEventListener('input', function(){
+    SPEED = parseFloat(this.value) || 1;
+    $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  });
+})();
+
+
+  /* ============ 1. 物理参数与状态 ============ */
+  var CFG = {
+    mInc: 4096,        /* 增量式码盘外圈刻线数（360°/4096 = 0.0879°） */
+    nAbs: 4,           /* 演示码盘码道数（图11-2 四位码盘 → 每扇区 22.5°） */
+    nAbsBig: 12,       /* 教材口径：n 码道分辨角 360°/2ⁿ；12 位 → 0.0879° */
+    nAbsMax: 23,       /* 我国已有 23 位光电编码器 */
+    Wgr: 0.02,         /* 光栅栅距 0.02 mm（50 线/mm） */
+    lam: 0.9,          /* 光源波长 0.9 μm（红外发光二极管） */
+    dlt: 0.5,          /* 单条刻线误差 δ = 0.5 μm（用于式 11-3 误差平均） */
+    Wmag: 0.2,         /* 磁栅节距 0.2 mm（教材只给符号 W，此处取常用值） */
+    Wsyn: 2,           /* 感应同步器节距 2 mm（直线式常用值） */
+    strokeLin: 10      /* 线位移量程 10 mm */
+  };
+  var TYPES = {
+    incr: { name:'增量式光电编码器', hint:'增量式：外圈计脉冲、内圈辨向（内外圈错开半缝宽）、零位狭缝计圈；输出 A/B 两相（相差 π/2）与零位 C 相。分辨力 α = 360°/(m·n)，m 为刻线数、n 为细分倍数；断电后信息丢失。' },
+    abs:  { name:'绝对式光电编码器', hint:'绝对式：n 条码道配 n 个光电元件，任意位置输出固定编码，360° 内绝对测量、断电不丢失；分辨角 α = 360°/2ⁿ（n = 5 → 11.25°）。格雷码可避免多位同时翻转的读数粗误差。' },
+    grating: { name:'光栅传感器', hint:'光栅：标尺光栅与指示光栅以小夹角 θ 叠合，产生莫尔条纹。θ 越小条纹越宽，B_H ≈ W/θ —— 栅距被放大 1/θ 倍；分辨力即栅距 W，细分后当量 W/n。' },
+    mag: { name:'磁栅传感器', hint:'磁栅：磁尺录制节距 W 的磁信号，磁头读取。动态磁头（速度响应式）静止无输出；静态磁头（磁通响应式）静止也有输出，输出频率为电源频率的 2 倍。' },
+    sync: { name:'感应同步器', hint:'感应同步器：定尺连续绕组与滑尺正弦/余弦绕组（空间相差 π/2）的互感随位置变化。一个节距内绝对测量、多节距有误差平均效应，可拼接测长。' }
+  };
+  var S = { type:'incr', x:0, th:2, div:1, code:'bin', proc:'phase', head:'st', wmode:null, cv:'moire', dir:1, demoToken:0 };
+
+  /* ============ 2. 模型（纯函数，不碰 DOM） ============ */
+  function isLine(){ return S.type === 'grating' || S.type === 'mag' || S.type === 'sync'; }
+  function phiDeg(){ return (S.type === 'incr' ? 720 : 360)*S.x/100; }      /* 转角（°） */
+  function xmm(){ return CFG.strokeLin*S.x/100; }                          /* 线位移（mm） */
+  function WdegInc(){ return 360/CFG.mInc; }                               /* 一条缝隙对应角 0.0879° */
+  function alphaIncr(){ return 360/(CFG.mInc*S.div); }                     /* 分辨力 α = 360/(m·n) */
+  function alphaAbs(n){ return 360/Math.pow(2, n); }                       /* 分辨角 α = 360/2ⁿ */
+  function thRad(){ return S.th*Math.PI/180; }
+  function moireB(){ return CFG.Wgr/(2*Math.sin(thRad()/2)); }             /* 式 11-1 精确式 */
+  function moireAppx(){ return CFG.Wgr/thRad(); }                          /* 式 11-1 近似式 W/θ */
+  function magnify(){ return 1/thRad(); }                                  /* 位移放大倍数 ≈ 1/θ */
+  function fringeN(){ return xmm()/CFG.Wgr; }                              /* 条纹数 n = x/W */
+  function grPhase(){ return 2*Math.PI*(xmm()/CFG.Wgr % 1); }              /* 式 11-5 相位 2πx/W */
+  function syncTheta(){ return 2*Math.PI*xmm()/CFG.Wsyn; }                 /* 式 11-16 θ = 2πx/W */
+  function magPhase(){ return 2*Math.PI*(xmm()/CFG.Wmag % 1); }            /* 式 11-10 相位 */
+  function absK(){ return Math.floor(((phiDeg() + 11.25) % 360)/22.5) % 16; }  /* 当前扇区（码盘逆时针转过 φ） */
+  function codeVal(k){ return (S.code === 'gray') ? (k ^ (k >> 1)) : k; }
+  function bitStr4(v){ var s = '', i; for (i = 3; i >= 0; i--) s += ((v >> i) & 1); return s; }
+  function dirTxt(){ return S.dir > 0 ? '正转' : '反转'; }
+  /* 增量式 A/B 相电平（外圈刻线、内圈错开半缝宽 → 相差 π/2）
+     与结构区全周时序图同源：一圈 24 个周期（示意），实际 4096 个 */
+  function lvlA(){ var u = (phiDeg() % 360)/360; return (((u*24) % 1) + 1) % 1 < 0.5; }
+  function lvlB(){ var u = (phiDeg() % 360)/360; return (((u*24 + 0.25*S.dir) % 1) + 1) % 1 < 0.5; }
+  function lvlZ(){ var u = (phiDeg() % 360)/360; return u < 0.004 || u > 0.996; }
+
+  /* ============ 3. 光路 / 磁通粒子动画 ============ */
+  var BEAM = { segs:[], els:null, phase:0 };
+  function segLen(s){ var dx = s.x2 - s.x1, dy = s.y2 - s.y1; return Math.sqrt(dx*dx + dy*dy) || 1; }
+  function initBeam(){
+    var g = $('beamDots'), html = '', i;
+    for (i = 0; i < 22; i++) html += '<circle cx="150" cy="150" r="3.3" fill="#e0b52e" stroke="#fff" stroke-width="0.9" opacity=".95"/>';
+    g.innerHTML = html;
+    BEAM.els = g.querySelectorAll('circle');
+  }
+  function runBeam(){
+    var last = performance.now();
+    (function loop(now){
+      var dt = Math.min(60, now - last); last = now;
+      BEAM.phase = (BEAM.phase + dt/1500) % 1;
+      var segs = BEAM.segs || [], n = BEAM.els ? BEAM.els.length : 0, total = 0, i, pi;
+      for (i = 0; i < segs.length; i++) total += segLen(segs[i]);
+      pi = 0;
+      for (i = 0; i < segs.length; i++){
+        var s = segs[i], L = segLen(s);
+        var cnt = Math.max(1, Math.round(n*L/(total || 1)));
+        var f = clamp(s.f || 1, 0.15, 2.2), k;
+        for (k = 0; k < cnt && pi < n; k++, pi++){
+          var t = ((BEAM.phase*(0.4 + 0.6*f) + k/cnt) % 1 + 1) % 1;
+          if (s.rev) t = 1 - t;
+          BEAM.els[pi].setAttribute('cx', (s.x1 + (s.x2 - s.x1)*t).toFixed(1));
+          BEAM.els[pi].setAttribute('cy', (s.y1 + (s.y2 - s.y1)*t).toFixed(1));
+          BEAM.els[pi].setAttribute('opacity', (0.35 + 0.55*Math.min(1, f/1.3)).toFixed(2));
+        }
+      }
+      for (; pi < n; pi++) BEAM.els[pi].setAttribute('opacity', '0');
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+
+  /* ============ 4. 结构件初始化（一次性生成几何） ============ */
+  var cxI = 150, cyI = 160;
+  function initDisc(){                                  /* 增量式：外圈 48 缝 + 内圈 48 缝（错开半缝宽） */
+    var cx = cxI, cy = cyI, sA = '', sB = '', i, a, x1, y1, x2, y2;
+    for (i = 0; i < 48; i++){
+      a = i*Math.PI*2/48;
+      x1 = cx + 90*Math.cos(a); y1 = cy + 90*Math.sin(a);
+      x2 = cx + 108*Math.cos(a); y2 = cy + 108*Math.sin(a);
+      sA += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke="#7d8fa6" stroke-width="5.4"/>';
+    }
+    for (i = 0; i < 48; i++){
+      a = (i + 0.25)*Math.PI*2/48;                      /* 错开 1/4 栅距 = 半条缝宽 → B 相 90° */
+      x1 = cx + 62*Math.cos(a); y1 = cy + 62*Math.sin(a);
+      x2 = cx + 80*Math.cos(a); y2 = cy + 80*Math.sin(a);
+      sB += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke="#8fa3b8" stroke-width="4.2"/>';
+    }
+    $('incRingA').innerHTML = sA;
+    $('incRingB').innerHTML = sB;
+  }
+  var cxA = 150, cyA = 164;
+  var ABSD = { els:null };
+  function arcPt(r, thDeg){                             /* θ 自 12 点方向顺时针（°） */
+    var a = thDeg*Math.PI/180;
+    return [(cxA + r*Math.sin(a)).toFixed(2), (cyA - r*Math.cos(a)).toFixed(2)];
+  }
+  function wedgePath(r1, r2, a1, a2){
+    var p1 = arcPt(r1, a1), p2 = arcPt(r1, a2), p3 = arcPt(r2, a2), p4 = arcPt(r2, a1);
+    return 'M' + p1[0] + ' ' + p1[1] + ' A' + r1 + ' ' + r1 + ' 0 0 1 ' + p2[0] + ' ' + p2[1] +
+           ' L' + p3[0] + ' ' + p3[1] + ' A' + r2 + ' ' + r2 + ' 0 0 0 ' + p4[0] + ' ' + p4[1] + ' Z';
+  }
+  function initAbsDisc(){                               /* 4 码道 × 16 扇区 = 64 个扇形 */
+    var s = '', tk, k, r2, r1, a1;
+    for (tk = 0; tk < 4; tk++){
+      r2 = 106 - tk*22; r1 = r2 - 20;
+      for (k = 0; k < 16; k++){
+        a1 = k*22.5 - 11.25;
+        s += '<path d="' + wedgePath(r1, r2, a1, a1 + 22.5) + '" fill="#f2f7fd" stroke="#cfdcec" stroke-width="0.6"/>';
+      }
+    }
+    $('absTracks').innerHTML = s;
+    ABSD.els = $('absTracks').querySelectorAll('path');
+  }
+  var GR = { bands:null, wp:3 };
+  function initGrating(){                               /* 标尺光栅（灰）/ 指示光栅（蓝）栅线 + 莫尔条纹带 */
+    var s = '', i, x;
+    for (i = 0; i < 100; i++){
+      x = 52 + i*GR.wp;                                 /* 栅距 3 px 示意（实际 W = 0.02 mm，已放大） */
+      s += '<line x1="' + x + '" y1="46" x2="' + x + '" y2="250" stroke="#93a6bc" stroke-width="1.6"/>';
+    }
+    $('grScale').innerHTML = s;
+    $('grInd').innerHTML = s.replace(/#93a6bc/g, '#2b6cb0').replace(/1.6/g, '1.2');
+    var b = '';
+    for (i = 0; i < 18; i++) b += '<rect x="58" y="0" width="278" height="0" fill="#4b6b8f"/>';
+    $('grBands').innerHTML = b;
+    GR.bands = $('grBands').querySelectorAll('rect');
+  }
+  function initMag(){                                   /* 磁尺录磁段：每段半节距，N/S 交替 */
+    var s = '', i, x;
+    for (i = 0; i < 24; i++){
+      x = 38 + i*17;                                    /* 17 px = W/2（W = 34 px 示意） */
+      s += '<rect x="' + x + '" y="150" width="17" height="36" fill="' + (i % 2 ? '#fbe4e4' : '#e3ecf9') + '"/>';
+      s += '<text x="' + (x + 8.5) + '" y="173" text-anchor="middle" font-size="10" fill="' + (i % 2 ? '#d94a3d' : '#2b6cb0') + '">' + (i % 2 ? 'S' : 'N') + '</text>';
+    }
+    $('magStrip').innerHTML = s;
+  }
+  function initSync(){                                  /* 定尺连续绕组（曲折线）+ 滑尺正弦/余弦分段绕组 */
+    var d = 'M50 200', x = 50, i, up = false;
+    for (i = 0; i < 9; i++){ x += 34; d += ' L' + x + ' ' + (up ? 200 : 226); up = !up; }
+    $('syScale').setAttribute('d', d);
+    var s1 = '', s2 = '';
+    for (i = 0; i < 6; i++){
+      if (60 + i*68 <= 352) s1 += '<rect x="' + (60 + i*68) + '" y="100" width="9" height="24" rx="2" fill="#2b6cb0"/>';
+      if (77 + i*68 <= 352) s2 += '<rect x="' + (77 + i*68) + '" y="100" width="9" height="24" rx="2" fill="#c2703a"/>';
+    }
+    $('sySin').innerHTML = s1;
+    $('syCos').innerHTML = s2;
+    var t = '', k;
+    for (k = 0; k <= 5; k++){
+      t += '<line x1="' + (40 + k*68) + '" y1="30" x2="' + (40 + k*68) + '" y2="42" stroke="#9fb2c8" stroke-width="1.4"/>';
+      t += '<text x="' + (40 + k*68) + '" y="52" text-anchor="middle" font-size="9.5" fill="#94a3b8">' + k*2 + '</text>';
+    }
+    $('syTicks').innerHTML = t;
+  }
+
+  /* ============ 5. 主刷新（唯一入口） ============ */
+  function syncSeg(sel, attr, val){
+    var bs = document.querySelectorAll(sel + ' button'), i;
+    for (i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i].getAttribute(attr) === val);
+  }
+  function paint(){
+    var t = S.type, lineT = isLine();
+    var phi = phiDeg(), xm = xmm(), i;
+    var k = absK(), cv2 = codeVal(k);
+
+    /* ---- 控件与按钮态 ---- */
+    syncSeg('#segType', 'data-type', t);
+    syncSeg('#segDiv', 'data-div', String(S.div));
+    syncSeg('#segCode', 'data-code', S.code);
+    syncSeg('#segProc', 'data-proc', S.proc);
+    syncSeg('#segHead', 'data-head', S.head);
+    syncSeg('#segCv', 'data-cv', S.cv);
+    $('typeHint').innerHTML = TYPES[t].hint;
+    $('rowTh').style.display   = (t === 'grating') ? '' : 'none';
+    $('rowDiv').style.display  = (t === 'incr' || t === 'grating') ? '' : 'none';
+    $('rowCode').style.display = (t === 'abs') ? '' : 'none';
+    $('rowProc').style.display = (t === 'sync') ? '' : 'none';
+    $('rowHead').style.display = (t === 'mag') ? '' : 'none';
+    $('xName').textContent = lineT ? '位移 x' : '转角 φ';
+    $('xTxt').textContent = (t === 'incr') ? '两圈 720°' : (t === 'abs' ? '一圈 360°' : '量程 10 mm');
+    $('xOut').textContent = lineT ? xm.toFixed(2) + ' mm' : phi.toFixed(1) + '°';
+    $('thOut').textContent = S.th.toFixed(1) + '°';
+    $('thTxt').textContent = '放大 ' + magnify().toFixed(1) + '×';
+    $('divS1').textContent = lineT ? ('当量 ' + CFG.Wgr.toFixed(3) + ' mm') : ('当量 ' + (360/CFG.mInc).toFixed(4) + '°');
+    $('divS2').textContent = lineT ? ('当量 ' + (CFG.Wgr/2).toFixed(3) + ' mm') : ('当量 ' + (360/CFG.mInc/2).toFixed(4) + '°');
+    $('divS4').textContent = lineT ? ('四倍频 ' + (CFG.Wgr/4).toFixed(3) + ' mm') : ('四倍频 ' + (360/CFG.mInc/4).toFixed(4) + '°');
+    $('stSub').textContent = TYPES[t].name + '：' + ({ incr:'码盘 A/B/Z', abs:'4 码道码盘', grating:'莫尔条纹', mag:'磁尺与磁头', sync:'定尺与滑尺' })[t];
+
+    /* ---- 结构组切换 ---- */
+    $('stIncr').style.display    = (t === 'incr') ? '' : 'none';
+    $('stAbs').style.display     = (t === 'abs') ? '' : 'none';
+    $('stGrating').style.display = (t === 'grating') ? '' : 'none';
+    $('stMag').style.display     = (t === 'mag') ? '' : 'none';
+    $('stSync').style.display    = (t === 'sync') ? '' : 'none';
+
+    /* ---- 结构几何与信号（按型式） ---- */
+    if (t === 'incr'){
+      $('incDisc').setAttribute('transform', 'rotate(' + (phi % 360).toFixed(2) + ' ' + cxI + ' ' + cyI + ')');
+      $('incLampA').setAttribute('fill', lvlA() ? '#d94a3d' : '#c9d6e4');
+      $('incLampB').setAttribute('fill', lvlB() ? '#d94a3d' : '#c9d6e4');
+      $('incLampZ').setAttribute('fill', lvlZ() ? '#d94a3d' : '#c9d6e4');
+      drawIncrWave();
+      $('incCnt').textContent = 'N = ' + Math.round(phi/alphaIncr()) + ' 个脉冲（' + (phi/360).toFixed(2) + ' 圈）';
+      $('incCnt2').textContent = 'α = 360°/(m·n) = 360/(4096×' + S.div + ') = ' + alphaIncr().toFixed(4) + '°';
+      BEAM.segs = [{ x1:56, y1:146, x2:262, y2:112, f:1.0 },
+                   { x1:56, y1:152, x2:262, y2:208, f:1.0 },
+                   { x1:56, y1:140, x2:120, y2:40, f:0.85 }];
+      $('stNote').textContent = '黄点＝光源到光电元件的光路示意；外圈 48 缝、内圈 48 缝（错开 1/4 栅距 = 半条缝宽）代表实际 4096 缝。';
+    } else if (t === 'abs'){
+      $('absDisc').setAttribute('transform', 'rotate(' + (-phi).toFixed(2) + ' ' + cxA + ' ' + cyA + ')');
+      if (ABSD.els){
+        for (i = 0; i < ABSD.els.length; i++){
+          var tk = Math.floor(i/16), sk = i % 16;
+          ABSD.els[i].setAttribute('fill', ((cv2 >> (3 - tk)) & 1) ? '#33506f' : '#f2f7fd');
+        }
+      }
+      for (i = 0; i < 4; i++){
+        var bit = (cv2 >> (3 - i)) & 1;
+        $('absB' + i).textContent = bit ? '1' : '0';
+        $('absR' + i).setAttribute('fill', bit ? '#d94a3d' : '#c9d6e4');
+        $('absL' + i).setAttribute('fill', bit ? '#d94a3d' : '#c9d6e4');
+      }
+      $('absBin').textContent = bitStr4(k);
+      $('absGray').textContent = bitStr4(k ^ (k >> 1));
+      $('absInfo').textContent = 'φ = ' + phi.toFixed(1) + '°，扇区 k = ' + k + ' / 16（每扇区 22.5°）';
+      $('absInfo2').textContent = 'α = 360°/2ⁿ：n = 4 → 22.5°；n = 12 → ' + alphaAbs(12).toFixed(4) + '°';
+      $('absInfo3').textContent = (S.code === 'bin') ? '当前按二进制 8-4-2-1 绘制' : '当前按格雷码绘制（每次翻 1 位）';
+      BEAM.segs = [{ x1:150, y1:272, x2:150, y2:56, f:1.0 }];
+      $('stNote').textContent = '深色扇区＝该码位为 1；读出头固定不动，码盘转过一个扇区（22.5°）读出的码字就换一组 → 任意位置输出固定编码、断电不丢失。';
+    } else if (t === 'grating'){
+      var sx = ((xm/CFG.Wgr) % 1)*GR.wp;                 /* 标尺光栅随被测物右移（模一个栅距） */
+      var tn = Math.tan(thRad());
+      $('grScale').setAttribute('transform', 'translate(' + sx.toFixed(2) + ' 0)');
+      $('grInd').setAttribute('transform', 'rotate(' + S.th.toFixed(2) + ' 196 154)');
+      var bhpx = GR.wp/tn;                               /* 视图中条纹间距（真实关系 B_H = W/θ） */
+      if (GR.bands){
+        for (i = 0; i < GR.bands.length; i++){
+          var yy = 154 - (sx + (i - 8)*GR.wp)/tn;        /* 亮带中心（两光栅栅线重合处） */
+          var yd = yy + bhpx/2;                          /* 暗带中心（错开半栅距） */
+          var hh = Math.min(bhpx*0.62, 200);
+          var vis = (yd + hh/2 > 46) && (yd - hh/2 < 250);
+          if (vis){
+            GR.bands[i].setAttribute('y', (yd - hh/2).toFixed(1));
+            GR.bands[i].setAttribute('height', Math.max(0, hh).toFixed(1));
+            GR.bands[i].setAttribute('opacity', '0.20');
+          } else {
+            GR.bands[i].setAttribute('y', '0');
+            GR.bands[i].setAttribute('height', '0');
+            GR.bands[i].setAttribute('opacity', '0');
+          }
+        }
+      }
+      /* B_H 标注：取离视场中心最近的一条亮带与相邻亮带的中心距 */
+      var k0 = Math.round((sx + 8*GR.wp)/GR.wp);
+      var yb0 = clamp(154 - (sx + k0*GR.wp)/tn, 48, 248);
+      var yb1 = clamp(154 - (sx + (k0 + 1)*GR.wp)/tn, 48, 248);
+      $('grDimT1').setAttribute('y1', yb0.toFixed(1)); $('grDimT1').setAttribute('y2', yb0.toFixed(1));
+      $('grDimT2').setAttribute('y1', yb1.toFixed(1)); $('grDimT2').setAttribute('y2', yb1.toFixed(1));
+      $('grBH').textContent = 'B_H = ' + moireB().toFixed(3) + ' mm（放大 ' + magnify().toFixed(1) + '×，θ = ' + S.th.toFixed(1) + '°）';
+      var sep = clamp(bhpx/4, 16, 120);                  /* 两光电元件相隔 B_H/4 */
+      $('grPD1').setAttribute('y', (148 - sep/2).toFixed(1));
+      $('grPD2').setAttribute('y', (148 + sep/2).toFixed(1));
+      drawGratingWave();
+      $('grUTxt2').textContent = '相位 2πx/W = ' + (grPhase()*180/Math.PI).toFixed(1) + '°（一个栅距 = 一个周期）';
+      $('grUTxt5').textContent = '脉冲数 n = x/W = ' + fringeN().toFixed(1) + ' 个条纹（当量 W/' + S.div + ' = ' + (CFG.Wgr/S.div).toFixed(3) + ' mm）';
+      BEAM.segs = [{ x1:52, y1:66, x2:300, y2:152, f:1.0 }];
+      $('stNote').textContent = '视场约 1.9 mm × 1.4 mm（栅距已放大示意）；灰＝标尺光栅（动），蓝＝指示光栅（固定，夹角 θ）；x 增大条纹上移。';
+    } else if (t === 'mag'){
+      var shm = ((xm/CFG.Wmag) % 1)*34;                  /* 磁尺被读过的部分随之"移动" */
+      $('magStrip').setAttribute('transform', 'translate(' + shm.toFixed(2) + ' 0)');
+      $('magHeadSt').style.display  = (S.head === 'st') ? '' : 'none';
+      $('magHeadDyn').style.display = (S.head === 'dyn') ? '' : 'none';
+      /* 两磁头输出（式 11-15）：e₁ = U_m sin(2πx/W)、e₂ = U_m cos(2πx/W)，窗口取 2 个节距 */
+      var u2 = (xm/CFG.Wmag) % 2, ph2 = 2*Math.PI*u2;
+      $('mgE1').setAttribute('d', sinPath(424, 686, 96, 30, 2, 0));
+      $('mgE2').setAttribute('d', sinPath(424, 686, 160, 30, 2, Math.PI/2));
+      var cx2 = 424 + (u2/2)*262;
+      $('mgC1').setAttribute('x1', cx2.toFixed(1)); $('mgC1').setAttribute('x2', cx2.toFixed(1));
+      $('mgC2').setAttribute('x1', cx2.toFixed(1)); $('mgC2').setAttribute('x2', cx2.toFixed(1));
+      $('mgT1').textContent = 'e₁ = U_m sin(2πx/W) = ' + Math.sin(ph2).toFixed(3);
+      $('mgT2').textContent = 'e₂ = U_m cos(2πx/W) = ' + Math.cos(ph2).toFixed(3);
+      $('mgT3').textContent = (S.head === 'st')
+        ? '静态磁头：输出频率 = 2×电源（静止也有输出）'
+        : '动态磁头：感应电动势 ∝ 运动速度（静止无输出）';
+      $('stNote').textContent = (S.head === 'st')
+        ? '黄点＝漏磁通示意：静态磁头（磁通响应式）静止也有输出，输出频率为电源频率的 2 倍。'
+        : '黄点＝漏磁通示意：动态磁头（速度响应式）静止时无输出，不适用于长度测量。';
+      BEAM.segs = [{ x1:196, y1:186, x2:196, y2:95, f:1.0 },
+                   { x1:204, y1:186, x2:204, y2:95, f:1.0 },
+                   { x1:212, y1:186, x2:212, y2:95, f:1.0 },
+                   { x1:238, y1:186, x2:238, y2:95, f:1.0 },
+                   { x1:246, y1:186, x2:246, y2:95, f:1.0 },
+                   { x1:254, y1:186, x2:254, y2:95, f:1.0 }];
+    } else {
+      var shs = ((xm/CFG.Wsyn) % 1)*68;                  /* 滑尺随工作台右移（模一个节距） */
+      $('sySlide').setAttribute('transform', 'translate(' + shs.toFixed(2) + ' 0)');
+      var mk = 40 + xm/CFG.strokeLin*340;
+      $('syMark').setAttribute('x1', mk.toFixed(1)); $('syMark').setAttribute('x2', mk.toFixed(1));
+      $('syMarkTxt').setAttribute('x', clamp(mk, 60, 380).toFixed(1));
+      $('syMarkTxt').textContent = 'x = ' + xm.toFixed(2) + ' mm（第 ' + (Math.floor(xm/CFG.Wsyn) + 1) + ' 个节距）';
+      $('stNote').textContent = '一个节距 W = 2 mm 内绝对测量；滑尺每移过一个节距，感应电动势变化一个周期（2π）。';
+      var thS = syncTheta()*180/Math.PI;
+      $('syTh').textContent = 'θ = ' + thS.toFixed(1) + '°（一个节距内 ' + (((thS % 360) + 360) % 360).toFixed(1) + '°）';
+      $('syTh2').textContent = 'θ = 2πx/W = ' + syncTheta().toFixed(3) + ' rad；x/W = ' + (xm/CFG.Wsyn).toFixed(3) + ' 个节距';
+      $('syTh3').textContent = (S.proc === 'phase')
+        ? '鉴相：幅值不变、相位随位移移动 → 一个节距内绝对测量'
+        : '鉴幅：幅值 = kωU_m·cos(φ−θ)，平衡跟踪 φ→θ 时趋零';
+      $('syTh4').textContent = (S.proc === 'phase')
+        ? 'θ 每过一个节距（2 mm）变化 360°'
+        : '激励幅值按 U_m sinφ、U_m cosφ 变化';
+      $('sySigT').textContent = '定尺感应电动势 E（' + (S.proc === 'phase' ? '鉴相：幅值不变、相位随 θ 移动' : '鉴幅：幅值随 cos(φ−θ) 变化') + '）';
+      BEAM.segs = [{ x1:70, y1:196, x2:70, y2:150, f:1.0 },
+                   { x1:110, y1:196, x2:110, y2:150, f:1.0 },
+                   { x1:150, y1:196, x2:150, y2:150, f:1.0 },
+                   { x1:190, y1:196, x2:190, y2:150, f:1.0 },
+                   { x1:230, y1:196, x2:230, y2:150, f:1.0 },
+                   { x1:270, y1:196, x2:270, y2:150, f:1.0 }];
+    }
+    /* ---- 读数卡 ---- */
+    $('readSub').textContent = TYPES[t].name + '：' + ({ incr:'脉冲计数', abs:'绝对码字', grating:'条纹计数', mag:'相位 / 幅值', sync:'电角度 θ' })[t];
+    if (t === 'incr'){
+      $('bigCap').textContent = '转角 φ';
+      $('bigNum').textContent = phi.toFixed(1); $('bigUnit').textContent = '°';
+      $('kv1l').textContent = '计数脉冲 N';
+      $('kv1v').textContent = Math.round(phi/alphaIncr()) + ' 个';
+      $('kv2l').textContent = '分辨力 α = 360°/(m·n)';
+      $('kv2v').textContent = alphaIncr().toFixed(4) + '°（' + (alphaIncr()*3600).toFixed(1) + '″）';
+      $('kv3l').textContent = '零位（C 相）脉冲';
+      $('kv3v').textContent = (Math.floor(phi/360) + 1) + ' 个（计圈）';
+      $('kv4l').textContent = '辨向（A/B 相差 π/2）';
+      $('kv4v').textContent = S.dir > 0 ? 'A 超前 B 90°（正转）' : 'A 滞后 B 90°（反转）';
+      $('readFine').innerHTML = 'N = φ/α = ' + phi.toFixed(1) + '°/' + alphaIncr().toFixed(4) + '° = <b>' +
+        Math.round(phi/alphaIncr()) + '</b> 个脉冲；一圈 = ' + Math.round(360/alphaIncr()) + ' 个（m = 4096 线，n = ' + S.div + '）。' +
+        '当前 A = ' + (lvlA() ? '1' : '0') + '、B = ' + (lvlB() ? '1' : '0') + '、Z = ' + (lvlZ() ? '1' : '0') + '。';
+    } else if (t === 'abs'){
+      $('bigCap').textContent = '转角 φ';
+      $('bigNum').textContent = phi.toFixed(1); $('bigUnit').textContent = '°';
+      $('kv1l').textContent = '二进制码 8-4-2-1';
+      $('kv1v').textContent = bitStr4(k);
+      $('kv2l').textContent = '格雷码（循环码）';
+      $('kv2v').textContent = bitStr4(k ^ (k >> 1));
+      $('kv3l').textContent = '分辨角 α = 360°/2ⁿ';
+      $('kv3v').textContent = alphaAbs(CFG.nAbs).toFixed(1) + '°（4 码道）';
+      $('kv4l').textContent = '当前扇区 k';
+      $('kv4v').textContent = k + ' / 16';
+      $('readFine').innerHTML = 'φ = ' + phi.toFixed(1) + '° → 扇区 k = <b>' + k + '</b>；二进制 ' + bitStr4(k) +
+        '，格雷码 ' + bitStr4(k ^ (k >> 1)) + '。实际产品：n = 12 码道 → α = ' + alphaAbs(12).toFixed(4) +
+        '°（= ' + (alphaAbs(12)*60).toFixed(2) + '′ = ' + (alphaAbs(12)*3600).toFixed(1) + '″）；我国已有 23 位光电编码器。360° 内绝对测量、<b>断电不丢失</b>。';
+    } else if (t === 'grating'){
+      $('bigCap').textContent = '位移 x';
+      $('bigNum').textContent = xm.toFixed(2); $('bigUnit').textContent = 'mm';
+      $('kv1l').textContent = '条纹数 n = x/W';
+      $('kv1v').textContent = fringeN().toFixed(1) + ' 个';
+      $('kv2l').textContent = '莫尔条纹宽度 B_H';
+      $('kv2v').textContent = moireB().toFixed(3) + ' mm';
+      $('kv3l').textContent = '放大倍数 ≈ 1/θ';
+      $('kv3v').textContent = magnify().toFixed(1) + '×（1/θ）';
+      $('kv4l').textContent = '细分当量 W/n';
+      $('kv4v').textContent = (CFG.Wgr/S.div).toFixed(4) + ' mm';
+      $('readFine').innerHTML = 'W = ' + CFG.Wgr + ' mm（50 线/mm），θ = ' + S.th.toFixed(1) + '° = ' + thRad().toFixed(4) +
+        ' rad → B_H ≈ W/θ = <b>' + moireAppx().toFixed(3) + ' mm</b>（精确式 ' + moireB().toFixed(3) + ' mm）＝栅距的 ' +
+        magnify().toFixed(0) + ' 倍；x = ' + xm.toFixed(2) + ' mm 共移过 ' + fringeN().toFixed(0) + ' 个条纹。' +
+        '栅移一个 W，条纹移一个 B_H 且方向垂直于栅线。';
+    } else if (t === 'mag'){
+      $('bigCap').textContent = '位移 x';
+      $('bigNum').textContent = xm.toFixed(2); $('bigUnit').textContent = 'mm';
+      $('kv1l').textContent = '节距 W';
+      $('kv1v').textContent = CFG.Wmag.toFixed(2) + ' mm';
+      $('kv2l').textContent = '移过节距数 x/W';
+      $('kv2v').textContent = (xm/CFG.Wmag).toFixed(2) + ' 个';
+      $('kv3l').textContent = '一个节距内相位 2πx/W';
+      $('kv3v').textContent = (magPhase()*180/Math.PI).toFixed(1) + '°';
+      $('kv4l').textContent = '输出信号频率';
+      $('kv4v').textContent = (S.head === 'st') ? '2 × 电源频率（静止也有输出）' : '∝ 运动速度（静止无输出）';
+      $('readFine').innerHTML = 'e₁ = U_m sin(2πx/W) = ' + Math.sin(magPhase()).toFixed(3) + '，e₂ = U_m cos(2πx/W) = ' +
+        Math.cos(magPhase()).toFixed(3) + '（两磁头相距 (m+1/4)W → 相差 π/2）。静态磁头薄片厚 = W/4 = ' +
+        (CFG.Wmag/4).toFixed(3) + ' mm；测量精度 ±0.01 mm/m，分辨力 1~5 μm。';
+    } else {
+      var thDeg = syncTheta()*180/Math.PI;
+      $('bigCap').textContent = '位移 x';
+      $('bigNum').textContent = xm.toFixed(2); $('bigUnit').textContent = 'mm';
+      $('kv1l').textContent = '电角度 θ = 2πx/W';
+      $('kv1v').textContent = thDeg.toFixed(1) + '°（' + ((thDeg % 360 + 360) % 360).toFixed(1) + '° 在一个节距内）';
+      $('kv2l').textContent = '移过节距数 x/W';
+      $('kv2v').textContent = (xm/CFG.Wsyn).toFixed(3) + ' 个';
+      $('kv3l').textContent = '信号处理';
+      $('kv3v').textContent = (S.proc === 'phase') ? '鉴相：E ∝ sin(ωt+θ)' : '鉴幅：E ∝ sinωt·cos(φ−θ)';
+      $('kv4l').textContent = '分辨力（直线式）';
+      $('kv4v').textContent = '±1.5 μm（精度）';
+      $('readFine').innerHTML = 'W = ' + CFG.Wsyn + ' mm，每毫米 = 180° 电角度；x = ' + xm.toFixed(2) + ' mm → θ = ' +
+        thDeg.toFixed(1) + '° = ' + syncTheta().toFixed(3) + ' rad。' +
+        (S.proc === 'phase'
+          ? '鉴相：幅值恒定、相位随位移变 —— 测相位即得位移（一个节距内绝对测量）。'
+          : '鉴幅：φ = θ 时 E = 0（平衡跟踪），用幅值 cos(φ−θ) 判断位移。') + '定尺可拼接，几米~几十米。';
+    }
+
+    /* ---- 公式 / 波形 / 曲线 / 要点 ---- */
+    paintFormulas();
+    paintWave();
+    drawCurve();
+    paintPoints();
+    if (window.__repack) window.__repack();
+  }
+
+  /* ============ 6. 结构区波形（位置域） ============ */
+  function stepPath(x0, x1, y0, amp, fn){
+    var d = '', px, v, y, prev = null;
+    for (px = x0; px <= x1; px += 2){
+      v = fn((px - x0)/(x1 - x0)) ? 1 : 0;
+      y = y0 + (v ? -amp : amp);
+      if (prev === null) d = 'M' + px.toFixed(1) + ' ' + y.toFixed(1);
+      else if (v !== prev) d += ' L' + px.toFixed(1) + ' ' + (y0 + (prev ? -amp : amp)).toFixed(1) + ' L' + px.toFixed(1) + ' ' + y.toFixed(1);
+      else d += ' L' + px.toFixed(1) + ' ' + y.toFixed(1);
+      prev = v;
+    }
+    return d;
+  }
+  function drawIncrWave(){
+    var u = (phiDeg() % 360)/360;
+    var ncy = 24;                                        /* 全周 24 个周期示意 */
+    $('tA').setAttribute('d', stepPath(456, 686, 54, 13, function(v){ return (((v*ncy + u) % 1) + 1) % 1 < 0.5; }));
+    $('tB').setAttribute('d', stepPath(456, 686, 100, 13, function(v){ return (((v*ncy + u + 0.25*S.dir) % 1) + 1) % 1 < 0.5; }));
+    $('tZ').setAttribute('d', stepPath(456, 686, 146, 13, function(v){ return v < 0.02 || v > 0.98; }));
+    $('tCursor').setAttribute('x1', (456 + u*230).toFixed(1));
+    $('tCursor').setAttribute('x2', (456 + u*230).toFixed(1));
+    $('incCursorTxt').setAttribute('x', clamp(456 + u*230, 456, 620).toFixed(1));
+    $('incCursorTxt').textContent = 'φ = ' + ((phiDeg() % 360)).toFixed(1) + '°';
+  }
+  function sinPath(x0, x1, y0, amp, cycles, ph){
+    var d = '', n = 80, i, x, y;
+    for (i = 0; i <= n; i++){
+      x = x0 + (x1 - x0)*i/n;
+      y = y0 - amp*Math.sin(2*Math.PI*(cycles*i/n) + ph);
+      d += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
+    }
+    return d;
+  }
+  function drawGratingWave(){
+    var fr = (xmm()/CFG.Wgr) % 1;                         /* 一个栅距内的相位 0~1 */
+    $('grU0').setAttribute('d', sinPath(424, 686, 108, 42, 4, 2*Math.PI*fr));
+    var cxw = 424 + fr*262;
+    $('grCur').setAttribute('x1', cxw.toFixed(1)); $('grCur').setAttribute('x2', cxw.toFixed(1));
+    $('grDot').setAttribute('cx', cxw.toFixed(1));
+    $('grDot').setAttribute('cy', (108 - 42*Math.sin(2*Math.PI*fr)).toFixed(1));
+    $('grUTxt').textContent = 'u₀ = U₀ + U_m sin(2πx/W)：sin = ' + Math.sin(2*Math.PI*fr).toFixed(3);
+  }
+
+  /* ============ 7. 波形卡（滚动显示） ============ */
+  var WAVE = { t:0, mode:'ab' };
+  var WMODE = { incr:'ab', abs:'ab', grating:'moire', mag:'phase', sync:'phase' };
+  function edgePulse(t, frac, cond){
+    var e = t - frac, k = Math.round(e);
+    return (Math.abs(e - k) < 0.013) && cond(k + frac);
+  }
+  function paintWave(){
+    var wm = S.wmode || WMODE[S.type];
+    WAVE.mode = wm;
+    syncSeg('#segWave', 'data-wm', wm);
+    $('wvAB').style.display    = (wm === 'ab') ? '' : 'none';
+    $('wvMoire').style.display = (wm === 'moire') ? '' : 'none';
+    $('wvPhase').style.display = (wm === 'phase') ? '' : 'none';
+    $('wvSub').textContent = ({ ab:'A/B 两相方波与计数脉冲', moire:'莫尔条纹信号与四倍频细分', phase:'感应同步器 / 磁栅 鉴相与鉴幅' })[wm];
+    $('wvHint').innerHTML = (wm === 'ab')
+      ? 'u₁、u₂ 由相隔 B_H/4 的两个光电元件得到，相差 π/2：单路只能数明暗，两路才能<b>辨向</b>（正转 Y₁、反转 Y₂）。'
+      : (wm === 'moire'
+        ? '莫尔条纹信号近似正弦（式 11-5）；把 u₂ 反相得到四路依次相差 π/2 的信号，一个周期内发 4 个脉冲 → <b>四倍频细分</b>，当量 W/4。'
+        : '鉴相型：两相激励相差 π/2，定尺总电势 E = kωU_m sin(ωt+θ)，<b>幅值不变、相位随位移 θ = 2πx/W 变化</b>；鉴幅型：E 幅值 = kωU_m cos(φ−θ)，φ = θ 时为零（平衡跟踪）。');
+    if (wm === 'ab'){
+      $('abDir').textContent = '当前：' + dirTxt() + '（滑块' + (S.dir > 0 ? '右' : '左') + '移）→ 计数脉冲落在 u₂ 的' +
+        (S.dir > 0 ? '高' : '低') + '电平上，由 Y' + (S.dir > 0 ? '₁' : '₂') + ' 输出';
+      $('abDir').setAttribute('fill', S.dir > 0 ? '#0f9d58' : '#d94a3d');
+    } else if (wm === 'moire'){
+      $('moNote').textContent = '一个栅距 W（φ = 0~2π）内发 4 个脉冲 → 四倍频，当量 ' + (CFG.Wgr/4).toFixed(4) +
+        ' mm；当前 ' + S.div + ' 倍频 → 当量 ' + (CFG.Wgr/S.div).toFixed(4) + ' mm';
+    } else {
+      var th = syncTheta();
+      $('phT').textContent = 'θ = 2πx/W = ' + (th*180/Math.PI).toFixed(1) + '°';
+      $('phELab').textContent = (S.proc === 'phase') ? 'E = kωU_m sin(ωt+θ)' : 'E = kωU_m sinωt·cos(φ−θ)';
+      $('phT2').textContent = (S.proc === 'phase')
+        ? 'θ = 0 时 E 与 u_s 同相；θ = 90°（移过 W/4 = 0.5 mm）时 E 与 u_c 同相 → 相位鉴别位移'
+        : '平衡跟踪：φ 逐步逼近 θ；φ = θ 时 E 的幅值为 0（图中幅值正周期性趋零）';
+      $('phT3').textContent = (S.proc === 'phase')
+        ? 'θ 每过一个节距 W = 2 mm 变化 360°，一个节距内绝对测量，多节距由计数扩展'
+        : '激励 u_s、u_c 的幅值按 U_m sin φ、U_m cos φ 变化 —— 幅值即反映滑尺位置';
+    }
+  }
+  function runWave(){
+    var last = performance.now();
+    (function loop(now){
+      var dt = Math.min(60, now - last); last = now;
+      WAVE.t = (WAVE.t + dt/1000) % 1000;
+      var T = WAVE.t, wm = WAVE.mode;
+      if (wm === 'ab'){
+        var PA = T*0.5;
+        var dir = S.dir;
+        var lvA = function(t){ return (((t % 1) + 1) % 1) < 0.5; };
+        var lvB = function(t){ return lvA(t + 0.25*dir); };
+        $('abA').setAttribute('d', stepPath(64, 686, 52, 15, function(u){ return lvA(u*6 + PA); }));
+        $('abB').setAttribute('d', stepPath(64, 686, 104, 15, function(u){ return lvB(u*6 + PA); }));
+        $('abY1').setAttribute('d', stepPath(64, 686, 156, 15, function(u){
+          var t = u*6 + PA; return edgePulse(t, 0, function(te){ return lvB(te); });
+        }));
+        $('abY2').setAttribute('d', stepPath(64, 686, 208, 15, function(u){
+          var t = u*6 + PA; return edgePulse(t, 0.5, function(te){ return lvB(te); });
+        }));
+      } else if (wm === 'moire'){
+        var ph = 2*Math.PI*(T*0.5 + (xmm()/CFG.Wgr % 1));
+        $('moS1').setAttribute('d', sinPath(64, 686, 44, 12, 3, ph));
+        $('moS2').setAttribute('d', sinPath(64, 686, 82, 12, 3, ph + Math.PI));
+        $('moC1').setAttribute('d', sinPath(64, 686, 120, 12, 3, ph + Math.PI/2));
+        $('moC2').setAttribute('d', sinPath(64, 686, 158, 12, 3, ph + Math.PI*1.5));
+        $('moP').setAttribute('d', stepPath(64, 686, 196, 12, function(u){
+          var t = u*3 + T*0.5 + (xmm()/CFG.Wgr % 1); return edgePulse(t, 0, function(){ return true; }) ||
+                 edgePulse(t, 0.25, function(){ return true; }) || edgePulse(t, 0.5, function(){ return true; }) ||
+                 edgePulse(t, 0.75, function(){ return true; });
+        }));
+      } else {
+        var WT = T*3.0, th2 = syncTheta();
+        if (S.proc === 'phase'){
+          $('phUs').setAttribute('d', sinPath(64, 686, 52, 18, 3, WT));
+          $('phUc').setAttribute('d', sinPath(64, 686, 102, 18, 3, WT + Math.PI/2));
+          $('phE').setAttribute('d', sinPath(64, 686, 160, 24, 3, WT + th2));
+        } else {
+          var eps = 1.5*Math.cos(T*0.9);                     /* 跟踪误差（示意：周期性地趋于 0） */
+          var phiT = th2 + eps;
+          $('phUs').setAttribute('d', sinPath(64, 686, 52, 18*Math.abs(Math.sin(phiT)), 3, WT));
+          $('phUc').setAttribute('d', sinPath(64, 686, 102, 18*Math.abs(Math.cos(phiT)), 3, WT + Math.PI/2));
+          $('phE').setAttribute('d', sinPath(64, 686, 160, 24*Math.abs(Math.cos(eps)) + 0.5, 3, WT));
+        }
+      }
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+
+  /* ============ 8. 特性曲线卡 ============ */
+  var CV = { x0:66, x1:660, y0:246, y1:36, mode:null };
+  function cvLx(v, a, b){ return CV.x0 + (v - a)/(b - a)*(CV.x1 - CV.x0); }             /* 线性横轴 */
+  function cvLlx(v, a, b){ return CV.x0 + Math.log10(v/a)/Math.log10(b/a)*(CV.x1 - CV.x0); }
+  function cvLy(v, a, b){ return CV.y0 - Math.log10(v/a)/Math.log10(b/a)*(CV.y0 - CV.y1); }
+  function fmtY(v){ return v >= 1 ? String(v) : v.toPrecision(1); }
+  function cvGrid(xa, xb, isLog, yA, yB, xticks, yticks, xlab){
+    var s = '', i, v;
+    for (i = 0; i < yticks.length; i++){
+      v = yticks[i];
+      s += '<line x1="' + CV.x0 + '" y1="' + cvLy(v, yA, yB).toFixed(1) + '" x2="' + CV.x1 + '" y2="' + cvLy(v, yA, yB).toFixed(1) + '" stroke="#e6edf6"/>';
+      s += '<text x="58" y="' + (cvLy(v, yA, yB) + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="#5b6b80">' + fmtY(v) + '</text>';
+    }
+    for (i = 0; i < xticks.length; i++){
+      v = xticks[i];
+      var xx = isLog ? cvLlx(v, xa, xb) : cvLx(v, xa, xb);
+      s += '<line x1="' + xx.toFixed(1) + '" y1="' + CV.y1 + '" x2="' + xx.toFixed(1) + '" y2="' + CV.y0 + '" stroke="#e6edf6"/>';
+      s += '<text x="' + xx.toFixed(1) + '" y="' + (CV.y0 + 16) + '" text-anchor="middle" font-size="11" fill="#5b6b80">' + v + '</text>';
+    }
+    $('cvGrid').innerHTML = s;
+    $('cvSub').textContent = xlab;
+  }
+  function drawCurve(){
+    var mode = S.cv;
+    if (mode === 'moire'){
+      if (CV.mode !== 'moire'){
+        cvGrid(0.05, 6, true, 0.005, 200, [0.05, 0.1, 0.2, 0.5, 1, 2, 5], [0.01, 0.1, 1, 10, 100], '莫尔条纹宽度 B_H 与夹角 θ（双对数坐标）');
+        CV.mode = 'moire';
+      }
+      var d1 = '', d2 = '', i, th, b;
+      for (i = 0; i <= 60; i++){
+        th = Math.pow(10, Math.log10(0.05) + (Math.log10(6) - Math.log10(0.05))*i/60);
+        b = CFG.Wgr/(2*Math.sin(th*Math.PI/360));
+        d1 += (i ? 'L' : 'M') + cvLlx(th, 0.05, 6).toFixed(1) + ' ' + cvLy(clamp(b, 0.005, 200), 0.005, 200).toFixed(1) + ' ';
+        b = CFG.Wgr/(th*Math.PI/180);
+        d2 += (i ? 'L' : 'M') + cvLlx(th, 0.05, 6).toFixed(1) + ' ' + cvLy(clamp(b, 0.005, 200), 0.005, 200).toFixed(1) + ' ';
+      }
+      $('cv1').setAttribute('d', d1);
+      $('cv2').setAttribute('d', d2);
+      $('cvXLab').textContent = '栅线夹角 θ /（°）（对数）';
+      $('cvYLab').textContent = 'B_H / mm（对数）';
+      $('cvH').setAttribute('y1', cvLy(moireB(), 0.005, 200).toFixed(1));
+      $('cvH').setAttribute('y2', cvLy(moireB(), 0.005, 200).toFixed(1));
+      $('cvV').setAttribute('x1', cvLlx(S.th, 0.05, 6).toFixed(1));
+      $('cvV').setAttribute('x2', cvLlx(S.th, 0.05, 6).toFixed(1));
+      $('cvDot').setAttribute('cx', cvLlx(S.th, 0.05, 6).toFixed(1));
+      $('cvDot').setAttribute('cy', cvLy(moireB(), 0.005, 200).toFixed(1));
+      $('cvDot2').setAttribute('cx', cvLlx(0.1, 0.05, 6).toFixed(1));
+      $('cvDot2').setAttribute('cy', cvLy(CFG.Wgr/(2*Math.sin(0.1*Math.PI/360)), 0.005, 200).toFixed(1));
+      $('cvMark').textContent = 'θ = ' + S.th.toFixed(1) + '°, B_H = ' + moireB().toFixed(3) + ' mm（放大 ' + magnify().toFixed(0) + '×）';
+      $('cvMark').setAttribute('fill', '#0f9d58');
+      $('cvNote').textContent = 'θ=0.1° → 573×；θ=0.01 rad → 100×（W=0.02 mm 时 B_H = 2 mm）';
+      $('lg1').textContent = 'B_H = W/(2sin(θ/2))（式 11-1 精确式）';
+      $('lg2').textContent = 'B_H ≈ W/θ（θ 很小时两线重合）';
+      $('lg3').textContent = 'θ = 0.1° → 放大 573×（参照点）';
+    } else {
+      if (CV.mode !== 'resol'){
+        cvGrid(2, 24, false, 1e-6, 200, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24], [0.0001, 0.01, 1, 100], '分辨角 α = 360°/2ⁿ 与码道数（等效位数）n');
+        CV.mode = 'resol';
+      }
+      var d3 = '', n, al;
+      for (n = 2; n <= 24; n += 0.5){
+        al = 360/Math.pow(2, n);
+        d3 += ((n === 2) ? 'M' : 'L') + cvLx(n, 2, 24).toFixed(1) + ' ' + cvLy(clamp(al, 1e-6, 200), 1e-6, 200).toFixed(1) + ' ';
+      }
+      $('cv1').setAttribute('d', d3);
+      $('cv2').setAttribute('d', '');
+      $('cvXLab').textContent = '码道数 n（增量式为等效位数）';
+      $('cvYLab').textContent = 'α /（°）（对数）';
+      var neq = Math.log(CFG.mInc*S.div)/Math.LN2;                 /* 增量式等效位数 */
+      $('cvH').setAttribute('y1', cvLy(alphaAbs(neq), 1e-6, 200).toFixed(1));
+      $('cvH').setAttribute('y2', cvLy(alphaAbs(neq), 1e-6, 200).toFixed(1));
+      $('cvV').setAttribute('x1', cvLx(CFG.nAbs, 2, 24).toFixed(1));
+      $('cvV').setAttribute('x2', cvLx(CFG.nAbs, 2, 24).toFixed(1));
+      $('cvDot').setAttribute('cx', cvLx(CFG.nAbs, 2, 24).toFixed(1));
+      $('cvDot').setAttribute('cy', cvLy(alphaAbs(CFG.nAbs), 1e-6, 200).toFixed(1));
+      $('cvDot2').setAttribute('cx', cvLx(neq, 2, 24).toFixed(1));
+      $('cvDot2').setAttribute('cy', cvLy(alphaAbs(neq), 1e-6, 200).toFixed(1));
+      $('cvMark').textContent = '绝对式 n=' + CFG.nAbs + ' → α = ' + alphaAbs(CFG.nAbs).toFixed(1) + '°；n=' + CFG.nAbsBig +
+        ' → ' + alphaAbs(CFG.nAbsBig).toFixed(4) + '°';
+      $('cvMark').setAttribute('fill', '#0f9d58');
+      $('cvNote').textContent = '增量式 ' + CFG.mInc + ' 线 ×' + S.div + ' 倍频 = ' + (CFG.mInc*S.div) +
+        ' 脉冲/转 → 等效 ' + neq.toFixed(1) + ' 位、α = ' + alphaAbs(neq).toFixed(4) + '°；n=23 位 → 4.3×10⁻⁵°';
+      $('lg1').textContent = '绝对式：α = 360°/2ⁿ（n 条码道）';
+      $('lg2').textContent = '增量式：等效位数 log₂(m·n)（当前 ' + neq.toFixed(1) + ' 位）';
+      $('lg3').textContent = '增量式 ' + CFG.mInc + ' 线 ×' + S.div + ' 倍频';
+    }
+  }
+
+  /* ============ 9. 公式卡 ============ */
+  function paintFormulas(){
+    var t = S.type, html = '', phi = phiDeg(), xm = xmm(), i;
+    $('fmlTitle').textContent = TYPES[t].name + '（教材 §' + ({ incr:'11.1.2', abs:'11.1.1', grating:'11.2', mag:'11.3', sync:'11.4' })[t] + '）';
+    if (t === 'incr'){
+      html += '<div class="row"><span class="tag">§11.1</span><span>数字式传感器＝<b>编码型</b>（输出数字编码）＋<b>脉冲型</b>（输出脉冲）→ 光电编码器 / 光栅 / 磁栅 / 感应同步器</span></div>';
+      html += '<div class="row"><span class="tag">图11-4</span><span>一条缝隙对应 ' + WdegInc().toFixed(4) + '°；α = ' + frac('360°', 'm·n') + ' = ' + frac('360°', CFG.mInc + '×' + S.div) + ' = <b>' + alphaIncr().toFixed(4) + '°</b>（m = 4096 缝/圈，n = ' + S.div + ' 倍频）</span></div>';
+      html += '<div class="row"><span class="tag f">计数</span><span>N = ' + frac('φ', 'α') + ' = ' + frac(phi.toFixed(1) + '°', alphaIncr().toFixed(4) + '°') + ' = <b>' + Math.round(phi/alphaIncr()) + '</b> 个脉冲；一圈 ' + Math.round(360/alphaIncr()) + ' 个</span></div>';
+      html += '<div class="row"><span class="tag">图11-5</span><span>A、B 相差 π/2 接 D 触发器：正转 Q = 1、反转 Q = 0 → 控制可逆计数器加/减；当前 <b>' + dirTxt() + '</b></span></div>';
+      html += '<div class="row"><span class="tag">习题11-8</span><span>100 个脉冲对应 8.79° → 分辨力 = 8.79°/100 = <b>0.0879°</b>（＝360°/4096）</span></div>';
+      html += '<div class="note">增量法：每次计数是相对上次的<b>增量</b>，需零位基准计圈；断电后计数值丢失（可用零位光栅做成准绝对系统）。</div>';
+    } else if (t === 'abs'){
+      var k = absK();
+      html += '<div class="row"><span class="tag">§11.1.1</span><span>α = ' + frac('360°', '2ⁿ') + '：n = 4 → 22.5°；n = 5 → 11.25°；n = 12 → <b>' + alphaAbs(12).toFixed(4) + '°</b>（' + (alphaAbs(12)*3600).toFixed(2) + '″）</span></div>';
+      html += '<div class="row"><span class="tag">图11-2</span><span>当前 φ = ' + phi.toFixed(1) + '° → 扇区 k = ' + k + '：二进制 <b>' + bitStr4(k) + '</b>，格雷码 <b>' + bitStr4(k ^ (k >> 1)) + '</b></span></div>';
+      html += '<div class="row"><span class="tag">表11-1</span><span>格雷码＝二进制码异或自身右移一位：' + bitStr4(k) + ' ⊕ ' + bitStr4(k >> 1) + ' = ' + bitStr4(k ^ (k >> 1)) + '</span></div>';
+      html += '<div class="row"><span class="tag">图11-3</span><span>插值法提高分辨率：14 位码道＋1 条附加码道（插值器产生 16 个正/余弦信号、32 等分）→ 等效 ' + (14 + 5) + ' 位，α = ' + (360/Math.pow(2, 19)).toFixed(5) + '° = ' + (360/Math.pow(2, 19)*3600).toFixed(2) + '″（&lt; 3″）</span></div>';
+      html += '<div class="row"><span class="tag">特点</span><span>n 条码道配 n 个光电元件；任意位置输出固定编码，360° 内绝对测量、<b>断电不丢失</b></span></div>';
+      html += '<div class="note">二进制码在扇区交界处（如 0111 → 1000）可能多位同时翻转，读出瞬时粗误差；格雷码每次只翻 1 位 → 无粗误差。我国已有 23 位光电编码器。</div>';
+    } else if (t === 'grating'){
+      var n = fringeN();
+      html += '<div class="row"><span class="tag">式 11-1</span><span>B_H = ' + frac('W', '2sin(θ/2)') + ' ≈ ' + frac('W', 'θ') + ' = ' + frac(CFG.Wgr + ' mm', thRad().toFixed(4) + ' rad') + ' = <b>' + moireB().toFixed(3) + ' mm</b></span></div>';
+      html += '<div class="row"><span class="tag g">放大</span><span>放大倍数 = B_H/W ≈ 1/θ = <b>' + magnify().toFixed(1) + '×</b>（θ = ' + S.th.toFixed(1) + '°）；θ = 0.1° → 573×</span></div>';
+      html += '<div class="row"><span class="tag">式 11-2</span><span>x = nW = nθB_H → n = ' + frac('x', 'W') + ' = ' + frac(xm.toFixed(2) + ' mm', CFG.Wgr + ' mm') + ' = <b>' + n.toFixed(0) + ' 个条纹</b></span></div>';
+      html += '<div class="row"><span class="tag f">式 11-3</span><span>误差平均：Δ = ±' + frac('δ', '√n') + ' = ±' + frac(CFG.dlt + ' μm', '√' + n.toFixed(0)) + ' = ±' + (CFG.dlt/Math.sqrt(n)*1000).toFixed(1) + ' nm（δ = 0.5 μm，n = ' + n.toFixed(0) + ' 条刻线）</span></div>';
+      html += '<div class="row"><span class="tag">式 11-5</span><span>u₀ = U₀ + U_m sin' + frac('2πx', 'W') + '；相位 2πx/W = ' + (grPhase()*180/Math.PI).toFixed(1) + '°，sin = ' + Math.sin(grPhase()).toFixed(3) + '</span></div>';
+      html += '<div class="row"><span class="tag">细分</span><span>n 倍频：当量 = ' + frac('W', 'n') + ' = ' + (CFG.Wgr/S.div).toFixed(4) + ' mm，精度提高 n 倍（四倍频常用，图11-14/15）</span></div>';
+      html += '<div class="note">式 11-4：两光栅间隙 d = W²/λ。W = 0.02 mm、λ = 0.9 μm → d ≈ 0.44 mm（教材式）；教材测长仪实例（W = 0.01 mm）取 0.02~0.035 mm —— 实际以条纹对比度最佳为准。</div>';
+    } else if (t === 'mag'){
+      html += '<div class="row"><span class="tag">式 11-7~9</span><span>φ₂ = ' + frac('φ₀R₀', 'R₀+R_F') + '，φ = φ₀(a₀+a₂sin2ωt) → e₀ = ' + frac('dφ₂', 'dt') + ' = kφ₀cos2ωt（<b>输出频率＝电源 2 倍</b>）</span></div>';
+      html += '<div class="row"><span class="tag">式 11-10/11</span><span>φ = φ_m sin' + frac('2πx', 'W') + ' → e₀ = kφ_m sin' + frac('2πx', 'W') + 'cos2ωt；W = ' + CFG.Wmag.toFixed(2) + ' mm 时相位 = ' + (magPhase()*180/Math.PI).toFixed(1) + '°</span></div>';
+      html += '<div class="row"><span class="tag">式 11-12~14</span><span>鉴相：u₀ = U_m sin' + frac('2πx', 'W') + ' ± 2ωt → 幅值不变、<b>相位随位置变</b></span></div>';
+      html += '<div class="row"><span class="tag">式 11-15</span><span>鉴幅：e₁ = U_m sin(2πx/W) = ' + Math.sin(magPhase()).toFixed(3) + '，e₂ = U_m cos(2πx/W) = ' + Math.cos(magPhase()).toFixed(3) + '（两磁头相距 (m+1/4)W → 相差 π/2）</span></div>';
+      html += '<div class="row"><span class="tag">参数</span><span>精度 ±0.01 mm/m，分辨力 1~5 μm；静态磁头薄片厚 = W/4 = ' + (CFG.Wmag/4).toFixed(3) + ' mm，铁芯用铁镍合金</span></div>';
+      html += '<div class="note">动态磁头（速度响应式）静止无输出、不适用于长度测量；静态磁头（磁通响应式）静止也有输出 —— 现场按是否需要静态测量选用。</div>';
+    } else {
+      var thD = syncTheta()*180/Math.PI;
+      html += '<div class="row"><span class="tag">式 11-16</span><span>E_s = kωU_m cosωt·sinθ，E_c = kωU_m sinωt·cosθ，θ = ' + frac('2πx', 'W') + ' = ' + (thD % 360).toFixed(1) + '°（一个节距内）</span></div>';
+      html += '<div class="row"><span class="tag">式 11-17</span><span>鉴相：E = E_s+E_c = kωU_m sin(ωt+θ) → 幅值不变、相位随位移变（当前 θ = ' + thD.toFixed(1) + '°）</span></div>';
+      html += '<div class="row"><span class="tag">式 11-18~20</span><span>鉴幅：u_s = U_m sinφ·cosωt、u_c = U_m cosφ·cosωt → E = kωU_m sinωt·cos(φ−θ)，<b>φ = θ 时 E = 0</b>（平衡跟踪）</span></div>';
+      html += '<div class="row"><span class="tag">分辨力</span><span>W = ' + CFG.Wsyn + ' mm → 每毫米 180° 电角度；x = ' + xm.toFixed(2) + ' mm = ' + (xm/CFG.Wsyn).toFixed(3) + ' 个节距，θ = ' + thD.toFixed(1) + '°</span></div>';
+      html += '<div class="row"><span class="tag">参数</span><span>直线式精度 ±1.5 μm；定尺与滑尺间隙 0.2~0.3 mm（旋转式）；一个节距内绝对测量、多节距有误差平均效应</span></div>';
+      html += '<div class="note">定尺连续绕组、滑尺为正弦/余弦分段绕组（空间相差 W/4 → π/2）；定尺可拼接 → 几米~几十米（三坐标测量机、数控机床、回转伺服）。</div>';
+    }
+    $('fmlBody').innerHTML = html;
+  }
+
+  /* ============ 10. 要点 ============ */
+  var PTS_TEXT = [
+    '数字式传感器按输出分<b>编码型</b>（绝对编码器：直接输出数字编码）与<b>脉冲型</b>（增量编码器、光栅、磁栅、感应同步器：输出脉冲/相位）；优点是精度与分辨率高、稳定性好、抗干扰、便于与计算机接口。',
+    '<b>绝对式编码器</b>：n 条码道配 n 个光电元件，任意位置输出与位置对应的固定编码，360° 内绝对测量、<b>断电不丢失</b>；分辨角 α = 360°/2ⁿ（n = 5 → 11.25°）；采用<b>格雷码</b>是因为二进制码在扇区交界处可能多位同时翻转（0111→1000）而产生读数粗误差，格雷码每次只翻 1 位（表11-1）。',
+    '<b>增量式编码器</b>：外圈计数码道、内圈辨向码道（错开半缝宽）、零位狭缝计圈；输出 A/B 两相（相差 π/2）与零位 C 相；分辨力 α = 360°/(m·n)，m 为刻线数、n 为细分倍数 —— 断电后信息丢失。',
+    '<b>辨向为何要两路 π/2 信号</b>：单路只有明暗交替，无法判向；在相隔 B_H/4 处放两个光电元件（或 D 触发器 + 两相脉冲）得到相位差 π/2 的两路信号，正转由 Y₁、反转由 Y₂ 输出计数脉冲，再由可逆计数器加/减计数。',
+    '<b>莫尔条纹三大特性</b>：①位移放大 —— B_H ≈ W/θ，θ 越小条纹越宽，栅距被放大 1/θ 倍（θ = 0.1° 时 ≈ 573 倍）；②运动对应 —— 栅移一个 W，条纹移一个 B_H，方向垂直于栅线且与栅移动方向对应；③误差平均 —— Δ = ±δ/√n，刻线越多局部误差被抵消得越好。',
+    '<b>光栅细分（倍频）</b>：在一个条纹周期内发 n 个脉冲，当量降为 W/n、精度提高 n 倍；四倍频（把两路正交信号反相得四路依次相差 π/2）电路简单、最常用；分辨力极限仍是栅距，更高细分数要专用细分电路。',
+    '<b>光栅传感器组成</b>：光栅读数头（标尺光栅＋指示光栅＋光路＋光电元件）＋光栅数显表（放大整形、细分、辨向、计数显示）；两光栅间隙按 d = W²/λ（教材式，实例取 0.02~0.035 mm）以获最佳条纹对比度。',
+    '<b>磁栅的两类磁头</b>：动态磁头（速度响应式）静止无输出、不适用于长度测量；静态磁头（磁通响应式）静止也有输出，输出频率为电源频率的 2 倍；两磁头相距 (m+1/4)W 得 π/2 相位差 → 鉴相 u₀ = U_m sin(2πx/W±2ωt) 或鉴幅 e₁、e₂ 两路；精度 ±0.01 mm/m、分辨力 1~5 μm。',
+    '<b>感应同步器</b>：定尺连续绕组与滑尺正弦/余弦分段绕组（空间相差 W/4 → π/2）的互感随位置变化；鉴相 E = kωU_m sin(ωt+θ)（θ = 2πx/W，幅值不变、相位随位移变）、鉴幅 E = kωU_m sinωt·cos(φ−θ)（φ = θ 时 E = 0 平衡跟踪）；一个节距内绝对测量、多节距误差平均、定尺可拼接 —— 直线式精度 ±1.5 μm。',
+    '典型应用：钢带光电编码数字液位计（量程 > 20 m、分辨率 1 mm；15 码道最大有效长度 32.768 m，插值后 20 m 量程仅需 12 码道）、增量编码器测转速（1 MHz 时钟、100 脉冲/转：100 r/min → 1/6000；6000 r/min → 1/100）、光栅万能测长仪（W = 0.01 mm、四裂相指示光栅、四细分）、圆光栅测角、磁栅与感应同步器用于数控机床与三坐标测量机。'
+  ];
+  var PTS = { active:-1 };
+  function paintPoints(){
+    if (!$('points').children.length){
+      var html = '';
+      PTS_TEXT.forEach(function(x, k){ html += '<li data-pi="' + k + '">' + x + '</li>'; });
+      $('points').innerHTML = html;
+    }
+  }
+  function setPt(i){
+    PTS.active = i;
+    var lis = $('points').children, k;
+    for (k = 0; k < lis.length; k++) lis[k].classList.toggle('on', k === i);
+    for (k = 0; k < PTS_TEXT.length; k++){
+      var bb = $('ptsB' + k);
+      if (bb) bb.classList.toggle('on', k === i);
+    }
+    if (i >= 0) say('<b>要点 ' + (i + 1) + '/' + PTS_TEXT.length + '</b>：' + PTS_TEXT[i]);
+  }
+  for (var pb = 0; pb < PTS_TEXT.length; pb++){
+    (function(k){
+      var bb = $('ptsB' + k);
+      if (bb) bb.addEventListener('click', function(){ stopDemo(); setPt(k); });
+    })(pb);
+  }
+
+  /* ============ 11. 交互 ============ */
+  function setType(t){
+    S.type = t; S.wmode = null;
+    S.cv = (t === 'grating') ? 'moire' : 'resol';
+    if (!isLine()) S.x = 0;
+    paint(); say(TYPES[t].hint);
+  }
+  function setX(v){
+    var st = isLine() ? 0.25 : 1;
+    v = clamp(Math.round(v/st)*st, 0, 100);
+    if (v > S.x) S.dir = 1; else if (v < S.x) S.dir = -1;
+    S.x = v; $('x').value = S.x; paint();
+  }
+  function setTh(v){ S.th = clamp(Math.round(v*10)/10, 0.2, 6); $('th').value = S.th; paint(); }
+  function setDiv(n){ S.div = n; paint(); }
+  function setCode(c){ S.code = c; paint(); }
+  function setProc(p){ S.proc = p; paint(); }
+  function setHead(h){ S.head = h; paint(); }
+  function setWMode(m){ S.wmode = m; paintWave(); }
+  function setCv(m){ S.cv = m; syncSeg('#segCv', 'data-cv', m); drawCurve(); }
+  $('x').addEventListener('input', function(){ stopDemo(); setX(+this.value); });
+  $('th').addEventListener('input', function(){ stopDemo(); setTh(+this.value); });
+  $('xM').addEventListener('click', function(){ stopDemo(); setX(S.x - (isLine() ? 1.25 : 2)); });
+  $('xP').addEventListener('click', function(){ stopDemo(); setX(S.x + (isLine() ? 1.25 : 2)); });
+  document.querySelectorAll('#segType button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setType(b.getAttribute('data-type')); });
+  });
+  document.querySelectorAll('#segDiv button').forEach(function(b){
+    b.addEventListener('click', function(){
+      stopDemo(); setDiv(+b.getAttribute('data-div'));
+      say('<b>' + S.div + ' 倍频细分</b>：当量降为 ' + (isLine() ? (CFG.Wgr/S.div).toFixed(4) + ' mm' : alphaIncr().toFixed(4) + '°') +
+          '，同样位移下的计数脉冲数提高 ' + S.div + ' 倍 —— 精度提高 n 倍，但计数频率也提高 n 倍。');
+    });
+  });
+  document.querySelectorAll('#segCode button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setCode(b.getAttribute('data-code')); say('编码方式已切换为 <b>' + (S.code === 'bin' ? '二进制 8-4-2-1' : '格雷码（循环码）') + '</b>。'); });
+  });
+  document.querySelectorAll('#segProc button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setProc(b.getAttribute('data-proc')); say(S.proc === 'phase' ? '<b>鉴相型</b>：幅值不变、相位随位移 —— 测相位得位移。' : '<b>鉴幅型</b>：用幅值 cos(φ−θ) 鉴位移，平衡跟踪时 φ = θ、E = 0。'); });
+  });
+  document.querySelectorAll('#segHead button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setHead(b.getAttribute('data-head')); say(S.head === 'st' ? '<b>静态磁头</b>（磁通响应式）：静止也有输出，输出频率为电源频率的 2 倍。' : '<b>动态磁头</b>（速度响应式）：静止时无输出，只有相对运动才有感应电动势 —— 不适用于长度测量。'); });
+  });
+  document.querySelectorAll('#segWave button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setWMode(b.getAttribute('data-wm')); });
+  });
+  document.querySelectorAll('#segCv button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setCv(b.getAttribute('data-cv')); });
+  });
+  $('reset').addEventListener('click', function(){
+    stopDemo();
+    S.type = 'incr'; S.th = 2; S.div = 1; S.code = 'bin'; S.proc = 'phase'; S.head = 'st'; S.wmode = null; S.cv = 'moire'; S.dir = 1;
+    S.x = 0; $('x').value = 0; $('th').value = 2;
+    paint();
+    say('已复位：增量式光电编码器、φ = 0、×1 细分、θ = 2.0°、静态磁头、鉴相型。');
+  });
+
+  /* ============ 12. 演示脚本 ============ */
+  async function demoCap(){
+    var tok = beginDemo('cap');
+    setType('incr'); setDiv(1); setX(0); setWMode('ab');
+    say('【<b>编码器</b>】数字式传感器分<b>编码型</b>（绝对编码器：输出数字编码）与<b>脉冲型</b>（增量编码器、光栅、磁栅、感应同步器：输出脉冲）。先看<b>增量式光电编码器</b>：外圈计脉冲、内圈辨向、零位狭缝计圈。');
+    if (!await sleep(4400, tok)) return;
+    say('① 外圈有 m = 4096 条缝，一条缝对应 360°/4096 = <b>0.0879°</b>；当前 ×' + S.div + ' 细分 → 分辨力 α = 360°/(m·n) = <b>' + alphaIncr().toFixed(4) + '°</b>。现在让码盘转一整圈（下面看 A/B 相脉冲与计数）。');
+    if (!await sleep(1600, tok)) return;
+    if (!await tween(0, 50, 3600, setX, tok)) return;
+    if (!await sleep(1800, tok)) return;
+    say('② 转过 360°：N = 360°/α = <b>' + Math.round(360/alphaIncr()) + ' 个脉冲</b>；A、B 两相相差 π/2（内圈错开半条缝宽得到），零位 C 相每圈给 1 个基准脉冲 → 可以计圈。');
+    if (!await sleep(3600, tok)) return;
+    say('③ 把滑块<b>往回拖（反转）</b>看辨向：A 原超前 B，反转后 B 超前 A，计数脉冲由 Y₂ 输出、可逆计数器做减计数 —— 这就是辨向电路的作用。');
+    if (!await tween(50, 20, 2400, setX, tok)) return;
+    if (!await sleep(2000, tok)) return;
+    say('④ 切到<b>绝对式编码器</b>：4 条码道 → 360°/2⁴ = 22.5° 一个扇区，任意位置输出<b>固定编码</b>，360° 内绝对测量、<b>断电不丢失</b>。看读出头处 4 个码位的输出。');
+    setType('abs'); setX(0);
+    if (!await sleep(3400, tok)) return;
+    if (!await tween(0, 45, 3000, setX, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('⑤ 二进制码在扇区交界处可能多位同时翻转、读出粗误差；换成<b>格雷码</b>每次只翻 1 位（表11-1）。实际产品 n = 12 码道 → α = 0.0879°，我国已有 23 位。');
+    setCode('gray');
+    if (!await sleep(3200, tok)) return;
+    say('⑥ 再看<b>细分倍频</b>：切回增量式并把细分改成 ×4，同样转角下计数脉冲数变为 4 倍、当量降到 0.0220° —— 精度提高 n 倍，代价是计数频率也提高 n 倍。');
+    setType('incr'); setCode('bin'); setX(0); setDiv(4);
+    if (!await tween(0, 50, 3200, setX, tok)) return;
+    if (!await sleep(1800, tok)) return;
+    say('【小结】绝对式＝任意位置固定编码、断电不丢失；增量式＝脉冲计数＋零位基准，靠 A/B 辨向、靠细分提高分辨力。');
+    setDiv(1); setX(0);
+    if (!await sleep(2800, tok)) return;
+    endDemo();
+  }
+
+  async function demoMoire(){
+    var tok = beginDemo('moire');
+    setType('grating'); setX(0); setTh(2); setDiv(1); setWMode('moire');
+    say('【<b>光栅传感器</b>】两块栅距相同的光栅以小夹角 θ 叠合（标尺光栅随被测物移动、指示光栅固定），就会出现明暗相间的<b>莫尔条纹</b>。W = 0.02 mm（50 线/mm）。');
+    if (!await sleep(4200, tok)) return;
+    say('① 拖动位移 x：标尺光栅移动一个栅距 W，莫尔条纹就移动一个条纹宽度 B_H，方向垂直于栅线且与栅移动方向对应 —— 这就是"运动对应"（图11-10）。');
+    if (!await tween(0, 25, 3600, setX, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('② <b>放大作用</b>：B_H = W/(2sin(θ/2)) ≈ W/θ。当前 θ = ' + S.th.toFixed(1) + '° → B_H = <b>' + moireB().toFixed(3) +
+        ' mm</b>，相当于把栅距放大了 <b>' + magnify().toFixed(0) + ' 倍</b>；现在把 θ 调小到 0.5°，看条纹变宽。');
+    if (!await tween(2, 0.5, 3000, setTh, tok)) return;
+    if (!await sleep(2200, tok)) return;
+    say('③ θ = 0.5° → B_H = <b>' + moireB().toFixed(3) + ' mm</b>、放大 ' + magnify().toFixed(0) + ' 倍。θ 再小（0.1°）就有 573 倍 —— 无论是肉眼还是光电元件都能清楚地读数。');
+    if (!await sleep(3400, tok)) return;
+    say('④ <b>误差平均效应</b>（式 11-3）：莫尔条纹是很多条刻线综合的结果，单条刻线的误差 δ 被平均掉，Δ = ±δ/√n = ±' + (CFG.dlt/Math.sqrt(fringeN())*1000).toFixed(1) + ' nm（n = ' + fringeN().toFixed(0) + ' 条刻线参与）。');
+    if (!await sleep(3600, tok)) return;
+    say('⑤ <b>细分</b>：一个条纹周期内发 n 个脉冲，当量降为 W/n。切到 ×4：四路依次相差 π/2 的信号（sin、−sin、cos、−cos）在一个周期内给出 4 个计数脉冲 → 当量 W/4 = 0.005 mm。');
+    setDiv(4);
+    if (!await sleep(3400, tok)) return;
+    say('⑥ 分辨力本身是栅距 W，细分只是提高读数分辨力；两光栅间隙按 d = W²/λ 取（实例 0.02~0.035 mm），太大会丢失条纹对比度。');
+    if (!await tween(25, 40, 2400, setX, tok)) return;
+    if (!await sleep(2000, tok)) return;
+    setTh(2); setDiv(1); setX(0);
+    say('【小结】莫尔条纹三特性：位移放大（1/θ）、运动对应（栅移 W → 条纹移 B_H）、误差平均（δ/√n）。');
+    if (!await sleep(3000, tok)) return;
+    endDemo();
+  }
+
+  async function demoSync(){
+    var tok = beginDemo('sync');
+    setType('sync'); setX(0); setProc('phase'); setWMode('phase');
+    say('【<b>感应同步器</b>】定尺上是<b>连续绕组</b>，滑尺上是分段排布的正弦/余弦绕组，空间上相差 1/4 节距（π/2）。节距 W = 2 mm，定尺与滑尺互不接触。');
+    if (!await sleep(4200, tok)) return;
+    say('① <b>一个节距内绝对测量</b>：滑尺移动一个节距 W，互感（感应电动势）就变化一个周期，θ = 2πx/W。滑尺移动 0.5 mm 就是 90° 电角度。');
+    if (!await tween(0, 25, 3000, setX, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('② <b>鉴相法</b>（式 11-16/11-17）：滑尺 sin、cos 绕组分别用 sinωt、cosωt 激励，定尺总电势 E = kωU_m sin(ωt+θ) —— 幅值不变、<b>相位随位移移动</b>。现在 x = ' +
+        xmm().toFixed(2) + ' mm，θ = <b>' + (syncTheta()*180/Math.PI).toFixed(1) + '°</b>，注意 E 的波形相对 u_s 平移了多少。');
+    if (!await sleep(4000, tok)) return;
+    say('③ 继续移动滑尺到 x = 1.00 mm（半个节距），θ = 180°：E 与 u_s 反相；到 x = 0.5 mm（W/4）时 θ = 90°，E 与 u_c 同相。滑尺每过一个节距，相位再绕一圈。');
+    if (!await tween(25, 10, 2400, setX, tok)) return;
+    if (!await sleep(2400, tok)) return;
+    say('④ 切到<b>鉴幅法</b>（式 11-18~20）：激励幅值按 sinφ、cosφ 变化，E = kωU_m sinωt·cos(φ−θ)。系统<b>平衡跟踪</b>：φ 逼近 θ，φ = θ 时 E 的幅值为 0（看幅值周期性地趋零）。');
+    setProc('amp');
+    if (!await sleep(4400, tok)) return;
+    say('⑤ 感应同步器的优点：多节距同时工作 → 误差平均效应；定尺可拼接 → 几米到几十米；非接触、寿命长。直线式精度可达 ±1.5 μm，圆感应同步器用于转台与回转伺服。');
+    if (!await tween(10, 45, 2800, setX, tok)) return;
+    if (!await sleep(2200, tok)) return;
+    setProc('phase'); setX(0);
+    say('【小结】鉴相看"相位"、鉴幅看"幅值"；一个节距内绝对测量，多节距靠计数扩展量程。');
+    if (!await sleep(3000, tok)) return;
+    endDemo();
+  }
+
+  async function demoMag(){
+    var tok = beginDemo('mag');
+    setType('mag'); setX(0); setHead('st'); setWMode('phase');
+    say('【<b>磁栅传感器</b>】磁尺是在非导磁尺基上镀磁性薄膜并录制好<b>节距 W</b> 的磁信号（可现场激光定位录磁，避免安装误差）。磁头读取漏磁通：φ = φ_m sin(2πx/W)。');
+    if (!await sleep(4200, tok)) return;
+    say('① <b>静态磁头</b>（磁通响应式）：有激励绕组和输出绕组，静止时也有输出；激励电流每周使铁芯饱和两次 → <b>输出频率是电源频率的 2 倍</b>（式 11-9/11-11）。');
+    if (!await sleep(3800, tok)) return;
+    say('② 换成<b>动态磁头</b>（速度响应式）：只有一组绕组，靠相对运动产生感应电动势，<b>静止时没有输出</b>，因此不适用于长度测量。');
+    setHead('dyn');
+    if (!await sleep(3400, tok)) return;
+    say('③ 要测长度还得用静态磁头。为了辨向和细分，通常把两只磁头做在一起，相距 (m+1/4)W → 两路输出相差 π/2：e₁ = U_m sin(2πx/W)、e₂ = U_m cos(2πx/W)。');
+    setHead('st');
+    if (!await sleep(3400, tok)) return;
+    say('④ 看<b>鉴相</b>波形（式 11-12~14）：u₀ = U_m sin(2πx/W ± 2ωt) —— 幅值不变、相位随位置变；现在拖动位移，看 e₁、e₂ 的游标在正弦/余弦上移动。');
+    if (!await tween(0, 30, 3200, setX, tok)) return;
+    if (!await sleep(2000, tok)) return;
+    say('⑤ 磁栅的测量精度 ±0.01 mm/m、分辨力 1~5 μm；制作简单、成本低，用于三坐标测量机、数控与重型机床。');
+    if (!await sleep(3200, tok)) return;
+    setX(0);
+    say('【小结】磁尺录磁定节距、磁头读漏磁通；动态式只看速度、静态式两者都行且输出 2 倍频。');
+    if (!await sleep(2800, tok)) return;
+    endDemo();
+  }
+
+  async function demoPoints(){
+    var tok = beginDemo('pts');
+    say('【<b>本章要点</b>】共 10 条，逐条看一遍，也可点编号按钮单独回看。');
+    if (!await sleep(2000, tok)) return;
+    for (var i = 0; i < PTS_TEXT.length; i++){
+      setPt(i);
+      if (!await sleep(PTS_TEXT[i].length > 90 ? 4200 : 3200, tok)) return;
+    }
+    setPt(-1);
+    endDemo();
+  }
+
+  /* ============ 13. 键盘 ============ */
+  document.addEventListener('keydown', function(e){
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input') return;
+    if (e.key === 'ArrowLeft'){ stopDemo(); setX(S.x - (isLine() ? 2.5 : 4)); e.preventDefault(); }
+    else if (e.key === 'ArrowRight'){ stopDemo(); setX(S.x + (isLine() ? 2.5 : 4)); e.preventDefault(); }
+    else if (e.key === '1'){ stopDemo(); setType('incr'); }
+    else if (e.key === '2'){ stopDemo(); setType('abs'); }
+    else if (e.key === '3'){ stopDemo(); setType('grating'); }
+    else if (e.key === '4'){ stopDemo(); setType('mag'); }
+    else if (e.key === '5'){ stopDemo(); setType('sync'); }
+    else if (e.key === 'd'){ stopDemo(); setDiv(S.div === 1 ? 4 : 1); }
+    else if (e.key === ' '){
+      e.preventDefault();
+      if (playingKey){ stopDemo(); say('演示已暂停。'); }
+      else { var k = { incr:'cap', abs:'cap', grating:'moire', mag:'mag', sync:'sync' }[S.type]; if (DEMOS[k] && DEMOS[k].fn) DEMOS[k].fn(); }
+    }
+    else if (e.key === 'r' || e.key === 'R'){ $('reset').click(); }
+  });
+
+
+  DEMOS.cap   = { btn:'playCap',   label:'▶ 编码器原理', fn:demoCap };
+  DEMOS.moire = { btn:'playMoire', label:'▶ 光栅莫尔条纹', fn:demoMoire };
+  DEMOS.sync  = { btn:'playSync',  label:'▶ 感应同步器', fn:demoSync };
+  DEMOS.mag   = { btn:'playMag',   label:'▶ 磁栅与信号处理', fn:demoMag };
+  DEMOS.pts   = { btn:'ptsPlay',   label:'▶ 巡览要点', fn:demoPoints };
+  bindDemos();
+
+  /* ============ 启动 ============ */
+  var q = new URLSearchParams(location.search);
+  if (q.has('type') && TYPES[q.get('type')]) S.type = q.get('type');
+  if (q.has('th')) S.th = clamp(parseFloat(q.get('th')) || 2, 0.2, 6);
+  if (q.has('div')) S.div = [1, 2, 4].indexOf(parseInt(q.get('div'), 10)) >= 0 ? parseInt(q.get('div'), 10) : 1;
+  if (q.has('code') && ['bin', 'gray'].indexOf(q.get('code')) >= 0) S.code = q.get('code');
+  if (q.has('proc') && ['phase', 'amp'].indexOf(q.get('proc')) >= 0) S.proc = q.get('proc');
+  if (q.has('head') && ['dyn', 'st'].indexOf(q.get('head')) >= 0) S.head = q.get('head');
+  if (q.has('wm') && ['ab', 'moire', 'phase'].indexOf(q.get('wm')) >= 0) S.wmode = q.get('wm');
+  if (q.has('cv') && ['moire', 'resol'].indexOf(q.get('cv')) >= 0) S.cv = q.get('cv');
+  if (q.has('speed')) SPEED = clamp(parseFloat(q.get('speed')) || 1, 0.4, 2.5);
+  if (!q.has('cv')) S.cv = (S.type === 'grating') ? 'moire' : 'resol';   /* 曲线卡默认跟随器件 */
+
+  initDisc(); initAbsDisc(); initGrating(); initMag(); initSync(); initBeam();
+  $('x').min = 0; $('x').max = 100;
+  $('x').step = isLine() ? 0.25 : 1;
+  if (q.has('x')){
+    var stp = isLine() ? 0.25 : 1, xv = clamp(parseFloat(q.get('x')) || 0, 0, 100);
+    S.x = clamp(Math.round(xv/stp)*stp, 0, 100);
+  }
+  $('x').value = S.x;
+  $('th').value = S.th;
+  $('speed').value = SPEED; $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  paint();
+  runBeam();
+  runWave();
+  var AUTO = { '1':'cap', '2':'moire', '3':'sync', '4':'mag', '5':'pts' };
+  if (AUTO[q.get('auto')] && DEMOS[AUTO[q.get('auto')]].fn) DEMOS[AUTO[q.get('auto')]].fn();
+
+})();
+</script>
+
+<script>
+/* ==================== 板块布局引擎：拖动 / 缩放 / 记忆 ====================
+   由 _build/build.js 注入；章节的面板清单 / 记忆键 / 默认布局在构建时替换。 */
+(function(){
+  "use strict";
+  var BOARD = document.getElementById('board');
+  var COLS  = ['colA','colB','colC'];
+  var IDS   = ["ctrlCard","ptsCard","structCard","readCard","fmlCard","waveCard","curveCard"];
+  var MINZ = 0.7, MAXZ = 1.6, MINCOL = 260;
+  var KEY = 'jh-digital-layout-v1';
+  var DEF = {"weight":{"colA":2.9,"colB":5.2,"colC":3.9},"col":{"colA":["ctrlCard","ptsCard"],"colB":["structCard","readCard"],"colC":["fmlCard","waveCard","curveCard"]},"zoom":{}};
+  var L = null, focused = null;
+  function el(id){ return document.getElementById(id); }
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function load(){
+    var d;
+    try { d = JSON.parse(localStorage.getItem(KEY)); } catch (e) { d = null; }
+    if (!d || !d.col) return clone(DEF);
+    COLS.forEach(function(c){ if (!d.col[c]) d.col[c] = []; });
+    var seen = {};
+    COLS.forEach(function(c){
+      d.col[c] = d.col[c].filter(function(id){ if (IDS.indexOf(id) < 0 || seen[id]) return false; seen[id] = 1; return true; });
+    });
+    IDS.forEach(function(id){ if (!seen[id]){ d.col.colC.push(id); seen[id] = 1; } });
+    d.weight = d.weight || clone(DEF.weight);
+    d.zoom = d.zoom || {};
+    return d;
+  }
+  L = load();
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(L)); } catch (e) {} }
+  function render(){
+    COLS.forEach(function(cid){
+      var col = el(cid);
+      L.col[cid].forEach(function(pid){ var p = el(pid); if (p) col.appendChild(p); });
+      col.style.flexGrow = L.weight[cid] || 1;
+    });
+  }
+  function applyZoom(id){
+    var p = el(id); if (!p) return;
+    var b = p.querySelector('.pbody'); if (!b) return;
+    b.style.zoom = L.zoom[id] || 1;
+  }
+  function applyAll(){ render(); IDS.forEach(applyZoom); }
+
+  function startDrag(ev, p){
+    if (ev.button) return;
+    var x0 = ev.clientX, y0 = ev.clientY, moved = false, lastTarget = null;
+    function move(e){
+      if (!moved){
+        if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) < 6) return;
+        moved = true;
+        document.body.classList.add('layout-dragging');
+        p.classList.add('sorting');
+      }
+      var col = null, i, r;
+      for (i = 0; i < COLS.length; i++){
+        r = el(COLS[i]).getBoundingClientRect();
+        if (e.clientX >= r.left - 6 && e.clientX <= r.right + 6){ col = COLS[i]; break; }
+      }
+      if (!col) col = (e.clientX < BOARD.getBoundingClientRect().left + BOARD.clientWidth/2) ? COLS[0] : COLS[COLS.length - 1];
+      var list = L.col[col].filter(function(id){ return id !== p.id; });
+      var idx = list.length, j, q, qr;
+      for (j = 0; j < list.length; j++){
+        q = el(list[j]); if (!q) continue;
+        qr = q.getBoundingClientRect();
+        if (e.clientY < qr.top + qr.height/2){ idx = j; break; }
+      }
+      var key = col + ':' + idx;
+      if (key === lastTarget) return;
+      lastTarget = key;
+      COLS.forEach(function(c2){ L.col[c2] = L.col[c2].filter(function(id){ return id !== p.id; }); });
+      L.col[col].splice(idx, 0, p.id);
+      render();
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', up);
+      document.body.classList.remove('layout-dragging');
+      p.classList.remove('sorting');
+      if (moved) save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
+  }
+  function startSplit(ev, sp){
+    ev.preventDefault();
+    var left = el(sp.getAttribute('data-left')), right = el(sp.getAttribute('data-right'));
+    var total = left.offsetWidth + right.offsetWidth;
+    var wl = L.weight[left.id] || 1, wr = L.weight[right.id] || 1, sum = wl + wr;
+    var x0 = ev.clientX, pxPerWeight = total/sum;
+    document.body.classList.add('layout-dragging');
+    function move(e){
+      var d = (e.clientX - x0)/pxPerWeight;
+      var nl = Math.max(MINCOL/(total/sum), Math.min(sum - MINCOL/(total/sum), wl + d));
+      left.style.flexGrow = nl; right.style.flexGrow = sum - nl;
+      L.weight[left.id] = nl; L.weight[right.id] = sum - nl;
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.body.classList.remove('layout-dragging');
+      save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  }
+  function zoomPanel(id, d){
+    var z = Math.round(((L.zoom[id] || 1) + d)*100)/100;
+    L.zoom[id] = Math.max(MINZ, Math.min(MAXZ, z));
+    applyZoom(id); save();
+  }
+  function toggleFocus(id){
+    var p = el(id); if (!p) return;
+    if (focused === id){ p.classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    else {
+      if (focused) el(focused).classList.remove('focused');
+      p.classList.add('focused'); document.body.classList.add('has-focus'); focused = id;
+    }
+  }
+  function reset(){
+    L = clone(DEF);
+    if (focused){ el(focused).classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    applyAll(); save();
+  }
+  var back = document.createElement('div');
+  back.id = 'focusBack';
+  back.addEventListener('click', function(){ if (focused) toggleFocus(focused); });
+  document.body.appendChild(back);
+
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var head = p.querySelector('.phead');
+    if (head){
+      head.addEventListener('pointerdown', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        e.preventDefault(); startDrag(e, p);
+      });
+      head.addEventListener('dblclick', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        toggleFocus(id);
+      });
+    }
+    p.querySelectorAll('.ptool').forEach(function(b){
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        var a = b.getAttribute('data-act');
+        if (a === 'in') zoomPanel(id, 0.08);
+        else if (a === 'out') zoomPanel(id, -0.08);
+        else if (a === 'max') toggleFocus(id);
+      });
+    });
+  });
+  document.querySelectorAll('.vsplit').forEach(function(sp){
+    sp.addEventListener('pointerdown', function(e){ startSplit(e, sp); });
+  });
+  /* ---------- 折叠：滑过上方自动折叠，回到可视区自动展开；可手动锁定 ---------- */
+  function setFold(p, on){
+    p.classList.toggle('folded', on);
+    var btn = p.querySelector('.ptool[data-act="fold"]');
+    if (btn) btn.textContent = on ? '▸' : '▾';
+  }
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var tools = p.querySelector('.ptools');
+    if (!tools) return;
+    var fb = document.createElement('button');
+    fb.className = 'ptool';
+    fb.setAttribute('data-act', 'fold');
+    fb.title = '折叠 / 展开本板块（手动折叠后不会被自动展开）';
+    fb.textContent = '▾';
+    tools.insertBefore(fb, tools.firstChild);
+    fb.addEventListener('click', function(e){
+      e.stopPropagation();
+      var folded = p.classList.contains('folded');
+      setFold(p, !folded);
+      if (!folded) p.setAttribute('data-manual', '1'); else p.removeAttribute('data-manual');
+    });
+  });
+  var ticking = false;
+  function autoFold(){
+    ticking = false;
+    var vh = window.innerHeight || 900;
+    IDS.forEach(function(id){
+      var p = el(id); if (!p) return;
+      if (!p.parentNode || p.parentNode.id !== 'colB') return;    /* 只有中间列参与自动折叠（左右两列固定不动） */
+      var r = p.getBoundingClientRect();
+      if (r.bottom < 90){                                          /* 整块滑到上方之外 → 收起 */
+        if (!p.classList.contains('folded')) setFold(p, true);
+      } else if (r.top < vh - 30 && r.bottom > 60 && !p.hasAttribute('data-manual')){
+        if (p.classList.contains('folded')) setFold(p, false);      /* 回到可视区 → 展开 */
+      }
+    });
+  }
+  function onScrollOrWheel(){
+    if (!ticking){ ticking = true; requestAnimationFrame(autoFold); }
+  }
+  window.addEventListener('scroll', onScrollOrWheel, { passive:true });
+  window.addEventListener('wheel', onScrollOrWheel, { passive:true });
+  window.addEventListener('touchmove', onScrollOrWheel, { passive:true });
+  window.addEventListener('resize', function(){ if (window.__repack) window.__repack(); });
+  setTimeout(autoFold, 400);
+  window.__autoFold = autoFold;
+
+  var lr = document.getElementById('layReset');
+  if (lr) lr.addEventListener('click', reset);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && focused) toggleFocus(focused); });
+  window.addEventListener('resize', function(){ IDS.forEach(applyZoom); });
+  window.__repack = function(){};
+  applyAll();
+  window.addEventListener('load', applyAll);
+})();
+
+</script>
+</body>
+</html>

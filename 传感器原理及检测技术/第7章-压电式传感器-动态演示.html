@@ -1,0 +1,2008 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第7章 压电式传感器 · 动态演示｜传感器原理与技术</title>
+<style>
+/* =====================================================================
+   公共样式（各章通用）· 由 _build/build.js 注入到每个单文件 HTML 的样式表顶部
+   与第4章保持同一套类名与观感；章节特有的语义色 / 版式写在章节模块的 extraCss 里
+   ===================================================================== */
+:root{
+  --jhu:#0e4a8e; --jhu2:#0a2f5c; --ink:#12233a; --muted:#5b6b80;
+  --line:#d5dfec; --bg:#eef3f9; --card:#ffffff;
+  --flux:#0d8b7f;      /* 磁通 / 场线（第4章起沿用） */
+  --cu:#c2703a;        /* 线圈 / 铜 */
+  --iron:#4b6b8f;      /* 铁芯 / 铁磁体 */
+  --gapm:#e08a1e;      /* 气隙 / 有效量 */
+  --eddy:#7c3aed;      /* 涡流 / 强调（紫） */
+  --hot:#d94a3d; --ok:#0f9d58;
+  --grid:rgba(14,74,142,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Source Han Sans SC","Hiragino Sans GB",system-ui,sans-serif;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    var(--bg);
+  color:var(--ink); font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+header{
+  background:linear-gradient(120deg,var(--jhu) 0%,var(--jhu2) 100%);
+  color:#fff; padding:8px 24px; display:flex; align-items:center; gap:16px;
+  box-shadow:0 3px 14px rgba(10,47,92,.28);
+}
+header h1{font-size:22px; margin:0; letter-spacing:1px; font-weight:700}
+header .sub{font-size:13px; opacity:.9; border-left:1px solid rgba(255,255,255,.45); padding-left:13px}
+header .right{margin-left:auto; text-align:right; font-size:12.5px; opacity:.92; line-height:1.3}
+header .right b{font-size:15px; letter-spacing:2px}
+#laybar{display:flex; align-items:center; gap:10px; padding:3px 20px; font-size:12px; color:#41566f;
+        background:#e4edf8; border-bottom:1px solid #cfdcec}
+#laybar button{border:1px solid #a9c1dd; background:#fff; color:var(--jhu); border-radius:7px;
+               font-size:12px; font-weight:700; padding:2px 10px; cursor:pointer; font-family:inherit}
+#laybar button:hover{background:#f2f7fd}
+#laybar .hint{color:#6b7d92}
+#boardWrap{padding:6px 14px 2px}
+#board{display:flex; align-items:flex-start}
+.col{display:flex; flex-direction:column; gap:6px; min-width:0; flex-grow:1; flex-basis:0}
+.colhead{font-size:11.5px; font-weight:700; color:#8296ad; letter-spacing:.4px; padding:0 3px 2px; border-bottom:1px dashed #dbe5f0}
+.vsplit{flex:0 0 13px; align-self:stretch; cursor:col-resize; position:relative; touch-action:none}
+.vsplit::before{content:""; position:absolute; left:5.5px; top:8px; bottom:8px; width:2px; border-radius:2px; background:#cfdcec}
+.vsplit:hover::before{background:var(--jhu); width:3px; left:5px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:13px;
+      box-shadow:0 2px 10px rgba(18,35,58,.06); padding:5px 9px}
+.card h2{margin:0 0 4px; font-size:14.5px; color:var(--jhu); font-weight:700; display:flex; align-items:center; gap:7px}
+.card h2::before{content:""; width:4px; height:15px; border-radius:3px; background:var(--jhu)}
+.card h2 small{font-weight:400; color:var(--muted); font-size:12px}
+.panel{position:relative; box-sizing:border-box}
+.panel > .phead{display:flex; align-items:center; gap:6px; cursor:move; touch-action:none; user-select:none; margin:-1px 0 4px}
+.panel > .phead h2{margin:0; flex:1; min-width:0; cursor:move}
+.ptools{display:flex; gap:3px; flex:none}
+.ptool{width:21px; height:21px; padding:0; line-height:1; border:1px solid var(--line); background:#fff;
+       color:var(--jhu); border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit}
+.ptool:hover{background:#eef4fc; border-color:#9fbedd}
+.panel.sorting{opacity:.6; outline:2px dashed var(--jhu); outline-offset:2px; pointer-events:none}
+.panel.focused{position:fixed; left:14px; right:14px; top:80px; bottom:14px; z-index:300; overflow:auto;
+               box-shadow:0 18px 50px rgba(10,47,92,.38); border-color:var(--jhu)}
+#focusBack{position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(10,30,55,.34); z-index:290; display:none}
+body.has-focus #focusBack{display:block}
+body.layout-dragging{user-select:none}
+svg{display:block; width:100%; height:auto}
+.tiny{font-size:12px; fill:var(--muted); color:var(--muted)}
+/* ---- 控件 ---- */
+.ctrl{display:flex; flex-direction:column; gap:2px; margin-bottom:2px}
+.ctrl .row{display:flex; align-items:center; gap:7px}
+.ctrl .name{font-size:12.8px; color:var(--muted); width:118px; flex:none}
+.ctrl .name b{color:var(--ink); font-size:14px}
+.ctrl output{font-size:18px; font-weight:800; min-width:96px; text-align:right; font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none; appearance:none; height:8px; border-radius:5px; background:#dce6f2; outline:none; flex:1; min-width:70px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:21px; height:21px; border-radius:50%;
+      background:#fff; border:3px solid var(--jhu); cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.seg{display:flex; gap:6px; flex-wrap:wrap}
+.seg button{flex:1 1 0; min-width:96px; padding:5px 8px; border-radius:9px; border:1px solid var(--line);
+            background:#fff; cursor:pointer; font-size:13px; font-weight:700; color:#33506f; font-family:inherit; line-height:1.3}
+.seg button small{display:block; font-weight:400; font-size:11px; color:var(--muted)}
+.seg button:hover{border-color:#9fbedd}
+.seg button.on{background:var(--jhu); border-color:var(--jhu); color:#fff}
+.seg button.on small{color:rgba(255,255,255,.85)}
+/* 紧凑小按钮（章节里的型式/模式细分按钮） */
+.seg.tight button{min-width:66px; flex:1 1 66px; padding:3px 4px; font-size:11.5px; line-height:1.25}
+.seg.tight button small{font-size:10px}
+.step{border:1px solid var(--line); background:#fff; color:var(--jhu); width:28px; height:28px;
+      border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; line-height:1}
+.actions{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap}
+.actions button{flex:1 1 92px; padding:5px 4px; border-radius:9px; border:1px solid var(--jhu);
+                background:var(--jhu); color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;
+                font-family:inherit; white-space:nowrap}
+.actions button.ghost{background:#fff; color:var(--jhu)}
+.actions button.running{background:var(--hot); border-color:var(--hot); color:#fff}
+.actions button:hover{filter:brightness(1.07)}
+.narrate{margin-top:4px; border-left:5px solid var(--flux); background:#f2fbf9; border-radius:0 10px 10px 0;
+         padding:3px 10px; font-size:12.4px; line-height:1.34; min-height:26px; color:#0a5f57}
+/* ---- 读数 ---- */
+.big{display:flex; align-items:baseline; gap:9px; background:linear-gradient(90deg,#f2f7ff,#fff);
+     border:1px solid #d9e5f5; border-radius:12px; padding:3px 12px}
+.big .cap{font-size:13px; color:var(--muted); margin-right:auto}
+.big .num{font-size:23px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
+.big .unit{font-size:15px; font-weight:700; color:var(--muted)}
+.kv{display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:5px}
+.kv .box{border:1px dashed var(--line); border-radius:9px; padding:2px 6px; font-size:10.5px; color:var(--muted)}
+.kv .box b{display:block; font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:1px}
+.fine{font-size:10.4px; color:var(--muted); margin-top:5px; line-height:1.5; font-variant-numeric:tabular-nums}
+.fine b{color:var(--ink)}
+/* ---- 比例条 / 图例 ---- */
+.rmbar{display:flex; height:15px; border-radius:5px; overflow:hidden; border:1px solid var(--line); background:#f4f8fd; margin-top:3px}
+.rmbar i{display:block; height:100%}
+.legend{display:flex; gap:8px; flex-wrap:wrap; font-size:10.4px; color:var(--muted); margin-top:1px}
+.legend i{display:inline-block; width:14px; height:9px; border-radius:2px; margin-right:5px}
+/* ---- 公式 ---- */
+.fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:10.9px; line-height:1.22; color:#16283d}
+.fml .row{display:block; border-bottom:1px dashed #e7eef7; padding:0}
+.fml .row:last-child{border-bottom:none}
+.fml .tag{display:inline-block; font-family:"Microsoft YaHei",sans-serif; font-size:11px; color:#fff;
+          background:var(--jhu); border-radius:5px; padding:0 6px; margin-right:5px; vertical-align:1px}
+.fml .tag.g{background:var(--gapm)} .fml .tag.f{background:var(--flux)} .fml .tag.v{background:var(--eddy)}
+.fml b{color:var(--hot)}
+.fml .note{font-family:"Microsoft YaHei",sans-serif; font-size:10.8px; color:var(--muted); line-height:1.4; margin-top:2px}
+.frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.88em; line-height:1.02; margin:0 .14em}
+.frac i{font-style:normal; padding:0 .3em}
+.frac b{font-weight:400; color:inherit; border-top:1.4px solid currentColor; padding:0 .3em}
+/* ---- 要点 ---- */
+ol.points{margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:4px}
+ol.points li{border:1px solid var(--line); border-left:4px solid #c8d6e6; border-radius:0 9px 9px 0;
+             padding:0 7px; font-size:10.9px; line-height:1.28; color:#3c5068; background:#fbfdff; transition:.25s}
+ol.points li.on{border-left-color:var(--ok); background:#f2fbf5; color:var(--ink); box-shadow:0 0 0 2px rgba(15,157,88,.12)}
+ol.points li .hl{color:var(--ok); font-weight:700}
+.hint{font-size:12px; color:var(--muted); margin-top:5px}
+footer{padding:3px 18px 5px; font-size:11px; color:var(--muted); line-height:1.5}
+footer b{color:var(--jhu)}
+.actions button.ptsB{flex:0 0 26px; padding:2px 0; font-size:11px; border-radius:6px}   /* 要点编号按钮：特异性需高于 .actions button */
+/* 左右两列都吸附固定；只有中间列（结构+读数）随页面滚动 */
+#colA, #colC{position:sticky; top:4px; align-self:flex-start;
+             max-height:calc(100vh - 10px); overflow-y:auto; overscroll-behavior:contain}
+#colA::-webkit-scrollbar, #colC::-webkit-scrollbar{width:6px}
+#colA::-webkit-scrollbar-thumb, #colC::-webkit-scrollbar-thumb{background:#c3d3e6; border-radius:3px}
+/* 中间列底部留白：让最后一张卡片也能滚动到屏幕中间 */
+#colB{padding-bottom:52vh}
+.panel > .pbody{max-height:2600px; overflow:hidden; transition:max-height .22s ease, opacity .18s ease}
+.panel.folded > .pbody{max-height:0 !important; opacity:0}
+.panel.folded{border-color:#bcd0e5; background:#f8fbff}
+.panel.folded > .phead h2{color:#5b6b80}
+.ptool[data-act="fold"]{font-size:11px}
+.readlabel{font-size:12.5px; font-weight:700; color:#5b6b80; margin:7px 0 3px; padding-top:6px; border-top:1px dashed #dbe5f0}
+.readwrap svg{max-height:196px}
+.pbody > svg{max-height:300px}
+.pbody > svg + svg{max-height:196px}
+@media (max-width:1200px){ #boardWrap{min-width:1180px} }
+
+  /* ---- 第7章语义色 ---- */
+  :root{ --piezo:#0d8b7f; --chgp:#d94a3d; --chgn:#2b6cb0; --elec:#c9a227; --ceramic:#8a5a2b; --ampv:#7c3aed; }
+</style>
+</head>
+<body>
+<header>
+  <h1>第 7 章 压电式传感器</h1>
+  <div class="sub">压电效应与压电材料 · 石英 / 压电陶瓷 · 等效电路与测量电路 · 典型应用 | 动态演示</div>
+  <div class="right"><b>江汉大学</b><br>传感器原理与技术</div>
+</header>
+<div id="laybar">
+  <span style="font-weight:700;color:#0e4a8e">板块布局</span>
+  <button id="layReset">↺ 恢复默认（一屏）</button>
+  <span class="hint"><b>左右两列固定不动</b>（左＝型式与输入量＋要点，右＝数据/曲线/公式），只有<b>中间列</b>随页面滚动；每块标题栏的 <b>▾</b> 可折叠该板块；<b>滚轮下滑时滑过上方的那几块会自动收起、滚回来自动展开</b>（手动折起的不会被自动展开）；拖动<b>标题栏</b>可换列换位、拖<b>竖条</b>调列宽、<b>＋ －</b> 缩放、<b>⛶</b> 全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
+</div>
+
+<div id="boardWrap">
+<main id="board">
+
+  <!-- ================= 左列 ================= -->
+  <div class="col" id="colA">
+    <div class="colhead">① 型式与输入量</div>
+
+
+    <section class="card panel" id="ctrlCard">
+      <div class="phead">
+        <h2>型式与输入量</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="ctrl">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px" id="typeName"><b>器件 / 型式</b></span>
+          <div class="seg tight" id="segType" style="flex:1">
+            <button data-type="quartz" class="on">石英晶片<small>正/逆压电效应</small></button>
+            <button data-type="ceramic">压电陶瓷<small>材料与极化</small></button>
+            <button data-type="conn">元件接法<small>单片/并/串</small></button>
+            <button data-type="circuit">测量电路<small>等效电路·放大器</small></button>
+            <button data-type="accel">加速度计<small>q = d₃₃ma</small></button>
+          </div>
+        </div>
+        <div class="hint" id="typeHint">石英（SiO₂）x 切晶片：沿 x（电轴）受力称纵向效应，q = d₁₁F 与晶片尺寸无关。</div>
+      </div>
+      <div class="ctrl" id="rowAxis">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>受力方向</b><br><span class="tiny">x 电轴 / y 机械轴 / z 光轴</span></span>
+          <div class="seg tight" id="segAxis" style="flex:1">
+            <button data-axis="x" class="on">沿 x 纵向<small>q = d₁₁F</small></button>
+            <button data-axis="y">沿 y 横向<small>q = −d₁₁(l/h)F</small></button>
+            <button data-axis="z">沿 z 光轴<small>q = 0</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="ctrl" id="rowMat" style="display:none">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>压电材料</b><br><span class="tiny" id="matNote">表7-1 材料特性</span></span>
+          <div class="seg tight" id="segMat" style="flex:1">
+            <button data-mat="quartz">石英<small>d₁₁ = 2.31 pC/N</small></button>
+            <button data-mat="batio3">BaTiO₃<small>d₃₃ = 190 pC/N</small></button>
+            <button data-mat="pzt" class="on">PZT-5<small>d₃₃ = 250 pC/N</small></button>
+            <button data-mat="pvdf">PVDF<small>d₃₁ = 6.7 pC/N</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="ctrl" id="rowConn" style="display:none">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>元件接法</b><br><span class="tiny">图7-7 两片叠合</span></span>
+          <div class="seg tight" id="segConn" style="flex:1">
+            <button data-conn="single" class="on">单片<small>q · C_a · U</small></button>
+            <button data-conn="parallel">并联<small>2q · 2C_a · U</small></button>
+            <button data-conn="series">串联<small>q · C_a/2 · 2U</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="ctrl" id="rowAmp">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>前置放大器</b><br><span class="tiny">图7-9 / 图7-10</span></span>
+          <div class="seg tight" id="segPre" style="flex:1">
+            <button data-pre="volt" class="on">电压放大器<small>K_u 受 C_c 影响</small></button>
+            <button data-pre="charge">电荷放大器<small>U_o ≈ −Q/C_f</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="ctrl" id="rowCab" style="display:none">
+        <div class="row">
+          <span class="name"><b>电缆电容 C_c</b><br><span class="tiny" id="cabTxt">100 pF/m × 2 m = 200 pF</span></span>
+          <input type="range" id="cab" min="50" max="1000" step="10" value="200">
+          <output id="cabOut">200 pF</output>
+        </div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b>输入量</b><br><span class="tiny" id="xTxt">力 F = 10.0 N（满量程 50 N）</span></span>
+          <button class="step" id="xM" title="减小">−</button>
+          <input type="range" id="x" min="0" max="100" step="1" value="20">
+          <button class="step" id="xP" title="增大">＋</button>
+          <output id="xOut">20 %</output>
+        </div>
+      </div>
+      <div class="ctrl" id="rowAmpF" style="display:none">
+        <div class="row">
+          <span class="name"><b>正弦力幅值 F_m</b><br><span class="tiny">式7-15 用（N）</span></span>
+          <input type="range" id="amp" min="1" max="50" step="1" value="10">
+          <output id="ampOut">10 N</output>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="playEff" class="ghost">▶ 压电效应</button>
+        <button id="playMat" class="ghost">▶ 压电材料</button>
+        <button id="playConn" class="ghost">▶ 元件接法</button>
+        <button id="playAmp" class="ghost">▶ 测量电路</button>
+        <button id="reset" class="ghost" style="flex:0 0 58px">↺ 复位</button>
+      </div>
+      <div class="ctrl" style="margin-top:5px">
+        <div class="row">
+          <span class="name"><b>演示速度</b><br><span class="tiny">0.4× 慢 ～ 2.5× 快</span></span>
+          <input type="range" id="speed" min="0.4" max="2.5" step="0.1" value="1">
+          <output id="speedOut">1.0×</output>
+        </div>
+      </div>
+      <div class="narrate" id="narration">初始状态：石英晶片沿 x（电轴）受力，F = 10.0 N，q = d₁₁F = 23.1 pC，U = q/C_a = 23.1 mV。四个演示按钮分别讲：压电效应 / 压电材料 / 元件接法 / 测量电路。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="ptsCard">
+      <div class="phead">
+        <h2>本章要点</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="actions" style="margin-top:0">
+        <button id="ptsPlay" class="ghost" style="flex:0 0 98px">▶ 巡览要点</button>
+        <button id="ptsB0" class="ghost ptsB">1</button><button id="ptsB1" class="ghost ptsB">2</button>
+        <button id="ptsB2" class="ghost ptsB">3</button><button id="ptsB3" class="ghost ptsB">4</button>
+        <button id="ptsB4" class="ghost ptsB">5</button><button id="ptsB5" class="ghost ptsB">6</button>
+        <button id="ptsB6" class="ghost ptsB">7</button><button id="ptsB7" class="ghost ptsB">8</button>
+        <button id="ptsB8" class="ghost ptsB">9</button>
+      </div>
+      <ol class="points" id="points"></ol>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colA" data-right="colB" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 中列 ================= -->
+  <div class="col" id="colB">
+    <div class="colhead">② 结构动态 ＋ 输出读数（成对显示）</div>
+
+
+    <section class="card panel" id="structCard">
+      <div class="phead">
+        <h2>结构动态 <small id="stSub">石英晶片 · 沿 x 受力 → 表面电荷</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="st" viewBox="0 0 700 320" role="img" aria-label="压电式传感器结构动态">
+        <!-- ======================= ① 石英晶片：三轴受力与电荷 ======================= -->
+        <g id="stQuartz">
+          <g opacity="0.9">
+            <line x1="40" y1="96" x2="82" y2="96" stroke="#233b57" stroke-width="2"/>
+            <polygon points="86,96 77,92 77,100" fill="#233b57"/>
+            <text x="90" y="93" font-size="11.5" font-weight="700" fill="#233b57">x 电轴</text>
+            <line x1="40" y1="96" x2="66" y2="120" stroke="#233b57" stroke-width="2"/>
+            <text x="44" y="136" font-size="11.5" font-weight="700" fill="#233b57">y 机械轴</text>
+            <line x1="40" y1="96" x2="66" y2="72" stroke="#233b57" stroke-width="2"/>
+            <text x="70" y="62" font-size="11.5" font-weight="700" fill="#233b57">z 光轴</text>
+          </g>
+          <rect id="qCry" x="200" y="112" width="300" height="75" rx="3" fill="#e8f4f1" stroke="#0d8b7f" stroke-width="1.8"/>
+          <line id="qElT" x1="200" y1="112" x2="500" y2="112" stroke="#c9a227" stroke-width="5" stroke-linecap="round"/>
+          <line id="qElB" x1="200" y1="188" x2="500" y2="188" stroke="#c9a227" stroke-width="5" stroke-linecap="round"/>
+          <text id="qPlus" x="350" y="104" text-anchor="middle" font-size="13" font-weight="700" fill="#d94a3d">+ + + +</text>
+          <text id="qMinus" x="350" y="212" text-anchor="middle" font-size="13" font-weight="700" fill="#2b6cb0">− − − −</text>
+          <path id="qLeadT" d="M500 112 H610 V228" fill="none" stroke="#233b57" stroke-width="1.8"/>
+          <path id="qLeadB" d="M500 188 H660 V228" fill="none" stroke="#233b57" stroke-width="1.8"/>
+          <line id="qFxT" x1="250" y1="58" x2="250" y2="104" stroke="#d94a3d" stroke-width="3"/>
+          <polygon id="qFxH" points="250,112 244,98 256,98" fill="#d94a3d"/>
+          <line id="qFxB" x1="250" y1="244" x2="250" y2="198" stroke="#d94a3d" stroke-width="3"/>
+          <polygon id="qFxH2" points="250,190 244,204 256,204" fill="#d94a3d"/>
+          <text id="qFxTxt" x="262" y="80" font-size="12" font-weight="700" fill="#d94a3d">F_x</text>
+          <line id="qFyL" x1="108" y1="150" x2="188" y2="150" stroke="#d94a3d" stroke-width="3"/>
+          <polygon id="qFyLH" points="196,150 184,144 184,156" fill="#d94a3d"/>
+          <line id="qFyR" x1="592" y1="150" x2="512" y2="150" stroke="#d94a3d" stroke-width="3"/>
+          <polygon id="qFyRH" points="504,150 516,144 516,156" fill="#d94a3d"/>
+          <text id="qFyTxt" x="112" y="140" font-size="12" font-weight="700" fill="#d94a3d">F_y</text>
+          <g id="qZg" opacity="0.28">
+            <line x1="556" y1="64" x2="584" y2="36" stroke="#d94a3d" stroke-width="2.6"/>
+            <polygon points="588,32 578,36 586,44" fill="#d94a3d"/>
+            <text x="612" y="30" text-anchor="end" font-size="11.5" font-weight="700" fill="#d94a3d">F_z（光轴）</text>
+          </g>
+          <rect x="520" y="230" width="170" height="66" rx="9" fill="#f4f8fd" stroke="#cfdcec"/>
+          <text x="605" y="256" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0e4a8e">→ 前置放大器</text>
+          <text x="605" y="278" text-anchor="middle" font-size="11" fill="#5b6b80">R_i ≥ 10¹² Ω　C_i = 100 pF</text>
+          <text id="qOut" x="36" y="292" font-size="13.5" font-weight="700" fill="#0e4a8e">q = +23.1 pC　U = q/C_a = +23.1 mV</text>
+          <text id="qNote" x="36" y="311" font-size="11.5" fill="#5b6b80">纵向效应：q = d₁₁F_x，与晶片尺寸无关</text>
+          <text x="36" y="272" font-size="11.5" fill="#94a3b8">逆压电效应（反向）：同一晶片加交变电压 U → 产生形变，用来发射超声（声呐 / 探伤 / B 超）</text>
+        </g>
+        <!-- ======================= ② 压电陶瓷：电畴极化 → 受力出电荷 ======================= -->
+        <g id="stCeramic" style="display:none">
+          <text x="120" y="40" text-anchor="middle" font-size="12.5" font-weight="700" fill="#8a5a2b">① 未极化（电畴随机）</text>
+          <text x="348" y="40" text-anchor="middle" font-size="12.5" font-weight="700" fill="#8a5a2b">② 直流电场极化</text>
+          <text x="578" y="40" text-anchor="middle" font-size="12.5" font-weight="700" fill="#8a5a2b">③ 极化后受力 → 表面电荷</text>
+          <rect x="24" y="96" width="192" height="120" rx="4" fill="#f6ece0" stroke="#8a5a2b" stroke-width="1.6"/>
+          <rect x="252" y="96" width="192" height="120" rx="4" fill="#f6ece0" stroke="#8a5a2b" stroke-width="1.6"/>
+          <rect x="480" y="96" width="196" height="120" rx="4" fill="#f6ece0" stroke="#8a5a2b" stroke-width="1.6"/>
+          <g id="cerA"></g>
+          <g id="cerB"></g>
+          <g id="cerC"></g>
+          <line x1="252" y1="96" x2="444" y2="96" stroke="#c9a227" stroke-width="4.5" stroke-linecap="round"/>
+          <line x1="252" y1="216" x2="444" y2="216" stroke="#c9a227" stroke-width="4.5" stroke-linecap="round"/>
+          <text x="252" y="88" font-size="13" font-weight="700" fill="#2b6cb0">−</text>
+          <text x="252" y="234" font-size="13" font-weight="700" fill="#d94a3d">＋</text>
+          <line x1="234" y1="110" x2="234" y2="200" stroke="#7c3aed" stroke-width="3"/>
+          <polygon points="234,208 228,194 240,194" fill="#7c3aed"/>
+          <text x="234" y="106" text-anchor="middle" font-size="12" font-weight="700" fill="#7c3aed">E</text>
+          <line x1="480" y1="96" x2="676" y2="96" stroke="#c9a227" stroke-width="4.5" stroke-linecap="round"/>
+          <line x1="480" y1="216" x2="676" y2="216" stroke="#c9a227" stroke-width="4.5" stroke-linecap="round"/>
+          <text id="cerPlus" x="556" y="88" text-anchor="middle" font-size="13" font-weight="700" fill="#d94a3d">＋ ＋ ＋</text>
+          <text id="cerMinus" x="556" y="234" text-anchor="middle" font-size="13" font-weight="700" fill="#2b6cb0">− − −</text>
+          <line id="cerFxT" x1="636" y1="56" x2="636" y2="88" stroke="#d94a3d" stroke-width="3"/>
+          <polygon id="cerFxTH" points="636,96 630,82 642,82" fill="#d94a3d"/>
+          <line id="cerFxB" x1="636" y1="256" x2="636" y2="224" stroke="#d94a3d" stroke-width="3"/>
+          <polygon id="cerFxBH" points="636,216 630,230 642,230" fill="#d94a3d"/>
+          <text id="cerFtxt" x="648" y="176" font-size="12" font-weight="700" fill="#d94a3d">F</text>
+          <text x="120" y="250" text-anchor="middle" font-size="11.5" fill="#94a3b8">无净极化 → 无压电性</text>
+          <text x="348" y="250" text-anchor="middle" font-size="11.5" fill="#94a3b8">电畴取向一致 → 剩余极化</text>
+          <text x="578" y="250" text-anchor="middle" font-size="11.5" fill="#94a3b8">表面出现束缚电荷</text>
+          <text id="cerOut" x="36" y="288" font-size="13.5" font-weight="700" fill="#0e4a8e">q = d₃₃F = 2500 pC</text>
+          <text id="cerNote" x="36" y="308" font-size="11.5" fill="#5b6b80">压电陶瓷 d₃₃ = 250 pC/N，约为石英 d₁₁ 的 108 倍</text>
+        </g>
+        <!-- ======================= ③ 元件接法：单片 / 并联 / 串联 ======================= -->
+        <g id="stConn" style="display:none">
+          <g id="cnSingle">
+            <rect x="200" y="122" width="270" height="46" rx="3" fill="#e8f4f1" stroke="#0d8b7f" stroke-width="1.8"/>
+            <line x1="185" y1="122" x2="485" y2="122" stroke="#c9a227" stroke-width="5" stroke-linecap="round"/>
+            <line x1="185" y1="168" x2="485" y2="168" stroke="#c9a227" stroke-width="5" stroke-linecap="round"/>
+            <text x="335" y="150" text-anchor="middle" font-size="12" fill="#0d8b7f">单片压电晶片</text>
+          </g>
+          <g id="cnPair" style="display:none">
+            <rect x="200" y="96" width="270" height="46" rx="3" fill="#e8f4f1" stroke="#0d8b7f" stroke-width="1.8"/>
+            <rect x="200" y="148" width="270" height="46" rx="3" fill="#e8f4f1" stroke="#0d8b7f" stroke-width="1.8"/>
+            <line x1="185" y1="96" x2="485" y2="96" stroke="#c9a227" stroke-width="5" stroke-linecap="round"/>
+            <line x1="185" y1="145" x2="485" y2="145" stroke="#c9a227" stroke-width="5" stroke-linecap="round"/>
+            <line x1="185" y1="194" x2="485" y2="194" stroke="#c9a227" stroke-width="5" stroke-linecap="round"/>
+            <text x="335" y="124" text-anchor="middle" font-size="12" fill="#0d8b7f">晶片 1</text>
+            <text x="335" y="176" text-anchor="middle" font-size="12" fill="#0d8b7f">晶片 2</text>
+          </g>
+          <path id="cnWire1" d="M185 122 H100" fill="none" stroke="#233b57" stroke-width="1.8"/>
+          <path id="cnWire2" d="M185 168 H100" fill="none" stroke="#233b57" stroke-width="1.8"/>
+          <circle id="cnT1" cx="88" cy="122" r="5" fill="#233b57"/>
+          <circle id="cnT2" cx="88" cy="168" r="5" fill="#233b57"/>
+          <text id="cnT1Txt" x="76" y="112" text-anchor="middle" font-size="12.5" font-weight="700" fill="#233b57">A</text>
+          <text id="cnT2Txt" x="76" y="190" text-anchor="middle" font-size="12.5" font-weight="700" fill="#233b57">B</text>
+          <text id="cnMidTxt" x="690" y="230" text-anchor="end" font-size="11.5" font-weight="700" fill="#8a5a2b">中间电极</text>
+          <text id="cnOut" x="36" y="272" font-size="13.5" font-weight="700" fill="#0e4a8e">单片：q = 23.1 pC　C_a = 1000 pF　U = 23.1 mV</text>
+          <text id="cnNote" x="36" y="292" font-size="11.5" fill="#5b6b80">单片基准：q = d₁₁F</text>
+          <text id="cnNote2" x="36" y="311" font-size="11.5" fill="#5b6b80">并联利于准静态测量；串联提高电压、要求后接高输入阻抗</text>
+        </g>
+        <!-- ======================= ④ 等效电路：电压源 ⇄ 电荷源 ======================= -->
+        <g id="stEquiv" style="display:none">
+          <text x="40" y="46" font-size="12.5" font-weight="700" fill="#0e4a8e">（b）电压源形式</text>
+          <text x="40" y="64" font-size="11.5" fill="#5b6b80">U = q/C_a 与 C_a 串联</text>
+          <path id="eqWireV" d="M70 96 H204 M216 96 H330 M70 96 V124 M70 168 V196 M70 196 H330 M330 96 V196" fill="none" stroke="#233b57" stroke-width="1.8"/>
+          <circle cx="70" cy="146" r="22" fill="#fff" stroke="#233b57" stroke-width="2"/>
+          <text x="70" y="152" text-anchor="middle" font-size="14" font-weight="700" fill="#0e4a8e">U</text>
+          <line x1="204" y1="84" x2="204" y2="108" stroke="#233b57" stroke-width="3"/>
+          <line x1="216" y1="84" x2="216" y2="108" stroke="#233b57" stroke-width="3"/>
+          <text x="210" y="76" text-anchor="middle" font-size="12" font-weight="700" fill="#0d8b7f">C_a</text>
+          <circle cx="330" cy="96" r="4.5" fill="#d94a3d"/>
+          <circle cx="330" cy="196" r="4.5" fill="#2b6cb0"/>
+          <text x="342" y="92" font-size="12" font-weight="700" fill="#d94a3d">a</text>
+          <text x="342" y="212" font-size="12" font-weight="700" fill="#2b6cb0">b</text>
+          <text x="392" y="46" font-size="12.5" font-weight="700" fill="#0e4a8e">（c）电荷源形式</text>
+          <text x="392" y="64" font-size="11.5" fill="#5b6b80">q 与 C_a、R_a 并联</text>
+          <path id="eqWireQ" d="M410 96 H668 M410 96 V124 M410 168 V196 M410 196 H668 M490 96 V130 M490 162 V196 M580 96 V122 M580 170 V196" fill="none" stroke="#233b57" stroke-width="1.8"/>
+          <circle cx="410" cy="146" r="22" fill="#fff" stroke="#233b57" stroke-width="2"/>
+          <text x="410" y="152" text-anchor="middle" font-size="14" font-weight="700" fill="#0e4a8e">q</text>
+          <line x1="474" y1="130" x2="506" y2="130" stroke="#233b57" stroke-width="3"/>
+          <line x1="474" y1="162" x2="506" y2="162" stroke="#233b57" stroke-width="3"/>
+          <text x="490" y="122" text-anchor="middle" font-size="12" font-weight="700" fill="#0d8b7f">C_a</text>
+          <path d="M580 122 l9 7 l-18 14 l18 14 l-18 14 l9 7" fill="none" stroke="#233b57" stroke-width="2.2"/>
+          <text x="580" y="114" text-anchor="middle" font-size="12" font-weight="700" fill="#8a5a2b">R_a</text>
+          <circle cx="668" cy="96" r="4.5" fill="#d94a3d"/>
+          <circle cx="668" cy="196" r="4.5" fill="#2b6cb0"/>
+          <text x="640" y="86" font-size="12" font-weight="700" fill="#d94a3d">a</text>
+          <text x="640" y="214" font-size="12" font-weight="700" fill="#2b6cb0">b</text>
+          <text id="eqOut" x="36" y="256" font-size="12.5" font-weight="700" fill="#0e4a8e">两式互为等效：U = q/C_a（式7-10）</text>
+          <text id="eqNote" x="36" y="288" font-size="11.5" fill="#5b6b80">元件本身 R_a = 10¹⁰ Ω，外接电缆电容 C_c、放大器输入 R_i = 10¹² Ω、C_i = 100 pF（图7-8）</text>
+          <text id="eqNote2" x="36" y="308" font-size="11.5" fill="#5b6b80">接放大器后总电容 C = C_a + C_c + C_i，总电阻 R = R_a ∥ R_i → 决定低频下限 ω_L = 1/RC</text>
+        </g>
+        <!-- ======================= ⑤ 压电加速度计：F = ma → q = d₃₃ma ======================= -->
+        <g id="stAccel" style="display:none">
+          <rect x="270" y="52" width="180" height="12" rx="3" fill="#dde5ee" stroke="#8a98aa"/>
+          <path id="acSpring" d="M360 64 v14 l-16 8 l32 16 l-32 16 l32 16 v6" fill="none" stroke="#8a98aa" stroke-width="2.2"/>
+          <rect id="acMass" x="270" y="138" width="180" height="84" rx="4" fill="#cddcee" stroke="#4b6b8f" stroke-width="1.8"/>
+          <text id="acMassTxt" x="360" y="184" text-anchor="middle" font-size="13" font-weight="700" fill="#233b57">质量块 m = 2 g</text>
+          <rect id="acPz1" x="280" y="222" width="160" height="10" fill="#f6ece0" stroke="#8a5a2b" stroke-width="1.4"/>
+          <rect id="acPz2" x="280" y="232" width="160" height="10" fill="#f6ece0" stroke="#8a5a2b" stroke-width="1.4"/>
+          <text x="452" y="232" font-size="11.5" font-weight="700" fill="#8a5a2b">压电片（PZT）</text>
+          <rect x="210" y="250" width="300" height="42" rx="4" fill="#dde5ee" stroke="#8a98aa" stroke-width="1.6"/>
+          <line x1="230" y1="286" x2="250" y2="258" stroke="#a8b6c6" stroke-width="1.6"/>
+          <line x1="270" y1="286" x2="290" y2="258" stroke="#a8b6c6" stroke-width="1.6"/>
+          <line x1="310" y1="286" x2="330" y2="258" stroke="#a8b6c6" stroke-width="1.6"/>
+          <line x1="350" y1="286" x2="370" y2="258" stroke="#a8b6c6" stroke-width="1.6"/>
+          <line x1="390" y1="286" x2="410" y2="258" stroke="#a8b6c6" stroke-width="1.6"/>
+          <line x1="430" y1="286" x2="450" y2="258" stroke="#a8b6c6" stroke-width="1.6"/>
+          <line x1="470" y1="286" x2="490" y2="258" stroke="#a8b6c6" stroke-width="1.6"/>
+          <text x="228" y="280" font-size="11.5" font-weight="700" fill="#4b6b8f">基座</text>
+          <line id="acArr" x1="232" y1="110" x2="232" y2="216" stroke="#d94a3d" stroke-width="3"/>
+          <polygon id="acArrH1" points="232,104 226,118 238,118" fill="#d94a3d"/>
+          <polygon id="acArrH2" points="232,222 226,208 238,208" fill="#d94a3d"/>
+          <text id="acArrTxt" x="216" y="168" text-anchor="end" font-size="13" font-weight="700" fill="#d94a3d">a</text>
+          <line id="acLeadT" x1="440" y1="227" x2="556" y2="227" stroke="#233b57" stroke-width="1.8"/>
+          <line id="acLeadB" x1="440" y1="237" x2="556" y2="237" stroke="#233b57" stroke-width="1.8"/>
+          <rect x="556" y="196" width="134" height="104" rx="9" fill="#f4f8fd" stroke="#cfdcec"/>
+          <text x="623" y="218" text-anchor="middle" font-size="12" font-weight="700" fill="#0e4a8e">电荷放大器</text>
+          <text x="623" y="238" text-anchor="middle" font-size="11" fill="#5b6b80">C_f = 10 pF</text>
+          <text x="623" y="256" text-anchor="middle" font-size="11" fill="#5b6b80">100 mV/pC</text>
+          <text id="acUo" x="623" y="284" text-anchor="middle" font-size="13.5" font-weight="700" fill="#d94a3d">U_o = 2.45 V</text>
+          <text id="acOut" x="36" y="296" font-size="13.5" font-weight="700" fill="#0e4a8e">a = 5.0 g　q = d₃₃ma = 24.5 pC　U_o = q/C_f = 2.45 V</text>
+          <text id="acNote" x="36" y="316" font-size="11.5" fill="#5b6b80">S_q = d₃₃mg = 4.90 pC/g</text>
+          <text id="acNote2" x="212" y="40" font-size="11.5" fill="#5b6b80">S_v = S_q/C_f = 490 mV/g　f₀ = 55 kHz</text>
+        </g>
+        <!-- 电荷粒子（沿引线流动，数量/速度 ∝ 电荷量） -->
+        <g id="qDots"></g>
+      </svg>
+      <div class="readlabel">输出读数：电荷 q 与电压 U（含电荷量级条）</div>
+      <div class="readwrap"><svg viewBox="0 0 620 200" role="img" aria-label="输出读数 电荷与电压">
+        <g transform="translate(140,18)">
+          <text id="qu1" x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">力 F = 10.0 N（满量程 50 N）</text>
+          <text id="qu2" x="0" y="22" font-size="12" fill="#5b6b80">电荷 q = d₁₁F = 23.1 pC</text>
+          <text id="qu3" x="0" y="44" font-size="12" fill="#5b6b80">电压 U = q/C_a = 23.1 mV（C_a = 1000 pF）</text>
+          <text x="0" y="70" font-size="11.5" fill="#5b6b80">电荷量级（对数刻度）</text>
+          <rect x="0" y="76" width="400" height="15" rx="5" fill="#f4f8fd" stroke="#d5dfec"/>
+          <rect id="quBar" x="0" y="76" width="0" height="15" rx="5" fill="#0d8b7f"/>
+          <line x1="100" y1="76" x2="100" y2="91" stroke="#c3d3e6"/>
+          <line x1="200" y1="76" x2="200" y2="91" stroke="#c3d3e6"/>
+          <line x1="300" y1="76" x2="300" y2="91" stroke="#c3d3e6"/>
+          <text x="0" y="106" font-size="10.5" fill="#94a3b8">1 pC</text>
+          <text x="100" y="106" text-anchor="middle" font-size="10.5" fill="#94a3b8">10 pC</text>
+          <text x="200" y="106" text-anchor="middle" font-size="10.5" fill="#94a3b8">100 pC</text>
+          <text x="300" y="106" text-anchor="middle" font-size="10.5" fill="#94a3b8">1000 pC</text>
+          <text x="400" y="106" text-anchor="end" font-size="10.5" fill="#94a3b8">10⁴ pC</text>
+          <text id="qu4" x="0" y="132" font-size="12" font-weight="700" fill="#d94a3d">U_i = q/C = 17.8 mV（电压放大器）</text>
+          <text id="qu5" x="0" y="154" font-size="12" font-weight="700" fill="#7c3aed">U_o = −q/C_f = 23.1 mV（电荷放大器）</text>
+          <text id="quNote" x="0" y="178" font-size="11" fill="#94a3b8">电荷（红点）从受力面经电极流入前置放大器；数量与流速 ∝ q</text>
+        </g>
+      </svg></div>
+      <div class="hint" id="stHint">石英纵向效应：q = d₁₁F，与晶片尺寸无关 —— 换“沿 y 横向”看尺寸比 l/h 与极性变化。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="waveCard">
+      <div class="phead">
+        <h2>测量电路 <small id="waveSub">图7-9 电压放大器 / 图7-10 电荷放大器</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="cir" viewBox="0 0 700 320" role="img" aria-label="压电式传感器测量电路与输出波形">
+        <rect x="24" y="140" width="76" height="70" rx="8" fill="#e8f4f1" stroke="#0d8b7f" stroke-width="1.6"/>
+        <text x="62" y="166" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0d8b7f">压电元件</text>
+        <text x="62" y="184" text-anchor="middle" font-size="11" fill="#5b6b80">q, C_a</text>
+        <text id="cSrcTxt" x="62" y="200" text-anchor="middle" font-size="10.5" fill="#94a3b8">23.1 pC</text>
+        <path d="M100 152 H312" fill="none" stroke="#233b57" stroke-width="1.8"/>
+        <path d="M100 196 H312" fill="none" stroke="#233b57" stroke-width="1.8"/>
+        <path d="M150 152 V166 M150 174 V196" fill="none" stroke="#233b57" stroke-width="1.8"/>
+        <line x1="132" y1="166" x2="168" y2="166" stroke="#233b57" stroke-width="3"/>
+        <line x1="132" y1="174" x2="168" y2="174" stroke="#233b57" stroke-width="3"/>
+        <text id="cCabTxt" x="150" y="140" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8a5a2b">C_c = 200 pF（电缆）</text>
+        <path d="M210 152 V166 M210 174 V196" fill="none" stroke="#233b57" stroke-width="1.8"/>
+        <line x1="192" y1="166" x2="228" y2="166" stroke="#233b57" stroke-width="3"/>
+        <line x1="192" y1="174" x2="228" y2="174" stroke="#233b57" stroke-width="3"/>
+        <text x="210" y="140" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8a5a2b">C_i = 100 pF</text>
+        <path d="M262 152 V162 M262 188 V196" fill="none" stroke="#233b57" stroke-width="1.8"/>
+        <rect x="250" y="162" width="24" height="26" fill="#fff" stroke="#233b57" stroke-width="2"/>
+        <text x="286" y="180" font-size="11.5" font-weight="700" fill="#4b6b8f">R_i</text>
+        <g id="cAmpV">
+          <rect x="312" y="120" width="126" height="108" rx="10" fill="#f7f4ff" stroke="#7c3aed" stroke-width="1.6"/>
+          <text x="375" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#7c3aed">电压放大器</text>
+          <text x="375" y="168" text-anchor="middle" font-size="11" fill="#5b6b80">R_i ≥ 10¹² Ω</text>
+          <text x="375" y="190" text-anchor="middle" font-size="11" fill="#5b6b80">阻抗变换（高阻→低阻）</text>
+          <text id="cAmpVt" x="375" y="212" text-anchor="middle" font-size="11" font-weight="700" fill="#d94a3d">U_i = 17.8 mV</text>
+          <path d="M438 174 H470" fill="none" stroke="#233b57" stroke-width="1.8"/>
+        </g>
+        <g id="cAmpQ" style="display:none">
+          <polygon points="312,120 312,228 412,174" fill="#fff" stroke="#7c3aed" stroke-width="2"/>
+          <text x="328" y="150" font-size="14" font-weight="700" fill="#7c3aed">−</text>
+          <text x="328" y="202" font-size="14" font-weight="700" fill="#7c3aed">+</text>
+          <text x="360" y="222" font-size="11" fill="#7c3aed">A</text>
+          <path d="M412 174 H452 V88 H430" fill="none" stroke="#233b57" stroke-width="1.8"/>
+          <path d="M386 88 H348" fill="none" stroke="#233b57" stroke-width="1.8"/>
+          <path d="M336 88 H296 V152" fill="none" stroke="#233b57" stroke-width="1.8"/>
+          <rect x="386" y="80" width="44" height="16" fill="#fff" stroke="#233b57" stroke-width="2"/>
+          <text x="408" y="72" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8a5a2b">R_f</text>
+          <line x1="336" y1="72" x2="336" y2="104" stroke="#233b57" stroke-width="3"/>
+          <line x1="348" y1="72" x2="348" y2="104" stroke="#233b57" stroke-width="3"/>
+          <text x="342" y="64" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0d8b7f">C_f</text>
+          <circle cx="296" cy="152" r="4" fill="#233b57"/>
+          <path d="M412 174 H470" fill="none" stroke="#233b57" stroke-width="1.8"/>
+          <text id="cAmpQt" x="470" y="196" text-anchor="end" font-size="11" font-weight="700" fill="#7c3aed">U_o = −23.1 mV</text>
+        </g>
+        <circle id="cOutDot" cx="470" cy="174" r="5" fill="#233b57"/>
+        <line x1="500" y1="174" x2="690" y2="174" stroke="#e2e8f0" stroke-width="1.4"/>
+        <line x1="500" y1="60" x2="500" y2="290" stroke="#e2e8f0" stroke-width="1.4"/>
+        <path id="cWave" fill="none" stroke="#d94a3d" stroke-width="2.6"/>
+        <text x="500" y="48" font-size="12.5" font-weight="700" fill="#0e4a8e">输出波形（正弦力 F_m sinωt 作用）</text>
+        <text id="cWaveV" x="500" y="290" font-size="14" font-weight="800" fill="#d94a3d">U_o = −23.1 mV</text>
+        <text id="cWaveF" x="500" y="312" font-size="11" fill="#5b6b80">频率响应：高通，低频下限 f_L = 0.012 Hz</text>
+        <text id="cUi" x="24" y="272" font-size="12.5" font-weight="700" fill="#0e4a8e">U_i = q/(C_a+C_c+C_i) = 17.8 mV</text>
+        <text id="cUo" x="24" y="292" font-size="12.5" font-weight="700" fill="#7c3aed">U_o = −q/C_f = −23.1 mV（与 C_c 无关）</text>
+        <text id="cNote" x="24" y="312" font-size="11" fill="#5b6b80">K_u = d₁₁/(C_a+C_c+C_i) = 1.78 mV/N</text>
+        <g id="cDots"></g>
+      </svg>
+      <div class="hint" id="waveHint">电压放大器：K_u = d₁₁/(C_a+C_c+C_i)，电缆电容 C_c 直接吃掉灵敏度；电荷放大器：U_o ≈ −q/C_f，与 C_c 无关。</div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colB" data-right="colC" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 右列 ================= -->
+  <div class="col" id="colC">
+    <div class="colhead">③ 公式推导 · 特性曲线 · 本章要点</div>
+
+
+    <section class="card panel" id="readCard">
+      <div class="phead">
+        <h2>输出读数</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="big">
+        <span class="cap" id="bigCap">石英晶片电荷 q</span>
+        <span class="num" id="bigNum">23.1</span><span class="unit" id="bigUnit">pC</span>
+      </div>
+      <div class="kv">
+        <div class="box"><span id="kvL1">电荷 q = d·F</span><b id="kv1">23.1 pC</b></div>
+        <div class="box"><span id="kvL2">电压 U = q/C_a</span><b id="kv2">23.1 mV</b></div>
+        <div class="box"><span id="kvL3">灵敏度</span><b id="kv3">2.31 pC/N</b></div>
+        <div class="box"><span id="kvL4">输入力 F</span><b id="kv4">10.0 N</b></div>
+      </div>
+      <div class="fine" id="readFine">q = d₁₁F = 2.31×10⁻¹² C/N × 10.0 N = 23.1 pC；U = q/C_a = 23.1 pC / 1000 pF = 23.1 mV。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="fmlCard">
+      <div class="phead">
+        <h2>公式推导 <small id="fmlTitle">石英 · 纵向效应</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody"><div class="fml" id="fmlBody"></div></div>
+    </section>
+
+    <section class="card panel" id="curveCard">
+      <div class="phead">
+        <h2>特性曲线 <small id="curveSub">q 与 F 线性 · 频率响应 · 电荷泄漏</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="seg tight" id="segCurve" style="margin-bottom:4px">
+        <button data-cm="qf" class="on">q–F 线性<small>四种材料同图</small></button>
+        <button data-cm="freq">频率响应<small>电压/电荷放大器</small></button>
+        <button data-cm="leak">电荷泄漏<small>e^(−t/RC)</small></button>
+      </div>
+      <svg id="curve" viewBox="0 0 700 300" role="img" aria-label="压电式传感器特性曲线">
+        <g id="cvGrid"></g>
+        <line x1="76" y1="246" x2="664" y2="246" stroke="#9fb2c8" stroke-width="1.5"/>
+        <line x1="76" y1="34" x2="76" y2="246" stroke="#9fb2c8" stroke-width="1.5"/>
+        <g id="cvQf">
+          <path id="qfL1" fill="none" stroke="#0d8b7f" stroke-width="3.4"/>
+          <path id="qfL2" fill="none" stroke="#d94a3d" stroke-width="2.2" stroke-dasharray="7 5"/>
+          <path id="qfL3" fill="none" stroke="#c9a227" stroke-width="2"/>
+          <path id="qfL4" fill="none" stroke="#7c3aed" stroke-width="2"/>
+          <line id="qfMx" x1="0" y1="34" x2="0" y2="246" stroke="#0e4a8e" stroke-width="1.4" stroke-dasharray="5 4"/>
+          <circle id="qfDot" cx="0" cy="0" r="5.5" fill="#0e4a8e" stroke="#fff" stroke-width="2"/>
+          <text id="qfEnd1" x="668" y="40" font-size="11.5" font-weight="700" fill="#0d8b7f" text-anchor="end">PZT</text>
+          <text id="qfEnd2" x="668" y="58" font-size="11.5" font-weight="700" fill="#d94a3d" text-anchor="end">石英</text>
+          <text id="qfEnd3" x="668" y="76" font-size="11.5" font-weight="700" fill="#c9a227" text-anchor="end">BaTiO₃</text>
+          <text id="qfEnd4" x="668" y="94" font-size="11.5" font-weight="700" fill="#7c3aed" text-anchor="end">PVDF</text>
+          <text id="qfLbl" x="84" y="60" font-size="12.5" font-weight="700" fill="#0e4a8e"></text>
+          <text id="qfYlab" x="68" y="30" text-anchor="end" font-size="12" fill="#5b6b80">q / nC</text>
+          <text id="qfXlab" x="664" y="268" text-anchor="end" font-size="12" fill="#5b6b80">力 F / N（满量程 50 N）</text>
+        </g>
+        <g id="cvFreq" style="display:none">
+          <path id="frVolt" fill="none" stroke="#d94a3d" stroke-width="3"/>
+          <path id="frChg" fill="none" stroke="#7c3aed" stroke-width="3"/>
+          <line id="frFL" x1="76" y1="34" x2="76" y2="246" stroke="#d94a3d" stroke-width="1.3" stroke-dasharray="4 4"/>
+          <line id="frFC" x1="76" y1="34" x2="76" y2="246" stroke="#7c3aed" stroke-width="1.3" stroke-dasharray="4 4"/>
+          <circle id="frDot1" cx="0" cy="0" r="4.5" fill="#d94a3d"/>
+          <circle id="frDot2" cx="0" cy="0" r="4.5" fill="#7c3aed"/>
+          <text id="frT1" x="84" y="52" font-size="12.5" font-weight="700" fill="#d94a3d">电压放大器：K/K₀ = 0.769（受 C_c 影响）</text>
+          <text id="frT2" x="84" y="72" font-size="12.5" font-weight="700" fill="#7c3aed">电荷放大器：K/K₀ = 1.000（与 C_c 无关）</text>
+          <text id="frT3" x="84" y="92" font-size="11.5" fill="#5b6b80">K₀ = d₁₁/C_a = 2.31 mV/N（无电缆理想电压灵敏度）</text>
+          <text id="frYlab" x="68" y="30" text-anchor="end" font-size="12" fill="#5b6b80">K / K₀</text>
+          <text id="frXlab" x="664" y="268" text-anchor="end" font-size="12" fill="#5b6b80">频率 f / Hz（对数）</text>
+        </g>
+        <g id="cvLeak" style="display:none">
+          <path id="lkCurve" fill="none" stroke="#0d8b7f" stroke-width="3"/>
+          <line id="lkTau" x1="76" y1="34" x2="76" y2="246" stroke="#d94a3d" stroke-width="1.4" stroke-dasharray="5 4"/>
+          <circle id="lkDot" cx="0" cy="0" r="5" fill="#d94a3d" stroke="#fff" stroke-width="2"/>
+          <circle id="lkDot2" cx="0" cy="0" r="5" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+          <text id="lkT1" x="84" y="52" font-size="12.5" font-weight="700" fill="#0d8b7f">Q(t) = Q₀·e^(−t/RC)</text>
+          <text id="lkT2" x="84" y="72" font-size="11.5" fill="#5b6b80">τ = RC 处衰减到 63.2%，3τ 只剩 5%</text>
+          <text id="lkT3" x="84" y="92" font-size="11.5" fill="#5b6b80">阶跃力下输出按指数衰减 → 压电式不能测静态力</text>
+          <text id="lkYlab" x="68" y="30" text-anchor="end" font-size="12" fill="#5b6b80">Q / Q₀</text>
+          <text id="lkXlab" x="664" y="268" text-anchor="end" font-size="12" fill="#5b6b80">时间 t / s</text>
+        </g>
+      </svg>
+      <div class="legend">
+        <span><i style="background:#0d8b7f"></i>PZT d₃₃ = 250 pC/N</span>
+        <span><i style="background:#d94a3d"></i>石英 d₁₁ = 2.31 pC/N</span>
+        <span><i style="background:#c9a227"></i>BaTiO₃ d₃₃ = 190 pC/N</span>
+        <span><i style="background:#7c3aed"></i>PVDF d₃₁ = 6.7 pC/N</span>
+        <span style="margin-left:auto" id="curveNote"></span>
+      </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+</div><!-- /#boardWrap -->
+
+<footer>
+<b>参数：</b>石英 d₁₁ = 2.31×10⁻¹² C/N、εᵣ = 4.6、T_c = 573 ℃，晶片 l/h = 20 mm/5 mm = 4；BaTiO₃ d₃₃ = 190 pC/N；PZT d₃₃ = 250 pC/N（PZT 系 200~500）；PVDF d₃₁ = 6.7 pC/N；C_a = 1000 pF、C_c = 50~1000 pF、C_i = 100 pF、R_a = 10¹⁰ Ω、R_i = 10¹² Ω；电荷放大器 C_f = 1000 pF、R_f = 10¹² Ω；加速度计 m = 2 g、d₃₃ = 250 pC/N → S_q = 4.90 pC/g、C_f = 10 pF → S_v ≈ 490 mV/g、f₀ = 55 kHz。<b>关系式：</b>纵向 q = d₁₁F；横向 q = −d₁₁(l/h)F（d₁₂ = −d₁₁）；q = d₃₃F；U = q/C_a；并联 2q/2C_a/U、串联 q/(C_a/2)/2U；U_i = d₁₁F·jωR/[1+jωR(C+C_a)]；K_u = d₁₁/(C_a+C_c+C_i)；ω_L = 1/[(R_a∥R_i)(C_a+C_c+C_i)]；U_o ≈ −Q/C_f；f_c = 1/(2πR_fC_f)；加速度计 q = d₃₃ma。<b>典型应用：</b>压电加速度计（中心压缩式，q = d₃₃ma、S_v = 490 mV/g）、测力传感器（YDS-781，d₁₁ + 两片并联，可测 5000 N、分辨力 0.001 N）、双向/三向力传感器、玻璃破碎报警器、超声换能器（逆压电效应发射、正压电效应接收）、STM 微位移。<b>课堂提问：</b>① 为什么压电式不能测静态力，加大 R_i 有用吗？② 石英沿 x 与沿 y 受力，电荷量与极性各有什么不同？③ 接电荷放大器时，串联接法的总电荷变不变？
+</footer>
+
+<script>
+(function(){
+  "use strict";
+/* =====================================================================
+   公共运行时（各章通用）· 由 _build/build.js 注入到主脚本的最前面
+   章节代码直接使用：$ / sfmt / frac / clamp / say / sleep / tween /
+   beginDemo / stopDemo / endDemo / bindDemos
+   约定：章节必须定义 var S = { ..., demoToken:0 }；
+        演示函数写成 async，每个 await 判断返回值，结尾 endDemo()；
+        章节 jsB 里用 DEMOS.<key> = {btn:'...', label:'...', fn:demoXxx} 注册，
+        随后调用 bindDemos() 绑定按钮点击。
+   注意：不内置任何语音朗读；演示按钮只由 bindDemos() 绑定一次。
+   ===================================================================== */
+var $ = function(id){ return document.getElementById(id); };
+function sfmt(a, d){ return (a >= 0 ? '+' : '−') + Math.abs(a).toFixed(d); }
+function frac(a, b){ return '<span class="frac"><i>' + a + '</i><b>' + b + '</b></span>'; }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+var DEMOS = {}, SPEED = 1, playingKey = null;
+function say(t){ $('narration').innerHTML = t; }
+function sleep(ms, tok){
+  return new Promise(function(res){ setTimeout(function(){ res(S.demoToken === tok); }, Math.max(60, ms/SPEED)); });
+}
+function tween(from, to, dur, set, tok){
+  dur = Math.max(160, dur/SPEED);
+  return new Promise(function(res){
+    var t0 = performance.now();
+    (function step(now){
+      if (S.demoToken !== tok) return res(false);
+      var p = (now - t0)/dur;
+      if (!isFinite(p)) p = 1;
+      p = clamp(p, 0, 1);
+      var e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
+      var v = from + (to - from)*e;
+      v = (from <= to) ? Math.min(to, Math.max(from, v)) : Math.max(to, Math.min(from, v));
+      set(v);
+      if (p < 1) requestAnimationFrame(step); else res(true);
+    })(performance.now());
+  });
+}
+function resetDemoButtons(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b){ b.textContent = DEMOS[k].label; b.classList.remove('running'); }
+  });
+}
+function stopDemo(){ S.demoToken++; playingKey = null; resetDemoButtons(); }
+function beginDemo(key){
+  stopDemo(); playingKey = key;
+  var d = DEMOS[key], b = d && $(d.btn);
+  if (b){ b.textContent = '⏸ 暂停演示'; b.classList.add('running'); }
+  return ++S.demoToken;
+}
+function endDemo(){ playingKey = null; resetDemoButtons(); }
+function bindDemos(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b) b.addEventListener('click', function(){
+      if (playingKey === k){ stopDemo(); say('演示已暂停。可继续拖动滑块手动观察，或点其它演示按钮。'); }
+      else if (DEMOS[k].fn){ DEMOS[k].fn(); }
+    });
+  });
+}
+(function(){
+  var spd = $('speed');
+  if (spd) spd.addEventListener('input', function(){
+    SPEED = parseFloat(this.value) || 1;
+    $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  });
+})();
+
+
+  /* ============ 1. 物理参数与状态 ============ */
+  var CFG = {
+    d11: 2.31e-12,       /* 石英 d11 = 2.31 pC/N（纵向）*/
+    lh: 4,               /* 石英晶片 l/h = 20 mm / 5 mm = 4（横向放大）*/
+    Fmax: 50,            /* 力满量程 50 N */
+    aMax: 10,            /* 加速度满量程 10 g */
+    Ca: 1000e-12,        /* 压电元件电容 C_a = 1000 pF */
+    Ci: 100e-12,         /* 前置放大器输入电容 C_i = 100 pF */
+    Ra: 1e10,            /* 元件绝缘电阻 R_a = 1e10 Ω */
+    Ri: 1e12,            /* 前置级输入电阻 R_i = 1e12 Ω */
+    Cf: 1000e-12,        /* 电荷放大器反馈电容 C_f = 1000 pF */
+    Rf: 1e12,            /* 反馈电阻 R_f = 1e12 Ω */
+    CfA: 10e-12,         /* 加速度计电荷放大器 C_f = 10 pF（100 mV/pC）*/
+    d33A: 250e-12,       /* 加速度计压电片 PZT d33 = 250 pC/N */
+    m: 2e-3,             /* 质量块 m = 2 g */
+    g0: 9.80665,         /* 重力加速度 */
+    f0: 55e3             /* 加速度计固有频率 50~60 kHz */
+  };
+  /* 表7-1 常用压电材料（口径见备课简报）*/
+  var MATS = {
+    quartz: { name:'石英',   d:2.31e-12, sym:'d₁₁', epsr:'4.6',  Tc:'573 ℃',  tag:'天然/人造水晶，最稳定' },
+    batio3: { name:'BaTiO₃', d:190e-12,  sym:'d₃₃', epsr:'1700', Tc:'120 ℃',  tag:'最早实用化陶瓷' },
+    pzt:    { name:'PZT-5',  d:250e-12,  sym:'d₃₃', epsr:'1700', Tc:'300 ℃',  tag:'锆钛酸铅，课件常引 200~300 pC/N' },
+    pvdf:   { name:'PVDF',   d:6.7e-12,  sym:'d₃₁', epsr:'5',    Tc:'120 ℃',  tag:'有机高分子薄膜，柔韧、阻抗匹配好' }
+  };
+  var TYPES = {
+    quartz:  { name:'石英晶片', hint:'石英（SiO₂）x 切晶片：沿 x（电轴）受力称纵向效应，q = d₁₁F 与晶片尺寸无关；沿 y（机械轴）受力称横向效应，q = −d₁₁(l/h)F 与尺寸有关；沿 z（光轴）受力无压电效应。' },
+    ceramic: { name:'压电陶瓷', hint:'压电陶瓷（BaTiO₃、PZT）：必须经直流电场极化（电畴取向一致）后才具有压电性，q = d₃₃F；d₃₃ 比石英大 1~2 个数量级，但温度稳定性（居里点）不如石英。' },
+    conn:    { name:'元件接法', hint:'元件接法：并联（2q、2C_a、U 不变，利于准静态测量）；串联（q 不变、C_a/2、2U，提高电压但要求后接高输入阻抗）。接电荷放大器时串联总电荷不变，勿记反。' },
+    circuit: { name:'测量电路', hint:'等效电路与前置放大器：传感器可等效为电荷源 q 与 C_a、R_a 并联（或电压源 U = q/C_a 与 C_a 串联），外接电缆电容 C_c、输入电容 C_i 与输入电阻 R_i。' },
+    accel:   { name:'加速度计', hint:'压电加速度计：惯性力 F = ma 作用在压电片上，q = d₃₃F = d₃₃ma；配电荷放大器时 S_v = S_q/C_f，只与 m、d₃₃、C_f 有关。' }
+  };
+  var S = { type:'quartz', x:20, amp:10, axis:'x', mat:'pzt', conn:'single',
+            pre:'volt', cab:200, cm:'qf', pol:1, accA:0, waveAmp:22, waveF:3, demoToken:0 };
+
+  /* ============ 2. 模型（纯函数，不碰 DOM） ============ */
+  function rPar(a, b){ return a*b/(a + b); }
+  function model(){
+    var t = S.type, o = { type:t, F:CFG.Fmax*S.x/100, q:0, d:0, C:CFG.Ca };
+    if (t === 'accel'){
+      o.a = CFG.aMax*S.x/100;                       /* g */
+      o.F = CFG.m*o.a*CFG.g0;                       /* F = ma */
+      o.d = CFG.d33A; o.q = o.d*o.F;
+      o.Sq = CFG.d33A*CFG.m*CFG.g0;                 /* pC/g */
+      o.CfA = CFG.CfA; o.Sv = o.Sq/CFG.CfA;         /* V/g */
+    } else if (t === 'circuit'){
+      o.d = CFG.d11; o.q = o.d*o.F;
+    } else if (t === 'quartz'){
+      if (S.axis === 'x'){ o.d = CFG.d11; o.q = o.d*o.F; }
+      else if (S.axis === 'y'){ o.d = -CFG.d11*CFG.lh; o.q = o.d*o.F; }   /* d12 = −d11 */
+      else { o.d = 0; o.q = 0; }
+    } else if (t === 'ceramic'){
+      o.d = MATS[S.mat].d; o.q = o.d*o.F;
+    } else {                                        /* conn：单片 / 并联 / 串联 */
+      o.q1 = CFG.d11*o.F;
+      o.q = (S.conn === 'parallel') ? 2*o.q1 : o.q1;
+      o.C = (S.conn === 'parallel') ? 2*CFG.Ca : (S.conn === 'series' ? CFG.Ca/2 : CFG.Ca);
+      o.d = CFG.d11*(S.conn === 'parallel' ? 2 : 1);
+    }
+    o.U = o.q/o.C;
+    o.Cc = S.cab*1e-12;
+    o.Ctot = CFG.Ca + o.Cc + CFG.Ci;                /* C = C_a + C_c + C_i */
+    o.R = rPar(CFG.Ra, CFG.Ri);                     /* R = R_a ∥ R_i ≈ 9.9e9 Ω */
+    o.tau = o.R*o.Ctot;                             /* 电荷泄漏时间常数 */
+    o.fL = 1/(2*Math.PI*o.tau);                     /* 式7-18 低频下限 */
+    o.Ku = (o.d !== 0) ? Math.abs(o.d)/o.Ctot : 0;  /* 式7-16 K_u (V/N) */
+    o.Ui = o.q/o.Ctot;                              /* 电压放大器输入电压 */
+    o.Cf = (t === 'accel') ? CFG.CfA : CFG.Cf;      /* 加速度计配 10 pF → 100 mV/pC */
+    o.Uo = o.q/o.Cf;                                /* 式7-22 电荷放大器输出 */
+    o.fc = 1/(2*Math.PI*CFG.Rf*CFG.Cf);             /* 式7-23 电荷放大器下限 */
+    return o;
+  }
+  function qFmt(c){
+    var a = Math.abs(c);
+    if (a >= 1e-9) return (c*1e9).toFixed(2) + ' nC';
+    if (a >= 1e-15) return (c*1e12).toFixed(1) + ' pC';
+    return '0 pC';
+  }
+  function qBig(c){ return (Math.abs(c) >= 1e-9) ? (c*1e9).toFixed(2) : (c*1e12).toFixed(1); }
+  function qUnit(c){ return (Math.abs(c) >= 1e-9) ? 'nC' : 'pC'; }
+  function uFmt(v){
+    var a = Math.abs(v);
+    if (a < 1e-9) return '0 mV';
+    if (a >= 1) return v.toFixed(2) + ' V';
+    if (a >= 1e-3) return (v*1e3).toFixed(1) + ' mV';
+    return (v*1e6).toFixed(1) + ' µV';
+  }
+  function fmtF(f){
+    if (f >= 1000) return (f/1000).toFixed(2) + ' k';
+    if (f >= 1) return f.toFixed(2);
+    if (f >= 0.001) return f.toFixed(4);
+    return f.toExponential(1);
+  }
+  function sym(ch, n){ var s = '', i; for (i = 0; i < n; i++) s += ch + (i < n-1 ? ' ' : ''); return s; }
+  function nChg(q){ return (Math.abs(q) < 1e-18) ? 0 : clamp(Math.round(3 + 6*Math.min(1, Math.abs(q)*1e12/50)), 3, 9); }
+
+  /* ============ 3. 粒子动画引擎（电荷 / 电流） ============ */
+  var Q = { segs:[], els:null, phase:0 };      /* 结构卡内的电荷粒子 */
+  var W = { segs:[], els:null, phase:0 };      /* 测量电路内的电流粒子 */
+  function mkDots(g, n, cols){
+    var html = '', i;
+    for (i = 0; i < n; i++) html += '<circle cx="-20" cy="-20" r="3.4" fill="' + cols[i % cols.length] + '" opacity="0"/>';
+    g.innerHTML = html;
+    return g.querySelectorAll('circle');
+  }
+  function initAnim(){
+    Q.els = mkDots($('qDots'), 24, ['#d94a3d','#2b6cb0','#c9a227']);
+    W.els = mkDots($('cDots'), 16, ['#d94a3d','#7c3aed']);
+  }
+  function segLen(s){ var dx = s.x2 - s.x1, dy = s.y2 - s.y1; return Math.sqrt(dx*dx + dy*dy) || 1; }
+  function updateDots(E){
+    var segs = E.segs || [], els = E.els, n = els ? els.length : 0, i, total = 0, pi = 0;
+    for (i = 0; i < segs.length; i++) total += segLen(segs[i]);
+    if (!n || total <= 0){ if (els) for (i = 0; i < n; i++) els[i].setAttribute('opacity', '0'); return; }
+    for (i = 0; i < segs.length && pi < n; i++){
+      var s = segs[i], L = segLen(s);
+      var cnt = Math.max(1, Math.round(n*L/total));
+      var f = clamp(s.f || 1, 0.15, 2.5), k;
+      for (k = 0; k < cnt && pi < n; k++, pi++){
+        var u = ((E.phase*(0.45 + 0.55*f) + k/cnt) % 1 + 1) % 1;
+        els[pi].setAttribute('cx', (s.x1 + (s.x2 - s.x1)*u).toFixed(1));
+        els[pi].setAttribute('cy', (s.y1 + (s.y2 - s.y1)*u).toFixed(1));
+        els[pi].setAttribute('fill', s.c || '#d94a3d');
+        els[pi].setAttribute('opacity', (0.32 + 0.6*Math.min(1, f/1.3)).toFixed(2));
+      }
+    }
+    for (; pi < n; pi++) els[pi].setAttribute('opacity', '0');
+  }
+  /* 陶瓷电畴箭头：随机取向 → 转向电场方向 */
+  var CERA = [17, -52, 71, 133, -18, 96, -77, 41];
+  var CERX = [66, 102, 138, 174], CERY = [130, 182];
+  var CER = { ok:false, lines:[[],[],[]], heads:[[],[],[]] };
+  function initCer(){
+    var gA = $('cerA'), gB = $('cerB'), gC = $('cerC'), gs = [gA, gB, gC], s, i, ch;
+    for (s = 0; s < 3; s++){
+      var html = '';
+      for (i = 0; i < 8; i++){
+        html += '<line x1="0" y1="0" x2="0" y2="0" stroke="#8a5a2b" stroke-width="2.2"/>';
+        html += '<polygon points="0,0 0,0 0,0" fill="#8a5a2b"/>';
+      }
+      gs[s].innerHTML = html;
+      ch = gs[s].children;
+      for (i = 0; i < 8; i++){ CER.lines[s][i] = ch[2*i]; CER.heads[s][i] = ch[2*i + 1]; }
+    }
+    CER.ok = true;
+  }
+  /* 波形（滚动正弦） */
+  function drawWave(t){
+    var x0 = 504, x1 = 686, y0 = 174, n = 90, i, d = '';
+    var amp = clamp(S.waveAmp || 22, 4, 62), cyc = clamp(S.waveF || 3, 1.2, 6);
+    for (i = 0; i <= n; i++){
+      var x = x0 + (x1 - x0)*i/n;
+      var y = y0 - amp*Math.sin(2*Math.PI*(cyc*(i/n) + t*0.85));
+      d += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
+    }
+    $('cWave').setAttribute('d', d);
+  }
+  /* 加速度计质量块振动（幅度 ∝ a） */
+  function animAccel(t){
+    if (S.type !== 'accel') return;
+    var A = S.accA || 0, dy = A*Math.sin(2*Math.PI*t*0.9);
+    var yM = 138 + dy, i, d = 'M360 64', n = 5;
+    for (i = 0; i < n; i++){
+      d += ' L' + (i % 2 ? 376 : 344) + ' ' + (64 + (yM - 64)*(i + 0.5)/n).toFixed(1);
+    }
+    d += ' L360 ' + yM.toFixed(1);
+    $('acSpring').setAttribute('d', d);
+    $('acMass').setAttribute('y', yM.toFixed(1));
+    $('acMassTxt').setAttribute('y', (yM + 46).toFixed(1));
+  }
+  function runAnim(){
+    var last = performance.now();
+    (function loop(now){
+      var dt = Math.min(60, now - last); last = now;
+      Q.phase = (Q.phase + dt/1500) % 1;
+      W.phase = (W.phase + dt/900) % 1;
+      updateDots(Q); updateDots(W);
+      drawWave(now/1000);
+      animAccel(now/1000);
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+
+  /* ============ 4. 主刷新（唯一入口） ============ */
+  function paint(){
+    var t = S.type, md = model();
+    S.md = md;
+    /* --- 按钮态 --- */
+    document.querySelectorAll('#segType button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-type') === S.type);
+    });
+    document.querySelectorAll('#segAxis button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-axis') === S.axis);
+    });
+    document.querySelectorAll('#segMat button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-mat') === S.mat);
+    });
+    document.querySelectorAll('#segConn button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-conn') === S.conn);
+    });
+    document.querySelectorAll('#segPre button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-pre') === S.pre);
+    });
+    /* --- 控件显隐与文字 --- */
+    $('typeHint').textContent = TYPES[t].hint;
+    $('rowAxis').style.display  = (t === 'quartz')  ? '' : 'none';
+    $('rowMat').style.display   = (t === 'ceramic') ? '' : 'none';
+    $('rowConn').style.display  = (t === 'conn')    ? '' : 'none';
+    $('rowCab').style.display   = (t === 'circuit') ? '' : 'none';
+    $('rowAmpF').style.display  = (t === 'circuit' || t === 'accel') ? '' : 'none';
+    $('xOut').textContent = S.x + ' %';
+    $('cabOut').textContent = S.cab + ' pF';
+    $('cabTxt').textContent = '按 100 pF/m 计，约 ' + (S.cab/100).toFixed(1) + ' m 电缆';
+    $('ampOut').textContent = S.amp + ' N';
+    $('xTxt').textContent = (t === 'accel')
+      ? ('加速度 a = ' + (CFG.aMax*S.x/100).toFixed(1) + ' g（满量程 10 g）')
+      : ('力 F = ' + (CFG.Fmax*S.x/100).toFixed(1) + ' N（满量程 50 N）');
+    $('matNote').textContent = MATS[S.mat].name + '：' + MATS[S.mat].sym + ' = ' + (MATS[S.mat].d*1e12).toFixed(2) + ' pC/N';
+    $('stSub').textContent = (t === 'quartz') ? '石英晶片 · ' + (S.axis === 'x' ? '沿 x 纵向 q = d₁₁F' : (S.axis === 'y' ? '沿 y 横向 q = −d₁₁(l/h)F' : '沿 z 光轴 → 无压电效应'))
+      : (t === 'ceramic' ? '压电陶瓷 · 电畴极化 → q = d₃₃F'
+      : (t === 'conn' ? '元件接法 · 单片 / 并联 / 串联'
+      : (t === 'circuit' ? '等效电路 · 电压源 ⇄ 电荷源 + C_a / R_a'
+      : '压电加速度计 · F = ma → q = d₃₃ma')));
+    /* --- 结构切换 --- */
+    $('stQuartz').style.display  = (t === 'quartz')  ? '' : 'none';
+    $('stCeramic').style.display = (t === 'ceramic') ? '' : 'none';
+    $('stConn').style.display    = (t === 'conn')    ? '' : 'none';
+    $('stEquiv').style.display   = (t === 'circuit') ? '' : 'none';
+    $('stAccel').style.display   = (t === 'accel')   ? '' : 'none';
+    /* --- 结构几何 + 电荷粒子路径 --- */
+    Q.segs = [];
+    if (t === 'quartz') geoQuartz(md);
+    else if (t === 'ceramic') geoCeramic(md);
+    else if (t === 'conn') geoConn(md);
+    else if (t === 'circuit') geoEquiv(md);
+    else geoAccel(md);
+    /* --- 内嵌读数（结构图下方） --- */
+    paintInline(md);
+    paintRead(md);
+    drawCurves(md);
+    paintWave(md);
+    paintFormulas(md);
+    paintPoints();
+    if (window.__repack) window.__repack();
+  }
+
+  /* ---- 结构几何 ①：石英晶片三轴受力与电荷 ---- */
+  function geoQuartz(md){
+    var s = S.x/100, ax = S.axis;
+    var h = 76 - (ax === 'x' ? 14*s : 0), w = 300 - (ax === 'y' ? 26*s : 0);
+    var yT = 150 - h/2, yB = 150 + h/2, xL = 350 - w/2, xR = 350 + w/2;
+    $('qCry').setAttribute('x', xL.toFixed(1));
+    $('qCry').setAttribute('y', yT.toFixed(1));
+    $('qCry').setAttribute('width', (xR - xL).toFixed(1));
+    $('qCry').setAttribute('height', (yB - yT).toFixed(1));
+    $('qElT').setAttribute('x1', xL.toFixed(1)); $('qElT').setAttribute('x2', xR.toFixed(1));
+    $('qElT').setAttribute('y1', yT.toFixed(1)); $('qElT').setAttribute('y2', yT.toFixed(1));
+    $('qElB').setAttribute('x1', xL.toFixed(1)); $('qElB').setAttribute('x2', xR.toFixed(1));
+    $('qElB').setAttribute('y1', yB.toFixed(1)); $('qElB').setAttribute('y2', yB.toFixed(1));
+    $('qPlus').setAttribute('y', (yT - 8).toFixed(1));
+    $('qMinus').setAttribute('y', (yB + 24).toFixed(1));
+    $('qLeadT').setAttribute('d', 'M' + xR.toFixed(1) + ' ' + yT.toFixed(1) + ' H610 V228');
+    $('qLeadB').setAttribute('d', 'M' + xR.toFixed(1) + ' ' + yB.toFixed(1) + ' H660 V228');
+    /* 沿 x 的上下压力箭头 */
+    var onX = (ax === 'x');
+    $('qFxT').setAttribute('y1', (yT - 56).toFixed(1)); $('qFxT').setAttribute('y2', (yT - 10).toFixed(1));
+    $('qFxH').setAttribute('points', '250,' + (yT - 2).toFixed(1) + ' 244,' + (yT - 16).toFixed(1) + ' 256,' + (yT - 16).toFixed(1));
+    $('qFxB').setAttribute('y1', (yB + 56).toFixed(1)); $('qFxB').setAttribute('y2', (yB + 10).toFixed(1));
+    $('qFxH2').setAttribute('points', '250,' + (yB + 2).toFixed(1) + ' 244,' + (yB + 16).toFixed(1) + ' 256,' + (yB + 16).toFixed(1));
+    $('qFxTxt').setAttribute('y', (yT - 60).toFixed(1));
+    $('qFxT').setAttribute('opacity', onX ? 1 : 0.18);
+    $('qFxH').setAttribute('opacity', onX ? 1 : 0.18);
+    $('qFxB').setAttribute('opacity', onX ? 1 : 0.18);
+    $('qFxH2').setAttribute('opacity', onX ? 1 : 0.18);
+    $('qFxTxt').setAttribute('opacity', onX ? 1 : 0.18);
+    /* 沿 y 的左右压力箭头 */
+    var onY = (ax === 'y');
+    $('qFyL').setAttribute('x1', (xL - 84).toFixed(1)); $('qFyL').setAttribute('x2', (xL - 12).toFixed(1));
+    $('qFyLH').setAttribute('points', (xL - 4).toFixed(1) + ',150 ' + (xL - 18).toFixed(1) + ',144 ' + (xL - 18).toFixed(1) + ',156');
+    $('qFyR').setAttribute('x1', (xR + 84).toFixed(1)); $('qFyR').setAttribute('x2', (xR + 12).toFixed(1));
+    $('qFyRH').setAttribute('points', (xR + 4).toFixed(1) + ',150 ' + (xR + 18).toFixed(1) + ',144 ' + (xR + 18).toFixed(1) + ',156');
+    $('qFyTxt').setAttribute('x', (xL - 80).toFixed(1)); $('qFyTxt').setAttribute('y', (140 - h/2 + 4).toFixed(1));
+    $('qFyL').setAttribute('opacity', onY ? 1 : 0.18);
+    $('qFyLH').setAttribute('opacity', onY ? 1 : 0.18);
+    $('qFyR').setAttribute('opacity', onY ? 1 : 0.18);
+    $('qFyRH').setAttribute('opacity', onY ? 1 : 0.18);
+    $('qFyTxt').setAttribute('opacity', onY ? 1 : 0.18);
+    $('qZg').setAttribute('opacity', (ax === 'z') ? 1 : 0.28);
+    /* 表面电荷 */
+    var q = md.q, n = nChg(q), pos = (q >= 0);
+    $('qPlus').textContent  = n ? sym(pos ? '+' : '−', n) : '· · · ·';
+    $('qMinus').textContent = n ? sym(pos ? '−' : '+', n) : '· · · ·';
+    $('qPlus').setAttribute('fill', pos ? '#d94a3d' : '#2b6cb0');
+    $('qMinus').setAttribute('fill', pos ? '#2b6cb0' : '#d94a3d');
+    /* 电荷粒子沿引线流入放大器 */
+    var mag = Math.abs(q)*1e12, f = clamp(mag/23.1, 0.2, 2.4), c1 = pos ? '#d94a3d' : '#2b6cb0', c2 = pos ? '#2b6cb0' : '#d94a3d';
+    if (mag > 0.01){
+      Q.segs.push({ x1:xR, y1:yT, x2:608, y2:yT, f:f, c:c1 });
+      Q.segs.push({ x1:610, y1:yT, x2:610, y2:226, f:f, c:c1 });
+      Q.segs.push({ x1:xR, y1:yB, x2:658, y2:yB, f:f, c:c2 });
+      Q.segs.push({ x1:660, y1:yB, x2:660, y2:226, f:f, c:c2 });
+    }
+    $('qOut').textContent = (ax === 'z')
+      ? 'q = 0（沿光轴 z 受力无压电效应）'
+      : ('q = ' + (q >= 0 ? '+' : '−') + (Math.abs(q)*1e12).toFixed(1) + ' pC　U = q/C_a = ' + uFmt(md.U));
+    $('qNote').textContent = (ax === 'x')
+      ? '纵向效应：q = d₁₁F_x = 2.31 pC/N × ' + md.F.toFixed(1) + ' N = ' + qFmt(q) + '，与晶片尺寸无关'
+      : (ax === 'y'
+        ? '横向效应：q = −d₁₁(l/h)F_y，l/h = 20 mm/5 mm = 4 → 电荷放大 4 倍且极性与纵向相反'
+        : 'z 轴（光轴）不是极化方向：受力不产生电荷，只有 d₁₁、d₁₄ 两个独立压电常数');
+    $('stHint').textContent = (ax === 'z')
+      ? '石英沿 z（光轴）受力：q = 0 —— 电荷只出在垂直于 x（电轴）的晶面上，与受力方向无关。'
+      : (ax === 'y'
+        ? '横向效应：电荷仍出在垂直于 x 的晶面上，但大小按 l/h 放大（长而薄灵敏度高）、极性随受力方向反转。'
+        : '纵向效应：受力面 = 电荷面（都垂直于 x），q = d₁₁F 与晶片尺寸无关，是“尺寸无关”的测量基础。');
+  }
+  /* ---- 结构几何 ②：压电陶瓷电畴极化与受力出电荷 ---- */
+  function geoCeramic(md){
+    if (!CER.ok) initCer();
+    var pol = S.pol, off = [0, 228, 456], s, i, L = 13;
+    for (s = 0; s < 3; s++){
+      for (i = 0; i < 8; i++){
+        var ang = (s === 0) ? CERA[i] : ((s === 1) ? (CERA[i] + (90 - CERA[i])*pol) : 90);
+        var cx = CERX[i % 4] + off[s], cy = CERY[Math.floor(i/4)];
+        var rad = ang*Math.PI/180, ca = Math.cos(rad), sa = Math.sin(rad);
+        var ln = CER.lines[s][i], hd = CER.heads[s][i];
+        if (ln){
+          ln.setAttribute('x1', (cx - L*ca).toFixed(1)); ln.setAttribute('y1', (cy - L*sa).toFixed(1));
+          ln.setAttribute('x2', (cx + L*ca).toFixed(1)); ln.setAttribute('y2', (cy + L*sa).toFixed(1));
+        }
+        if (hd){
+          var x2 = cx + L*ca, y2 = cy + L*sa;
+          hd.setAttribute('points', x2.toFixed(1) + ',' + y2.toFixed(1) + ' ' +
+            (x2 - 7*ca + 4*sa).toFixed(1) + ',' + (y2 - 7*sa - 4*ca).toFixed(1) + ' ' +
+            (x2 - 7*ca - 4*sa).toFixed(1) + ',' + (y2 - 7*sa + 4*ca).toFixed(1));
+        }
+      }
+    }
+    var mag = Math.abs(md.q)*1e12, on = mag > 0.01;
+    var n = clamp(1 + Math.round(mag/900), 1, 3);
+    $('cerPlus').textContent  = on ? sym('＋', n) : '· · ·';
+    $('cerMinus').textContent = on ? sym('−', n) : '· · ·';
+    $('cerFxT').setAttribute('opacity', on ? 1 : 0.2); $('cerFxTH').setAttribute('opacity', on ? 1 : 0.2);
+    $('cerFxB').setAttribute('opacity', on ? 1 : 0.2); $('cerFxBH').setAttribute('opacity', on ? 1 : 0.2);
+    $('cerFtxt').setAttribute('opacity', on ? 1 : 0.2);
+    $('cerFtxt').textContent = 'F = ' + md.F.toFixed(0) + ' N';
+    var mm = MATS[S.mat];
+    $('cerOut').textContent = 'q = d₃₃F = ' + (mm.d*1e12).toFixed(2) + ' pC/N × ' + md.F.toFixed(1) + ' N = ' + qFmt(md.q);
+    $('cerNote').textContent = mm.name + '：' + mm.sym + ' = ' + (mm.d*1e12).toFixed(2) + ' pC/N，εᵣ = ' + mm.epsr +
+      '，T_c = ' + mm.Tc + (Math.abs(mm.d - CFG.d11) > 1e-15 ? '　约为石英的 ' + (mm.d/CFG.d11).toFixed(0) + ' 倍' : '　基准材料');
+    if (on){
+      var f = clamp(mag/500, 0.25, 2.4);
+      Q.segs.push({ x1:520, y1:200, x2:520, y2:104, f:f, c:'#d94a3d' });
+      Q.segs.push({ x1:600, y1:112, x2:600, y2:208, f:f, c:'#2b6cb0' });
+      Q.segs.push({ x1:540, y1:200, x2:540, y2:104, f:f, c:'#d94a3d' });
+      Q.segs.push({ x1:620, y1:112, x2:620, y2:208, f:f, c:'#2b6cb0' });
+    }
+    $('stHint').textContent = (pol < 0.99)
+      ? '极化过程：未极化时电畴随机取向、宏观无净极化 → 无压电性；加直流电场（3~5 kV/mm）后电畴转向电场方向。'
+      : (mm.name + ' 已极化：受力 F 时表面出现束缚电荷 q = ' + mm.sym + '·F；压电陶瓷 d₃₃ 比石英 d₁₁ 大 1~2 个数量级，但居里点低、长期稳定性差。');
+  }
+  /* ---- 结构几何 ③：元件接法 单片 / 并联 / 串联 ---- */
+  function geoConn(md){
+    var m = S.conn, two = (m !== 'single');
+    $('cnSingle').style.display = two ? 'none' : '';
+    $('cnPair').style.display = two ? '' : 'none';
+    var f = clamp(Math.abs(md.q)*1e12/23.1, 0.25, 2.4);
+    if (!two){
+      $('cnWire1').setAttribute('d', 'M185 122 H100');
+      $('cnWire2').setAttribute('d', 'M185 168 H100');
+      $('cnT1').setAttribute('cx', '88'); $('cnT1').setAttribute('cy', '122');
+      $('cnT2').setAttribute('cx', '88'); $('cnT2').setAttribute('cy', '168');
+      $('cnT1Txt').setAttribute('x', '76'); $('cnT1Txt').setAttribute('y', '112');
+      $('cnT2Txt').setAttribute('x', '76'); $('cnT2Txt').setAttribute('y', '190');
+      $('cnMidTxt').setAttribute('x', '690'); $('cnMidTxt').setAttribute('y', '230');
+      $('cnMidTxt').textContent = '单片：一个晶片 + 两个电极';
+      Q.segs.push({ x1:184, y1:122, x2:102, y2:122, f:f, c:'#d94a3d' });
+      Q.segs.push({ x1:184, y1:168, x2:102, y2:168, f:f, c:'#2b6cb0' });
+    } else if (m === 'parallel'){
+      $('cnWire1').setAttribute('d', 'M185 96 H120 V194 H185 M120 145 H102');
+      $('cnWire2').setAttribute('d', 'M485 145 H570');
+      $('cnT1').setAttribute('cx', '90'); $('cnT1').setAttribute('cy', '145');
+      $('cnT2').setAttribute('cx', '582'); $('cnT2').setAttribute('cy', '145');
+      $('cnT1Txt').setAttribute('x', '78'); $('cnT1Txt').setAttribute('y', '133');
+      $('cnT2Txt').setAttribute('x', '596'); $('cnT2Txt').setAttribute('y', '133');
+      $('cnMidTxt').setAttribute('x', '690'); $('cnMidTxt').setAttribute('y', '230');
+      $('cnMidTxt').textContent = '两片同极性面并接：外电极共接 → 端子 A，中间电极 → 端子 B';
+      Q.segs.push({ x1:184, y1:96, x2:122, y2:96, f:f, c:'#d94a3d' });
+      Q.segs.push({ x1:120, y1:98, x2:120, y2:192, f:f, c:'#d94a3d' });
+      Q.segs.push({ x1:184, y1:194, x2:122, y2:194, f:f, c:'#d94a3d' });
+      Q.segs.push({ x1:120, y1:145, x2:102, y2:145, f:f, c:'#d94a3d' });
+      Q.segs.push({ x1:485, y1:145, x2:568, y2:145, f:f, c:'#2b6cb0' });
+    } else {
+      $('cnWire1').setAttribute('d', 'M185 96 H100');
+      $('cnWire2').setAttribute('d', 'M185 194 H100');
+      $('cnT1').setAttribute('cx', '88'); $('cnT1').setAttribute('cy', '96');
+      $('cnT2').setAttribute('cx', '88'); $('cnT2').setAttribute('cy', '194');
+      $('cnT1Txt').setAttribute('x', '76'); $('cnT1Txt').setAttribute('y', '86');
+      $('cnT2Txt').setAttribute('x', '76'); $('cnT2Txt').setAttribute('y', '216');
+      $('cnMidTxt').setAttribute('x', '690'); $('cnMidTxt').setAttribute('y', '230');
+      $('cnMidTxt').textContent = '中间电极把两片异极相连（串联），无外接引出';
+      Q.segs.push({ x1:184, y1:96, x2:102, y2:96, f:f, c:'#d94a3d' });
+      Q.segs.push({ x1:184, y1:194, x2:102, y2:194, f:f, c:'#2b6cb0' });
+    }
+    var q1 = CFG.d11*(CFG.Fmax*S.x/100);
+    var rt = (m === 'parallel') ? '2q / 2C_a / U' : (m === 'series' ? 'q / C_a/2 / 2U' : 'q / C_a / U');
+    $('cnOut').textContent = TYPES.conn.name + '：' + (m === 'parallel' ? '并联' : (m === 'series' ? '串联' : '单片')) +
+      ' → q′ = ' + qFmt(md.q) + '　C′ = ' + (md.C*1e12).toFixed(0) + ' pF　U′ = ' + uFmt(md.U) + '（' + rt + '）';
+    $('cnNote').textContent = '单片基准：q = d₁₁F = ' + qFmt(q1) + '　U = q/C_a = ' + uFmt(q1/CFG.Ca) +
+      '（' + (md.q/q1).toFixed(0) + 'q / ' + (md.C/CFG.Ca).toFixed(2) + 'C_a / ' + (md.U/(q1/CFG.Ca)).toFixed(1) + 'U）';
+    $('cnNote2').textContent = (m === 'parallel')
+      ? '并联：电荷加倍、电容加倍 → 时间常数大、利于准静态测量；但体积大、需两片性能一致。'
+      : (m === 'series' ? '串联：电压加倍、电容减半 → 提高电压灵敏度；但要求后接高输入阻抗放大器（如电荷放大器）。'
+        : '单片最简单；两片叠合可提高灵敏度 —— 并联利于准静态，串联提高电压。');
+    $('stHint').textContent = '接法口诀：并联 2q、2C_a、U 不变；串联 q 不变、C_a/2、2U。接电荷放大器时串联的总电荷不变，不要记反。';
+  }
+  /* ---- 结构几何 ④：等效电路（电压源 ⇄ 电荷源） ---- */
+  function geoEquiv(md){
+    var q = Math.abs(md.q)*1e12, f = clamp(q/23.1, 0.25, 2.4);
+    if (q > 0.01){
+      Q.segs.push({ x1:70, y1:96, x2:204, y2:96, f:f, c:'#d94a3d' });
+      Q.segs.push({ x1:216, y1:96, x2:330, y2:96, f:f, c:'#d94a3d' });
+      Q.segs.push({ x1:328, y1:96, x2:328, y2:196, f:f, c:'#d94a3d' });
+      Q.segs.push({ x1:330, y1:196, x2:70, y2:196, f:f, c:'#2b6cb0' });
+      Q.segs.push({ x1:70, y1:194, x2:70, y2:170, f:f, c:'#2b6cb0' });
+      Q.segs.push({ x1:70, y1:122, x2:70, y2:98, f:f, c:'#d94a3d' });
+      Q.segs.push({ x1:410, y1:96, x2:668, y2:96, f:f, c:'#d94a3d' });
+      Q.segs.push({ x1:666, y1:96, x2:666, y2:196, f:f, c:'#d94a3d' });
+      Q.segs.push({ x1:668, y1:196, x2:410, y2:196, f:f, c:'#2b6cb0' });
+      Q.segs.push({ x1:410, y1:194, x2:410, y2:170, f:f, c:'#2b6cb0' });
+      Q.segs.push({ x1:410, y1:122, x2:410, y2:98, f:f, c:'#d94a3d' });
+    }
+    $('eqOut').textContent = '两式互为等效：U = q/C_a（式7-10）＝ ' + uFmt(md.q/CFG.Ca) + '（当前 q = ' + qFmt(md.q) + '，C_a = 1000 pF）';
+    $('eqNote').textContent = '元件自身：C_a = 1000 pF、R_a = 10¹⁰ Ω；外接：电缆 C_c = ' + S.cab +
+      ' pF、放大器 C_i = 100 pF、R_i = 10¹² Ω（图7-8）';
+    $('eqNote2').textContent = '接放大器后：C = C_a+C_c+C_i = ' + (md.Ctot*1e12).toFixed(0) + ' pF，R = R_a∥R_i = ' +
+      (md.R/1e9).toFixed(2) + '×10⁹ Ω → ω_L = 1/RC，f_L = ' + fmtF(md.fL) + ' Hz';
+    $('stHint').textContent = '压电元件既是“电荷发生器”又是“电容器”：电荷源 q 与 C_a、R_a 并联 ⇔ 电压源 U = q/C_a 与 C_a 串联，两种画法完全等效。';
+  }
+  /* ---- 结构几何 ⑤：压电加速度计 ---- */
+  function geoAccel(md){
+    S.accA = clamp(S.x/100*13, 0, 13);
+    $('acOut').textContent = 'a = ' + md.a.toFixed(1) + ' g　q = d₃₃ma = ' + qFmt(md.q) + '　U_o = q/C_f = ' + uFmt(md.Uo);
+    $('acUo').textContent = 'U_o = ' + uFmt(md.Uo);
+    $('acNote').textContent = 'S_q = d₃₃mg = ' + (md.Sq*1e12).toFixed(2) + ' pC/g';
+    $('acNote2').textContent = 'S_v = S_q/C_f = ' + (md.Sv*1e3).toFixed(0) + ' mV/g　f₀ = ' + (CFG.f0/1000).toFixed(0) + ' kHz';
+    var on = md.a > 0.01;
+    $('acArr').setAttribute('opacity', on ? 1 : 0.2);
+    $('acArrH1').setAttribute('opacity', on ? 1 : 0.2);
+    $('acArrH2').setAttribute('opacity', on ? 1 : 0.2);
+    $('acArrTxt').setAttribute('opacity', on ? 1 : 0.2);
+    $('acArrTxt').textContent = 'a = ' + md.a.toFixed(1) + ' g';
+    var mag = Math.abs(md.q)*1e12, f = clamp(mag/24.5, 0.25, 2.4);
+    if (on){
+      Q.segs.push({ x1:442, y1:227, x2:554, y2:227, f:f, c:'#d94a3d' });
+      Q.segs.push({ x1:442, y1:237, x2:554, y2:237, f:f, c:'#2b6cb0' });
+    }
+    $('stHint').textContent = '压电加速度计：质量块 m 受惯性力 F = ma 压紧压电片 → q = d₃₃ma；配电荷放大器 S_v = S_q/C_f 只取决于 m、d₃₃、C_f，与电缆无关。';
+  }
+
+  /* ============ 5. 内嵌读数 + 读数卡 ============ */
+  function paintInline(md){
+    var t = S.type;
+    $('qu1').textContent = (t === 'accel') ? ('加速度 a = ' + md.a.toFixed(1) + ' g（满量程 10 g）')
+                                           : ('力 F = ' + md.F.toFixed(1) + ' N（满量程 50 N）');
+    $('qu2').textContent = (t === 'accel') ? ('电荷 q = d₃₃ma = ' + qFmt(md.q))
+      : (t === 'quartz' && S.axis === 'z' ? '电荷 q = 0（沿 z 光轴受力无压电效应）'
+      : ('电荷 q = ' + (S.axis === 'y' && t === 'quartz' ? '−d₁₁(l/h)F' : 'd·F') + ' = ' + qFmt(md.q)));
+    $('qu3').textContent = '电压 U = q/C = ' + uFmt(md.U) + '（' + (t === 'conn' ? 'C′ = ' + (md.C*1e12).toFixed(0) + ' pF' : 'C_a = 1000 pF') + '）';
+    var lg = clamp((Math.log10(Math.max(Math.abs(md.q)*1e12, 0.05)))/4*400, 0, 400);
+    $('quBar').setAttribute('width', lg.toFixed(0));
+    $('quBar').setAttribute('fill', (t === 'accel') ? '#7c3aed' : ((t === 'ceramic') ? '#8a5a2b' : '#0d8b7f'));
+    $('qu4').textContent = 'U_i = q/(C_a+C_c+C_i) = ' + uFmt(md.Ui) + '（电压放大器，C = ' + (md.Ctot*1e12).toFixed(0) + ' pF）';
+    $('qu5').textContent = 'U_o = −q/C_f = ' + uFmt(-md.Uo) + (t === 'accel' ? '（C_f = 10 pF）' : '（C_f = 1000 pF）');
+    $('quNote').textContent = '电荷（红点）从受力面经电极流入前置放大器，数量与流速 ∝ q' + (t === 'accel' ? '；质量块随 a 振动。' : '。');
+  }
+  function paintRead(md){
+    var t = S.type, mm = MATS[S.mat];
+    if (t === 'quartz'){
+      $('bigCap').textContent = '石英晶片电荷 q';
+      $('bigNum').textContent = qBig(md.q); $('bigUnit').textContent = qUnit(md.q);
+      $('kvL1').textContent = '电荷 q = ' + (S.axis === 'y' ? '−d₁₁(l/h)F' : 'd₁₁F');
+      $('kv1').textContent = qFmt(md.q);
+      $('kvL2').textContent = '电压 U = q/C_a';
+      $('kv2').textContent = uFmt(md.U);
+      $('kvL3').textContent = (S.axis === 'x') ? '压电系数 d₁₁（纵向）' : (S.axis === 'y' ? '等效系数 −d₁₁(l/h)' : '压电系数（沿 z）');
+      $('kv3').textContent = (S.axis === 'x') ? '2.31 pC/N' : (S.axis === 'y' ? '−9.24 pC/N' : '0');
+      $('kvL4').textContent = '输入力 F';
+      $('kv4').textContent = md.F.toFixed(1) + ' N';
+      $('readFine').innerHTML = (S.axis === 'x')
+        ? '纵向：q = d₁₁F = 2.31×10⁻¹² C/N × ' + md.F.toFixed(1) + ' N = <b>' + qFmt(md.q) + '</b>；U = q/C_a = ' + qFmt(md.q) + ' / 1000 pF = <b>' + uFmt(md.U) + '</b>。电荷出在垂直于 x 轴的晶面，与晶片尺寸无关。'
+        : (S.axis === 'y'
+          ? '横向：q = −d₁₁(l/h)F_y，l/h = 20/5 = 4 → q = −2.31 pC/N × 4 × ' + md.F.toFixed(1) + ' N = <b>' + qFmt(md.q) + '</b>（与纵向 <b>反号</b>）；U = q/C_a = <b>' + uFmt(md.U) + '</b>。'
+          : '沿 z（光轴）受力：<b>q = 0</b> —— 石英只有 d₁₁、d₁₄ 两个独立压电常数，z 向无压电效应。');
+    } else if (t === 'ceramic'){
+      $('bigCap').textContent = mm.name + ' 压电陶瓷电荷 q';
+      $('bigNum').textContent = qBig(md.q); $('bigUnit').textContent = qUnit(md.q);
+      $('kvL1').textContent = '电荷 q = ' + mm.sym + 'F';
+      $('kv1').textContent = qFmt(md.q);
+      $('kvL2').textContent = '电压 U = q/C_a';
+      $('kv2').textContent = uFmt(md.U);
+      $('kvL3').textContent = mm.sym + '（εᵣ）';
+      $('kv3').textContent = (mm.d*1e12).toFixed(2) + ' pC/N（' + mm.epsr + '）';
+      $('kvL4').textContent = '与石英之比';
+      $('kv4').textContent = (Math.abs(mm.d - CFG.d11) < 1e-15) ? '1.0 ×' : (mm.d/CFG.d11).toFixed(0) + ' ×';
+      $('readFine').innerHTML = mm.name + '：q = ' + mm.sym + 'F = ' + (mm.d*1e12).toFixed(2) + ' pC/N × ' + md.F.toFixed(1) +
+        ' N = <b>' + qFmt(md.q) + '</b>，U = q/C_a = <b>' + uFmt(md.U) + '</b>；居里点 ' + mm.Tc +
+        '，' + (mm.d > 10*CFG.d11 ? '<b>比石英大两个数量级</b>' : '与石英同量级');
+    } else if (t === 'conn'){
+      $('bigCap').textContent = '接法输出电荷 q′';
+      $('bigNum').textContent = qBig(md.q); $('bigUnit').textContent = qUnit(md.q);
+      $('kvL1').textContent = '电荷 q′';
+      $('kv1').textContent = qFmt(md.q);
+      $('kvL2').textContent = '电压 U′ = q′/C′';
+      $('kv2').textContent = uFmt(md.U);
+      $('kvL3').textContent = '等效电容 C′';
+      $('kv3').textContent = (md.C*1e12).toFixed(0) + ' pF';
+      $('kvL4').textContent = '相对单片（q/C/U）';
+      $('kv4').textContent = (md.q/md.q1).toFixed(1) + 'q / ' + (md.C/CFG.Ca).toFixed(2) + 'C / ' + (md.U/(md.q1/CFG.Ca)).toFixed(2) + 'U';
+      $('readFine').innerHTML = '单片 q = d₁₁F = <b>' + qFmt(md.q1) + '</b>，C_a = 1000 pF，U = ' + uFmt(md.q1/CFG.Ca) +
+        '；<b>' + (S.conn === 'parallel' ? '并联：2q、2C_a、U 不变 → 利于准静态测量' : (S.conn === 'series' ? '串联：q 不变、C_a/2、2U → 提高电压，须接高输入阻抗' : '单片：结构最简单')) +
+        '</b>。注意接电荷放大器时，串联的总电荷不变。';
+    } else if (t === 'circuit'){
+      $('bigCap').textContent = '电荷放大器输出 U_o';
+      $('bigNum').textContent = (md.Uo*1e3).toFixed(1); $('bigUnit').textContent = 'mV';
+      $('kvL1').textContent = '电压放大器输入 U_i';
+      $('kv1').textContent = uFmt(md.Ui) ;
+      $('kvL2').textContent = 'K_u = d₁₁/(C_a+C_c+C_i)';
+      $('kv2').textContent = (md.Ku*1e3).toFixed(2) + ' mV/N';
+      $('kvL3').textContent = '总电容 C / 总电阻 R';
+      $('kv3').textContent = (md.Ctot*1e12).toFixed(0) + ' pF / ' + (md.R/1e9).toFixed(1) + ' GΩ';
+      $('kvL4').textContent = '低频下限 f_L = 1/2πRC';
+      $('kv4').textContent = fmtF(md.fL) + ' Hz';
+      $('readFine').innerHTML = '电缆 C_c = ' + S.cab + ' pF：U_i = q/(C_a+C_c+C_i) = ' + qFmt(md.q) + ' / ' + (md.Ctot*1e12).toFixed(0) +
+        ' pF = <b>' + uFmt(md.Ui) + '</b>（<b>随电缆变</b>）；U_o ≈ −q/C_f = <b>' + uFmt(-md.Uo) + '</b>（<b>与 C_c 无关</b>）。τ = RC = ' + md.tau.toFixed(1) + ' s → f_L = ' + fmtF(md.fL) + ' Hz。';
+    } else {
+      $('bigCap').textContent = '电荷放大器输出 U_o';
+      $('bigNum').textContent = (md.Uo).toFixed(3); $('bigUnit').textContent = 'V';
+      $('kvL1').textContent = '电荷 q = d₃₃ma';
+      $('kv1').textContent = qFmt(md.q);
+      $('kvL2').textContent = '惯性力 F = ma';
+      $('kv2').textContent = md.F.toFixed(4) + ' N';
+      $('kvL3').textContent = '电荷灵敏度 S_q';
+      $('kv3').textContent = (md.Sq*1e12).toFixed(2) + ' pC/g';
+      $('kvL4').textContent = '电压灵敏度 S_v';
+      $('kv4').textContent = (md.Sv*1e3).toFixed(0) + ' mV/g';
+      $('readFine').innerHTML = 'F = ma = 2 g × ' + md.a.toFixed(1) + ' g × 9.80665 = <b>' + md.F.toFixed(4) + ' N</b>；q = d₃₃F = 250 pC/N × ' +
+        md.F.toFixed(4) + ' N = <b>' + qFmt(md.q) + '</b>；U_o = q/C_f = ' + qFmt(md.q) + ' / 10 pF = <b>' + uFmt(md.Uo) + '</b>（100 mV/pC）。';
+    }
+  }
+
+  /* ============ 6. 特性曲线 ============ */
+  var CV = { x0:76, x1:664, y0:246, y1:34, grid:'' };
+  var SUP = ['⁰','¹','²','³','⁴','⁵','⁶','⁷','⁸','⁹'];
+  function sup(n){ var s = (n < 0) ? '⁻' : '', a = Math.abs(n), out = ''; do { out = SUP[a % 10] + out; a = Math.floor(a/10); } while (a > 0); return s + out; }
+  function cvx(u){ return CV.x0 + u*(CV.x1 - CV.x0); }
+  function cvy(v){ return CV.y0 - clamp(v, 0, 1)*(CV.y0 - CV.y1); }
+  function drawCurves(md){
+    var m = S.cm, bs = document.querySelectorAll('#segCurve button'), i;
+    for (i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-cm') === m);
+    $('cvQf').style.display   = (m === 'qf')   ? '' : 'none';
+    $('cvFreq').style.display = (m === 'freq') ? '' : 'none';
+    $('cvLeak').style.display = (m === 'leak') ? '' : 'none';
+    if (m === 'qf') drawQf(md); else if (m === 'freq') drawFreq(md); else drawLeak(md);
+  }
+  function drawQf(md){
+    var ds = [MATS.pzt.d, MATS.quartz.d, MATS.batio3.d, MATS.pvdf.d];
+    var qmax = ds[0]*CFG.Fmax;
+    var i, g = '';
+    if (CV.grid !== 'qf'){
+      for (i = 0; i <= 5; i++){
+        var v = i/5;
+        g += '<line x1="' + CV.x0 + '" y1="' + cvy(v).toFixed(1) + '" x2="' + CV.x1 + '" y2="' + cvy(v).toFixed(1) + '" stroke="#e6edf6"/>';
+        g += '<text x="70" y="' + (cvy(v)+4).toFixed(1) + '" text-anchor="end" font-size="11.5" fill="#5b6b80">' + (qmax*1e9*v).toFixed(2) + '</text>';
+      }
+      for (i = 0; i <= 5; i++){
+        g += '<line x1="' + cvx(i/5).toFixed(1) + '" y1="' + CV.y1 + '" x2="' + cvx(i/5).toFixed(1) + '" y2="' + CV.y0 + '" stroke="#e6edf6"/>';
+        g += '<text x="' + cvx(i/5).toFixed(1) + '" y="' + (CV.y0+18) + '" text-anchor="middle" font-size="11.5" fill="#5b6b80">' + (CFG.Fmax*i/5).toFixed(0) + '</text>';
+      }
+      $('cvGrid').innerHTML = g; CV.grid = 'qf';
+    }
+    function lineD(dv){
+      var d = '', k;
+      for (k = 0; k <= 20; k++){
+        var u = k/20;
+        d += (k ? 'L' : 'M') + cvx(u).toFixed(1) + ' ' + cvy(dv*CFG.Fmax*u/qmax).toFixed(1) + ' ';
+      }
+      return d;
+    }
+    $('qfL1').setAttribute('d', lineD(MATS.pzt.d));
+    $('qfL2').setAttribute('d', lineD(MATS.quartz.d));
+    $('qfL3').setAttribute('d', lineD(MATS.batio3.d));
+    $('qfL4').setAttribute('d', lineD(MATS.pvdf.d));
+    var curD = (S.type === 'ceramic') ? MATS[S.mat].d : ((S.type === 'accel') ? CFG.d33A : CFG.d11);
+    var ids = ['qfL1','qfL2','qfL3','qfL4'];
+    for (i = 0; i < 4; i++){
+      var hit = (Math.abs(ds[i] - curD) < 1e-16);
+      $(ids[i]).setAttribute('stroke-width', hit ? 3.6 : 1.8);
+      $(ids[i]).setAttribute('opacity', hit ? 1 : 0.55);
+    }
+    var u2 = clamp(md.F/CFG.Fmax, 0, 1);
+    $('qfMx').setAttribute('x1', cvx(u2).toFixed(1)); $('qfMx').setAttribute('x2', cvx(u2).toFixed(1));
+    $('qfDot').setAttribute('cx', cvx(u2).toFixed(1));
+    $('qfDot').setAttribute('cy', cvy(curD*md.F/qmax).toFixed(1));
+    $('qfLbl').textContent = '当前：q = ' + qFmt(curD*md.F) + '（F = ' + (md.F >= 1 ? md.F.toFixed(1) : md.F.toFixed(4)) +
+      ' N' + (S.type === 'accel' ? ' = ma' : '') + '）';
+    /* 线端标注：把标号贴在各自的直线端部，底部两条合并成一条说明 */
+    $('qfEnd1').setAttribute('y', '30');
+    $('qfEnd1').textContent = 'PZT：d₃₃ = 250 pC/N';
+    $('qfEnd3').setAttribute('y', (cvy(MATS.batio3.d*CFG.Fmax/qmax) - 5).toFixed(1));
+    $('qfEnd3').textContent = 'BaTiO₃：d₃₃ = 190 pC/N';
+    $('qfEnd2').setAttribute('x', '84'); $('qfEnd2').setAttribute('y', '232');
+    $('qfEnd2').setAttribute('text-anchor', 'start');
+    $('qfEnd2').textContent = '虚线石英 d₁₁ = 2.31、PVDF d₃₁ = 6.7 —— 斜率小 1~2 个数量级，几乎贴横轴';
+    $('qfEnd4').setAttribute('opacity', '0');
+    $('curveNote').textContent = '压电系数为常数 → q 与 F 严格线性；四条直线的斜率就是各自的压电系数（相差百倍，同图即可看出选型差别）';
+  }
+  function drawFreq(md){
+    var F0 = 1e-4, F1 = 1e4, LD = Math.log10(F1/F0), i, g = '';
+    function fx(f){ return cvx((Math.log10(Math.max(f, 1e-12)) - Math.log10(F0))/LD); }
+    if (CV.grid !== 'freq'){
+      for (i = -4; i <= 4; i++){
+        var f0 = Math.pow(10, i);
+        g += '<line x1="' + fx(f0).toFixed(1) + '" y1="' + CV.y1 + '" x2="' + fx(f0).toFixed(1) + '" y2="' + CV.y0 + '" stroke="#e6edf6"/>';
+        g += '<text x="' + fx(f0).toFixed(1) + '" y="' + (CV.y0+18) + '" text-anchor="middle" font-size="10.5" fill="#5b6b80">10' + sup(i) + '</text>';
+      }
+      for (i = 0; i <= 4; i++){
+        var v = i/4;
+        g += '<line x1="' + CV.x0 + '" y1="' + cvy(v).toFixed(1) + '" x2="' + CV.x1 + '" y2="' + cvy(v).toFixed(1) + '" stroke="#e6edf6"/>';
+        g += '<text x="70" y="' + (cvy(v)+4).toFixed(1) + '" text-anchor="end" font-size="11.5" fill="#5b6b80">' + v.toFixed(2) + '</text>';
+      }
+      $('cvGrid').innerHTML = g; CV.grid = 'freq';
+    }
+    var R = rPar(CFG.Ra, CFG.Ri), C = md.Ctot;
+    function hp(f, RC){ var w = 2*Math.PI*f; return w*RC/Math.sqrt(1 + w*RC*w*RC); }
+    function curveD(fn){
+      var d = '', k;
+      for (k = 0; k <= 140; k++){
+        var f = Math.pow(10, -4 + 8*k/140);
+        d += (k ? 'L' : 'M') + fx(f).toFixed(1) + ' ' + cvy(fn(f)).toFixed(1) + ' ';
+      }
+      return d;
+    }
+    var rv = CFG.Ca/C, rc = CFG.Ca/CFG.Cf;
+    $('frVolt').setAttribute('d', curveD(function(f){ return rv*hp(f, R*C); }));
+    $('frChg').setAttribute('d', curveD(function(f){ return rc*hp(f, CFG.Rf*CFG.Cf); }));
+    var fL = 1/(2*Math.PI*R*C), fc = 1/(2*Math.PI*CFG.Rf*CFG.Cf);
+    $('frFL').setAttribute('x1', fx(fL).toFixed(1)); $('frFL').setAttribute('x2', fx(fL).toFixed(1));
+    $('frFC').setAttribute('x1', fx(fc).toFixed(1)); $('frFC').setAttribute('x2', fx(fc).toFixed(1));
+    $('frDot1').setAttribute('cx', fx(fL).toFixed(1)); $('frDot1').setAttribute('cy', cvy(rv*hp(fL, R*C)).toFixed(1));
+    $('frDot2').setAttribute('cx', fx(fc).toFixed(1)); $('frDot2').setAttribute('cy', cvy(rc*hp(fc, CFG.Rf*CFG.Cf)).toFixed(1));
+    $('frT1').textContent = '电压放大器：K/K₀ = ' + rv.toFixed(3) + '（C = ' + (C*1e12).toFixed(0) + ' pF，C_c 越大平台越低）';
+    $('frT2').textContent = '电荷放大器：K/K₀ = ' + rc.toFixed(3) + '，下限 f_c = ' + fmtF(fc) + ' Hz（与 C_c 无关）';
+    $('frT3').textContent = 'K₀ = d₁₁/C_a = 2.31 mV/N；电压放大器 f_L = 1/2πRC = ' + fmtF(fL) + ' Hz（高通特性）';
+    $('curveNote').textContent = 'K_u = d₁₁/(C_a+C_c+C_i)：电缆 C_c 一进分母，灵敏度就降；U_o ≈ −Q/C_f 里没有 C_c —— 这就是电荷放大器“不怕长电缆”的原因';
+  }
+  function drawLeak(md){
+    var tau = md.tau, i, g = '';
+    if (CV.grid !== 'leak' + tau.toFixed(1)){
+      for (i = 0; i <= 3; i++){
+        var xx = cvx(i/3);
+        g += '<line x1="' + xx.toFixed(1) + '" y1="' + CV.y1 + '" x2="' + xx.toFixed(1) + '" y2="' + CV.y0 + '" stroke="#e6edf6"/>';
+        g += '<text x="' + xx.toFixed(1) + '" y="' + (CV.y0+18) + '" text-anchor="middle" font-size="11.5" fill="#5b6b80">' + (i === 0 ? '0' : (i + 'τ = ' + (tau*i).toFixed(1) + ' s')) + '</text>';
+      }
+      for (i = 0; i <= 4; i++){
+        var v = i/4;
+        g += '<line x1="' + CV.x0 + '" y1="' + cvy(v).toFixed(1) + '" x2="' + CV.x1 + '" y2="' + cvy(v).toFixed(1) + '" stroke="#e6edf6"/>';
+        g += '<text x="70" y="' + (cvy(v)+4).toFixed(1) + '" text-anchor="end" font-size="11.5" fill="#5b6b80">' + v.toFixed(2) + '</text>';
+      }
+      $('cvGrid').innerHTML = g; CV.grid = 'leak' + tau.toFixed(1);
+    }
+    var d = '', k;
+    for (k = 0; k <= 80; k++){
+      var u = k/80;
+      d += (k ? 'L' : 'M') + cvx(u).toFixed(1) + ' ' + cvy(Math.exp(-3*u)).toFixed(1) + ' ';
+    }
+    $('lkCurve').setAttribute('d', d);
+    $('lkTau').setAttribute('x1', cvx(1/3).toFixed(1)); $('lkTau').setAttribute('x2', cvx(1/3).toFixed(1));
+    $('lkDot').setAttribute('cx', cvx(1/3).toFixed(1)); $('lkDot').setAttribute('cy', cvy(Math.exp(-1)).toFixed(1));
+    $('lkDot2').setAttribute('cx', cvx(1).toFixed(1)); $('lkDot2').setAttribute('cy', cvy(Math.exp(-3)).toFixed(1));
+    $('lkT1').textContent = 'Q(t) = Q₀·e^(−t/RC)，τ = RC = ' + tau.toFixed(1) + ' s';
+    $('lkT2').textContent = 't = τ 衰减到 63.2%；t = 3τ 只剩 5% —— 静态力早就“漏光”了';
+    $('lkT3').textContent = 'f_L = 1/(2πτ) = ' + fmtF(md.fL) + ' Hz（ω→0 时输出为零）';
+    $('curveNote').textContent = '电荷经 R = R_a∥R_i = ' + (md.R/1e9).toFixed(1) + ' GΩ 泄漏：加大 R_i 只能把 τ 做大，不能消掉静态误差 —— 所以压电式测不了“静态力”';
+  }
+
+  /* ============ 7. 测量电路（图7-9 / 图7-10） ============ */
+  function paintWave(md){
+    var isV = (S.pre === 'volt'), i, bs = document.querySelectorAll('#segPre button');
+    for (i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-pre') === S.pre);
+    $('cAmpV').style.display = isV ? '' : 'none';
+    $('cAmpQ').style.display = isV ? 'none' : '';
+    $('cCabTxt').textContent = 'C_c = ' + S.cab + ' pF（电缆）';
+    $('cSrcTxt').textContent = qFmt(md.q);
+    $('cUi').textContent = 'U_i = q/(C_a+C_c+C_i) = ' + uFmt(md.Ui) + '（C = ' + (md.Ctot*1e12).toFixed(0) + ' pF）';
+    $('cUo').textContent = 'U_o = −q/C_f = ' + uFmt(-md.Uo) + '（与 C_c 无关）';
+    $('cAmpVt').textContent = 'U_i = ' + uFmt(md.Ui);
+    $('cAmpQt').textContent = 'U_o = ' + uFmt(-md.Uo);
+    $('cNote').textContent = 'K_u = d₁₁/(C_a+C_c+C_i) = ' + (md.Ku*1e3).toFixed(2) + ' mV/N；τ = RC = ' + md.tau.toFixed(1) + ' s';
+    $('cWaveV').textContent = (isV ? 'U_i = ' + uFmt(md.Ui) : 'U_o = ' + uFmt(-md.Uo));
+    $('cWaveF').textContent = 'f_L = ' + fmtF(md.fL) + ' Hz　f_c = ' + fmtF(md.fc) + ' Hz';
+    $('waveSub').textContent = isV ? '图7-9 电压放大器（K_u 受电缆 C_c 影响）' : '图7-10 电荷放大器（U_o ≈ −q/C_f，与 C_c 无关）';
+    $('waveHint').textContent = isV
+      ? '电压放大器：K_u = d₁₁/(C_a+C_c+C_i) = ' + (md.Ku*1e3).toFixed(2) + ' mV/N —— 电缆电容 C_c 一进分母灵敏度就下降，对策：短电缆、驱动电缆、集成化。'
+      : '电荷放大器：C_f 跨接在运放输出与输入端（密勒效应），U_o ≈ −q/C_f = ' + uFmt(-md.Uo) + '，与电缆 C_c 无关、A 被约掉；代价是电路复杂、造价高。';
+    S.waveAmp = clamp(Math.abs(isV ? md.Ui : md.Uo)*1e3*2.4, 8, 60);
+    S.waveF = clamp(1.6 + Math.abs(Math.log10(Math.max(md.fL, 1e-6)))/2.4, 1.4, 5.4);
+    W.segs = [];
+    if (S.type === 'accel' || Math.abs(md.q) > 1e-15){
+      var f = clamp(Math.abs(md.q)*1e12/(S.type === 'accel' ? 24.5 : 23.1), 0.25, 2.4);
+      W.segs.push({ x1:104, y1:152, x2:isV ? 310 : 294, y2:152, f:f, c:'#d94a3d' });
+      W.segs.push({ x1:104, y1:196, x2:isV ? 310 : 294, y2:196, f:f, c:'#2b6cb0' });
+      if (isV){
+        W.segs.push({ x1:150, y1:154, x2:150, y2:170, f:f*0.7, c:'#8a5a2b' });
+        W.segs.push({ x1:210, y1:154, x2:210, y2:170, f:f*0.7, c:'#8a5a2b' });
+      } else {
+        W.segs.push({ x1:414, y1:174, x2:450, y2:174, f:f, c:'#7c3aed' });
+        W.segs.push({ x1:452, y1:172, x2:452, y2:90, f:f, c:'#7c3aed' });
+        W.segs.push({ x1:450, y1:88, x2:298, y2:88, f:f, c:'#7c3aed' });
+        W.segs.push({ x1:296, y1:90, x2:296, y2:150, f:f, c:'#7c3aed' });
+      }
+    }
+  }
+
+  /* ============ 8. 公式 ============ */
+  function paintFormulas(md){
+    var t = S.type, html = '', mm = MATS[S.mat];
+    html += '<div class="row"><span class="tag">式7-3</span><span>P = d₁₁σ（石英沿电轴 x 受力，σ = F/S）</span></div>';
+    html += '<div class="row"><span class="tag">式7-4</span><span>P = ' + frac('q', 'S') + ' → q = ' + frac('d₁₁F', '1') + '（受力面 = 电荷面）</span></div>';
+    if (t === 'quartz'){
+      if (S.axis === 'x'){
+        html += '<div class="row"><span class="tag">式7-5</span><span>纵向效应：q = d₁₁F_x = 2.31 pC/N × ' + md.F.toFixed(1) + ' N = <b>' + qFmt(md.q) + '</b>（与晶片尺寸无关）</span></div>';
+        html += '<div class="row"><span class="tag g">式7-6/7-7</span><span>横向效应（对照）：q_xy = d₁₂(b/l)F_y = −d₁₁(l/h)F_y，l/h = 4 → 反号且放大 4 倍</span></div>';
+      } else if (S.axis === 'y'){
+        html += '<div class="row"><span class="tag">式7-6/7-7</span><span>横向效应：q_xy = d₁₂(b/l)F_y = −d₁₁(l/h)F_y = −2.31 pC/N × ' + CFG.lh + ' × ' + md.F.toFixed(1) + ' N = <b>' + qFmt(md.q) + '</b></span></div>';
+        html += '<div class="row"><span class="tag g">式7-5</span><span>横向与纵向对照：q_y = −(l/h)·q_x，<b>极性相反</b>、大小按尺寸比放大（长而薄灵敏度高）</span></div>';
+      } else {
+        html += '<div class="row"><span class="tag">式7-5</span><span>沿 z（光轴）受力：<b>q = 0</b>（z 不是极性轴，无压电效应）</span></div>';
+        html += '<div class="row"><span class="tag g">式7-1/7-2</span><span>P = P₁+P₂+P₃，P_i = Σ d_ij σ_j：石英只有 d₁₁、d₁₄ 两个独立分量 → 只有 x、y 受力才出电荷</span></div>';
+      }
+    } else if (t === 'ceramic'){
+      html += '<div class="row"><span class="tag">式7-1/7-2</span><span>P = P₁+P₂+P₃，P_i = Σ d_ij σ_j（压电陶瓷有 3 个独立压电常数）</span></div>';
+      html += '<div class="row"><span class="tag">式7-8</span><span>q = d₃₃F = ' + (mm.d*1e12).toFixed(2) + ' pC/N × ' + md.F.toFixed(1) + ' N = <b>' + qFmt(md.q) + '</b>（' + mm.name + '）</span></div>';
+      html += '<div class="row"><span class="tag g">表7-1</span><span>石英 d₁₁ = 2.31 pC/N（εᵣ = 4.6，T_c = 573 ℃）；BaTiO₃ d₃₃ = 190；PZT d₃₃ = 250（200~500）；PVDF d₃₁ = 6.7</span></div>';
+    } else if (t === 'conn'){
+      html += '<div class="row"><span class="tag">式7-9</span><span>C_a = ' + frac('ε_rε₀S', 'd') + ' = 1000 pF（单片）→ 并联 2C_a = 2000 pF，串联 C_a/2 = 500 pF</span></div>';
+      html += '<div class="row"><span class="tag">式7-10</span><span>U = ' + frac('Q', 'C_a') + '：单片 ' + uFmt(md.q1/CFG.Ca) + '，当前接法（' + (S.conn === 'parallel' ? '并联' : (S.conn === 'series' ? '串联' : '单片')) + '）U′ = ' + uFmt(md.U) + '</span></div>';
+      html += '<div class="row"><span class="tag g">并联</span><span>q′ = 2q、C′ = 2C_a、U′ = U（电荷加倍、电压不变 → 利于准静态测量）</span></div>';
+      html += '<div class="row"><span class="tag g">串联</span><span>q′ = q、C′ = C_a/2、U′ = 2U（电压加倍、电容减半 → 需高输入阻抗）</span></div>';
+    } else if (t === 'circuit'){
+      html += '<div class="row"><span class="tag">式7-13/7-14</span><span>U_i = ' + frac('d₁₁F·jωR', '1+jωR(C+C_a)') + '，U_o = −A·U_i（电压放大器）</span></div>';
+      html += '<div class="row"><span class="tag">式7-15</span><span>|U_i| = ' + frac('d₁₁F_mωR', '√(1+ω²R²(C_a+C_c+C_i)²)') + ' → 高频平坦、低频衰减</span></div>';
+      html += '<div class="row"><span class="tag">式7-16</span><span>K_u = ' + frac('d₁₁', 'C_a+C_c+C_i') + ' = ' + (md.Ku*1e3).toFixed(2) + ' mV/N（C = ' + (md.Ctot*1e12).toFixed(0) + ' pF，含电缆）</span></div>';
+      html += '<div class="row"><span class="tag">式7-17/7-18</span><span>ω_L = ' + frac('1', 'RC') + ' = ' + frac('1', '(R_a∥R_i)(C_a+C_c+C_i)') + ' → f_L = ' + fmtF(md.fL) + ' Hz（τ = ' + md.tau.toFixed(1) + ' s）</span></div>';
+      html += '<div class="row"><span class="tag v">式7-19~7-21</span><span>I = ' + frac('U_i(1+A)', 'R_f∥1/(jωC_f)') + '（密勒效应）：U_i 分母含 (1+A)C_f → A 被约掉</span></div>';
+      html += '<div class="row"><span class="tag v">式7-22</span><span>U_o ≈ −' + frac('Q', 'C_f') + ' = −' + frac(qFmt(md.q), '1000 pF') + ' = <b>' + uFmt(-md.Uo) + '</b>（与 C_c 无关）</span></div>';
+      html += '<div class="row"><span class="tag v">式7-23</span><span>f_c = ' + frac('1', '2πR_fC_f') + ' = ' + fmtF(md.fc) + ' Hz（电荷放大器下限，可低至 10⁻⁴ Hz）</span></div>';
+    } else {
+      html += '<div class="row"><span class="tag">式7-8</span><span>q = d₃₃F，F = ma → <b>q = d₃₃ma</b></span></div>';
+      html += '<div class="row"><span class="tag">代入</span><span>F = ma = 2 g × ' + md.a.toFixed(1) + ' g × 9.80665 = <b>' + md.F.toFixed(4) + ' N</b>；q = 250 pC/N × ' + md.F.toFixed(4) + ' N = <b>' + qFmt(md.q) + '</b></span></div>';
+      html += '<div class="row"><span class="tag g">S_q</span><span>S_q = d₃₃mg = ' + frac('q', 'a') + ' = ' + (md.Sq*1e12).toFixed(2) + ' pC/g（只与 m、d₃₃ 有关）</span></div>';
+      html += '<div class="row"><span class="tag g">S_v</span><span>S_v = ' + frac('S_q', 'C_f') + ' = ' + (md.Sq*1e12).toFixed(2) + ' pC/g ÷ 10 pF = ' + (md.Sv*1e3).toFixed(0) + ' mV/g（100 mV/pC）</span></div>';
+      html += '<div class="row"><span class="tag v">式7-22</span><span>U_o = ' + frac('q', 'C_f') + ' = ' + qFmt(md.q) + ' / 10 pF = <b>' + uFmt(md.Uo) + '</b></span></div>';
+      html += '<div class="row"><span class="tag v">固有频率</span><span>f₀ = 50~60 kHz（YDS 系列）→ 可测频带远高于 f_L，且远离安装共振</span></div>';
+    }
+    html += '<div class="note">' + TYPES[t].hint + '</div>';
+    $('fmlTitle').textContent = TYPES[t].name + ' ｜ ' + (t === 'quartz' ? ('受力方向：' + S.axis.toUpperCase() + ' 轴')
+      : (t === 'ceramic' ? (mm.name + '（' + mm.sym + '）')
+      : (t === 'conn' ? (S.conn === 'parallel' ? '并联' : (S.conn === 'series' ? '串联' : '单片'))
+      : (t === 'circuit' ? (S.pre === 'volt' ? '电压放大器' : '电荷放大器') + ' · C_c = ' + S.cab + ' pF'
+      : 'q = d₃₃ma · C_f = 10 pF'))));
+    $('fmlBody').innerHTML = html;
+  }
+
+  /* ============ 9. 要点 ============ */
+  var PTS_TEXT = [
+    '<b>压电效应</b>：正压电效应＝受力→表面出电荷（机械能→电能），传感器用它；逆压电效应＝加电场→变形（电能→机械能），超声发射、STM 微位移用它。',
+    '<b>石英 x 切</b>：沿 x（电轴）受力＝<b>纵向效应</b> q = d₁₁F（与尺寸无关）；沿 y（机械轴）受力＝<b>横向效应</b> q = −d₁₁(l/h)F（与尺寸有关、极性相反）；沿 z（光轴）受力 q = 0。',
+    '正压电效应并不“产生”电荷：它只建立偶极子方向的电场，外电路实际流过的电荷量由电压 U 与电容 C_a 决定。',
+    '<b>材料（表7-1）</b>：石英 d₁₁ = 2.31 pC/N、εᵣ = 4.6、T_c = 573 ℃（最稳定）；压电陶瓷 PZT d₃₃ = 250 pC/N（200~500）、约石英百倍但稳定性差；PVDF d₃₁ = 6.7 pC/N、柔韧、阻抗匹配好。陶瓷必须先<b>极化</b>。',
+    '<b>接法</b>：并联 → 2q、2C_a、U 不变（利于准静态）；串联 → q 不变、C_a/2、2U（提高电压、须接高输入阻抗）。接电荷放大器时串联的总电荷不变。',
+    '<b>等效电路</b>：电荷源 q 与 C_a、R_a 并联 ⇔ 电压源 U = q/C_a 与 C_a 串联；外接电缆 C_c、放大器输入 C_i、R_i。U = q/C_a（式7-10）。',
+    '<b>电压放大器</b>：K_u = d₁₁/(C_a+C_c+C_i)（式7-16）—— 电缆电容直接吃掉灵敏度；对策：短电缆、驱动电缆、集成化。',
+    '<b>电荷放大器</b>：U_o ≈ −Q/C_f（式7-22），与 C_c 无关、A 被约掉（增益漂移不影响精度），下限 f_c = 1/(2πR_fC_f) 可到 10⁻⁴ Hz；代价是电路复杂、造价高。',
+    '<b>不能测静态量</b>：电荷经 R = R_a∥R_i 泄漏，Q(t) = Q₀e^(−t/RC)，ω→0 时输出为零（f_L = 0.012 Hz）；加大 R_i 只能延长 τ。应用：加速度计 q = d₃₃ma、测力（YDS-781）、超声换能器（同一元件收发两用）。'
+  ];
+  var PTS = { active:-1 };
+  function paintPoints(){
+    if (!$('points').children.length){
+      var html = '';
+      PTS_TEXT.forEach(function(t2, k){ html += '<li data-pi="' + k + '">' + t2 + '</li>'; });
+      $('points').innerHTML = html;
+    }
+  }
+  function setPt(i){
+    PTS.active = i;
+    var lis = $('points').children, k;
+    for (k = 0; k < lis.length; k++) lis[k].classList.toggle('on', k === i);
+    for (k = 0; k < PTS_TEXT.length; k++){
+      var bb = $('ptsB' + k);
+      if (bb) bb.classList.toggle('on', k === i);
+    }
+    if (i >= 0) say('<b>要点 ' + (i+1) + '/' + PTS_TEXT.length + '</b>：' + PTS_TEXT[i]);
+  }
+  for (var pb = 0; pb < PTS_TEXT.length; pb++){
+    (function(k){ $('ptsB' + k).addEventListener('click', function(){ stopDemo(); setPt(k); }); })(pb);
+  }
+  /* 注意：ptsPlay 的点击已由 jsB 的 bindDemos() 统一绑定（DEMOS.pts），
+     这里不能再加一个监听器，否则同一次点击先启动又被第二个监听器当成“暂停”取消。 */
+
+  /* ============ 10. 交互 ============ */
+  function setType(t){
+    S.type = t;
+    if (t === 'ceramic' && S.pol < 0.99) S.pol = 1;
+    if (t === 'accel') S.pre = 'charge';      /* 加速度计标配电荷放大器（可手动改回对比） */
+    paint();
+  }
+  function setX(v){ S.x = clamp(Math.round(v), 0, 100); $('x').value = S.x; paint(); }
+  function setAxis(a){ S.axis = a; paint(); }
+  function setMat(m){ S.mat = m; paint(); }
+  function setConn(c){ S.conn = c; paint(); }
+  function setPre(p){ S.pre = p; paint(); }
+  function setCab(v){ S.cab = clamp(Math.round(v/10)*10, 50, 1000); $('cab').value = S.cab; paint(); }
+  function setAmp(v){ S.amp = clamp(Math.round(v), 1, 50); $('amp').value = S.amp; paint(); }
+  function setPol(v){ S.pol = clamp(v, 0, 1); paint(); }
+  function setCm(m){ S.cm = m; CV.grid = ''; paint(); }
+  $('x').addEventListener('input', function(){ stopDemo(); setX(+this.value); });
+  $('cab').addEventListener('input', function(){ stopDemo(); setCab(+this.value); });
+  $('amp').addEventListener('input', function(){ stopDemo(); setAmp(+this.value); });
+  $('xM').addEventListener('click', function(){ stopDemo(); setX(S.x - 5); });
+  $('xP').addEventListener('click', function(){ stopDemo(); setX(S.x + 5); });
+  document.querySelectorAll('#segType button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setType(b.getAttribute('data-type')); say(TYPES[S.type].hint); });
+  });
+  document.querySelectorAll('#segAxis button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setAxis(b.getAttribute('data-axis')); say(TYPES.quartz.hint); });
+  });
+  document.querySelectorAll('#segMat button').forEach(function(b){
+    b.addEventListener('click', function(){
+      stopDemo(); setMat(b.getAttribute('data-mat'));
+      var m = MATS[S.mat];
+      say('<b>' + m.name + '</b>：' + m.sym + ' = ' + (m.d*1e12).toFixed(2) + ' pC/N，εᵣ = ' + m.epsr + '，居里点 ' + m.Tc + ' —— ' + m.tag + '。');
+    });
+  });
+  document.querySelectorAll('#segConn button').forEach(function(b){
+    b.addEventListener('click', function(){
+      stopDemo(); setConn(b.getAttribute('data-conn'));
+      say(S.conn === 'single' ? '<b>单片</b>：q = d₁₁F、C = C_a、U = q/C_a。'
+        : (S.conn === 'parallel' ? '<b>并联</b>：两片同极性面并接 → 电荷加倍、电容加倍、<b>电压不变</b>，时间常数大、利于准静态测量。'
+        : '<b>串联</b>：两片异极相连 → 电荷不变、电容减半、<b>电压加倍</b>，提高电压灵敏度但要求后接高输入阻抗。'));
+    });
+  });
+  document.querySelectorAll('#segPre button').forEach(function(b){
+    b.addEventListener('click', function(){
+      stopDemo(); setPre(b.getAttribute('data-pre'));
+      say(S.pre === 'volt' ? '<b>电压放大器</b>：K_u = d₁₁/(C_a+C_c+C_i)，电缆电容 C_c 越大灵敏度越低 —— 拖电缆滑块看变化。'
+        : '<b>电荷放大器</b>：U_o ≈ −Q/C_f，与电缆电容 C_c 无关、A 被约掉，低频可到 10⁻⁴ Hz。');
+    });
+  });
+  document.querySelectorAll('#segCurve button').forEach(function(b){
+    b.addEventListener('click', function(){
+      stopDemo(); setCm(b.getAttribute('data-cm'));
+      say(S.cm === 'qf' ? '四种材料的 q–F：都是过原点的直线（压电系数为常数）—— 斜率差别就是灵敏度差别。'
+        : (S.cm === 'freq' ? '频率响应：电压放大器高通、平台高 K/K₀ = C_a/(C_a+C_c+C_i)；电荷放大器全频段平坦。'
+        : '电荷泄漏：阶跃力下 Q 按 e^(−t/RC) 衰减 —— 这就是压电式不能测静态力的原因。'));
+    });
+  });
+  $('reset').addEventListener('click', function(){
+    stopDemo();
+    S.type = 'quartz'; S.axis = 'x'; S.mat = 'pzt'; S.conn = 'single'; S.pre = 'volt';
+    S.cab = 200; S.amp = 10; S.cm = 'qf'; S.pol = 1; CV.grid = '';
+    $('cab').value = 200; $('amp').value = 10; $('cabOut').textContent = '200 pF'; $('ampOut').textContent = '10 N';
+    setX(20);
+    say('已复位：石英晶片沿 x 受力、F = 10.0 N → q = 23.1 pC、U = 23.1 mV；电压放大器、电缆 200 pF、单片接法。');
+  });
+
+  /* ============ 11. 演示脚本 ============ */
+  async function demoEff(){
+    var tok = beginDemo('eff');
+    setType('quartz'); setAxis('x'); setX(20);
+    say('【<b>压电效应</b>】正压电效应：晶体受力 → 表面出现电荷（机械能→电能），传感器用它；逆压电效应：加电场 → 晶体变形（电能→机械能），超声发射与 STM 微位移用它。');
+    if (!await sleep(4400, tok)) return;
+    say('① 石英晶片沿 <b>x（电轴）</b>受力 = <b>纵向效应</b>：q = d₁₁F = 2.31 pC/N × 10.0 N = <b>23.1 pC</b>。电荷从垂直于 x 轴的晶面（上下表面）流出，红点就是流向前置放大器的电荷。');
+    if (!await sleep(4400, tok)) return;
+    if (!await tween(0, 100, 3000, setX, tok)) return;
+    if (!await sleep(2400, tok)) return;
+    say('② 换方向：沿 <b>y（机械轴）</b>受力 = <b>横向效应</b>：q = −d₁₁(l/h)F_y，晶片长而薄（l/h = 20/5 = 4）→ 电荷放大 4 倍，但<b>极性与纵向相反</b> —— 看上下表面的“＋/−”是否换位。');
+    setAxis('y'); setX(20);
+    if (!await sleep(4200, tok)) return;
+    if (!await tween(20, 100, 2600, setX, tok)) return;
+    if (!await sleep(2000, tok)) return;
+    say('③ 沿 <b>z（光轴）</b>受力：z 不是极性轴 —— <b>电荷为 0</b>。三条轴要记牢：x 电轴（电荷面法线）、y 机械轴、z 光轴。');
+    setAxis('z'); setX(80);
+    if (!await sleep(3800, tok)) return;
+    say('④ 小结：x → q = d₁₁F；y → q = −d₁₁(l/h)F；z → q = 0。另外注意：正压电效应并不“产生”电荷，只是建立偶极子方向的电场，外电路流过的电荷量由 U 与 C_a 决定。');
+    setAxis('x'); setX(20);
+    if (!await sleep(4400, tok)) return;
+    endDemo();
+  }
+  async function demoMat(){
+    var tok = beginDemo('mat');
+    setType('ceramic'); setMat('pzt'); setX(20); setPol(0);
+    say('【<b>压电材料</b>】压电陶瓷（BaTiO₃、PZT）必须先<b>极化</b>：未极化时电畴随机取向、宏观无净极化 → <b>没有压电性</b>（看中列 ①）。');
+    if (!await sleep(3600, tok)) return;
+    say('① 施加直流电场（3~5 kV/mm）—— 电畴转向电场方向（②）。');
+    if (!await tween(0, 1, 2600, setPol, tok)) return;
+    if (!await sleep(1800, tok)) return;
+    say('② 撤去电场后电畴取向仍然一致 = <b>剩余极化</b>，此时压电陶瓷才具有压电性（③）。现在加力 F：q = d₃₃F。');
+    if (!await tween(0, 100, 2600, setX, tok)) return;
+    if (!await sleep(2200, tok)) return;
+    say('③ 换材料比一比：同样 ' + (CFG.Fmax*S.x/100).toFixed(0) + ' N 的力 —— 石英 d₁₁ = 2.31 pC/N → ' + qFmt(CFG.d11*CFG.Fmax*S.x/100) + '；BaTiO₃ d₃₃ = 190 → ' + qFmt(MATS.batio3.d*CFG.Fmax*S.x/100) + '；PZT d₃₃ = 250 → ' + qFmt(MATS.pzt.d*CFG.Fmax*S.x/100) + '；PVDF d₃₁ = 6.7 → ' + qFmt(MATS.pvdf.d*CFG.Fmax*S.x/100) + '。');
+    if (!await sleep(5200, tok)) return;
+    setMat('quartz');
+    if (!await sleep(2200, tok)) return;
+    setMat('pzt');
+    if (!await sleep(2000, tok)) return;
+    say('④ 选型：石英最稳定（T_c = 573 ℃、εᵣ = 4.6 小、绝缘好）但灵敏度低；压电陶瓷 d₃₃ 大 1~2 个数量级、适合传感器；PVDF 柔韧、阻抗匹配好（水声、人体），但 d 小、温度上限低。');
+    if (!await sleep(4600, tok)) return;
+    endDemo();
+  }
+  async function demoConn(){
+    var tok = beginDemo('conn');
+    setType('conn'); setConn('single'); setX(20);
+    say('【<b>元件接法</b>】单片：q = d₁₁F = 23.1 pC，C_a = 1000 pF，U = q/C_a = 23.1 mV —— 这是基准。');
+    if (!await sleep(3600, tok)) return;
+    setConn('parallel');
+    say('① <b>并联</b>（两片同极性面并接）：电荷 2q = ' + qFmt(2*CFG.d11*10) + '、电容 2C_a = 2000 pF —— 两者同比例增大，所以<b>电压 U 不变</b>。电荷多、时间常数大 → 适合准静态测量。');
+    if (!await sleep(4600, tok)) return;
+    setConn('series');
+    say('② <b>串联</b>（两片异极相连）：总电荷仍是 q = ' + qFmt(CFG.d11*10) + '、电容变成 C_a/2 = 500 pF → 电压 <b>U′ = 2U = ' + uFmt(2*(CFG.d11*10)/CFG.Ca) + '</b>，提高电压灵敏度，但必须后接高输入阻抗放大器。');
+    if (!await sleep(4800, tok)) return;
+    say('③ 易错点：并联是“2q、2C、U 不变”，串联是“q 不变、C/2、2U”。接<b>电荷放大器</b>时串联的总电荷不变，不要记反。');
+    if (!await sleep(4200, tok)) return;
+    setConn('single'); setX(20);
+    endDemo();
+  }
+  async function demoAmp(){
+    var tok = beginDemo('amp');
+    setType('circuit'); setPre('volt'); setCab(200); setX(20);
+    say('【<b>测量电路</b>】电压放大器：U_i = q/(C_a+C_c+C_i)，K_u = d₁₁/(C_a+C_c+C_i)。现在电缆 200 pF：C = 1300 pF，U_i = ' + uFmt(CFG.d11*10/(1300e-12)) + '。');
+    if (!await sleep(4600, tok)) return;
+    say('① 把电缆加长：C_c 从 200 pF 拉到 1000 pF —— 看 U_i 与 K_u 往下掉（C 变成 2100 pF）。电缆电容是<b>电压放大器</b>的天敌。');
+    if (!await tween(200, 1000, 2800, setCab, tok)) return;
+    if (!await sleep(2400, tok)) return;
+    say('② 换成<b>电荷放大器</b>（图7-10）：C_f 跨接在运放输出与输入端，利用密勒效应 U_o ≈ −Q/C_f = ' + uFmt(-CFG.d11*10/CFG.Cf) + ' —— <b>与电缆电容 C_c 完全无关</b>，A 也在式子里被约掉。');
+    setPre('charge');
+    if (!await sleep(4400, tok)) return;
+    if (!await tween(1000, 200, 2400, setCab, tok)) return;
+    if (!await sleep(1800, tok)) return;
+    say('③ 频率特性：电压放大器是<b>高通</b>（下限 f_L = 1/2πRC ≈ 0.012 Hz），电荷放大器下限 f_c = 1/(2πR_fC_f) ≈ 1.6×10⁻⁴ Hz。阶跃力下电荷按 e^(−t/RC) 泄漏 —— 所以压电式测不了静态力。');
+    if (!await sleep(4600, tok)) return;
+    say('④ 应用：加速度计把惯性力 F = ma 变成电荷 —— q = d₃₃ma，配电荷放大器 S_v = S_q/C_f = 490 mV/g（100 mV/pC），5 g → U_o = 2.45 V。它没有静态输出，正好用来测振动与冲击。');
+    setType('accel'); setPre('charge'); setX(50);
+    if (!await sleep(4400, tok)) return;
+    if (!await tween(0, 100, 2600, setX, tok)) return;
+    if (!await sleep(2000, tok)) return;
+    say('⑤ 同一原理还用于：测力（YDS-781 单向测力，可测 5000 N、分辨力 0.001 N）、玻璃破碎报警器、超声换能器（同一元件加交变电压发射超声、受力接收回声）。');
+    setType('circuit'); setX(20);
+    if (!await sleep(4200, tok)) return;
+    endDemo();
+  }
+  async function demoPoints(){
+    var tok = beginDemo('pts');
+    say('【<b>本章要点</b>】共 ' + PTS_TEXT.length + ' 条，逐条过一遍；也可点编号按钮单独回看。');
+    if (!await sleep(2000, tok)) return;
+    for (var i = 0; i < PTS_TEXT.length; i++){
+      setPt(i);
+      if (!await sleep(PTS_TEXT[i].length > 90 ? 3400 : 2600, tok)) return;
+    }
+    setPt(-1);
+    endDemo();
+  }
+
+  /* ============ 12. 键盘 ============ */
+  document.addEventListener('keydown', function(e){
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input') return;
+    if (e.key === 'ArrowLeft'){ stopDemo(); setX(S.x - 2); e.preventDefault(); }
+    else if (e.key === 'ArrowRight'){ stopDemo(); setX(S.x + 2); e.preventDefault(); }
+    else if (e.key === '1'){ stopDemo(); setType('quartz'); }
+    else if (e.key === '2'){ stopDemo(); setType('ceramic'); }
+    else if (e.key === '3'){ stopDemo(); setType('conn'); }
+    else if (e.key === '4'){ stopDemo(); setType('circuit'); }
+    else if (e.key === '5'){ stopDemo(); setType('accel'); }
+    else if (e.key === 'a'){ stopDemo(); setAxis({ x:'y', y:'z', z:'x' }[S.axis]); }
+    else if (e.key === 'p'){ stopDemo(); setPre(S.pre === 'volt' ? 'charge' : 'volt'); }
+    else if (e.key === 'c'){ stopDemo(); setConn({ single:'parallel', parallel:'series', series:'single' }[S.conn]); }
+    else if (e.key === ' '){
+      e.preventDefault();
+      if (playingKey){ stopDemo(); say('演示已暂停。'); }
+      else { var k = { quartz:'eff', ceramic:'mat', conn:'conn', circuit:'amp', accel:'amp' }[S.type]; if (DEMOS[k] && DEMOS[k].fn) DEMOS[k].fn(); }
+    }
+    else if (e.key === 'r' || e.key === 'R'){ $('reset').click(); }
+  });
+
+
+  DEMOS.eff  = { btn:'playEff',  label:'▶ 压电效应', fn:demoEff };
+  DEMOS.mat  = { btn:'playMat',  label:'▶ 压电材料', fn:demoMat };
+  DEMOS.conn = { btn:'playConn', label:'▶ 元件接法', fn:demoConn };
+  DEMOS.amp  = { btn:'playAmp',  label:'▶ 测量电路', fn:demoAmp };
+  DEMOS.pts  = { btn:'ptsPlay',  label:'▶ 巡览要点', fn:demoPoints };
+  bindDemos();
+
+  /* ============ 启动（URL 参数必须在第一次 paint 之前写入 S） ============ */
+  var q = new URLSearchParams(location.search);
+  if (q.has('type') && TYPES[q.get('type')]) S.type = q.get('type');
+  if (q.has('axis') && ['x','y','z'].indexOf(q.get('axis')) >= 0) S.axis = q.get('axis');
+  if (q.has('mat') && MATS[q.get('mat')]) S.mat = q.get('mat');
+  if (q.has('conn') && ['single','parallel','series'].indexOf(q.get('conn')) >= 0) S.conn = q.get('conn');
+  if (q.has('pre') && ['volt','charge'].indexOf(q.get('pre')) >= 0) S.pre = q.get('pre');
+  if (S.type === 'accel' && !q.has('pre')) S.pre = 'charge';   /* 与 setType 保持一致 */
+  if (q.has('cm') && ['qf','freq','leak'].indexOf(q.get('cm')) >= 0) S.cm = q.get('cm');
+  if (q.has('x')) S.x = clamp(Math.round(parseFloat(q.get('x')) || 0), 0, 100);
+  if (q.has('amp')) S.amp = clamp(Math.round(parseFloat(q.get('amp')) || 10), 1, 50);
+  if (q.has('cab')) S.cab = clamp(Math.round((parseFloat(q.get('cab')) || 200)/10)*10, 50, 1000);
+  if (q.has('speed')) SPEED = clamp(parseFloat(q.get('speed')) || 1, 0.4, 2.5);
+  $('x').value = S.x;
+  $('cab').value = S.cab;
+  $('amp').value = S.amp;
+  $('cabOut').textContent = S.cab + ' pF';
+  $('ampOut').textContent = S.amp + ' N';
+  $('speed').value = SPEED; $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  paint();
+  initAnim();
+  runAnim();
+  var AUTO = { '1':'eff', '2':'mat', '3':'conn', '4':'amp' };
+  if (AUTO[q.get('auto')] && DEMOS[AUTO[q.get('auto')]].fn) DEMOS[AUTO[q.get('auto')]].fn();
+
+})();
+</script>
+
+<script>
+/* ==================== 板块布局引擎：拖动 / 缩放 / 记忆 ====================
+   由 _build/build.js 注入；章节的面板清单 / 记忆键 / 默认布局在构建时替换。 */
+(function(){
+  "use strict";
+  var BOARD = document.getElementById('board');
+  var COLS  = ['colA','colB','colC'];
+  var IDS   = ["ctrlCard","ptsCard","structCard","waveCard","readCard","fmlCard","curveCard"];
+  var MINZ = 0.7, MAXZ = 1.6, MINCOL = 260;
+  var KEY = 'jh-piezo-layout-v1';
+  var DEF = {"weight":{"colA":3,"colB":5.3,"colC":3.8},"col":{"colA":["ctrlCard","ptsCard"],"colB":["structCard","waveCard"],"colC":["readCard","fmlCard","curveCard"]},"zoom":{}};
+  var L = null, focused = null;
+  function el(id){ return document.getElementById(id); }
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function load(){
+    var d;
+    try { d = JSON.parse(localStorage.getItem(KEY)); } catch (e) { d = null; }
+    if (!d || !d.col) return clone(DEF);
+    COLS.forEach(function(c){ if (!d.col[c]) d.col[c] = []; });
+    var seen = {};
+    COLS.forEach(function(c){
+      d.col[c] = d.col[c].filter(function(id){ if (IDS.indexOf(id) < 0 || seen[id]) return false; seen[id] = 1; return true; });
+    });
+    IDS.forEach(function(id){ if (!seen[id]){ d.col.colC.push(id); seen[id] = 1; } });
+    d.weight = d.weight || clone(DEF.weight);
+    d.zoom = d.zoom || {};
+    return d;
+  }
+  L = load();
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(L)); } catch (e) {} }
+  function render(){
+    COLS.forEach(function(cid){
+      var col = el(cid);
+      L.col[cid].forEach(function(pid){ var p = el(pid); if (p) col.appendChild(p); });
+      col.style.flexGrow = L.weight[cid] || 1;
+    });
+  }
+  function applyZoom(id){
+    var p = el(id); if (!p) return;
+    var b = p.querySelector('.pbody'); if (!b) return;
+    b.style.zoom = L.zoom[id] || 1;
+  }
+  function applyAll(){ render(); IDS.forEach(applyZoom); }
+
+  function startDrag(ev, p){
+    if (ev.button) return;
+    var x0 = ev.clientX, y0 = ev.clientY, moved = false, lastTarget = null;
+    function move(e){
+      if (!moved){
+        if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) < 6) return;
+        moved = true;
+        document.body.classList.add('layout-dragging');
+        p.classList.add('sorting');
+      }
+      var col = null, i, r;
+      for (i = 0; i < COLS.length; i++){
+        r = el(COLS[i]).getBoundingClientRect();
+        if (e.clientX >= r.left - 6 && e.clientX <= r.right + 6){ col = COLS[i]; break; }
+      }
+      if (!col) col = (e.clientX < BOARD.getBoundingClientRect().left + BOARD.clientWidth/2) ? COLS[0] : COLS[COLS.length - 1];
+      var list = L.col[col].filter(function(id){ return id !== p.id; });
+      var idx = list.length, j, q, qr;
+      for (j = 0; j < list.length; j++){
+        q = el(list[j]); if (!q) continue;
+        qr = q.getBoundingClientRect();
+        if (e.clientY < qr.top + qr.height/2){ idx = j; break; }
+      }
+      var key = col + ':' + idx;
+      if (key === lastTarget) return;
+      lastTarget = key;
+      COLS.forEach(function(c2){ L.col[c2] = L.col[c2].filter(function(id){ return id !== p.id; }); });
+      L.col[col].splice(idx, 0, p.id);
+      render();
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', up);
+      document.body.classList.remove('layout-dragging');
+      p.classList.remove('sorting');
+      if (moved) save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
+  }
+  function startSplit(ev, sp){
+    ev.preventDefault();
+    var left = el(sp.getAttribute('data-left')), right = el(sp.getAttribute('data-right'));
+    var total = left.offsetWidth + right.offsetWidth;
+    var wl = L.weight[left.id] || 1, wr = L.weight[right.id] || 1, sum = wl + wr;
+    var x0 = ev.clientX, pxPerWeight = total/sum;
+    document.body.classList.add('layout-dragging');
+    function move(e){
+      var d = (e.clientX - x0)/pxPerWeight;
+      var nl = Math.max(MINCOL/(total/sum), Math.min(sum - MINCOL/(total/sum), wl + d));
+      left.style.flexGrow = nl; right.style.flexGrow = sum - nl;
+      L.weight[left.id] = nl; L.weight[right.id] = sum - nl;
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.body.classList.remove('layout-dragging');
+      save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  }
+  function zoomPanel(id, d){
+    var z = Math.round(((L.zoom[id] || 1) + d)*100)/100;
+    L.zoom[id] = Math.max(MINZ, Math.min(MAXZ, z));
+    applyZoom(id); save();
+  }
+  function toggleFocus(id){
+    var p = el(id); if (!p) return;
+    if (focused === id){ p.classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    else {
+      if (focused) el(focused).classList.remove('focused');
+      p.classList.add('focused'); document.body.classList.add('has-focus'); focused = id;
+    }
+  }
+  function reset(){
+    L = clone(DEF);
+    if (focused){ el(focused).classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    applyAll(); save();
+  }
+  var back = document.createElement('div');
+  back.id = 'focusBack';
+  back.addEventListener('click', function(){ if (focused) toggleFocus(focused); });
+  document.body.appendChild(back);
+
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var head = p.querySelector('.phead');
+    if (head){
+      head.addEventListener('pointerdown', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        e.preventDefault(); startDrag(e, p);
+      });
+      head.addEventListener('dblclick', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        toggleFocus(id);
+      });
+    }
+    p.querySelectorAll('.ptool').forEach(function(b){
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        var a = b.getAttribute('data-act');
+        if (a === 'in') zoomPanel(id, 0.08);
+        else if (a === 'out') zoomPanel(id, -0.08);
+        else if (a === 'max') toggleFocus(id);
+      });
+    });
+  });
+  document.querySelectorAll('.vsplit').forEach(function(sp){
+    sp.addEventListener('pointerdown', function(e){ startSplit(e, sp); });
+  });
+  /* ---------- 折叠：滑过上方自动折叠，回到可视区自动展开；可手动锁定 ---------- */
+  function setFold(p, on){
+    p.classList.toggle('folded', on);
+    var btn = p.querySelector('.ptool[data-act="fold"]');
+    if (btn) btn.textContent = on ? '▸' : '▾';
+  }
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var tools = p.querySelector('.ptools');
+    if (!tools) return;
+    var fb = document.createElement('button');
+    fb.className = 'ptool';
+    fb.setAttribute('data-act', 'fold');
+    fb.title = '折叠 / 展开本板块（手动折叠后不会被自动展开）';
+    fb.textContent = '▾';
+    tools.insertBefore(fb, tools.firstChild);
+    fb.addEventListener('click', function(e){
+      e.stopPropagation();
+      var folded = p.classList.contains('folded');
+      setFold(p, !folded);
+      if (!folded) p.setAttribute('data-manual', '1'); else p.removeAttribute('data-manual');
+    });
+  });
+  var ticking = false;
+  function autoFold(){
+    ticking = false;
+    var vh = window.innerHeight || 900;
+    IDS.forEach(function(id){
+      var p = el(id); if (!p) return;
+      if (!p.parentNode || p.parentNode.id !== 'colB') return;    /* 只有中间列参与自动折叠（左右两列固定不动） */
+      var r = p.getBoundingClientRect();
+      if (r.bottom < 90){                                          /* 整块滑到上方之外 → 收起 */
+        if (!p.classList.contains('folded')) setFold(p, true);
+      } else if (r.top < vh - 30 && r.bottom > 60 && !p.hasAttribute('data-manual')){
+        if (p.classList.contains('folded')) setFold(p, false);      /* 回到可视区 → 展开 */
+      }
+    });
+  }
+  function onScrollOrWheel(){
+    if (!ticking){ ticking = true; requestAnimationFrame(autoFold); }
+  }
+  window.addEventListener('scroll', onScrollOrWheel, { passive:true });
+  window.addEventListener('wheel', onScrollOrWheel, { passive:true });
+  window.addEventListener('touchmove', onScrollOrWheel, { passive:true });
+  window.addEventListener('resize', function(){ if (window.__repack) window.__repack(); });
+  setTimeout(autoFold, 400);
+  window.__autoFold = autoFold;
+
+  var lr = document.getElementById('layReset');
+  if (lr) lr.addEventListener('click', reset);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && focused) toggleFocus(focused); });
+  window.addEventListener('resize', function(){ IDS.forEach(applyZoom); });
+  window.__repack = function(){};
+  applyAll();
+  window.addEventListener('load', applyAll);
+})();
+
+</script>
+</body>
+</html>

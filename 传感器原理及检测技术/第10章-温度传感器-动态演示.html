@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第10章 温度传感器 · 动态演示｜传感器原理与技术</title>
+<style>
+/* =====================================================================
+   公共样式（各章通用）· 由 _build/build.js 注入到每个单文件 HTML 的样式表顶部
+   与第4章保持同一套类名与观感；章节特有的语义色 / 版式写在章节模块的 extraCss 里
+   ===================================================================== */
+:root{
+  --jhu:#0e4a8e; --jhu2:#0a2f5c; --ink:#12233a; --muted:#5b6b80;
+  --line:#d5dfec; --bg:#eef3f9; --card:#ffffff;
+  --flux:#0d8b7f;      /* 磁通 / 场线（第4章起沿用） */
+  --cu:#c2703a;        /* 线圈 / 铜 */
+  --iron:#4b6b8f;      /* 铁芯 / 铁磁体 */
+  --gapm:#e08a1e;      /* 气隙 / 有效量 */
+  --eddy:#7c3aed;      /* 涡流 / 强调（紫） */
+  --hot:#d94a3d; --ok:#0f9d58;
+  --grid:rgba(14,74,142,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Source Han Sans SC","Hiragino Sans GB",system-ui,sans-serif;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    var(--bg);
+  color:var(--ink); font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+header{
+  background:linear-gradient(120deg,var(--jhu) 0%,var(--jhu2) 100%);
+  color:#fff; padding:8px 24px; display:flex; align-items:center; gap:16px;
+  box-shadow:0 3px 14px rgba(10,47,92,.28);
+}
+header h1{font-size:22px; margin:0; letter-spacing:1px; font-weight:700}
+header .sub{font-size:13px; opacity:.9; border-left:1px solid rgba(255,255,255,.45); padding-left:13px}
+header .right{margin-left:auto; text-align:right; font-size:12.5px; opacity:.92; line-height:1.3}
+header .right b{font-size:15px; letter-spacing:2px}
+#laybar{display:flex; align-items:center; gap:10px; padding:3px 20px; font-size:12px; color:#41566f;
+        background:#e4edf8; border-bottom:1px solid #cfdcec}
+#laybar button{border:1px solid #a9c1dd; background:#fff; color:var(--jhu); border-radius:7px;
+               font-size:12px; font-weight:700; padding:2px 10px; cursor:pointer; font-family:inherit}
+#laybar button:hover{background:#f2f7fd}
+#laybar .hint{color:#6b7d92}
+#boardWrap{padding:6px 14px 2px}
+#board{display:flex; align-items:flex-start}
+.col{display:flex; flex-direction:column; gap:6px; min-width:0; flex-grow:1; flex-basis:0}
+.colhead{font-size:11.5px; font-weight:700; color:#8296ad; letter-spacing:.4px; padding:0 3px 2px; border-bottom:1px dashed #dbe5f0}
+.vsplit{flex:0 0 13px; align-self:stretch; cursor:col-resize; position:relative; touch-action:none}
+.vsplit::before{content:""; position:absolute; left:5.5px; top:8px; bottom:8px; width:2px; border-radius:2px; background:#cfdcec}
+.vsplit:hover::before{background:var(--jhu); width:3px; left:5px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:13px;
+      box-shadow:0 2px 10px rgba(18,35,58,.06); padding:5px 9px}
+.card h2{margin:0 0 4px; font-size:14.5px; color:var(--jhu); font-weight:700; display:flex; align-items:center; gap:7px}
+.card h2::before{content:""; width:4px; height:15px; border-radius:3px; background:var(--jhu)}
+.card h2 small{font-weight:400; color:var(--muted); font-size:12px}
+.panel{position:relative; box-sizing:border-box}
+.panel > .phead{display:flex; align-items:center; gap:6px; cursor:move; touch-action:none; user-select:none; margin:-1px 0 4px}
+.panel > .phead h2{margin:0; flex:1; min-width:0; cursor:move}
+.ptools{display:flex; gap:3px; flex:none}
+.ptool{width:21px; height:21px; padding:0; line-height:1; border:1px solid var(--line); background:#fff;
+       color:var(--jhu); border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit}
+.ptool:hover{background:#eef4fc; border-color:#9fbedd}
+.panel.sorting{opacity:.6; outline:2px dashed var(--jhu); outline-offset:2px; pointer-events:none}
+.panel.focused{position:fixed; left:14px; right:14px; top:80px; bottom:14px; z-index:300; overflow:auto;
+               box-shadow:0 18px 50px rgba(10,47,92,.38); border-color:var(--jhu)}
+#focusBack{position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(10,30,55,.34); z-index:290; display:none}
+body.has-focus #focusBack{display:block}
+body.layout-dragging{user-select:none}
+svg{display:block; width:100%; height:auto}
+.tiny{font-size:12px; fill:var(--muted); color:var(--muted)}
+/* ---- 控件 ---- */
+.ctrl{display:flex; flex-direction:column; gap:2px; margin-bottom:2px}
+.ctrl .row{display:flex; align-items:center; gap:7px}
+.ctrl .name{font-size:12.8px; color:var(--muted); width:118px; flex:none}
+.ctrl .name b{color:var(--ink); font-size:14px}
+.ctrl output{font-size:18px; font-weight:800; min-width:96px; text-align:right; font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none; appearance:none; height:8px; border-radius:5px; background:#dce6f2; outline:none; flex:1; min-width:70px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:21px; height:21px; border-radius:50%;
+      background:#fff; border:3px solid var(--jhu); cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.seg{display:flex; gap:6px; flex-wrap:wrap}
+.seg button{flex:1 1 0; min-width:96px; padding:5px 8px; border-radius:9px; border:1px solid var(--line);
+            background:#fff; cursor:pointer; font-size:13px; font-weight:700; color:#33506f; font-family:inherit; line-height:1.3}
+.seg button small{display:block; font-weight:400; font-size:11px; color:var(--muted)}
+.seg button:hover{border-color:#9fbedd}
+.seg button.on{background:var(--jhu); border-color:var(--jhu); color:#fff}
+.seg button.on small{color:rgba(255,255,255,.85)}
+/* 紧凑小按钮（章节里的型式/模式细分按钮） */
+.seg.tight button{min-width:66px; flex:1 1 66px; padding:3px 4px; font-size:11.5px; line-height:1.25}
+.seg.tight button small{font-size:10px}
+.step{border:1px solid var(--line); background:#fff; color:var(--jhu); width:28px; height:28px;
+      border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; line-height:1}
+.actions{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap}
+.actions button{flex:1 1 92px; padding:5px 4px; border-radius:9px; border:1px solid var(--jhu);
+                background:var(--jhu); color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;
+                font-family:inherit; white-space:nowrap}
+.actions button.ghost{background:#fff; color:var(--jhu)}
+.actions button.running{background:var(--hot); border-color:var(--hot); color:#fff}
+.actions button:hover{filter:brightness(1.07)}
+.narrate{margin-top:4px; border-left:5px solid var(--flux); background:#f2fbf9; border-radius:0 10px 10px 0;
+         padding:3px 10px; font-size:12.4px; line-height:1.34; min-height:26px; color:#0a5f57}
+/* ---- 读数 ---- */
+.big{display:flex; align-items:baseline; gap:9px; background:linear-gradient(90deg,#f2f7ff,#fff);
+     border:1px solid #d9e5f5; border-radius:12px; padding:3px 12px}
+.big .cap{font-size:13px; color:var(--muted); margin-right:auto}
+.big .num{font-size:23px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
+.big .unit{font-size:15px; font-weight:700; color:var(--muted)}
+.kv{display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:5px}
+.kv .box{border:1px dashed var(--line); border-radius:9px; padding:2px 6px; font-size:10.5px; color:var(--muted)}
+.kv .box b{display:block; font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:1px}
+.fine{font-size:10.4px; color:var(--muted); margin-top:5px; line-height:1.5; font-variant-numeric:tabular-nums}
+.fine b{color:var(--ink)}
+/* ---- 比例条 / 图例 ---- */
+.rmbar{display:flex; height:15px; border-radius:5px; overflow:hidden; border:1px solid var(--line); background:#f4f8fd; margin-top:3px}
+.rmbar i{display:block; height:100%}
+.legend{display:flex; gap:8px; flex-wrap:wrap; font-size:10.4px; color:var(--muted); margin-top:1px}
+.legend i{display:inline-block; width:14px; height:9px; border-radius:2px; margin-right:5px}
+/* ---- 公式 ---- */
+.fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:10.9px; line-height:1.22; color:#16283d}
+.fml .row{display:block; border-bottom:1px dashed #e7eef7; padding:0}
+.fml .row:last-child{border-bottom:none}
+.fml .tag{display:inline-block; font-family:"Microsoft YaHei",sans-serif; font-size:11px; color:#fff;
+          background:var(--jhu); border-radius:5px; padding:0 6px; margin-right:5px; vertical-align:1px}
+.fml .tag.g{background:var(--gapm)} .fml .tag.f{background:var(--flux)} .fml .tag.v{background:var(--eddy)}
+.fml b{color:var(--hot)}
+.fml .note{font-family:"Microsoft YaHei",sans-serif; font-size:10.8px; color:var(--muted); line-height:1.4; margin-top:2px}
+.frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.88em; line-height:1.02; margin:0 .14em}
+.frac i{font-style:normal; padding:0 .3em}
+.frac b{font-weight:400; color:inherit; border-top:1.4px solid currentColor; padding:0 .3em}
+/* ---- 要点 ---- */
+ol.points{margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:4px}
+ol.points li{border:1px solid var(--line); border-left:4px solid #c8d6e6; border-radius:0 9px 9px 0;
+             padding:0 7px; font-size:10.9px; line-height:1.28; color:#3c5068; background:#fbfdff; transition:.25s}
+ol.points li.on{border-left-color:var(--ok); background:#f2fbf5; color:var(--ink); box-shadow:0 0 0 2px rgba(15,157,88,.12)}
+ol.points li .hl{color:var(--ok); font-weight:700}
+.hint{font-size:12px; color:var(--muted); margin-top:5px}
+footer{padding:3px 18px 5px; font-size:11px; color:var(--muted); line-height:1.5}
+footer b{color:var(--jhu)}
+.actions button.ptsB{flex:0 0 26px; padding:2px 0; font-size:11px; border-radius:6px}   /* 要点编号按钮：特异性需高于 .actions button */
+/* 左右两列都吸附固定；只有中间列（结构+读数）随页面滚动 */
+#colA, #colC{position:sticky; top:4px; align-self:flex-start;
+             max-height:calc(100vh - 10px); overflow-y:auto; overscroll-behavior:contain}
+#colA::-webkit-scrollbar, #colC::-webkit-scrollbar{width:6px}
+#colA::-webkit-scrollbar-thumb, #colC::-webkit-scrollbar-thumb{background:#c3d3e6; border-radius:3px}
+/* 中间列底部留白：让最后一张卡片也能滚动到屏幕中间 */
+#colB{padding-bottom:52vh}
+.panel > .pbody{max-height:2600px; overflow:hidden; transition:max-height .22s ease, opacity .18s ease}
+.panel.folded > .pbody{max-height:0 !important; opacity:0}
+.panel.folded{border-color:#bcd0e5; background:#f8fbff}
+.panel.folded > .phead h2{color:#5b6b80}
+.ptool[data-act="fold"]{font-size:11px}
+.readlabel{font-size:12.5px; font-weight:700; color:#5b6b80; margin:7px 0 3px; padding-top:6px; border-top:1px dashed #dbe5f0}
+.readwrap svg{max-height:196px}
+.pbody > svg{max-height:300px}
+.pbody > svg + svg{max-height:196px}
+@media (max-width:1200px){ #boardWrap{min-width:1180px} }
+
+  /* ---- 第10章语义色 ---- */
+  :root{ --ptr:#b3382c; --ntc:#0d8b7f; --tck:#7c3aed; --irc:#e08a1e; }
+</style>
+</head>
+<body>
+<header>
+  <h1>第 10 章 温度传感器</h1>
+  <div class="sub">热电阻 · 热敏电阻 · 热电偶 · PN 结与集成温度传感器 · 热辐射测温 | 动态演示</div>
+  <div class="right"><b>江汉大学</b><br>传感器原理与技术</div>
+</header>
+<div id="laybar">
+  <span style="font-weight:700;color:#0e4a8e">板块布局</span>
+  <button id="layReset">↺ 恢复默认（一屏）</button>
+  <span class="hint"><b>左右两列固定不动</b>（左＝型式与输入量＋要点，右＝数据/曲线/公式），只有<b>中间列</b>随页面滚动；每块标题栏的 <b>▾</b> 可折叠该板块；<b>滚轮下滑时滑过上方的那几块会自动收起、滚回来自动展开</b>（手动折起的不会被自动展开）；拖动<b>标题栏</b>可换列换位、拖<b>竖条</b>调列宽、<b>＋ －</b> 缩放、<b>⛶</b> 全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
+</div>
+
+<div id="boardWrap">
+<main id="board">
+
+  <!-- ================= 左列 ================= -->
+  <div class="col" id="colA">
+    <div class="colhead">① 型式与输入量</div>
+
+
+    <section class="card panel" id="ctrlCard">
+      <div class="phead">
+        <h2>器件与输入量</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="ctrl">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>温度器件</b></span>
+          <div class="seg tight" id="segType" style="flex:1">
+            <button data-type="rtd" class="on">热电阻<small>Pt100 三线制</small></button>
+            <button data-type="ntc">热敏电阻<small>NTC · B 值</small></button>
+            <button data-type="tc">热电偶<small>塞贝克 · 冷端</small></button>
+            <button data-type="ic">PN结/集成<small>−2 mV/℃ · 1 μA/K</small></button>
+            <button data-type="ir">热辐射<small>εσT⁴ · 非接触</small></button>
+          </div>
+        </div>
+        <div class="hint" id="typeHint">热电阻：金属电阻随温升增大，Pt100 在 0 ℃ 为 100 Ω、α≈0.385 Ω/℃；近似线性、精度高，但有引线电阻误差 → 三线制/四线制。</div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b>温度 t</b><br><span class="tiny" id="tTxt">0 ～ 400 ℃</span></span>
+          <button class="step" id="tM" title="减小 5 ℃">−</button>
+          <input type="range" id="t" min="0" max="400" step="1" value="25">
+          <button class="step" id="tP" title="增大 5 ℃">＋</button>
+          <output id="tOut">25 ℃</output>
+        </div>
+      </div>
+      <div class="ctrl" id="wireRow">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>引线制式</b><br><span class="tiny">仅热电阻（图10-3/10-4）</span></span>
+          <div class="seg tight" id="segWire" style="flex:1">
+            <button data-wire="2">二线制<small>2r 全计入</small></button>
+            <button data-wire="3" class="on">三线制<small>r 自动抵消</small></button>
+            <button data-wire="4">四线制<small>R=U/I</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="ctrl" id="epsRow">
+        <div class="row">
+          <span class="name"><b>发射率 ε</b><br><span class="tiny" id="epsTxt">仅热辐射测温使用</span></span>
+          <input type="range" id="eps" min="0.1" max="1" step="0.05" value="0.8">
+          <output id="epsOut">0.80</output>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="playRtd" class="ghost">▶ 热电阻三线制</button>
+        <button id="playNtc" class="ghost">▶ 热敏电阻 R–T</button>
+        <button id="playTc" class="ghost">▶ 热电偶与冷端</button>
+        <button id="playIc" class="ghost">▶ PN结与集成</button>
+        <button id="playIr" class="ghost">▶ 热辐射测温</button>
+        <button id="reset" class="ghost" style="flex:0 0 58px">↺ 复位</button>
+      </div>
+      <div class="ctrl" style="margin-top:5px">
+        <div class="row">
+          <span class="name"><b>演示速度</b><br><span class="tiny">0.4× 慢 ～ 2.5× 快</span></span>
+          <input type="range" id="speed" min="0.4" max="2.5" step="0.1" value="1">
+          <output id="speedOut">1.0×</output>
+        </div>
+      </div>
+      <div class="narrate" id="narration">初始状态：热电阻 Pt100、三线制，t = 25 ℃、R_t = 109.73 Ω。五个演示按钮分别讲：热电阻三线制 / 热敏电阻 R–T / 热电偶与冷端 / PN结与集成 / 热辐射测温。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="ptsCard">
+      <div class="phead">
+        <h2>本章要点</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="actions" style="margin-top:0">
+        <button id="ptsPlay" class="ghost" style="flex:0 0 98px">▶ 巡览要点</button>
+        <button id="ptsB0" class="ghost ptsB">1</button><button id="ptsB1" class="ghost ptsB">2</button>
+        <button id="ptsB2" class="ghost ptsB">3</button><button id="ptsB3" class="ghost ptsB">4</button>
+        <button id="ptsB4" class="ghost ptsB">5</button><button id="ptsB5" class="ghost ptsB">6</button>
+        <button id="ptsB6" class="ghost ptsB">7</button><button id="ptsB7" class="ghost ptsB">8</button>
+        <button id="ptsB8" class="ghost ptsB">9</button><button id="ptsB9" class="ghost ptsB">10</button>
+      </div>
+      <ol class="points" id="points"></ol>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colA" data-right="colB" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 中列 ================= -->
+  <div class="col" id="colB">
+    <div class="colhead">② 结构动态 ＋ 输出读数（成对显示）</div>
+
+
+    <section class="card panel" id="tempCard">
+      <div class="phead">
+        <h2>结构动态 <small id="tempSub">Pt100 三线制电桥（图10-3）</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="temp" viewBox="0 0 700 320" role="img" aria-label="温度传感器结构动态：热电阻三线制、热敏电阻、热电偶、PN结与集成、热辐射">
+        <!-- ============ ① 热电阻：二线/三线制电桥 + 四线制 ============ -->
+        <g id="stRtd">
+          <g id="rtd23">
+            <text x="22" y="46" font-size="12.5" font-weight="700" fill="#233b57">+U</text>
+            <line x1="38" y1="52" x2="96" y2="52" stroke="#233b57" stroke-width="1.8"/>
+            <line id="rtdWireT" x1="96" y1="52" x2="130" y2="52" stroke="#233b57" stroke-width="1.8" style="display:none"/>
+            <g id="rtdLeadT">
+              <rect x="96" y="42" width="34" height="20" fill="#fff" stroke="var(--cu)" stroke-width="1.6"/>
+              <text x="113" y="36" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--cu)">r₃</text>
+            </g>
+            <line x1="130" y1="52" x2="330" y2="52" stroke="#233b57" stroke-width="1.8"/>
+            <line x1="150" y1="52" x2="150" y2="84" stroke="#233b57" stroke-width="1.8"/>
+            <rect x="138" y="84" width="24" height="22" fill="#fff" stroke="var(--cu)" stroke-width="1.6"/>
+            <text id="rtdLeadLTxt" x="134" y="100" text-anchor="end" font-size="11.5" font-weight="700" fill="var(--cu)">r₁</text>
+            <line x1="150" y1="106" x2="150" y2="136" stroke="#233b57" stroke-width="1.8"/>
+            <rect x="126" y="136" width="48" height="40" fill="#fdf2f0" stroke="var(--hot)" stroke-width="1.8"/>
+            <text x="150" y="161" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--hot)">R_t</text>
+            <text id="rtdRtVal" x="182" y="152" font-size="12" font-weight="700" fill="var(--hot)">109.73 Ω</text>
+            <text x="182" y="168" font-size="11" fill="#94a3b8">Pt100</text>
+            <line x1="150" y1="176" x2="150" y2="196" stroke="#233b57" stroke-width="1.8"/>
+            <line x1="150" y1="196" x2="150" y2="216" stroke="#233b57" stroke-width="1.8"/>
+            <rect x="132" y="216" width="36" height="22" fill="#fff" stroke="#233b57" stroke-width="1.6"/>
+            <text x="150" y="232" text-anchor="middle" font-size="11.5" font-weight="700" fill="#233b57">R₂</text>
+            <line x1="150" y1="238" x2="150" y2="262" stroke="#233b57" stroke-width="1.8"/>
+            <line x1="330" y1="52" x2="330" y2="84" stroke="#233b57" stroke-width="1.8"/>
+            <line id="rtdLeadRW" x1="330" y1="84" x2="330" y2="106" stroke="#233b57" stroke-width="1.8" style="display:none"/>
+            <g id="rtdLeadR">
+              <rect x="318" y="84" width="24" height="22" fill="#fff" stroke="var(--cu)" stroke-width="1.6"/>
+              <text x="348" y="100" font-size="11.5" font-weight="700" fill="var(--cu)">r₂</text>
+            </g>
+            <line x1="330" y1="106" x2="330" y2="136" stroke="#233b57" stroke-width="1.8"/>
+            <rect x="308" y="136" width="48" height="40" fill="#fff" stroke="#233b57" stroke-width="1.8"/>
+            <text x="332" y="161" text-anchor="middle" font-size="12.5" font-weight="800" fill="#233b57">R₃</text>
+            <line x1="330" y1="176" x2="330" y2="196" stroke="#233b57" stroke-width="1.8"/>
+            <line x1="330" y1="196" x2="330" y2="216" stroke="#233b57" stroke-width="1.8"/>
+            <rect x="312" y="216" width="36" height="22" fill="#fff" stroke="#233b57" stroke-width="1.6"/>
+            <text x="330" y="232" text-anchor="middle" font-size="11.5" font-weight="700" fill="#233b57">R₁</text>
+            <line x1="330" y1="238" x2="330" y2="262" stroke="#233b57" stroke-width="1.8"/>
+            <line x1="150" y1="196" x2="210" y2="196" stroke="#233b57" stroke-width="1.8"/>
+            <line x1="270" y1="196" x2="330" y2="196" stroke="#233b57" stroke-width="1.8"/>
+            <circle cx="150" cy="196" r="3.2" fill="#233b57"/>
+            <circle cx="330" cy="196" r="3.2" fill="#233b57"/>
+            <rect x="210" y="182" width="60" height="28" fill="#fff" stroke="#233b57" stroke-width="1.6"/>
+            <text x="240" y="201" text-anchor="middle" font-size="11.5" font-weight="700" fill="#233b57">检流计</text>
+            <line x1="38" y1="262" x2="330" y2="262" stroke="#233b57" stroke-width="1.8"/>
+            <text x="22" y="282" font-size="12.5" font-weight="700" fill="#233b57">−U</text>
+            <text id="rtdEq1" x="396" y="76" font-size="12.5" font-weight="700" fill="#0e4a8e">式10-7：(R_t+r)R₁ = (R₃+r)R₂</text>
+            <text id="rtdEq2" x="396" y="98" font-size="12" fill="#5b6b80">取 R₁ = R₂ → r 自动抵消，R_t = R₃</text>
+            <text id="rtdU0" x="396" y="128" font-size="14" font-weight="800" fill="var(--hot)">平衡时 R₃ = 109.73 Ω</text>
+            <text id="rtdNote" x="396" y="152" font-size="11.5" fill="#94a3b8">r₁、r₂ 分别落在相邻两臂</text>
+            <text id="rtdNote2" x="396" y="172" font-size="11.5" fill="#94a3b8">r₃ 为电源线，不进平衡式</text>
+          </g>
+          <g id="rtd4" style="display:none">
+            <text x="30" y="40" font-size="12.5" font-weight="700" fill="#0e4a8e">四线制（图10-4）：恒流源 + 电压表，R_t = U / I</text>
+            <rect x="200" y="60" width="90" height="34" fill="#fff" stroke="#233b57" stroke-width="1.8"/>
+            <text x="245" y="82" text-anchor="middle" font-size="11.5" font-weight="700" fill="#233b57">恒流源 I</text>
+            <line x1="110" y1="77" x2="200" y2="77" stroke="#233b57" stroke-width="1.8"/>
+            <line x1="290" y1="77" x2="360" y2="77" stroke="#233b57" stroke-width="1.8"/>
+            <line x1="360" y1="77" x2="360" y2="212" stroke="#233b57" stroke-width="1.8"/>
+            <line x1="360" y1="212" x2="110" y2="212" stroke="#233b57" stroke-width="1.8"/>
+            <line x1="110" y1="212" x2="110" y2="158" stroke="#233b57" stroke-width="1.8"/>
+            <rect x="86" y="118" width="48" height="40" fill="#fdf2f0" stroke="var(--hot)" stroke-width="1.8"/>
+            <text x="110" y="143" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--hot)">R_t</text>
+            <line x1="110" y1="118" x2="110" y2="77" stroke="#233b57" stroke-width="1.8"/>
+            <path d="M134 120 L200 120 L200 125 L250 125" fill="none" stroke="#0d8b7f" stroke-width="1.4"/>
+            <path d="M134 156 L200 156 L200 151 L250 151" fill="none" stroke="#0d8b7f" stroke-width="1.4"/>
+            <rect x="252" y="112" width="84" height="52" fill="#fff" stroke="#0d8b7f" stroke-width="1.8"/>
+            <text x="294" y="142" text-anchor="middle" font-size="12" font-weight="700" fill="#0d8b7f">电压表 V</text>
+            <text x="150" y="232" font-size="11.5" fill="#94a3b8">电压引线接在电流引线内侧，且不通过电流</text>
+            <text id="rtd4Eq1" x="396" y="80" font-size="12.5" font-weight="700" fill="#0e4a8e">R_t = U / I（引线电阻无压降）</text>
+            <text id="rtd4Eq2" x="396" y="104" font-size="12" fill="#5b6b80">= 109.735 mV / 1.000 mA</text>
+            <text id="rtd4Eq3" x="396" y="134" font-size="15" font-weight="800" fill="var(--hot)">= 109.735 Ω</text>
+            <text id="rtd4Note" x="396" y="160" font-size="11.5" fill="#94a3b8">四线制无引线误差，用于精密测量</text>
+            <text id="rtd4Note2" x="396" y="180" font-size="11.5" fill="#94a3b8">二线制 2r ≈ 7.8 ℃、三线制 0 ℃</text>
+          </g>
+        </g>
+        <!-- ============ ② 热敏电阻 NTC：珠状/片状 + 载流子 ============ -->
+        <g id="stNtc" style="display:none">
+          <text x="30" y="40" font-size="12.5" font-weight="700" fill="#0e4a8e">NTC 热敏电阻：半导体珠状 / 片状（图10-5/10-6）</text>
+          <circle id="ntcHalo" cx="150" cy="150" r="46" fill="var(--gapm)" opacity=".12"/>
+          <circle cx="150" cy="150" r="40" fill="none" stroke="#9fb2c8" stroke-width="1.2" stroke-dasharray="4 4"/>
+          <circle cx="150" cy="150" r="30" fill="#d9efe9" stroke="var(--flux)" stroke-width="1.8"/>
+          <text x="150" y="146" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0a5f57">NTC</text>
+          <text x="150" y="163" text-anchor="middle" font-size="10" fill="#0a5f57">珠状·玻璃封装</text>
+          <line x1="150" y1="78" x2="150" y2="120" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="150" y1="180" x2="150" y2="222" stroke="#233b57" stroke-width="1.8"/>
+          <circle cx="150" cy="78" r="3.4" fill="#233b57"/>
+          <circle cx="150" cy="222" r="3.4" fill="#233b57"/>
+          <text x="162" y="104" font-size="11" fill="#94a3b8">引线</text>
+          <rect x="286" y="126" width="66" height="46" rx="6" fill="#d9efe9" stroke="var(--flux)" stroke-width="1.8"/>
+          <rect x="286" y="116" width="66" height="10" fill="#c2703a" stroke="#a35a2c" stroke-width="1"/>
+          <rect x="286" y="172" width="66" height="10" fill="#c2703a" stroke="#a35a2c" stroke-width="1"/>
+          <text x="319" y="153" text-anchor="middle" font-size="11" font-weight="700" fill="#0a5f57">片状</text>
+          <text x="319" y="204" text-anchor="middle" font-size="10.5" fill="#94a3b8">表面贴装（SMD）</text>
+          <line x1="319" y1="86" x2="319" y2="116" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="319" y1="182" x2="319" y2="224" stroke="#233b57" stroke-width="1.8"/>
+          <text id="ntcT1" x="400" y="86" font-size="14" font-weight="800" fill="var(--flux)">R = 10.00 kΩ</text>
+          <text id="ntcT2" x="400" y="112" font-size="12" fill="#5b6b80">B = 3380 K，α_T = −B/T² = −3.80 %/℃</text>
+          <text id="ntcT3" x="400" y="138" font-size="12" fill="#5b6b80">R(50 ℃) = 4.161 kΩ</text>
+          <text id="ntcT4" x="400" y="164" font-size="11.5" fill="#94a3b8">非线性 3%~6%（铂 &lt;1%）</text>
+          <text x="30" y="256" font-size="11.5" fill="#94a3b8">温度升高 → 载流子（电子-空穴对）指数增加 → 电阻指数下降：粒子密度与流速 ∝ 温度</text>
+          <text x="30" y="276" font-size="11.5" fill="#94a3b8">PTC：重掺杂呈金属性，阻值随温升增大；CTR：特定温度附近阻值突变（测温主用 NTC）</text>
+          <text x="30" y="300" font-size="11.5" fill="#94a3b8">须在“零功率”下测量：电流过大会自热，读数偏低</text>
+        </g>
+        <!-- ============ ③ 热电偶：回路 + 热端/冷端 ============ -->
+        <g id="stTc" style="display:none">
+          <text x="30" y="40" font-size="12.5" font-weight="700" fill="#0e4a8e">热电偶回路（图10-7）：两种导体 A/B，热端 t、冷端 T₀</text>
+          <circle id="tcHot" cx="400" cy="150" r="12" fill="var(--hot)"/>
+          <text id="tcHotTxt" x="400" y="186" text-anchor="middle" font-size="12" font-weight="700" fill="var(--hot)">热端 t = 100.0 ℃</text>
+          <path d="M400 150 L400 96 L150 96" fill="none" stroke="#c2703a" stroke-width="5"/>
+          <path d="M400 150 L400 204 L150 204" fill="none" stroke="#4b6b8f" stroke-width="5"/>
+          <text x="290" y="88" text-anchor="middle" font-size="11.5" font-weight="700" fill="#c2703a">A（镍铬 · 正极）</text>
+          <text x="290" y="222" text-anchor="middle" font-size="11.5" font-weight="700" fill="#4b6b8f">B（镍硅 · 负极）</text>
+          <circle cx="150" cy="96" r="5" fill="#233b57"/>
+          <circle cx="150" cy="204" r="5" fill="#233b57"/>
+          <line x1="150" y1="96" x2="150" y2="204" stroke="#0d8b7f" stroke-width="1.4" stroke-dasharray="5 4"/>
+          <text id="tcColdTxt" x="150" y="252" text-anchor="middle" font-size="12" font-weight="700" fill="#0d8b7f">冷端（两接点等温）T₀ = 25.0 ℃</text>
+          <line x1="150" y1="96" x2="96" y2="96" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="150" y1="204" x2="96" y2="204" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="96" y1="96" x2="96" y2="130" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="96" y1="204" x2="96" y2="170" stroke="#233b57" stroke-width="1.6"/>
+          <rect x="56" y="130" width="80" height="40" fill="#fff" stroke="#233b57" stroke-width="1.8"/>
+          <text x="96" y="155" text-anchor="middle" font-size="12" font-weight="700" fill="#233b57">mV 表</text>
+          <text x="30" y="184" font-size="11" fill="#94a3b8">铜导线</text>
+          <text id="tcE1" x="460" y="68" font-size="15" font-weight="800" fill="#b3382c">E(t,T₀) = 3.096 mV</text>
+          <text id="tcE2" x="460" y="94" font-size="12" fill="#5b6b80">仪表指示 75.9 ℃（偏低 24.1 ℃）</text>
+          <text id="tcE3" x="460" y="120" font-size="12" fill="#5b6b80">E(t,0) = 4.096 mV</text>
+          <text id="tcE4" x="460" y="144" font-size="12" fill="#5b6b80">冷端修正量 E(T₀,0) = 1.000 mV</text>
+          <text id="tcE5" x="460" y="168" font-size="11.5" fill="#94a3b8">K 型 ≈ 41 μV/℃（补偿电桥）</text>
+          <text x="30" y="290" font-size="11.5" fill="#94a3b8">同种材料接成回路（温差为零）→ 热电势为零；热电势与导体长度、直径、温度分布无关（均质导体定律）</text>
+          <text x="30" y="310" font-size="11.5" fill="#94a3b8">铜导线与热电极的接点若等温 → 读数不受影响（中间导体定律，等温接线盒的依据）</text>
+        </g>
+        <!-- ============ ④ PN 结与集成（AD590）============ -->
+        <g id="stIc" style="display:none">
+          <text x="30" y="30" font-size="12.5" font-weight="700" fill="#0e4a8e">PN 结测温（恒流）＋ 集成温度传感器 AD590（电流型）</text>
+          <rect x="172" y="36" width="96" height="36" fill="#fff" stroke="#0d8b7f" stroke-width="1.6"/>
+          <text id="icVbe" x="220" y="60" text-anchor="middle" font-size="12" font-weight="700" fill="#0d8b7f">650.0 mV</text>
+          <line x1="200" y1="72" x2="200" y2="96" stroke="#0d8b7f" stroke-width="1.4"/>
+          <line x1="240" y1="72" x2="240" y2="96" stroke="#0d8b7f" stroke-width="1.4"/>
+          <line x1="76" y1="112" x2="200" y2="112" stroke="#233b57" stroke-width="1.8"/>
+          <polygon points="200,96 200,128 240,112" fill="#fdf2f0" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="240" y1="96" x2="240" y2="128" stroke="#233b57" stroke-width="2.4"/>
+          <line x1="240" y1="112" x2="376" y2="112" stroke="#233b57" stroke-width="1.8"/>
+          <text x="220" y="150" text-anchor="middle" font-size="11" fill="#94a3b8">PN 结（恒流 I）</text>
+          <rect x="56" y="145" width="40" height="34" fill="#fff" stroke="#233b57" stroke-width="1.8"/>
+          <text x="76" y="166" text-anchor="middle" font-size="12" font-weight="700" fill="#233b57">I</text>
+          <text x="76" y="136" text-anchor="middle" font-size="11" fill="#94a3b8">恒流源</text>
+          <line x1="76" y1="112" x2="76" y2="145" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="76" y1="179" x2="76" y2="212" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="76" y1="212" x2="376" y2="212" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="376" y1="212" x2="376" y2="112" stroke="#233b57" stroke-width="1.8"/>
+          <rect x="452" y="118" width="114" height="64" fill="#fff" stroke="#7c3aed" stroke-width="1.8"/>
+          <circle cx="482" cy="150" r="14" fill="none" stroke="#7c3aed" stroke-width="1.6"/>
+          <line x1="482" y1="164" x2="482" y2="136" stroke="#7c3aed" stroke-width="1.6"/>
+          <polygon points="482,130 477,140 487,140" fill="#7c3aed"/>
+          <text x="524" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#7c3aed">AD590</text>
+          <text x="524" y="164" text-anchor="middle" font-size="10.5" fill="#7c3aed">1 μA/K</text>
+          <line x1="566" y1="150" x2="606" y2="150" stroke="#233b57" stroke-width="1.8"/>
+          <rect x="606" y="140" width="42" height="20" fill="#fff" stroke="#233b57" stroke-width="1.6"/>
+          <text x="627" y="132" text-anchor="middle" font-size="10.5" fill="#94a3b8">10 kΩ</text>
+          <line x1="648" y1="150" x2="672" y2="150" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="672" y1="150" x2="672" y2="158" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="656" y1="158" x2="688" y2="158" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="662" y1="165" x2="682" y2="165" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="668" y1="172" x2="676" y2="172" stroke="#233b57" stroke-width="1.4"/>
+          <text id="icT1" x="30" y="246" font-size="12.5" font-weight="700" fill="#0e4a8e">PN 结：U_BE = 650.0 − 2.00×(t − 25) mV，灵敏度 −2.00 mV/℃（上限 150 ℃）</text>
+          <text id="icT2" x="30" y="272" font-size="12.5" font-weight="700" fill="#7c3aed">AD590：I = 1 μA/K × T(K) = 298.15 μA；串 10 kΩ → U = 10 mV/K × T = 2.9815 V</text>
+          <text x="30" y="300" font-size="11.5" fill="#94a3b8">两温敏三极管 ΔU_BE=(kT/q)ln r ∝ T（式10-28~10-31）；LM134 10 mV/K；DS18B20/TMP117 为数字量输出</text>
+        </g>
+        <!-- ============ ⑤ 热辐射（红外）测温光路 ============ -->
+        <g id="stIr" style="display:none">
+          <text x="30" y="30" font-size="12.5" font-weight="700" fill="#0e4a8e">热辐射测温（图10-29~10-32）：非接触，只测“表观温度”</text>
+          <rect x="58" y="116" width="84" height="88" fill="#fdece7" stroke="var(--hot)" stroke-width="1.8"/>
+          <circle id="irGlow" cx="100" cy="160" r="30" fill="var(--hot)" opacity=".18"/>
+          <text x="100" y="156" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b3382c">被测物</text>
+          <text id="irObjTxt" x="100" y="174" text-anchor="middle" font-size="11" font-weight="700" fill="#b3382c">400.0 ℃</text>
+          <text id="irEpsTxt" x="100" y="110" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--gapm)">ε = 0.80</text>
+          <line x1="142" y1="126" x2="236" y2="126" stroke="var(--hot)" stroke-width="1.6"/>
+          <line x1="142" y1="143" x2="236" y2="143" stroke="var(--hot)" stroke-width="1.6"/>
+          <line x1="142" y1="160" x2="236" y2="160" stroke="var(--hot)" stroke-width="1.6"/>
+          <line x1="142" y1="177" x2="236" y2="177" stroke="var(--hot)" stroke-width="1.6"/>
+          <line x1="142" y1="194" x2="236" y2="194" stroke="var(--hot)" stroke-width="1.6"/>
+          <ellipse cx="250" cy="160" rx="14" ry="46" fill="#e7f1fd" stroke="#2b6cb0" stroke-width="1.8"/>
+          <text x="250" y="226" text-anchor="middle" font-size="10.5" fill="#2b6cb0">透镜/光阑</text>
+          <line x1="264" y1="126" x2="300" y2="150" stroke="var(--hot)" stroke-width="1.6"/>
+          <line x1="264" y1="143" x2="300" y2="153" stroke="var(--hot)" stroke-width="1.6"/>
+          <line x1="264" y1="160" x2="300" y2="160" stroke="var(--hot)" stroke-width="1.6"/>
+          <line x1="264" y1="177" x2="300" y2="167" stroke="var(--hot)" stroke-width="1.6"/>
+          <line x1="264" y1="194" x2="300" y2="170" stroke="var(--hot)" stroke-width="1.6"/>
+          <rect x="300" y="132" width="44" height="56" fill="#fff" stroke="var(--gapm)" stroke-width="1.8"/>
+          <text x="322" y="156" text-anchor="middle" font-size="10.5" font-weight="700" fill="#a07c14">热电堆</text>
+          <text x="322" y="172" text-anchor="middle" font-size="10.5" fill="#a07c14">探测器</text>
+          <line x1="344" y1="160" x2="368" y2="160" stroke="#233b57" stroke-width="1.8"/>
+          <rect x="368" y="132" width="62" height="56" fill="#fff" stroke="#233b57" stroke-width="1.8"/>
+          <text x="399" y="156" text-anchor="middle" font-size="10.5" font-weight="700" fill="#233b57">放大·</text>
+          <text x="399" y="172" text-anchor="middle" font-size="10.5" font-weight="700" fill="#233b57">线性化</text>
+          <text id="irT1" x="446" y="86" font-size="15" font-weight="800" fill="#b3382c">表观温度 363.5 ℃</text>
+          <text id="irT2" x="446" y="112" font-size="12" fill="#5b6b80">M = εσT⁴ = 9314 W/m²</text>
+          <text id="irT3" x="446" y="138" font-size="12" fill="#5b6b80">黑体 M₀ = σT⁴ = 11643 W/m²</text>
+          <text id="irT4" x="446" y="164" font-size="12" fill="#5b6b80">真实 T = T_app·ε^(−1/4) = 400.0 ℃</text>
+          <text x="30" y="256" font-size="11.5" fill="#94a3b8">仪器按黑体（ε=1）标定 → 实测 M 反查得到的是“表观温度”，比真实温度低；</text>
+          <text x="30" y="276" font-size="11.5" fill="#94a3b8">ε 是最大误差源：ε=0.8、1000 K → 真实 1057 K（差 57 K，式10-38/10-39）；</text>
+          <text x="30" y="296" font-size="11.5" fill="#94a3b8">亮度法（光学高温计，700 ℃ 以上、1.5 级）误差最大；比色法用两波长之比可约掉 ε。</text>
+        </g>
+        <!-- 电流/载流子/辐射粒子层 -->
+        <g id="tmpDots" fill="var(--flux)"></g>
+      </svg>
+      <div class="readlabel">输出读数：器件工况与输出量</div>
+      <div class="readwrap"><svg viewBox="0 0 620 196" role="img" aria-label="温度传感器输出读数">
+        <g transform="translate(20,16)">
+          <text id="wrA" x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">工况：Pt100 三线制电桥，t = 25.0 ℃</text>
+          <text id="wrB" x="0" y="24" font-size="12" fill="#5b6b80">引线 1.5 Ω/根；r₁、r₂ 进相邻桥臂，r₃ 为电源线</text>
+          <text id="wrC" x="0" y="46" font-size="12" fill="#5b6b80">R₁ = R₂ = 1 kΩ，R₃ 为比较臂</text>
+          <text id="wrBig" x="0" y="78" font-size="15" font-weight="800" fill="#b3382c">R_t = 109.735 Ω</text>
+          <rect x="0" y="90" width="360" height="16" rx="5" fill="#f4f8fd" stroke="#d5dfec"/>
+          <rect id="wrBar" x="0" y="90" width="0" height="16" rx="5" fill="var(--flux)"/>
+          <text id="wrBarTxt" x="0" y="124" font-size="12.5" font-weight="700" fill="var(--flux)">R_t / R(25 ℃) = 1.00</text>
+          <text id="wrD" x="0" y="150" font-size="12" fill="#5b6b80">平衡时 R₃ = R_t，r 已抵消</text>
+          <text id="wrNote" x="0" y="176" font-size="11" fill="#94a3b8">1 Ω 引线 ≈ 2.6 ℃；二线制 2×1.5 Ω ≈ 7.8 ℃</text>
+        </g>
+      </svg></div>
+      <div class="hint" id="tempHint">Pt100 三线制：两根引线分别接进相邻桥臂，平衡式 (R_t+r)R₁ = (R₃+r)R₂ 中 r 同增同减，取 R₁ = R₂ 即自动抵消。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="cjCard">
+      <div class="phead">
+        <h2>冷端处理 <small id="cjSub">热电偶专用：冰点槽 / 补偿导线 / 补偿电桥</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="seg tight" id="segCJ" style="margin-bottom:4px">
+        <button data-cj="raw" class="on">不补偿<small>冷端 25 ℃</small></button>
+        <button data-cj="ice">冰点槽<small>冷端 0 ℃</small></button>
+        <button data-cj="wire">补偿导线<small>搬冷端+修正</small></button>
+        <button data-cj="bridge">补偿电桥<small>串 U_ab</small></button>
+      </div>
+      <svg id="cj" viewBox="0 0 700 285" role="img" aria-label="热电偶冷端处理方法">
+        <!-- 公共：热端 + 热电极 + 冷端接线盒 + 毫伏表 -->
+        <rect x="608" y="86" width="80" height="88" fill="#fdece7" stroke="var(--hot)" stroke-width="1.6"/>
+        <text x="648" y="80" text-anchor="middle" font-size="11" font-weight="700" fill="#b3382c">被测炉</text>
+        <text id="cjHotTxt" x="648" y="130" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b3382c">100 ℃</text>
+        <circle cx="608" cy="132" r="10" fill="var(--hot)"/>
+        <path d="M608 132 L556 132" fill="none" stroke="var(--hot)" stroke-width="4"/>
+        <path d="M470 96 L556 96 L556 132" fill="none" stroke="#c2703a" stroke-width="4"/>
+        <path d="M470 172 L556 172 L556 132" fill="none" stroke="#4b6b8f" stroke-width="4"/>
+        <text x="514" y="88" text-anchor="middle" font-size="10.5" font-weight="700" fill="#c2703a">A</text>
+        <text x="514" y="188" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4b6b8f">B</text>
+        <rect x="388" y="66" width="82" height="136" fill="none" stroke="#9fb2c8" stroke-width="1.4" stroke-dasharray="5 4"/>
+        <circle cx="470" cy="96" r="4.5" fill="#233b57"/>
+        <circle cx="470" cy="172" r="4.5" fill="#233b57"/>
+        <line x1="470" y1="96" x2="470" y2="172" stroke="#0d8b7f" stroke-width="1.3" stroke-dasharray="4 4"/>
+        <text id="cjBlockTxt" x="429" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#0d8b7f">冷端接线盒（等温）</text>
+        <!-- 冰点槽（仅 ice 模式显示） -->
+        <g id="cjIceCup">
+          <rect x="378" y="46" width="102" height="160" rx="10" fill="#e8f4ff" stroke="#2b6cb0" stroke-width="1.8"/>
+          <rect x="388" y="60" width="20" height="20" rx="4" fill="#fff" stroke="#8fb8e0" stroke-width="1.2"/>
+          <rect x="416" y="52" width="22" height="24" rx="4" fill="#fff" stroke="#8fb8e0" stroke-width="1.2"/>
+          <rect x="446" y="62" width="20" height="20" rx="4" fill="#fff" stroke="#8fb8e0" stroke-width="1.2"/>
+          <rect x="392" y="182" width="72" height="14" rx="4" fill="#cfe7fb"/>
+          <text x="429" y="222" text-anchor="middle" font-size="11" font-weight="700" fill="#2b6cb0">冰点槽 0 ℃（实验室）</text>
+        </g>
+        <text id="cjEnvTxt" x="429" y="222" text-anchor="middle" font-size="11" font-weight="700" fill="var(--gapm)">冷端暴露在 25 ℃ 环境</text>
+        <!-- 补偿元件区（三选一） -->
+        <g id="stCjIce">
+          <line x1="388" y1="96" x2="132" y2="96" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="388" y1="172" x2="132" y2="172" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="132" y1="96" x2="132" y2="112" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="132" y1="172" x2="132" y2="156" stroke="#233b57" stroke-width="1.6"/>
+          <text x="260" y="86" text-anchor="middle" font-size="11" fill="#94a3b8">铜导线（冷端已恒定在 0 ℃，无需再补偿）</text>
+        </g>
+        <g id="stCjWire" style="display:none">
+          <line x1="388" y1="96" x2="152" y2="96" stroke="var(--gapm)" stroke-width="3" stroke-dasharray="8 5"/>
+          <line x1="388" y1="172" x2="152" y2="172" stroke="var(--gapm)" stroke-width="3" stroke-dasharray="8 5"/>
+          <line x1="152" y1="96" x2="132" y2="96" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="152" y1="172" x2="132" y2="172" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="132" y1="96" x2="132" y2="112" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="132" y1="172" x2="132" y2="156" stroke="#233b57" stroke-width="1.6"/>
+          <text x="268" y="84" text-anchor="middle" font-size="11" font-weight="700" fill="var(--gapm)">补偿导线 KX：分度号匹配、极性不能反</text>
+          <text x="268" y="192" text-anchor="middle" font-size="11" fill="#94a3b8">把冷端搬到仪表端（25 ℃ 恒温），再按 E(T,0)=E(T,Tₙ)+E(Tₙ,0) 修正</text>
+        </g>
+        <g id="stCjBridge" style="display:none">
+          <line x1="388" y1="96" x2="340" y2="96" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="388" y1="172" x2="340" y2="172" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="150" y1="96" x2="132" y2="96" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="150" y1="172" x2="132" y2="172" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="132" y1="96" x2="132" y2="112" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="132" y1="172" x2="132" y2="156" stroke="#233b57" stroke-width="1.6"/>
+          <rect x="220" y="86" width="120" height="96" fill="#fff" stroke="#7c3aed" stroke-width="1.8"/>
+          <text x="280" y="78" text-anchor="middle" font-size="11" font-weight="700" fill="#7c3aed">补偿电桥（T₀ = 25 ℃ 时 U_ab = 1.000 mV）</text>
+          <line x1="220" y1="134" x2="252" y2="106" stroke="#233b57" stroke-width="1.5"/>
+          <line x1="252" y1="106" x2="292" y2="134" stroke="#c2703a" stroke-width="2.2"/>
+          <line x1="292" y1="134" x2="340" y2="106" stroke="#233b57" stroke-width="1.5"/>
+          <line x1="220" y1="134" x2="252" y2="162" stroke="#233b57" stroke-width="1.5"/>
+          <line x1="252" y1="162" x2="292" y2="134" stroke="#233b57" stroke-width="1.5"/>
+          <line x1="292" y1="134" x2="340" y2="162" stroke="#233b57" stroke-width="1.5"/>
+          <circle cx="252" cy="106" r="3.4" fill="#233b57"/>
+          <circle cx="252" cy="162" r="3.4" fill="#233b57"/>
+          <circle cx="292" cy="134" r="3.4" fill="#233b57"/>
+          <text x="268" y="112" font-size="10" font-weight="700" fill="#c2703a">铜臂</text>
+          <text x="270" y="194" text-anchor="middle" font-size="11" fill="#94a3b8">U_ab 与热电势串联叠加；铜臂与冷端同温，dU_ab/dT = 塞贝克系数</text>
+        </g>
+        <!-- 毫伏表 -->
+        <rect x="40" y="112" width="92" height="44" fill="#fff" stroke="#233b57" stroke-width="1.8"/>
+        <text x="86" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#233b57">mV 表</text>
+        <text id="cjRead" x="86" y="180" text-anchor="middle" font-size="12.5" font-weight="800" fill="#b3382c">3.096 mV</text>
+        <text id="cjInd" x="86" y="200" text-anchor="middle" font-size="11.5" fill="#5b6b80">指示 75.9 ℃</text>
+        <!-- 结果行 -->
+        <text id="cjEq1" x="30" y="268" font-size="12" font-weight="700" fill="#0e4a8e">实测 E(t,T₀) = E(t,0) − E(T₀,0) = 1.000 − 1.000 = 0.000 mV　修正后 0.000 mV</text>
+        <text id="cjErr" x="690" y="246" text-anchor="end" font-size="12.5" font-weight="800" fill="var(--hot)">误差 −25.00 ℃</text>
+        <text id="cjNote" x="30" y="246" font-size="11" fill="#94a3b8">不补偿 → 指示偏低（≈ 一个冷端温度）</text>
+      </svg>
+      <div class="hint" id="cjHint">冷端恒定五法：0 ℃ 恒温法（完全消除）｜补偿电桥（最常用）｜补偿导线（搬冷端）｜不需补偿（B 型 50 ℃ 以下）｜计算修正法。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="readCard">
+      <div class="phead">
+        <h2>输出读数 <small id="readSub">Pt100 三线制电桥</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="big">
+        <span class="cap" id="bigCap">传感器电阻 R_t</span>
+        <span class="num" id="bigNum">109.73</span><span class="unit" id="bigUnit">Ω</span>
+      </div>
+      <div class="kv">
+        <div class="box"><i id="kv1l" style="font-style:normal">引线误差 Δt</i><b id="kv1v">0.00 ℃</b></div>
+        <div class="box"><i id="kv2l" style="font-style:normal">灵敏度 dR/dt</i><b id="kv2v">0.388 Ω/℃</b></div>
+        <div class="box"><i id="kv3l" style="font-style:normal">相对变化</i><b id="kv3v">+9.73 %</b></div>
+        <div class="box"><i id="kv4l" style="font-style:normal">仪表读数 R</i><b id="kv4v">109.73 Ω</b></div>
+      </div>
+      <div class="fine" id="readFine">R_t = R₀(1+At+Bt²) = 100×(1+3.9083×10⁻³×25 − 5.775×10⁻⁷×25²) = 109.735 Ω。</div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colB" data-right="colC" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 右列 ================= -->
+  <div class="col" id="colC">
+    <div class="colhead">③ 公式推导 · 特性曲线 · 本章要点</div>
+
+
+    <section class="card panel" id="fmlCard">
+      <div class="phead">
+        <h2>公式推导 <small id="fmlTitle">热电阻 · Pt100 三线制</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody"><div class="fml" id="fmlBody"></div></div>
+    </section>
+
+    <section class="card panel" id="curveCard">
+      <div class="phead">
+        <h2>特性曲线 <small id="curveSub">Pt100 与 NTC 的 R–t 对比</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="curve" viewBox="0 0 700 300" role="img" aria-label="温度传感器特性曲线">
+        <g id="cGrid"></g>
+        <line x1="60" y1="240" x2="672" y2="240" stroke="#9fb2c8" stroke-width="1.5"/>
+        <line x1="60" y1="30" x2="60" y2="240" stroke="#9fb2c8" stroke-width="1.5"/>
+        <path id="c1" fill="none" stroke="#b3382c" stroke-width="3"/>
+        <path id="c2" fill="none" stroke="#0d8b7f" stroke-width="3"/>
+        <path id="c3" fill="none" stroke="#7c3aed" stroke-width="2.4" stroke-dasharray="7 5"/>
+        <line id="mkX" x1="0" y1="30" x2="0" y2="240" stroke="#0e4a8e" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <circle id="mkD1" r="5.5" fill="#b3382c" stroke="#fff" stroke-width="2"/>
+        <circle id="mkD2" r="5.5" fill="#0d8b7f" stroke="#fff" stroke-width="2"/>
+        <text id="axX" x="672" y="276" text-anchor="end" font-size="12.5" fill="#5b6b80">温度 t / ℃</text>
+        <text id="axY" x="14" y="26" font-size="12.5" fill="#5b6b80">R_t / R(25 ℃)</text>
+      </svg>
+      <div class="legend">
+        <span><i id="lg1i" style="background:#b3382c"></i><span id="lg1t">Pt100（近似线性）</span></span>
+        <span><i id="lg2i" style="background:#0d8b7f"></i><span id="lg2t">NTC 10 kΩ/B3380（强非线性）</span></span>
+        <span id="lg3w"><i id="lg3i" style="background:#7c3aed"></i><span id="lg3t">—</span></span>
+        <span style="margin-left:auto" id="curveNote"></span>
+      </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+</div><!-- /#boardWrap -->
+
+<footer>
+<b>参数：</b>Pt100 0 ℃ 为 100 Ω，A = 3.9083×10⁻³、B = −5.775×10⁻⁷（R₁₀₀ = 138.51 Ω、α = 0.00385 Ω/℃；教材式10-4 系数 A = 3.96847×10⁻³、B = −5.847×10⁻⁷ → R₁₀₀ ≈ 139.10 Ω）；引线 1.5 Ω/根（1 Ω ≈ 2.6 ℃）；NTC 10 kΩ/25 ℃、B = 3380 K；K 型分度表（0/100/400 ℃ → 0/4.096/16.397 mV）；AD590 1 μA/K、串 10 kΩ → 10 mV/K；σ = 5.67×10⁻⁸ W/(m²·K⁴)。<b>关系式：</b>R_t = R₀(1+At+Bt²)；(R_t+r)R₁ = (R₃+r)R₂（R₁ = R₂ → R_t = R₃）；R_t = U/I；R = R₀e^{B(1/T−1/T₀)}；α_T = −B/T²；E_AB(T,T₀) = E_AB(T) − E_AB(T₀)；E(T,0) = E(T,Tₙ) + E(Tₙ,0)；dU/dT ≈ −2 mV/℃；I = C_T·T；M = εσT⁴、T = T_app·ε^(−1/4)。<b>课堂提问：</b>① 三线制为什么能消掉引线电阻，前提是什么？② NTC 灵敏却不适合精密测温，为什么？③ 冷端 25 ℃ 而不补偿，测量 100 ℃ 会差多少？
+</footer>
+
+<script>
+(function(){
+  "use strict";
+/* =====================================================================
+   公共运行时（各章通用）· 由 _build/build.js 注入到主脚本的最前面
+   章节代码直接使用：$ / sfmt / frac / clamp / say / sleep / tween /
+   beginDemo / stopDemo / endDemo / bindDemos
+   约定：章节必须定义 var S = { ..., demoToken:0 }；
+        演示函数写成 async，每个 await 判断返回值，结尾 endDemo()；
+        章节 jsB 里用 DEMOS.<key> = {btn:'...', label:'...', fn:demoXxx} 注册，
+        随后调用 bindDemos() 绑定按钮点击。
+   注意：不内置任何语音朗读；演示按钮只由 bindDemos() 绑定一次。
+   ===================================================================== */
+var $ = function(id){ return document.getElementById(id); };
+function sfmt(a, d){ return (a >= 0 ? '+' : '−') + Math.abs(a).toFixed(d); }
+function frac(a, b){ return '<span class="frac"><i>' + a + '</i><b>' + b + '</b></span>'; }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+var DEMOS = {}, SPEED = 1, playingKey = null;
+function say(t){ $('narration').innerHTML = t; }
+function sleep(ms, tok){
+  return new Promise(function(res){ setTimeout(function(){ res(S.demoToken === tok); }, Math.max(60, ms/SPEED)); });
+}
+function tween(from, to, dur, set, tok){
+  dur = Math.max(160, dur/SPEED);
+  return new Promise(function(res){
+    var t0 = performance.now();
+    (function step(now){
+      if (S.demoToken !== tok) return res(false);
+      var p = (now - t0)/dur;
+      if (!isFinite(p)) p = 1;
+      p = clamp(p, 0, 1);
+      var e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
+      var v = from + (to - from)*e;
+      v = (from <= to) ? Math.min(to, Math.max(from, v)) : Math.max(to, Math.min(from, v));
+      set(v);
+      if (p < 1) requestAnimationFrame(step); else res(true);
+    })(performance.now());
+  });
+}
+function resetDemoButtons(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b){ b.textContent = DEMOS[k].label; b.classList.remove('running'); }
+  });
+}
+function stopDemo(){ S.demoToken++; playingKey = null; resetDemoButtons(); }
+function beginDemo(key){
+  stopDemo(); playingKey = key;
+  var d = DEMOS[key], b = d && $(d.btn);
+  if (b){ b.textContent = '⏸ 暂停演示'; b.classList.add('running'); }
+  return ++S.demoToken;
+}
+function endDemo(){ playingKey = null; resetDemoButtons(); }
+function bindDemos(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b) b.addEventListener('click', function(){
+      if (playingKey === k){ stopDemo(); say('演示已暂停。可继续拖动滑块手动观察，或点其它演示按钮。'); }
+      else if (DEMOS[k].fn){ DEMOS[k].fn(); }
+    });
+  });
+}
+(function(){
+  var spd = $('speed');
+  if (spd) spd.addEventListener('input', function(){
+    SPEED = parseFloat(this.value) || 1;
+    $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  });
+})();
+
+
+  /* ============ 1. 物理参数与器件表 ============ */
+  var SIG = 5.67e-8;                    /* 斯特藩-玻尔兹曼常数 W/(m²·K⁴)，式10-36 */
+  var CFG = {
+    pt:  { R0:100,                      /* Pt100：0 ℃ 为 100 Ω */
+           A:3.9083e-3, B:-5.775e-7,    /* 工业标准（IEC 60751）：R₁₀₀=138.51 Ω、α=0.00385 Ω/℃ */
+           Aa:3.96847e-3, Ba:-5.847e-7 }, /* 教材式(10-4) 给出的系数：R₁₀₀≈139.10 Ω */
+    rLead: 1.5,                         /* 每根引线电阻 Ω（示例导线，1 Ω ≈ 2.6 ℃） */
+    ntc: { R0:1e4, T0:298.15, B:3380 }, /* NTC：25 ℃ 10 kΩ、B = 3380 K（课件题 25/50 ℃ 两点算得） */
+    ktx: [0, 25, 50, 100, 150, 200, 250, 300, 350, 400],   /* K 型分度表温度点 ℃ */
+    kt:  [0, 1.000, 2.023, 4.096, 6.138, 8.138, 10.153, 12.209, 14.293, 16.397], /* mV（冷端 0 ℃） */
+    pn:  { U25:0.65, S:-2e-3 },         /* PN 结：25 ℃ 650 mV，−2 mV/℃（式10-24~10-27） */
+    ad:  { Rsh:1e4 },                   /* AD590 串接 10 kΩ → 10 mV/K */
+    tn:  25,                            /* 现场环境/冷端温度 ℃（未补偿时） */
+    tcal: 20                            /* 补偿电桥平衡点 ℃（教材约 20 ℃，仅提示） */
+  };
+  var TYPES = {
+    rtd: { name:'热电阻', short:'Pt100', tmin:0, tmax:400, tdef:25, unit:'Ω',
+           sub:'Pt100 三线制电桥（图10-3）',
+           hint:'热电阻（Pt100/Pt1000）：金属电阻随温升增大，R_t=R₀(1+At+Bt²)；0 ℃ 为 100 Ω、α≈0.385 Ω/℃，近似线性、精度高，但有引线电阻误差 → 三线制/四线制。' },
+    ntc: { name:'热敏电阻', short:'NTC 10 kΩ', tmin:0, tmax:300, tdef:25, unit:'kΩ',
+           sub:'NTC 珠状/片状结构与 R–T 特性（图10-5/10-6）',
+           hint:'热敏电阻（NTC）：R=R₀e^{B(1/T−1/T₀)}，半导体载流子随温升指数增加 → 阻值指数下降；灵敏度约为铂电阻的 10 倍，但非线性 3%~6%、一致性差、须逐支标定。' },
+    tc:  { name:'热电偶', short:'K 型', tmin:0, tmax:400, tdef:100, unit:'mV',
+           sub:'热电偶回路与冷端处理（图10-7~10-20）',
+           hint:'热电偶：两种导体接成回路、两接点有温差才有热电势（塞贝克效应），K 型 ≈41 μV/℃；测量端热、冷端必须恒定或用补偿（冰点槽/补偿导线/补偿电桥）。' },
+    ic:  { name:'PN结/集成', short:'AD590', tmin:0, tmax:150, tdef:25, unit:'μA',
+           sub:'PN 结恒流测温与 AD590 电流型集成传感器（图10-25/10-26）',
+           hint:'PN 结/集成：恒流下 U_BE 随温升下降 ≈−2 mV/℃；两温敏三极管 ΔU_BE=(kT/q)ln r ∝ T → AD590 输出 1 μA/K（25 ℃→298.15 μA），串 10 kΩ 得 10 mV/K。' },
+    ir:  { name:'热辐射', short:'红外', tmin:0, tmax:400, tdef:25, unit:'℃',
+           sub:'红外测温光路与表观温度（图10-29~10-32）',
+           hint:'热辐射测温（非接触）：M=εσT⁴，仪器按 ε=1 标定 → 只给“表观温度”T_app=T·ε^¼；发射率 ε 是最大误差源（比色法可约掉 ε）。' }
+  };
+  var S = { type:'rtd', t:25, wire:'3', eps:0.8, cj:'raw', demoToken:0 };
+
+  /* ============ 2. 模型（纯函数，不碰 DOM） ============ */
+  function kOf(t){ return t + 273.15; }                                  /* ℃ → K */
+  /* --- 热电阻（式10-2/10-4） --- */
+  function ptR(t){ return CFG.pt.R0*(1 + CFG.pt.A*t + CFG.pt.B*t*t); }
+  function ptRbook(t){ return CFG.pt.R0*(1 + CFG.pt.Aa*t + CFG.pt.Ba*t*t); }   /* 教材系数对照 */
+  function ptSlope(t){ return CFG.pt.R0*(CFG.pt.A + 2*CFG.pt.B*t); }           /* dR/dt，Ω/℃ */
+  function ptT(R){                                                             /* 由电阻反查温度（二分） */
+    var lo = -200, hi = 850, i, m;
+    for (i = 0; i < 60; i++){ m = (lo + hi)/2; if (ptR(m) < R) lo = m; else hi = m; }
+    return (lo + hi)/2;
+  }
+  /* --- 热敏电阻（式10-9~10-11） --- */
+  function ntcR(t){ var T = kOf(t); return CFG.ntc.R0*Math.exp(CFG.ntc.B*(1/T - 1/CFG.ntc.T0)); }
+  function ntcAlpha(t){ var T = kOf(t); return -CFG.ntc.B/(T*T); }              /* 1/℃ */
+  function ntcB(t1, t2, R1, R2){ return (kOf(t1)*kOf(t2)/(kOf(t2) - kOf(t1)))*Math.log(R1/R2); }
+  /* --- 热电偶 K 型（分度表线性插值，式10-21 中间温度定律） --- */
+  function tcE(t){
+    var x = CFG.ktx, y = CFG.kt, i;
+    if (t <= x[0]) return y[0] + (y[1] - y[0])/(x[1] - x[0])*(t - x[0]);
+    for (i = 1; i < x.length; i++){
+      if (t <= x[i]) return y[i-1] + (y[i] - y[i-1])/(x[i] - x[i-1])*(t - x[i-1]);
+    }
+    i = x.length - 1;
+    return y[i] + (y[i] - y[i-1])/(x[i] - x[i-1])*(t - x[i]);
+  }
+  function tcT(e){
+    var x = CFG.ktx, y = CFG.kt, i;
+    if (e <= y[0]) return x[0];
+    for (i = 1; i < y.length; i++){
+      if (e <= y[i]) return x[i-1] + (x[i] - x[i-1])/(y[i] - y[i-1])*(e - y[i-1]);
+    }
+    i = y.length - 1;
+    return x[i] + (x[i] - x[i-1])/(y[i] - y[i-1])*(e - y[i]);
+  }
+  function tcRead(){
+    var tn = (S.cj === 'ice') ? 0 : CFG.tn;      /* 冰点槽冷端 0 ℃，其余按 25 ℃ 环境 */
+    var E0 = tcE(S.t), En = tcE(tn), Em = E0 - En;
+    var comp = (S.cj === 'wire' || S.cj === 'bridge') ? En : 0;   /* 补偿导线+计算修正 / 补偿电桥补回 E(T₀,0) */
+    var tInd = tcT(Em + comp);
+    return { tn:tn, E0:E0, En:En, Em:Em, comp:comp, Efix:Em + comp, tInd:tInd, err:tInd - S.t };
+  }
+  /* --- PN 结 / 集成（式10-24~10-32） --- */
+  function pnU(t){ return CFG.pn.U25 + CFG.pn.S*(t - 25); }           /* V */
+  function adI(t){ return kOf(t)*1e-6; }                             /* A，I = C_T·T */
+  function adU(t){ return kOf(t)*1e-6*CFG.ad.Rsh; }                  /* V，串 10 kΩ → 10 mV/K */
+  /* --- 热辐射（式10-35~10-39） --- */
+  function irM(t, eps){ return eps*SIG*Math.pow(kOf(t), 4); }        /* W/m² */
+  function irTapp(t, eps){ return kOf(t)*Math.pow(eps, 0.25); }      /* K，表观温度 */
+  /* --- 分类型汇总读数（供 paint 统一使用） --- */
+  function modelOf(){
+    var t = S.t, T = kOf(t), ty = S.type, o = { type:ty, t:t, T:T, sub:TYPES[ty].sub };
+    if (ty === 'rtd'){
+      var R = ptR(t), r = CFG.rLead, w = S.wire;
+      var Rm = (w === '2') ? R + 2*r : R;                 /* 二线制：两根引线电阻全部计入 */
+      var tInd = (w === '2') ? ptT(Rm) : t;
+      o.R = R; o.Rm = Rm; o.tInd = tInd; o.err = tInd - t;
+      o.dotColor = 'var(--flux)'; o.dotSpeed = 1;
+      o.bigCap = '传感器电阻 R_t'; o.bigNum = R.toFixed(2); o.bigUnit = 'Ω';
+      o.kv = [ ['引线误差 Δt', (w === '2' ? sfmt(o.err, 2) : '0.00') + ' ℃'],
+               ['瞬时灵敏度 dR/dt', ptSlope(t).toFixed(3) + ' Ω/℃'],
+               ['相对变化 R_t/R₀−1', sfmt((R/CFG.pt.R0 - 1)*100, 2) + ' %'],
+               ['仪表读数 R', Rm.toFixed(2) + ' Ω'] ];
+      o.bar = R/CFG.pt.R0/3;
+      o.barTxt = 'R_t / R₀ = ' + (R/CFG.pt.R0).toFixed(3) + '（R₀ = 100 Ω）';
+      o.wrA = '工况：Pt100 ' + (w === '2' ? '二线制' : (w === '3' ? '三线制' : '四线制（恒流 + 电压表）')) + '，t = ' + t.toFixed(1) + ' ℃';
+      o.wrB = (w === '4') ? 'R_t = U/I = ' + R.toFixed(3) + ' mV / 1.000 mA（电压引线无电流）'
+                          : '引线 ' + r.toFixed(1) + ' Ω/根；' + (w === '2' ? '两根引线全部串入 R_t 臂' : 'r₁、r₂ 分别进相邻桥臂，r₃ 为电源线');
+      o.wrC = (w === '2') ? 'R₁ = R₂ = 1 kΩ，R₃ 为比较臂；2r = ' + (2*r).toFixed(1) + ' Ω 被算入 R_t'
+                          : 'R₁ = R₂ = 1 kΩ，平衡时 R₃ = R_t，r 抵消';
+      o.wrBig = 'R_t = ' + R.toFixed(3) + ' Ω（R₁₀₀ = ' + ptR(100).toFixed(2) + ' Ω）';
+      o.wrD = (w === '2') ? '指示温度 ' + tInd.toFixed(2) + ' ℃（偏高 ' + o.err.toFixed(2) + ' ℃）'
+                          : '指示温度 = t = ' + t.toFixed(2) + ' ℃（无引线误差）';
+      o.wrNote = '1 Ω 引线 ≈ 2.6 ℃；二线制 2×1.5 Ω ≈ 7.8 ℃；四线制 R_t = U/I 完全无引线误差';
+      o.fine = '式(10-4)：R_t = R₀(1+At+Bt²) = 100×(1+3.9083×10⁻³×' + t.toFixed(0) + ' − 5.775×10⁻⁷×' + t.toFixed(0) +
+        '²) = <b>' + R.toFixed(3) + ' Ω</b>；R₁₀₀ = ' + ptR(100).toFixed(3) + ' Ω、α₀ = (R₁₀₀−R₀)/(R₀·100) = 0.00385 Ω/(Ω·℃)（式10-2）。' +
+        '教材式(10-4) 系数 A = 3.96847×10⁻³、B = −5.847×10⁻⁷ → R_t = ' + ptRbook(t).toFixed(3) + ' Ω、R₁₀₀ ≈ 139.10 Ω（α≈0.00391）。';
+      o.hint = (w === '3') ? 'Pt100 三线制：两根引线分别接进相邻桥臂，平衡式 (R_t+r)R₁ = (R₃+r)R₂ 中 r 同增同减，取 R₁ = R₂ 即自动抵消。'
+             : (w === '2' ? '二线制：两根引线的电阻 2r 全部串在 R_t 臂里 → 指示偏高 2×1.5/0.385 ≈ 7.8 ℃，这就是热电阻必须用三线制的原因。'
+                          : '四线制：恒流源给 R_t 供电，电压表跨接在 R_t 两端（接在电流引线内侧）；电压引线不通过电流 → 引线压降不进测量回路，R_t = U/I。');
+    } else if (ty === 'ntc'){
+      var Rn = ntcR(t), aT = ntcAlpha(t)*100, R50 = ntcR(50), R0c = ntcR(0);
+      o.Rn = Rn; o.aT = aT;
+      o.dotColor = 'var(--flux)'; o.dotSpeed = 0.25 + 1.75*clamp(t/300, 0, 1);
+      o.bigCap = '热敏电阻 R_t'; o.bigNum = (Rn/1000).toFixed(2); o.bigUnit = 'kΩ';
+      o.kv = [ ['电阻温度系数 α_T', aT.toFixed(2) + ' %/℃'],
+               ['B 值（式10-10）', CFG.ntc.B.toFixed(0) + ' K'],
+               ['相对 25 ℃ 变化', (Rn/CFG.ntc.R0).toFixed(3)],
+               ['R(50 ℃) 对照', (R50/1000).toFixed(3) + ' kΩ'] ];
+      o.bar = Rn/CFG.ntc.R0/3;
+      o.barTxt = 'R_t / R(25 ℃) = ' + (Rn/CFG.ntc.R0).toFixed(3);
+      o.wrA = '工况：NTC 10 kΩ/B3380，t = ' + t.toFixed(1) + ' ℃（' + T.toFixed(2) + ' K）';
+      o.wrB = 'R = R₀·e^{B(1/T − 1/T₀)}，R₀ = 10 kΩ @ 25 ℃，B = 3380 K';
+      o.wrC = 'α_T = −B/T² = ' + aT.toFixed(2) + ' %/℃（0 ℃ 时 −4.53 %/℃，150 ℃ 时 −1.89 %/℃）';
+      o.wrBig = 'R_t = ' + (Rn/1000).toFixed(3) + ' kΩ（' + Rn.toFixed(0) + ' Ω）';
+      o.wrD = '载流子密度与流速 ∝ 温度：红晕越大、粒子越多 = 阻值越小';
+      o.wrNote = '须零功率测量（电流大则自热）；B 值必须用 K 计算；NTC 常见 B = 2000~6000 K';
+      o.fine = '式(10-9)：R_T = A·e^{B/T} ⟺ R = R₀e^{B(1/T−1/T₀)} = 10000×e^{3380×(1/' + T.toFixed(2) + ' − 1/298.15)} = <b>' +
+        Rn.toFixed(1) + ' Ω</b>。式(10-10)：用 25 ℃/50 ℃ 两点算 B = [T₁T₂/(T₂−T₁)]ln(R₁/R₂) = ' +
+        ntcB(25, 50, CFG.ntc.R0, R50).toFixed(0) + ' K（课件 4.16 kΩ → 3380 K）。' +
+        '式(10-11)：α_T = −B/T² = ' + aT.toFixed(2) + ' %/℃；R(0 ℃) = ' + (R0c/1000).toFixed(2) + ' kΩ、R(150 ℃) = ' + ntcR(150).toFixed(0) + ' Ω。';
+      o.hint = 'NTC“灵而不准”：灵敏度是铂电阻的 10 倍以上，但非线性 3%~6%、一致性与互换性差，须逐支标定 —— 强项在控温/补偿/报警而非精密测温。';
+    } else if (ty === 'tc'){
+      var R2 = tcRead();
+      o.tc = R2;
+      o.dotColor = 'var(--hot)'; o.dotSpeed = 0.35 + 1.65*clamp(R2.Em/Math.max(1e-9, tcE(TYPES.tc.tmax)), 0, 1);
+      o.bigCap = '热电偶输出热电势 E'; o.bigNum = R2.Efix.toFixed(3); o.bigUnit = 'mV';
+      o.kv = [ ['冷端温度 T₀', R2.tn.toFixed(1) + ' ℃'],
+               ['冷端修正量 E(T₀,0)', R2.En.toFixed(3) + ' mV'],
+               ['指示温度', R2.tInd.toFixed(2) + ' ℃'],
+               ['误差', (Math.abs(R2.err) < 0.05 ? '0.00' : sfmt(R2.err, 2)) + ' ℃'] ];
+      o.bar = R2.Efix/16.4;
+      o.barTxt = 'E(t,0) = ' + R2.Efix.toFixed(3) + ' mV（400 ℃ 满量程 16.397 mV）';
+      o.wrA = '工况：K 型热电偶，t = ' + t.toFixed(1) + ' ℃，冷端 T₀ = ' + R2.tn.toFixed(1) + ' ℃（' +
+        ({raw:'不补偿', ice:'冰点槽 0 ℃', wire:'补偿导线+修正', bridge:'补偿电桥'})[S.cj] + '）';
+      o.wrB = '实测 E(t,T₀) = E(t,0) − E(T₀,0) = ' + R2.E0.toFixed(3) + ' − ' + R2.En.toFixed(3) + ' = ' + R2.Em.toFixed(3) + ' mV';
+      o.wrC = '修正后 E(t,0) = ' + R2.Efix.toFixed(3) + ' mV → 指示 ' + R2.tInd.toFixed(2) + ' ℃';
+      o.wrBig = 'K 型灵敏度 ≈ 41 μV/℃（100 ℃ → 4.096 mV）';
+      o.wrD = (S.cj === 'raw') ? '不补偿：指示偏低 ' + Math.abs(R2.err).toFixed(2) + ' ℃（≈ 冷端温度 25 ℃）'
+                               : '已补偿：冷端影响被抵消，误差 ' + (Math.abs(R2.err) < 0.05 ? '≈ 0' : sfmt(R2.err, 2)) + ' ℃';
+      o.wrNote = '热电势与导体长度、直径、温度分布无关（均质导体定律）；K 型量程 −50~1200 ℃';
+      o.fine = '式(10-21) 中间温度定律：E_AB(T,T₀) = E_AB(T,Tₙ) + E_AB(Tₙ,T₀)。当前 E(t,0) = ' + R2.E0.toFixed(3) +
+        ' mV、E(T₀,0) = ' + R2.En.toFixed(3) + ' mV → 实测 ' + R2.Em.toFixed(3) + ' mV，查表得 ' + R2.tInd.toFixed(2) + ' ℃，误差 ' +
+        sfmt(R2.err, 2) + ' ℃。补偿方式：' + ({raw:'不补偿', ice:'冰点槽（完全消除）', wire:'补偿导线把冷端搬到 25 ℃ 恒温处并计算修正', bridge:'补偿电桥串入 U_ab = E(T₀,0)'})[S.cj] + '。';
+      o.hint = (S.cj === 'raw') ? '不补偿时，热电势 E(t,25) 小于 E(t,0)，仪表按冷端 0 ℃ 查表 → 指示偏低约一个冷端温度（教材算例差 21 ℃）。'
+             : (S.cj === 'ice' ? '冰点槽把冷端恒定在 0 ℃（完全消除误差），但只适合实验室；注意试管防短路、冰水混合物要搅拌。'
+             : (S.cj === 'wire' ? '补偿导线把冷端“搬”到温度稳定的仪表端（25 ℃），再用计算修正法加回 E(T₀,0)；须与热电偶分度号匹配、极性不能接反、接点等温。'
+                                : '补偿电桥最常用：铜电阻臂与冷端同温，冷端升高时电桥输出 U_ab 随塞贝克系数增大，与热电势串联后抵消；平衡点约 20 ℃，须与冷端同温、分度号匹配。'));
+    } else if (ty === 'ic'){
+      var Ube = pnU(t), II = adI(t), UU = adU(t);
+      o.dotColor = 'var(--eddy)'; o.dotSpeed = 0.8 + 0.4*clamp(t/150, 0, 1);
+      o.bigCap = 'AD590 输出电流 I'; o.bigNum = (II*1e6).toFixed(2); o.bigUnit = 'μA';
+      o.kv = [ ['PN 结 U_BE', (Ube*1000).toFixed(1) + ' mV'],
+               ['PN 结灵敏度', '−2.00 mV/℃'],
+               ['串 10 kΩ → U', UU.toFixed(4) + ' V'],
+               ['热力学温度 T', T.toFixed(2) + ' K'] ];
+      o.bar = II/(1e-6*423.15);
+      o.barTxt = 'T(T₀=25 ℃) 的 1 μA/K 输出：' + (II*1e6).toFixed(2) + ' μA';
+      o.wrA = '工况：恒流 I 下测温，t = ' + t.toFixed(1) + ' ℃ = ' + T.toFixed(2) + ' K';
+      o.wrB = 'PN 结：U_BE = 650.0 − 2.00×(t − 25) = ' + (Ube*1000).toFixed(1) + ' mV（恒流条件，上限 150 ℃）';
+      o.wrC = 'AD590：I = 1 μA/K × T = ' + (II*1e6).toFixed(2) + ' μA；串 10 kΩ → U = 10 mV/K × T = ' + UU.toFixed(4) + ' V';
+      o.wrBig = '灵敏度：PN 结 −2.00 mV/℃（放大后 10 mV/℃）；AD590 串 10 kΩ → 10 mV/K = 10 mV/℃';
+      o.wrD = '集成式（AD590/LM134/DS18B20）线性好、无需冷端补偿、输出可远传';
+      o.wrNote = '温敏三极管线性优于二极管；集成式总范围 −55~150 ℃、一般 ±0.5 ℃（DS18B20 ±0.5 ℃、TMP117 ±0.1 ℃）';
+      o.fine = '式(10-24~10-27)：恒流下 U = (kT/q)ln(I/I_s)，dU/dT = (k/q)ln(I/I_s) ≈ <b>−2 mV/℃</b>，当前 U_BE = ' +
+        (Ube*1000).toFixed(1) + ' mV。式(10-28~10-31)：两管 ΔU_BE = (kT/q)ln r ∝ T → U₀ = (R₂/R₁)(kT/q)ln r → 10 mV/K。' +
+        'AD590（式10-32 形式）：I = C_T·T = 1 μA/K × ' + T.toFixed(2) + ' K = <b>' + (II*1e6).toFixed(2) + ' μA</b>，串 10 kΩ → ' + UU.toFixed(4) + ' V。';
+      o.hint = 'PN 结必须恒流供电（−2 mV/℃ 与电流有关）；两只匹配三极管的 ΔU_BE 与 T 成正比且能消掉 I_s 的影响 —— 这就是集成温度传感器线性好的原因。';
+    } else {
+      var M = irM(t, S.eps), M0 = SIG*Math.pow(T, 4), Tap = irTapp(t, S.eps);
+      o.M = M; o.M0 = M0; o.Tap = Tap;
+      o.dotColor = 'var(--hot)'; o.dotSpeed = 0.35 + 1.65*clamp(M/11643, 0, 1);
+      o.bigCap = '仪表读数（表观温度）'; o.bigNum = (Tap - 273.15).toFixed(1); o.bigUnit = '℃';
+      o.kv = [ ['真实温度 t', t.toFixed(1) + ' ℃'],
+               ['M = εσT⁴', M.toFixed(0) + ' W/m²'],
+               ['黑体 M₀ = σT⁴', M0.toFixed(0) + ' W/m²'],
+               ['表观温度偏差 Δ', sfmt(Tap - T, 1) + ' K'] ];
+      o.bar = M/12000;
+      o.barTxt = 'M / M(400 ℃ 黑体) = ' + (M/11643).toFixed(3);
+      o.wrA = '工况：红外测温，被测物真实温度 t = ' + t.toFixed(1) + ' ℃（' + T.toFixed(2) + ' K）、ε = ' + S.eps.toFixed(2);
+      o.wrB = '式(10-36)：M₀ = σT⁴ = ' + M0.toFixed(0) + ' W/m²；式(10-37)：M = ε·M₀ = ' + M.toFixed(0) + ' W/m²';
+      o.wrC = '仪器按 ε=1 标定 → 反查得表观温度 T_app = (M/σ)^(1/4) = ' + (Tap - 273.15).toFixed(1) + ' ℃';
+      o.wrBig = '真实温度 = T_app·ε^(−1/4) = ' + (Tap*Math.pow(S.eps, -0.25) - 273.15).toFixed(1) + ' ℃（式10-38/10-39）';
+      o.wrD = 'ε 越小，表观温度越低：' + (S.eps < 1 ? '当前低了 ' + (T - Tap).toFixed(1) + ' K' : 'ε = 1（黑体）时完全一致');
+      o.wrNote = 'ε：抛光不锈钢 0.1~0.3、黑胶带 0.95、人体皮肤 ≈0.98；非接触上限 3000 ℃、精度比接触式低一个数量级';
+      o.fine = '式(10-36)：M₀ = σT⁴ = 5.67×10⁻⁸ × ' + T.toFixed(2) + '⁴ = <b>' + M0.toFixed(0) + ' W/m²</b>；式(10-37)：ε = M/M₀ → M = εσT⁴ = ' +
+        M.toFixed(0) + ' W/m²。式(10-38/10-39)：εσT⁴ = σT_app⁴ → 表观温度 T_app = T·ε^¼ = ' + Tap.toFixed(2) + ' K（' +
+        (Tap - 273.15).toFixed(1) + ' ℃），真实 T = T_app·ε^(−1/4) = ' + (Tap*Math.pow(S.eps, -0.25)).toFixed(2) + ' K。' +
+        '教材例：ε = 0.8、T_app = 1000 K → T = 1057 K（差 57 K）。当前表观温度比真实低 ' + (T - Tap).toFixed(1) + ' K（相对 ' +
+        Math.abs((Tap - T)/T*100).toFixed(1) + ' %）。';
+      o.hint = '红外测温只给“表观温度”：ε 是最大误差源。亮度法（光学高温计，700 ℃ 以上、1.5 级）误差最大；比色法用两波长之比可约掉 ε，精度最高（900~2000 ℃、≤±1 %）。';
+    }
+    return o;
+  }
+
+  /* ============ 3. 粒子动画引擎（电流 / 载流子 / 辐射） ============ */
+  var DOTS = { segs:[], els:null, phase:0, speed:1 };
+  function segLen(s){ var dx = s.x2 - s.x1, dy = s.y2 - s.y1; return Math.sqrt(dx*dx + dy*dy) || 1; }
+  function initDots(){
+    var g = $('tmpDots'), html = '', i;
+    for (i = 0; i < 30; i++) html += '<circle cx="0" cy="0" r="3.2" stroke="#fff" stroke-width="1" opacity=".9"/>';
+    g.innerHTML = html;
+    DOTS.els = g.querySelectorAll('circle');
+  }
+  function runDots(){
+    var last = performance.now();
+    (function loop(now){
+      var dt = Math.min(60, now - last); last = now;
+      DOTS.phase = (DOTS.phase + dt/1700*(DOTS.speed || 1)) % 1;
+      var segs = DOTS.segs, els = DOTS.els, n = els ? els.length : 0, total = 0, i, pi;
+      for (i = 0; i < segs.length; i++) total += segLen(segs[i]);
+      pi = 0;
+      for (i = 0; i < segs.length; i++){
+        var s = segs[i], L = segLen(s);
+        var cnt = Math.max(1, Math.round(n*L/(total || 1))), f = clamp(s.f || 1, 0.12, 2.2), k;
+        for (k = 0; k < cnt && pi < n; k++, pi++){
+          var u = ((DOTS.phase*(0.45 + 0.55*f) + k/cnt) % 1 + 1) % 1;
+          els[pi].setAttribute('cx', (s.x1 + (s.x2 - s.x1)*u).toFixed(1));
+          els[pi].setAttribute('cy', (s.y1 + (s.y2 - s.y1)*u).toFixed(1));
+          els[pi].setAttribute('opacity', (0.22 + 0.72*Math.min(1, f/1.4)).toFixed(2));
+        }
+      }
+      for (; pi < n; pi++) els[pi].setAttribute('opacity', '0');
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+
+  /* ============ 4. 结构动态（五类器件） ============ */
+  function paintStruct(o){
+    $('stRtd').style.display = (S.type === 'rtd') ? '' : 'none';
+    $('stNtc').style.display = (S.type === 'ntc') ? '' : 'none';
+    $('stTc').style.display  = (S.type === 'tc')  ? '' : 'none';
+    $('stIc').style.display  = (S.type === 'ic')  ? '' : 'none';
+    $('stIr').style.display  = (S.type === 'ir')  ? '' : 'none';
+    $('tmpDots').setAttribute('fill', o.dotColor);
+    DOTS.speed = o.dotSpeed;
+    var segs = [];
+    if (S.type === 'rtd'){
+      var w = S.wire;
+      $('rtd23').style.display = (w === '4') ? 'none' : '';
+      $('rtd4').style.display  = (w === '4') ? '' : 'none';
+      if (w !== '4'){
+        $('rtdLeadT').style.display = (w === '3') ? '' : 'none';   /* r₃ 电源线 */
+        $('rtdLeadR').style.display = (w === '3') ? '' : 'none';   /* r₂ 进相邻桥臂 */
+        $('rtdWireT').style.display = (w === '3') ? 'none' : '';   /* 二线制时补回导线 */
+        $('rtdLeadRW').style.display = (w === '3') ? 'none' : '';
+        $('rtdLeadLTxt').textContent = (w === '3') ? 'r₁' : '2r';
+        $('rtdRtVal').textContent = o.R.toFixed(2) + ' Ω';
+        $('rtdEq1').textContent = (w === '3') ? '式10-7：(R_t+r)R₁ = (R₃+r)R₂' : '二线制：R_meas = R_t + 2r';
+        $('rtdEq2').textContent = (w === '3') ? '取 R₁ = R₂ → r 自动抵消，R_t = R₃'
+                                              : '两根引线电阻全部计入 → 指示偏高';
+        $('rtdU0').textContent = (w === '3') ? ('平衡时 R₃ = ' + o.R.toFixed(2) + ' Ω')
+                                             : ('平衡时 R₃ = R_t+2r = ' + o.Rm.toFixed(2) + ' Ω');
+        $('rtdNote').textContent = (w === '3') ? 'r₁、r₂ 分别落在相邻两臂（同一电缆）' : '2r = ' + (2*CFG.rLead).toFixed(1) + ' Ω ≈ ' + Math.abs(o.err).toFixed(1) + ' ℃ 误差';
+        $('rtdNote2').textContent = (w === '3') ? 'r₃ 为电源线，不进平衡式' : '三线制可把它抵消 → 见按钮';
+        /* 电流粒子：+U → 两臂 → −U（检流计平衡时无电流） */
+        segs.push({ x1:38,  y1:52,  x2:96,  y2:52 , f:1 });
+        segs.push({ x1:130, y1:52,  x2:150, y2:52 , f:1 });
+        segs.push({ x1:150, y1:52,  x2:150, y2:84 , f:1 });
+        segs.push({ x1:150, y1:106, x2:150, y2:136, f:1 });
+        segs.push({ x1:150, y1:176, x2:150, y2:216, f:1 });
+        segs.push({ x1:150, y1:238, x2:150, y2:262, f:1 });
+        segs.push({ x1:150, y1:52,  x2:330, y2:52 , f:1 });
+        segs.push({ x1:330, y1:52,  x2:330, y2:84 , f:1 });
+        segs.push({ x1:330, y1:106, x2:330, y2:136, f:1 });
+        segs.push({ x1:330, y1:176, x2:330, y2:216, f:1 });
+        segs.push({ x1:330, y1:238, x2:330, y2:262, f:1 });
+        segs.push({ x1:330, y1:262, x2:38,  y2:262, f:1 });
+      } else {
+        $('rtd4Eq2').textContent = '= ' + (o.R*1e-3*1e3).toFixed(3) + ' mV / 1.000 mA';
+        $('rtd4Eq3').textContent = '= ' + o.R.toFixed(3) + ' Ω';
+        $('rtd4Note').textContent = '四线制无引线误差（当前 ' + o.R.toFixed(3) + ' Ω）';
+        segs.push({ x1:290, y1:77,  x2:360, y2:77 , f:1 });
+        segs.push({ x1:360, y1:77,  x2:360, y2:212, f:1 });
+        segs.push({ x1:360, y1:212, x2:110, y2:212, f:1 });
+        segs.push({ x1:110, y1:212, x2:110, y2:158, f:1 });
+        segs.push({ x1:110, y1:118, x2:110, y2:77 , f:1 });
+        segs.push({ x1:200, y1:77,  x2:110, y2:77 , f:1 });
+      }
+    } else if (S.type === 'ntc'){
+      var rel = clamp(o.Rn/CFG.ntc.R0, 0, 1);
+      $('ntcHalo').setAttribute('r', (34 + 26*(1 - rel)).toFixed(1));
+      $('ntcHalo').setAttribute('opacity', (0.06 + 0.22*(1 - rel)).toFixed(2));
+      $('ntcT1').textContent = 'R = ' + (o.Rn/1000).toFixed(3) + ' kΩ（t = ' + S.t.toFixed(1) + ' ℃）';
+      $('ntcT2').textContent = 'B = 3380 K，α_T = −B/T² = ' + o.aT.toFixed(2) + ' %/℃';
+      $('ntcT3').textContent = 'R(50 ℃) = ' + (ntcR(50)/1000).toFixed(3) + ' kΩ，R(0 ℃) = ' + (ntcR(0)/1000).toFixed(2) + ' kΩ';
+      $('ntcT4').textContent = 'R/R(25 ℃) = ' + (o.Rn/CFG.ntc.R0).toFixed(3) + '（非线性 3%~6%，铂 <1%）';
+      var ff = clamp(0.3 + 1.7*(1 - rel), 0.2, 2.2);
+      segs.push({ x1:150, y1:78,  x2:150, y2:120, f:ff });
+      segs.push({ x1:150, y1:180, x2:150, y2:222, f:ff });
+      segs.push({ x1:128, y1:138, x2:172, y2:146, f:ff });
+      segs.push({ x1:128, y1:152, x2:172, y2:144, f:ff });
+      segs.push({ x1:126, y1:164, x2:174, y2:156, f:ff });
+      segs.push({ x1:126, y1:150, x2:174, y2:150, f:ff });
+      segs.push({ x1:134, y1:132, x2:166, y2:164, f:ff });
+      segs.push({ x1:134, y1:168, x2:166, y2:136, f:ff });
+    } else if (S.type === 'tc'){
+      var R3 = o.tc;
+      $('tcHot').setAttribute('r', (9 + 5*clamp(S.t/400, 0, 1)).toFixed(1));
+      $('tcHotTxt').textContent = '热端 t = ' + S.t.toFixed(1) + ' ℃';
+      $('tcColdTxt').textContent = '冷端（两接点等温）T₀ = ' + R3.tn.toFixed(1) + ' ℃';
+      $('tcE1').textContent = 'E(t,T₀) = ' + R3.Em.toFixed(3) + ' mV';
+      $('tcE2').textContent = '仪表指示 ' + R3.tInd.toFixed(1) + ' ℃（' + (Math.abs(R3.err) < 0.05 ? '误差 ≈ 0' : '偏低 ' + Math.abs(R3.err).toFixed(1) + ' ℃') + '）';
+      $('tcE3').textContent = 'E(t,0) = ' + R3.E0.toFixed(3) + ' mV';
+      $('tcE4').textContent = '冷端修正量 E(T₀,0) = ' + R3.En.toFixed(3) + ' mV';
+      $('tcE5').textContent = 'K 型 ≈ 41 μV/℃（' + ({raw:'不补偿', ice:'冰点槽', wire:'补偿导线+修正', bridge:'补偿电桥'})[S.cj] + '）';
+      var ft = clamp(0.3 + 1.7*R3.Em/Math.max(1e-9, tcE(TYPES.tc.tmax)), 0.2, 2.2);
+      segs.push({ x1:400, y1:150, x2:400, y2:96 , f:ft });
+      segs.push({ x1:400, y1:96,  x2:150, y2:96 , f:ft });
+      segs.push({ x1:150, y1:96,  x2:150, y2:204, f:ft });
+      segs.push({ x1:150, y1:204, x2:400, y2:204, f:ft });
+      segs.push({ x1:400, y1:204, x2:400, y2:150, f:ft });
+    } else if (S.type === 'ic'){
+      $('icVbe').textContent = (pnU(S.t)*1000).toFixed(1) + ' mV';
+      $('icT1').textContent = 'PN 结：U_BE = 650.0 − 2.00×(t − 25) = ' + (pnU(S.t)*1000).toFixed(1) + ' mV（灵敏度 −2.00 mV/℃，上限 150 ℃）';
+      $('icT2').textContent = 'AD590：I = 1 μA/K × T(K) = ' + (adI(S.t)*1e6).toFixed(2) + ' μA；串 10 kΩ → U = 10 mV/K × T = ' + adU(S.t).toFixed(4) + ' V';
+      segs.push({ x1:76,  y1:145, x2:76,  y2:112, f:1 });
+      segs.push({ x1:76,  y1:112, x2:200, y2:112, f:1 });
+      segs.push({ x1:240, y1:112, x2:376, y2:112, f:1 });
+      segs.push({ x1:376, y1:112, x2:376, y2:212, f:1 });
+      segs.push({ x1:376, y1:212, x2:76,  y2:212, f:1 });
+      segs.push({ x1:76,  y1:212, x2:76,  y2:179, f:1 });
+      segs.push({ x1:566, y1:150, x2:606, y2:150, f:1 });
+      segs.push({ x1:648, y1:150, x2:672, y2:150, f:1 });
+    } else {
+      var rr = 0.25 + 0.75*S.eps;
+      $('irGlow').setAttribute('r', (26 + 14*clamp(o.M/11643, 0, 1)).toFixed(1));
+      $('irGlow').setAttribute('opacity', (0.10 + 0.20*clamp(o.M/11643, 0, 1)).toFixed(2));
+      $('irObjTxt').textContent = S.t.toFixed(1) + ' ℃';
+      $('irEpsTxt').textContent = 'ε = ' + S.eps.toFixed(2);
+      $('irT1').textContent = '表观温度 ' + (o.Tap - 273.15).toFixed(1) + ' ℃';
+      $('irT2').textContent = 'M = εσT⁴ = ' + o.M.toFixed(0) + ' W/m²';
+      $('irT3').textContent = '黑体 M₀ = σT⁴ = ' + o.M0.toFixed(0) + ' W/m²';
+      $('irT4').textContent = '真实 T = T_app·ε^(−1/4) = ' + S.t.toFixed(1) + ' ℃';
+      var yy = [126, 143, 160, 177, 194], k;
+      for (k = 0; k < 5; k++) segs.push({ x1:142, y1:yy[k], x2:236, y2:yy[k], f:rr*1.4 });
+      var y2s = [126, 143, 160, 177, 194], y2e = [150, 153, 160, 167, 170];
+      for (k = 0; k < 5; k++) segs.push({ x1:264, y1:y2s[k], x2:300, y2:y2e[k], f:rr*1.4 });
+    }
+    DOTS.segs = segs;
+  }
+
+  /* ============ 5. 主刷新 ============ */
+  function paint(){
+    var o = modelOf(), i, els;
+    /* --- 控件态 --- */
+    els = document.querySelectorAll('#segType button');
+    for (i = 0; i < els.length; i++) els[i].classList.toggle('on', els[i].getAttribute('data-type') === S.type);
+    els = document.querySelectorAll('#segWire button');
+    for (i = 0; i < els.length; i++) els[i].classList.toggle('on', els[i].getAttribute('data-wire') === S.wire);
+    els = document.querySelectorAll('#segCJ button');
+    for (i = 0; i < els.length; i++) els[i].classList.toggle('on', els[i].getAttribute('data-cj') === S.cj);
+    var T = TYPES[S.type];
+    $('typeHint').textContent = T.hint;
+    $('t').min = T.tmin; $('t').max = T.tmax; $('t').value = S.t;
+    $('tOut').textContent = S.t.toFixed(0) + ' ℃';
+    $('tTxt').textContent = T.tmin + ' ～ ' + T.tmax + ' ℃（' + T.short + '）';
+    $('wireRow').style.display = (S.type === 'rtd') ? '' : 'none';
+    $('epsRow').style.display = (S.type === 'ir') ? '' : 'none';
+    $('epsTxt').textContent = (S.type === 'ir') ? '被测物发射率（ε 越小读数越低）' : '仅热辐射测温使用';
+    $('eps').value = S.eps; $('epsOut').textContent = S.eps.toFixed(2);
+    $('tempSub').textContent = o.sub;
+    $('tempHint').textContent = o.hint;
+    $('readSub').textContent = T.name + ' · ' + T.short;
+    /* --- 结构 + 粒子 --- */
+    paintStruct(o);
+    /* --- 内嵌读数 --- */
+    $('wrA').textContent = o.wrA;
+    $('wrB').textContent = o.wrB;
+    $('wrC').textContent = o.wrC;
+    $('wrBig').textContent = o.wrBig;
+    $('wrD').textContent = o.wrD;
+    $('wrNote').textContent = o.wrNote;
+    $('wrBar').setAttribute('width', clamp(o.bar*360, 3, 360).toFixed(1));
+    $('wrBarTxt').textContent = o.barTxt;
+    /* --- 读数卡 --- */
+    $('bigCap').textContent = o.bigCap;
+    $('bigNum').textContent = o.bigNum;
+    $('bigUnit').textContent = o.bigUnit;
+    for (i = 0; i < 4; i++){
+      $('kv' + (i+1) + 'l').textContent = o.kv[i][0];
+      $('kv' + (i+1) + 'v').textContent = o.kv[i][1];
+    }
+    $('readFine').innerHTML = o.fine;
+    /* --- 公式 / 曲线 / 要点 / 冷端 --- */
+    paintFormulas(o);
+    drawCurve(o);
+    paintPoints();
+    paintCJ(o);
+    if (window.__repack) window.__repack();
+  }
+
+  /* ============ 6. 冷端处理卡 ============ */
+  var CJ_INFO = {
+    raw:    '不补偿：冷端（接线盒）随环境 25 ℃ 变化，热电势 E(t,T₀) 里少了 E(T₀,0) 这一项，仪表按冷端 0 ℃ 查表 → 指示偏低约一个冷端温度。',
+    ice:    '0 ℃ 恒温法：冷端放进冰水混合物（试管防短路、须搅拌），T₀ = 0 ℃，E(T₀,0) = 0 → 误差完全消除，但只适合实验室。',
+    wire:   '补偿导线：把冷端“搬”到温度稳定的仪表端（25 ℃ 恒温处），再按中间温度定律 E(T,0) = E(T,Tₙ) + E(Tₙ,0) 计算修正；须与热电偶分度号匹配、极性不能接反、接点等温。',
+    bridge: '补偿电桥：铜电阻臂与冷端同温，冷端升高时电桥输出 U_ab = E(Tₙ,0) 随之增大，与热电势串联后抵消；最常用，平衡点约 20 ℃，须与冷端同温、分度号匹配。'
+  };
+  /* SVG 内的短提示（必须短，避免与右侧误差文字重叠） */
+  var CJ_SHORT = {
+    raw:    '不补偿 → 指示偏低（≈ 一个冷端温度）',
+    ice:    '冷端 0 ℃ → 误差完全消除',
+    wire:   '补偿导线搬冷端 + 计算修正',
+    bridge: '补偿电桥串入 U_ab = E(T₀,0) 抵消'
+  };
+  function setCJ(m){
+    if (!CJ_INFO[m]) return;
+    S.cj = m; stopDemo(); paint();
+    say('<b>冷端处理</b>：' + CJ_INFO[m]);
+  }
+  function paintCJ(o){
+    var R = (o.type === 'tc') ? o.tc : tcRead();      /* 冷端卡始终按当前 t 演示热电偶 */
+    $('cjSub').textContent = (S.type === 'tc') ? '热电偶专用：冰点槽 / 补偿导线 / 补偿电桥'
+                                              : '热电偶专用（先在左列选择“热电偶”）';
+    $('stCjIce').style.display = (S.cj === 'raw' || S.cj === 'ice') ? '' : 'none';
+    $('stCjWire').style.display = (S.cj === 'wire') ? '' : 'none';
+    $('stCjBridge').style.display = (S.cj === 'bridge') ? '' : 'none';
+    $('cjIceCup').style.display = (S.cj === 'ice') ? '' : 'none';
+    $('cjEnvTxt').style.display = (S.cj === 'ice') ? 'none' : '';
+    $('cjEnvTxt').textContent = (S.cj === 'raw') ? '冷端暴露在 25 ℃ 环境' : '冷端搬到仪表端 25 ℃ 恒温处';
+    $('cjBlockTxt').textContent = (S.cj === 'ice') ? '冷端接线盒（浸入冰点槽）' : (S.cj === 'bridge' ? '冷端接线盒（与铜臂同温）' : '冷端接线盒（等温）');
+    $('cjHotTxt').textContent = S.t.toFixed(0) + ' ℃';
+    $('cjRead').textContent = R.Efix.toFixed(3) + ' mV';
+    $('cjInd').textContent = '指示 ' + R.tInd.toFixed(1) + ' ℃';
+    $('cjEq1').textContent = '实测 E(t,T₀) = E(t,0) − E(T₀,0) = ' + R.E0.toFixed(3) + ' − ' + R.En.toFixed(3) + ' = ' + R.Em.toFixed(3) +
+      ' mV　修正后 ' + R.Efix.toFixed(3) + ' mV';
+    $('cjErr').textContent = (Math.abs(R.err) < 0.05) ? '误差 ≈ 0.00 ℃' : ('误差 ' + sfmt(R.err, 2) + ' ℃');
+    $('cjErr').setAttribute('fill', (Math.abs(R.err) < 0.05) ? 'var(--ok)' : 'var(--hot)');
+    $('cjNote').textContent = CJ_SHORT[S.cj];
+    $('cjHint').textContent = CJ_INFO[S.cj].replace(/<[^>]+>/g, '') +
+      (S.cj === 'raw' ? '冷端恒定五法：0 ℃ 恒温法（完全消除）｜补偿电桥（最常用）｜补偿导线（搬冷端）｜不需补偿（B 型 50 ℃ 以下）｜计算修正法。' : '');
+  }
+
+  /* ============ 7. 特性曲线 ============ */
+  var CH = { x0:60, x1:672, y0:240, y1:30, key:'' };
+  function cpx(u, xmax){ return CH.x0 + u/xmax*(CH.x1 - CH.x0); }
+  function cpy(v, ymin, ymax){ return CH.y0 - (clamp(v, ymin, ymax) - ymin)/(ymax - ymin)*(CH.y0 - CH.y1); }
+  function drawCurve(o){
+    var ty = S.type, xmax, ymin, ymax, step, ylab, xlab, rows, c1, c2, c3, v1, v2;
+    if (ty === 'rtd' || ty === 'ntc'){ xmax = 400; ymin = 0; ymax = 3; step = 0.5; ylab = 'R_t / R(25 ℃)'; }
+    else if (ty === 'tc'){ xmax = 400; ymin = -2; ymax = 18; step = 2; ylab = 'E / mV'; }
+    else if (ty === 'ic'){ xmax = 150; ymin = 0; ymax = 4500; step = 500; ylab = '输出 / mV（AD590 串 10 kΩ）'; }
+    else { xmax = 400; ymin = 0; ymax = 12000; step = 2000; ylab = '辐射出射度 M / (W/m²)'; }
+    xlab = '温度 t / ℃';
+    var key = [xmax, ymin, ymax, step].join('|');
+    if (CH.key !== key){
+      var html = '', v, i, y, x;
+      for (v = ymin; v <= ymax + 1e-9; v += step){
+        y = cpy(v, ymin, ymax);
+        html += '<line x1="' + CH.x0 + '" y1="' + y.toFixed(1) + '" x2="' + CH.x1 + '" y2="' + y.toFixed(1) + '" stroke="#e6edf6"/>';
+        html += '<text x="52" y="' + (y + 4).toFixed(1) + '" text-anchor="end" font-size="11.5" fill="#5b6b80">' + (Math.abs(v) >= 1000 ? (v/1000).toFixed(1) + 'k' : v.toFixed(step < 1 ? 1 : 0)) + '</text>';
+      }
+      for (i = 0; i <= 4; i++){
+        x = cpx(xmax*i/4, xmax);
+        html += '<line x1="' + x.toFixed(1) + '" y1="' + CH.y1 + '" x2="' + x.toFixed(1) + '" y2="' + CH.y0 + '" stroke="#e6edf6"/>';
+        html += '<text x="' + x.toFixed(1) + '" y="' + (CH.y0 + 14) + '" text-anchor="middle" font-size="11.5" fill="#5b6b80">' + (xmax*i/4).toFixed(0) + '</text>';
+      }
+      $('cGrid').innerHTML = html; CH.key = key;
+    }
+    $('axX').textContent = xlab; $('axY').textContent = ylab;
+    function pathOf(fn){
+      var d = '', i, first = true;
+      for (i = 0; i <= 120; i++){
+        var t2 = xmax*i/120, v3 = fn(t2);
+        if (v3 === null) continue;
+        d += (first ? 'M' : 'L') + cpx(t2, xmax).toFixed(1) + ' ' + cpy(v3, ymin, ymax).toFixed(1) + ' ';
+        first = false;
+      }
+      return d;
+    }
+    var rowsVis = [];
+    if (ty === 'rtd' || ty === 'ntc'){
+      var Ra = ptR(25), Rb = ntcR(25);
+      c1 = pathOf(function(t2){ return ptR(t2)/Ra; });
+      c2 = pathOf(function(t2){ return t2 <= 320 ? ntcR(t2)/Rb : null; });
+      c3 = '';
+      v1 = ptR(S.t)/Ra; v2 = ntcR(S.t)/Rb;
+      $('lg1t').textContent = 'Pt100（近似线性，400 ℃ ≈ ' + (ptR(400)/Ra).toFixed(2) + ' 倍）';
+      $('lg2t').textContent = 'NTC 10 kΩ/B3380（指数下降，非线性 3%~6%）';
+      $('lg3w').style.display = 'none';
+      $('curveSub').textContent = 'Pt100 与 NTC 的 R–t 对比（均以 25 ℃ 归一）';
+      $('curveNote').textContent = 'Pt100 近似直线（非线性 <1%）；NTC 从 0 ℃ 的 ' + (ntcR(0)/Rb).toFixed(2) + ' 倍一路跌到 ' + (ntcR(400)/Rb).toFixed(4) + ' 倍';
+      $('mkD1').setAttribute('fill', '#b3382c'); $('mkD2').setAttribute('fill', '#0d8b7f');
+    } else if (ty === 'tc'){
+      var tn = (S.cj === 'ice') ? 0 : CFG.tn, En = tcE(tn), errT = tcRead().err;
+      c1 = pathOf(function(t2){ return tcE(t2); });
+      c2 = pathOf(function(t2){ return tcE(t2) - En; });
+      c3 = '';
+      v1 = tcE(S.t); v2 = tcE(S.t) - En;
+      $('lg1t').textContent = 'E(t,0)：理想热电势（冷端 0 ℃）';
+      $('lg2t').textContent = 'E(t,' + tn.toFixed(0) + ')：' + ({raw:'不补偿时仪表实测', ice:'冰点槽（与理想重合）', wire:'补偿导线端实测', bridge:'补偿电桥端实测'})[S.cj];
+      $('lg3w').style.display = 'none';
+      $('curveSub').textContent = 'K 型热电偶 E–t 曲线（冷端修正）';
+      $('curveNote').textContent = '两条线之差 = E(T₀,0) = ' + En.toFixed(3) + ' mV（≈ ' + (En/0.041).toFixed(1) + ' ℃）' +
+        (Math.abs(errT) < 0.05 ? '；当前已补偿 → 指示正确' : '；当前不补偿 → 查表指示偏低 ' + Math.abs(errT).toFixed(1) + ' ℃');
+      $('mkD1').setAttribute('fill', '#b3382c'); $('mkD2').setAttribute('fill', '#0d8b7f');
+    } else if (ty === 'ic'){
+      c1 = pathOf(function(t2){ return adU(t2)*1000; });
+      c2 = pathOf(function(t2){ return pnU(t2)*1000; });
+      c3 = '';
+      v1 = adU(S.t)*1000; v2 = pnU(S.t)*1000;
+      $('lg1t').textContent = 'AD590：10 mV/K × T(K)（上升）';
+      $('lg2t').textContent = 'PN 结 U_BE：650 − 2(t−25) mV（下降）';
+      $('lg3w').style.display = 'none';
+      $('curveSub').textContent = 'PN 结 U_BE 与 AD590 输出的 t 特性';
+      $('curveNote').textContent = '两条线互为相反：一个 −2 mV/℃，一个 +10 mV/K，都要求恒流/恒压供电';
+      $('mkD1').setAttribute('fill', '#7c3aed'); $('mkD2').setAttribute('fill', '#0d8b7f');
+    } else {
+      c1 = pathOf(function(t2){ return SIG*Math.pow(kOf(t2), 4); });
+      c2 = pathOf(function(t2){ return irM(t2, S.eps); });
+      c3 = '';
+      v1 = SIG*Math.pow(o.T, 4); v2 = o.M;
+      $('lg1t').textContent = '黑体 M₀ = σT⁴（ε = 1）';
+      $('lg2t').textContent = '实际物体 M = εσT⁴（ε = ' + S.eps.toFixed(2) + '）';
+      $('lg3w').style.display = 'none';
+      $('curveSub').textContent = '热辐射 M–t 曲线（T⁴，随 ε 整体缩放）';
+      $('curveNote').textContent = 'ε 只改变曲线高度（' + (S.eps*100).toFixed(0) + '%），M ∝ T⁴ 的强非线性无法改变 —— 所以必须做线性化';
+      $('mkD1').setAttribute('fill', '#495057'); $('mkD2').setAttribute('fill', '#b3382c');
+    }
+    $('c1').setAttribute('d', c1);
+    $('c2').setAttribute('d', c2);
+    $('c3').setAttribute('d', c3 || '');
+    $('c1').setAttribute('stroke', (ty === 'ic') ? '#7c3aed' : ((ty === 'ir') ? '#495057' : '#b3382c'));
+    $('c2').setAttribute('stroke', (ty === 'rtd' || ty === 'ntc') ? '#0d8b7f' : ((ty === 'ic') ? '#0d8b7f' : ((ty === 'ir') ? '#b3382c' : '#0d8b7f')));
+    $('mkX').setAttribute('x1', cpx(S.t, xmax).toFixed(1));
+    $('mkX').setAttribute('x2', cpx(S.t, xmax).toFixed(1));
+    $('mkD1').setAttribute('cx', cpx(S.t, xmax).toFixed(1)); $('mkD1').setAttribute('cy', cpy(v1, ymin, ymax).toFixed(1));
+    $('mkD2').setAttribute('cx', cpx(S.t, xmax).toFixed(1)); $('mkD2').setAttribute('cy', cpy(v2, ymin, ymax).toFixed(1));
+    $('mkD2').setAttribute('opacity', (ty === 'tc' && S.cj !== 'raw' && S.cj !== 'ice') ? 1 : (ty === 'tc' ? 1 : 0.9));
+    $('lg1i').style.background = (ty === 'ic') ? '#7c3aed' : ((ty === 'ir') ? '#495057' : '#b3382c');
+    $('lg2i').style.background = (ty === 'ir') ? '#b3382c' : '#0d8b7f';
+  }
+
+  /* ============ 8. 公式推导（式号 + 动态代入） ============ */
+  function paintFormulas(o){
+    var html = '', ty = S.type, t = S.t;
+    if (ty === 'rtd'){
+      var w = S.wire, R = o.R, r = CFG.rLead;
+      $('fmlTitle').textContent = '热电阻 Pt100 · ' + (w === '2' ? '二线制' : (w === '3' ? '三线制' : '四线制'));
+      html += '<div class="row"><span class="tag">式 10-1</span><span>R_t = R₀[1+α(T−T₀)]（线性近似）；<span class="tag">式 10-2</span> α = ' +
+        frac('R₁₀₀−R₀', 'R₀·100') + ' = ' + frac('138.51−100', '100×100') + ' = 0.00385 Ω/(Ω·℃) → α·R₀ = <b>0.3851 Ω/℃</b></span></div>';
+      html += '<div class="row"><span class="tag">式 10-4</span><span>0~850 ℃：R_t = R₀(1+At+Bt²) = 100×(1+3.9083×10⁻³×' + t.toFixed(0) + ' − 5.775×10⁻⁷×' +
+        t.toFixed(0) + '²) = <b>' + R.toFixed(3) + ' Ω</b></span></div>';
+      html += '<div class="row"><span class="tag v">教材系数</span><span>A = 3.96847×10⁻³、B = −5.847×10⁻⁷（PI 分度）→ R_t = ' + ptRbook(t).toFixed(3) +
+        ' Ω、R₁₀₀ = 139.10 Ω（α≈0.00391 Ω/℃ —— 与工业标准 138.51 Ω 略有差别）</span></div>';
+      if (w !== '4'){
+        html += '<div class="row"><span class="tag g">式 10-7</span><span>(R_t+r)·R₁ = (R₃+r)·R₂ —— ' +
+          (w === '3' ? '两根引线 r₁、r₂ 分别落在相邻桥臂（同一根三芯电缆）' : '二线制只有两根引线，2r 全部串在 R_t 臂里') + '</span></div>';
+        if (w === '3'){
+          html += '<div class="row"><span class="tag g">式 10-8</span><span>R_t = R₃·' + frac('R₂', 'R₁') + ' + (' + frac('R₂', 'R₁') + ' − 1)·r；取 <b>R₁ = R₂</b> → R_t = R₃，r 自动抵消' +
+            '（教材式10-8 首项作 R₃R₁/R₂，按式10-7 推导应为 R₃R₂/R₁）</span></div>';
+          html += '<div class="row"><span class="tag">当前</span><span>R_t = ' + R.toFixed(3) + ' Ω → 桥臂平衡时 R₃ = ' + R.toFixed(3) + ' Ω，引线误差 <b>0 ℃</b></span></div>';
+        } else {
+          html += '<div class="row"><span class="tag g">二线制</span><span>R_meas = R_t + 2r = ' + R.toFixed(3) + ' + ' + (2*r).toFixed(1) + ' = ' + o.Rm.toFixed(3) +
+            ' Ω → 反查温度 ' + o.tInd.toFixed(2) + ' ℃，误差 <b>' + sfmt(o.err, 2) + ' ℃</b>（1 Ω ≈ 2.6 ℃）</span></div>';
+        }
+      } else {
+        html += '<div class="row"><span class="tag g">四线制</span><span>R_t = ' + frac('U', 'I') + ' = ' + frac((R*1e-3*1e3).toFixed(3) + ' mV', '1.000 mA') +
+          ' = <b>' + R.toFixed(3) + ' Ω</b>（电压引线不通过电流，接在电流引线内侧）</span></div>';
+        html += '<div class="row"><span class="tag">对比</span><span>二线制 +2r = ' + (o.R + 2*r).toFixed(2) + ' Ω（≈ +7.8 ℃）、三线制 = ' + o.R.toFixed(2) + ' Ω、四线制 = ' + o.R.toFixed(2) + ' Ω</span></div>';
+      }
+      html += '<div class="row"><span class="tag f">负温段</span><span>式 10-3（−200~0 ℃）：R_t = R₀[1+At+Bt²+C(t−100)t³]，C = −4.22×10⁻¹²；铜电阻见式 10-5/10-6</span></div>';
+      html += '<div class="note">定量结论：R_t = ' + R.toFixed(3) + ' Ω，R₁₀₀/R₀ = 1.385，瞬时灵敏度 dR/dt = ' + ptSlope(t).toFixed(4) + ' Ω/℃（25 ℃），量程 −200~850 ℃。</div>';
+    } else if (ty === 'ntc'){
+      $('fmlTitle').textContent = '热敏电阻 NTC · B 值 / α_T';
+      var Rn = o.Rn;
+      html += '<div class="row"><span class="tag">式 10-9</span><span>R_T = A·e^{B/T}　⟺　R = R₀·e^{B(1/T − 1/T₀)} = 10000×e^{3380×(1/' + o.T.toFixed(2) + ' − 1/298.15)} = <b>' +
+        Rn.toFixed(1) + ' Ω</b></span></div>';
+      html += '<div class="row"><span class="tag">式 10-10</span><span>B = ' + frac('T₁T₂', 'T₂−T₁') + '·ln' + frac('R_T1', 'R_T2') + ' = ' + frac('298.15×323.15', '25') + '×ln' +
+        frac('10.00 kΩ', '4.161 kΩ') + ' = ' + frac('96347', '25') + '×0.8768 = <b>3380 K</b>（用 25 ℃/50 ℃ 两点）</span></div>';
+      html += '<div class="row"><span class="tag">式 10-11</span><span>α_T = −' + frac('B', 'T²') + ' = −' + frac('3380', o.T.toFixed(2) + '²') + ' = <b>' + o.aT.toFixed(2) +
+        ' %/℃</b>（0 ℃ 时 −4.53 %/℃、150 ℃ 时 −1.89 %/℃ —— 越热越不灵敏）</span></div>';
+      html += '<div class="row"><span class="tag g">线性化</span><span>串/并联固定电阻把工作段压到小范围、或软件折线分段（可做到 0.1 ℃ 内）；温度系数 ' +
+        o.aT.toFixed(2) + ' %/℃ 是铂电阻（0.385 %/℃）的 ' + (Math.abs(o.aT)/0.385).toFixed(1) + ' 倍</span></div>';
+      html += '<div class="row"><span class="tag f">对照</span><span>R(0 ℃) = ' + (ntcR(0)/1000).toFixed(2) + ' kΩ、R(50 ℃) = ' + (ntcR(50)/1000).toFixed(3) +
+        ' kΩ、R(150 ℃) = ' + ntcR(150).toFixed(0) + ' Ω；量程 −100~300 ℃，B = 2000~6000 K</span></div>';
+      html += '<div class="note">注意：B 值必须用热力学温度 K 计算；须零功率（小电流）测量，否则自热使读数偏低；PTC/CTR 另论（PTC 重掺杂呈金属性、CTR 在某温度突变）。</div>';
+    } else if (ty === 'tc'){
+      var R3 = o.tc;
+      $('fmlTitle').textContent = '热电偶 K 型 · 中间温度定律与冷端补偿';
+      html += '<div class="row"><span class="tag">式 10-13</span><span>E_AB(T) = ∫α_AB dT（塞贝克系数 α_AB = dE/dT）</span></div>';
+      html += '<div class="row"><span class="tag">式 10-16~18</span><span>总热电势 = 接触电动势 + 温差电动势：E_AB(T,T₀) = E_AB(T) − E_AB(T₀) + ∫(σ_A−σ_B)dT</span></div>';
+      html += '<div class="row"><span class="tag">式 10-19</span><span>参考电极：E_AB = E_AC + E_CB（以铂为公共参考电极，分度表据此统一）</span></div>';
+      html += '<div class="row"><span class="tag g">式 10-21</span><span>中间温度定律：E_AB(T,T₀) = E_AB(T,Tₙ) + E_AB(Tₙ,T₀)　→　E(t,0) = ' +
+        R3.Em.toFixed(3) + ' + ' + R3.En.toFixed(3) + ' = <b>' + R3.Efix.toFixed(3) + ' mV</b> → 查表 ' + R3.tInd.toFixed(2) + ' ℃</span></div>';
+      html += '<div class="row"><span class="tag">当前工况</span><span>t = ' + t.toFixed(1) + ' ℃、冷端 T₀ = ' + R3.tn.toFixed(1) + ' ℃（' +
+        ({raw:'不补偿', ice:'冰点槽 0 ℃', wire:'补偿导线+计算修正', bridge:'补偿电桥'})[S.cj] + '）：E(t,0) = ' + R3.E0.toFixed(3) + ' mV、E(T₀,0) = ' + R3.En.toFixed(3) +
+        ' mV、实测 ' + R3.Em.toFixed(3) + ' mV → 误差 <b>' + (Math.abs(R3.err) < 0.05 ? '≈ 0' : sfmt(R3.err, 2)) + ' ℃</b></span></div>';
+      html += '<div class="row"><span class="tag v">教材算例</span><span>冷端 25 ℃、读数 20.000 mV → 加 E(25,0) = 1.000 mV 得 21.000 mV → 查表 ≈ 505 ℃；不补偿直接查表 484 ℃，差 ≈ 21 ℃</span></div>';
+      html += '<div class="note">冷端五法：0 ℃ 恒温法（完全消除）｜补偿电桥（最常用、平衡点约 20 ℃、须与冷端同温）｜补偿导线（搬冷端、极性不能反）｜不需补偿（B 型 50 ℃ 以下）｜计算修正法。</div>';
+    } else if (ty === 'ic'){
+      $('fmlTitle').textContent = 'PN 结 · 集成温度传感器 AD590';
+      var Ube = pnU(t)*1000, II = adI(t)*1e6, UU = adU(t);
+      html += '<div class="row"><span class="tag">式 10-24</span><span>恒流下 I = I_s(e^{qU/kT} − 1) → U = ' + frac('kT', 'q') + '·ln' + frac('I', 'I_s') +
+        ' ≈ ' + Ube.toFixed(1) + ' mV（25 ℃ 时 650 mV）</span></div>';
+      html += '<div class="row"><span class="tag">式 10-27</span><span>' + frac('dU', 'dT') + ' = ' + frac('k', 'q') + '·ln' + frac('I', 'I_s') +
+        ' ≈ <b>−2 mV/℃</b>（与电流有关，必须恒流供电；放大后可达 10 mV/℃）</span></div>';
+      html += '<div class="row"><span class="tag">式 10-28~31</span><span>两温敏三极管：ΔU_BE = ' + frac('kT', 'q') + '·ln r ∝ T → U₀ = ' + frac('R₂', 'R₁') +
+        '·' + frac('kT', 'q') + '·ln r = 10 mV/K（LM134：R₁ = 940 Ω、R₂ = 30 kΩ、r = 37）</span></div>';
+      html += '<div class="row"><span class="tag g">式 10-32</span><span>电流型（AD590）：I = C_T·T = 1 μA/K × ' + o.T.toFixed(2) + ' K = <b>' + II.toFixed(2) +
+        ' μA</b>；串 10 kΩ → U = 10 mV/K × T = <b>' + UU.toFixed(4) + ' V</b>（输出阻抗 MΩ 级，可远传）</span></div>';
+      html += '<div class="row"><span class="tag f">当前</span><span>U_BE = ' + Ube.toFixed(1) + ' mV、I = ' + II.toFixed(2) + ' μA、U = ' + UU.toFixed(4) +
+        ' V（相对 25 ℃：U_BE ' + sfmt((Ube - 650), 1) + ' mV）</span></div>';
+      html += '<div class="note">PN 结上限 150 ℃（表10-4 −40~150 ℃）；集成式总 −55~150 ℃、一般 ±0.5 ℃；DS18B20（−55~125 ℃、±0.5 ℃、DQ 端 4.7 kΩ 上拉）/ TMP117（±0.1 ℃）为数字输出。</div>';
+    } else {
+      $('fmlTitle').textContent = '热辐射测温 · 表观温度与发射率';
+      html += '<div class="row"><span class="tag">式 10-35</span><span>普朗克：E₀(λ,T) = ' + frac('C₁', 'λ⁵(e^{C₂/λT} − 1)') + '，C₁ = 3.742×10⁻¹⁶ W·m²、C₂ = 1.438×10⁻² m·K</span></div>';
+      html += '<div class="row"><span class="tag">式 10-36</span><span>斯特藩-玻尔兹曼：M₀ = σT⁴ = 5.67×10⁻⁸ × ' + o.T.toFixed(2) + '⁴ = <b>' + o.M0.toFixed(0) +
+        ' W/m²</b>（T 的单位必须用 K）</span></div>';
+      html += '<div class="row"><span class="tag">式 10-37</span><span>黑度（发射率）ε = ' + frac('M', 'M₀') + ' → M = εσT⁴ = ' + S.eps.toFixed(2) + '×' + o.M0.toFixed(0) +
+        ' = <b>' + o.M.toFixed(0) + ' W/m²</b></span></div>';
+      html += '<div class="row"><span class="tag g">式 10-38/39</span><span>仪器按 ε=1 标定：εσT⁴ = σT_app⁴ → T_app = T·ε^¼ = ' + o.T.toFixed(2) + '×' + Math.pow(S.eps, 0.25).toFixed(4) +
+        ' = <b>' + o.Tap.toFixed(2) + ' K（' + (o.Tap - 273.15).toFixed(1) + ' ℃）</b>；真实 T = T_app·ε^(−1/4) = ' + (o.Tap*Math.pow(S.eps, -0.25)).toFixed(2) + ' K</span></div>';
+      html += '<div class="row"><span class="tag v">教材算例</span><span>ε = 0.8、T_app = 1000 K → T = 1000×' + Math.pow(0.8, -0.25).toFixed(4) + ' = 1057 K（差 57 K）</span></div>';
+      html += '<div class="note">只测“表观温度”：ε 是最大误差源（抛光不锈钢 0.1~0.3、黑胶带 0.95）；亮度法（光学高温计 700~2000 ℃、1.5 级）误差最大，比色法用两波长之比可约掉 ε（900~2000 ℃、≤±1 %）。</div>';
+    }
+    $('fmlBody').innerHTML = html;
+  }
+
+  /* ============ 9. 要点 ============ */
+  var PTS_TEXT = [
+    '温度是最基本的被测量之一：<b>接触式</b>（热电阻 / 热敏电阻 / 热电偶 / PN 结与集成）靠热平衡，<b>非接触式</b>（热辐射）靠辐射能；本章五类器件的量程、线性与精度差别很大。',
+    '<b>热电阻</b>：金属电阻随温升增大。Pt100 在 0 ℃ 为 100 Ω，式(10-4) R_t = R₀(1+At+Bt²)；工业标准 A = 3.9083×10⁻³、B = −5.775×10⁻⁷ → R₁₀₀ = 138.51 Ω、α = 0.00385 Ω/℃（式10-2）；教材给 A = 3.96847×10⁻³、B = −5.847×10⁻⁷（R₁₀₀ ≈ 139.10 Ω）。',
+    '<b>引线电阻是热电阻的头号误差源</b>：1 Ω ≈ 2.6 ℃。二线制 2r 全部计入（2×1.5 Ω ≈ 7.8 ℃）；<b>三线制</b>两根引线分别进相邻桥臂，(R_t+r)R₁ = (R₃+r)R₂，取 R₁ = R₂ 时 r 自动抵消；四线制 R_t = U/I，电压引线无电流（须接在电流引线内侧）。',
+    '<b>热敏电阻</b>：NTC 的 R = R₀e^{B(1/T−1/T₀)} 是指数非线性；B = 2000~6000 K（10 kΩ/25 ℃ 用 25 ℃、50 ℃ 两点算得 B ≈ 3380 K）；α_T = −B/T² ≈ −3.8 %/℃（25 ℃），约为金属的 10 倍；PTC 重掺杂呈金属性、CTR 特定温度突变（测温主用 NTC）。',
+    'NTC “<b>灵而不准</b>”：非线性 3%~6%（铂 &lt;1%）、一致性与互换性差须逐支标定、B 值必须用 K、必须在零功率（小电流）下测量，否则自热使读数偏低 → 适合控温/补偿/报警，精密测温交给铂电阻。',
+    '<b>热电偶</b>：两种导体接成回路、两接点<b>有温差</b>才有热电势（塞贝克效应），mV 级。三定律：均质导体（与长度/直径/温度分布无关）、参考电极 E_AB = E_AC + E_CB、中间导体（第三导体两端等温则不影响）。K 型 ≈ 41 μV/℃（100 ℃ → 4.096 mV），量程 −50~1200 ℃。',
+    '<b>冷端处理五法</b>：0 ℃ 恒温法（完全消除、仅实验室）｜补偿电桥（最常用、平衡点约 20 ℃、须与冷端同温且分度号匹配）｜补偿导线（搬冷端、极性不能反、接点等温）｜不需补偿（B 型 50 ℃ 以下）｜计算修正法。冷端不恒定 = 热电偶最大误差源。',
+    '<b>中间温度定律算例</b>：K 型冷端 25 ℃、读数 20.000 mV → 加 E(25,0) = 1.000 mV 得 21.000 mV → 查表 ≈ 505 ℃；不补偿直接查表得 484 ℃，<b>差约 21 ℃</b>（≈ 冷端温度）。',
+    '<b>PN 结 / 集成</b>：恒流下 U_BE 随温升下降 ≈ <b>−2 mV/℃</b>（放大后可达 10 mV/℃、上限 150 ℃）；两温敏三极管 ΔU_BE = (kT/q)ln r ∝ T → <b>AD590 输出 1 μA/K</b>（25 ℃ → 298.15 μA、串 10 kΩ 得 10 mV/K）、LM134 10 mV/K、DS18B20/TMP117 数字量输出。',
+    '<b>热辐射测温（非接触）</b>：M = εσT⁴（式10-36）、ε = M/M₀（式10-37）；仪器按 ε=1 标定 → 只给<b>表观温度</b> T_app = T·ε^¼，真实 T = T_app·ε^(−1/4)（式10-38/39；ε=0.8、1000 K → 1057 K）。ε 是最大误差源，比色法可约掉 ε 最准；光学高温计只测 700 ℃ 以上且不能连续。'
+  ];
+  var PTS = { active:-1 };
+  function paintPoints(){
+    if (!$('points').children.length){
+      var html = '';
+      PTS_TEXT.forEach(function(t2, k){ html += '<li data-pi="' + k + '">' + t2 + '</li>'; });
+      $('points').innerHTML = html;
+    }
+  }
+  function setPt(i){
+    PTS.active = i;
+    var lis = $('points').children, k;
+    for (k = 0; k < lis.length; k++) lis[k].classList.toggle('on', k === i);
+    for (k = 0; k < PTS_TEXT.length; k++){
+      var bb = $('ptsB' + k);
+      if (bb) bb.classList.toggle('on', k === i);
+    }
+    if (i >= 0) say('<b>要点 ' + (i+1) + '/' + PTS_TEXT.length + '</b>：' + PTS_TEXT[i]);
+  }
+  for (var pb = 0; pb < PTS_TEXT.length; pb++){
+    (function(k){ $('ptsB' + k).addEventListener('click', function(){ stopDemo(); setPt(k); }); })(pb);
+  }
+  (function(){
+    var scb = document.querySelectorAll('#segCJ button');
+    for (var i = 0; i < scb.length; i++){
+      (function(b){ b.addEventListener('click', function(){ setCJ(b.getAttribute('data-cj')); }); })(scb[i]);
+    }
+  })();
+
+  /* ============ 10. 交互 ============ */
+  function setType(ty){
+    if (!TYPES[ty]) return;
+    S.type = ty;
+    /* 若原温度落在该器件量程的最低端（0~5 ℃），跳到该器件的常用工作点，避免“刚切换就无输出” */
+    if (S.t <= TYPES[ty].tmin + 5 || S.t > TYPES[ty].tmax) S.t = TYPES[ty].tdef;
+    S.t = clamp(S.t, TYPES[ty].tmin, TYPES[ty].tmax);
+    paint();
+  }
+  function setT(v){
+    var T = TYPES[S.type];
+    S.t = clamp(Math.round(v), T.tmin, T.tmax);
+    $('t').value = S.t;
+    paint();
+  }
+  function setWire(w){ S.wire = w; paint(); }
+  function setEps(v){ S.eps = Math.round(v*20)/20; $('eps').value = S.eps; paint(); }
+  $('t').addEventListener('input', function(){ stopDemo(); setT(+this.value); });
+  $('eps').addEventListener('input', function(){ stopDemo(); setEps(+this.value); });
+  $('tM').addEventListener('click', function(){ stopDemo(); setT(S.t - 5); });
+  $('tP').addEventListener('click', function(){ stopDemo(); setT(S.t + 5); });
+  (function(){
+    var tb = document.querySelectorAll('#segType button');
+    for (var i = 0; i < tb.length; i++){
+      (function(b){
+        b.addEventListener('click', function(){
+          stopDemo(); setType(b.getAttribute('data-type'));
+          say('<b>' + TYPES[S.type].name + '</b>：' + TYPES[S.type].hint);
+        });
+      })(tb[i]);
+    }
+    var wb = document.querySelectorAll('#segWire button');
+    for (var j = 0; j < wb.length; j++){
+      (function(b){
+        b.addEventListener('click', function(){
+          stopDemo(); setWire(b.getAttribute('data-wire'));
+          say('<b>引线制式</b>：' + (S.wire === '2' ? '二线制 2r 全部计入 R_t，指示偏高 ≈ 7.8 ℃。'
+            : (S.wire === '3' ? '三线制：两根引线分别进相邻桥臂，平衡时 r 抵消 —— 工业测温的标准接法。'
+                              : '四线制：恒流源 + 电压表，R_t = U/I，引线电阻完全不进测量回路（精密测量）。')));
+        });
+      })(wb[j]);
+    }
+  })();
+  $('reset').addEventListener('click', function(){
+    stopDemo();
+    S.type = 'rtd'; S.t = 25; S.wire = '3'; S.eps = 0.8; S.cj = 'raw';
+    $('eps').value = 0.8; $('epsOut').textContent = '0.80';
+    setType('rtd'); setT(25);
+    say('已复位：热电阻 Pt100、三线制、t = 25 ℃、ε = 0.80、热电偶冷端按不补偿演示。');
+  });
+
+  /* ============ 11. 演示脚本 ============ */
+  async function demoRtd(){
+    var tok = beginDemo('rtd');
+    S.cj = 'raw'; setType('rtd'); setWire('3'); setT(25);
+    say('【<b>热电阻 Pt100</b>】金属电阻随温升增大：R_t = R₀(1+At+Bt²)。现在 t = 25 ℃、R_t = <b>' + ptR(25).toFixed(3) +
+        ' Ω</b>；0 ℃ 时为 100.000 Ω、100 ℃ 时为 ' + ptR(100).toFixed(3) + ' Ω —— 每升高 1 ℃ 约 +0.385 Ω。');
+    if (!await sleep(3600, tok)) return;
+    if (!await tween(25, 100, 2600, setT, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('① 100 ℃：R_t = <b>' + ptR(100).toFixed(3) + ' Ω</b>（比 0 ℃ 高 38.5%）。注意曲线近似直线 —— 铂电阻线性度 &lt;1%，这是它精度高的原因。');
+    if (!await sleep(3000, tok)) return;
+    if (!await tween(100, 400, 2600, setT, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('② 400 ℃：R_t = <b>' + ptR(400).toFixed(3) + ' Ω</b>。但注意：真正的麻烦不是铂，而是<b>引线电阻</b> —— 1 Ω 引线就相当于 2.6 ℃。');
+    if (!await sleep(3400, tok)) return;
+    setWire('3'); setT(25);
+    say('③ 现在切到<b>二线制</b>看误差：两根引线各 1.5 Ω，2r = 3 Ω 全部串进 R_t 臂 → 电桥平衡时 R₃ = R_t + 2r，指示偏高约 7.8 ℃。');
+    if (!await sleep(3200, tok)) return;
+    setWire('2');
+    if (!await sleep(2400, tok)) return;
+    say('④ 改成<b>三线制</b>（图10-3）：热电阻“一端一根线、另一端两根线”，两根引线 r₁、r₂ 分别接进<b>相邻桥臂</b>，平衡式 (R_t+r)R₁ = (R₃+r)R₂ 中 r 同增同减 —— ' +
+        '取 R₁ = R₂ 即 R_t = R₃，<b>引线电阻自动抵消</b>（Δ = 0 ℃）。');
+    setWire('3');
+    if (!await sleep(4200, tok)) return;
+    say('⑤ 更彻底的是<b>四线制</b>（图10-4）：恒流源给热电阻供电，电压表跨接在 R_t 两端，R_t = U/I = 109.735 mV/1.000 mA —— 引线电阻根本不进测量回路。');
+    setWire('4');
+    if (!await sleep(3600, tok)) return;
+    setType('rtd'); setWire('3'); setT(25);
+    say('【小结】热电阻三件套：Pt100 的 R–t 关系（式10-4）、三线制消 r（式10-7/10-8）、四线制消引线（R = U/I）。');
+    if (!await sleep(2600, tok)) return;
+    endDemo();
+  }
+
+  async function demoNtc(){
+    var tok = beginDemo('ntc');
+    S.cj = 'raw'; setType('ntc'); setT(25);
+    say('【<b>NTC 热敏电阻</b>】R = R₀·e^{B(1/T − 1/T₀)}。25 ℃ 时 10 kΩ（B = 3380 K）。看珠子里的载流子：温度越高，电子-空穴对越多，粒子越密、流得越快，电阻越小。');
+    if (!await sleep(3800, tok)) return;
+    if (!await tween(25, 50, 2400, setT, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('① 50 ℃：R = <b>' + (ntcR(50)/1000).toFixed(3) + ' kΩ</b>（只剩 41.6%）。反过来用这两点就能算 B 值：B = [T₁T₂/(T₂−T₁)]·ln(R₁/R₂) = <b>' +
+        ntcB(25, 50, 1e4, ntcR(50)).toFixed(0) + ' K</b>（式10-10）。');
+    if (!await sleep(4200, tok)) return;
+    if (!await tween(50, 150, 2800, setT, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('② 150 ℃：R = <b>' + ntcR(150).toFixed(0) + ' Ω</b>！指数下降的威力 —— 温度上升 5 倍阻值掉 28 倍。α_T = −B/T² 也在变：25 ℃ 时 −3.80 %/℃、150 ℃ 时只有 −1.89 %/℃。');
+    if (!await sleep(4200, tok)) return;
+    setT(0);
+    say('③ 反过来看 0 ℃：R = <b>' + (ntcR(0)/1000).toFixed(2) + ' kΩ</b>，是 25 ℃ 的 2.8 倍 —— 低端灵敏、高端迟钝，这就是 NTC “灵而不准”。');
+    if (!await sleep(3400, tok)) return;
+    setT(25);
+    say('④ 线性化的办法：串/并联固定电阻把工作段压小，或用软件折线分段（可做到 0.1 ℃ 内）。热敏电阻强在控温、补偿、报警，精密测温还是要用铂电阻。');
+    if (!await sleep(3600, tok)) return;
+    endDemo();
+  }
+
+  async function demoTc(){
+    var tok = beginDemo('tc');
+    S.cj = 'raw'; setType('tc'); setT(100);
+    say('【<b>热电偶</b>】两种导体 A、B 接成回路，两接点有温差才有热电势（塞贝克效应），K 型 ≈ 41 μV/℃。现在热端 100 ℃、E(100,0) = <b>' +
+        tcE(100).toFixed(3) + ' mV</b>。');
+    if (!await sleep(3800, tok)) return;
+    say('① 但冷端（接线盒）在 25 ℃ 环境里，实测只有 E(100,25) = 4.096 − 1.000 = <b>' + tcRead().Em.toFixed(3) +
+        ' mV</b>，仪表按冷端 0 ℃ 查表 → 指示 ' + tcRead().tInd.toFixed(1) + ' ℃，<b>偏低 ' + Math.abs(tcRead().err).toFixed(1) + ' ℃</b>（≈ 冷端温度）。');
+    if (!await sleep(4400, tok)) return;
+    say('② 用<b>冰点槽</b>把冷端恒定在 0 ℃：E(25,0) = 0，实测 4.096 mV → 指示 100.0 ℃，误差完全消除（但只适合实验室）。');
+    setCJ('ice');
+    if (!await sleep(3800, tok)) return;
+    say('③ 现场最常用的是<b>补偿导线</b>：把冷端“搬”到仪表端 25 ℃ 恒温处，再按中间温度定律 E(T,0) = E(T,Tₙ) + E(Tₙ,0) 计算修正。注意：分度号必须匹配、极性不能接反。');
+    setCJ('wire');
+    if (!await sleep(4200, tok)) return;
+    say('④ 或者用<b>补偿电桥</b>：铜电阻臂与冷端同温，冷端升高时电桥输出 U_ab 随塞贝克系数同步增大，与热电势串联后自动抵消 —— 最常用，平衡点约 20 ℃。');
+    setCJ('bridge');
+    if (!await sleep(4200, tok)) return;
+    say('⑤ 教材算例：冷端 25 ℃、读数 20.000 mV → 加 1.000 mV 得 21.000 mV → 查表 ≈ 505 ℃；不补偿只有 484 ℃，差约 21 ℃。');
+    if (!await sleep(3800, tok)) return;
+    S.cj = 'raw'; setT(25); paint();
+    say('【小结】热电偶本体很皮实（−200~1300 ℃、微秒响应），但<b>冷端不恒定是最大误差源</b> —— 冷端五法必须记牢。');
+    if (!await sleep(3000, tok)) return;
+    endDemo();
+  }
+
+  async function demoIc(){
+    var tok = beginDemo('ic');
+    S.cj = 'raw'; setType('ic'); setT(25);
+    say('【<b>PN 结与集成温度传感器</b>】恒流下 PN 结正向压降随温升下降，≈ −2 mV/℃；现在 25 ℃、U_BE = <b>650.0 mV</b>（式10-24~10-27）。');
+    if (!await sleep(3600, tok)) return;
+    if (!await tween(25, 100, 2600, setT, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('① 100 ℃：U_BE = <b>' + (pnU(100)*1000).toFixed(1) + ' mV</b>（掉了 150 mV）。PN 结上限只有 150 ℃，而且要恒流供电 —— 这就是它不如铂电阻“皮实”的地方。');
+    if (!await sleep(3600, tok)) return;
+    setT(25);
+    say('② 更好的办法是<b>集成</b>：两只匹配三极管在不同电流密度下工作，ΔU_BE = (kT/q)·ln r 与 T <b>成正比</b>，还能消掉 I_s 的影响 → 线性好、不用冷端补偿。');
+    if (!await sleep(4200, tok)) return;
+    say('③ AD590 是电流型：输出 I = 1 μA/K × T(K)。25 ℃ = 298.15 K → <b>' + (adI(25)*1e6).toFixed(2) +
+        ' μA</b>；串 10 kΩ 电阻就得到 10 mV/K → ' + adU(25).toFixed(4) + ' V，输出阻抗 MΩ 级、可远传。');
+    if (!await sleep(4400, tok)) return;
+    if (!await tween(25, 100, 2400, setT, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('④ 100 ℃ = 373.15 K → I = <b>' + (adI(100)*1e6).toFixed(2) + ' μA</b>、U = ' + adU(100).toFixed(4) + ' V。比例关系严格成立（1 μA/K），这就是集成温度传感器的“准”。');
+    if (!await sleep(4000, tok)) return;
+    setT(25);
+    say('【小结】PN 结 −2 mV/℃（便宜但有上限）、集成式 1 μA/K 或 10 mV/K（线性好、免冷端补偿）、DS18B20/TMP117 直接给数字量。');
+    if (!await sleep(2800, tok)) return;
+    endDemo();
+  }
+
+  async function demoIr(){
+    var tok = beginDemo('ir');
+    S.cj = 'raw'; setType('ir'); setEps(0.8); setT(400);
+    say('【<b>热辐射测温</b>】非接触、不破坏被测温度场。被测物真实温度 400 ℃（673.15 K）、发射率 ε = 0.80：M = εσT⁴ = <b>' +
+        irM(400, 0.8).toFixed(0) + ' W/m²</b>（黑体 11643 W/m²）。');
+    if (!await sleep(4200, tok)) return;
+    say('① 仪器是按黑体（ε = 1）标定的，拿实测 M 反查温度只得 <b>' + (irTapp(400, 0.8) - 273.15).toFixed(1) +
+        ' ℃</b> —— 这就是「表观温度」，比真实温度低了 ' + (kOf(400) - irTapp(400, 0.8)).toFixed(1) + ' K。红外测温永远只给表观温度。');
+    if (!await sleep(4400, tok)) return;
+    say('② 把 ε 拖到 0.30（抛光金属表面）：表观温度掉到 <b>' + (irTapp(400, 0.3) - 273.15).toFixed(1) +
+        ' ℃</b>！同样是 400 ℃ 的物体，读数和真实温度差了 ' + (400 - (irTapp(400, 0.3) - 273.15)).toFixed(0) + ' ℃ —— ε 是最大误差源。');
+    if (!await tween(0.8, 0.3, 2600, setEps, tok)) return;
+    if (!await sleep(3000, tok)) return;
+    say('③ 令 ε = 1（黑体/涂黑胶带 0.95）：表观温度回到真实值 —— 这就是现场测温要在被测面上贴黑胶带、或用比色法（两波长之比可约掉 ε）的原因。');
+    if (!await tween(0.3, 1, 2400, setEps, tok)) return;
+    if (!await sleep(2400, tok)) return;
+    say('④ 曲线：M ∝ T⁴ 的强非线性无法回避，ε 只把整条曲线按比例压低。所以辐射测温精度比接触式低一个数量级，但量程上限可达 3000 ℃。');
+    if (!await tween(1, 0.8, 1600, setEps, tok)) return;
+    if (!await sleep(2600, tok)) return;
+    setEps(0.8); setT(25);
+    say('【小结】光学高温计（亮度法，700 ℃ 以上、1.5 级）误差最大；比色温度计可约掉 ε 最准；红外测温仪毫秒级、适合电子体温计与轴温监测。');
+    if (!await sleep(3000, tok)) return;
+    endDemo();
+  }
+
+  async function demoPoints(){
+    var tok = beginDemo('pts');
+    say('【<b>本章要点</b>】共 ' + PTS_TEXT.length + ' 条，逐条看一遍，也可点编号按钮单独回看。');
+    if (!await sleep(2000, tok)) return;
+    for (var i = 0; i < PTS_TEXT.length; i++){
+      setPt(i);
+      if (!await sleep(PTS_TEXT[i].length > 130 ? 4200 : 3200, tok)) return;
+    }
+    setPt(-1);
+    endDemo();
+  }
+
+  /* ============ 12. 键盘 ============ */
+  document.addEventListener('keydown', function(e){
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input') return;
+    if (e.key === 'ArrowLeft'){ stopDemo(); setT(S.t - 5); e.preventDefault(); }
+    else if (e.key === 'ArrowRight'){ stopDemo(); setT(S.t + 5); e.preventDefault(); }
+    else if (e.key === '1'){ stopDemo(); setType('rtd'); }
+    else if (e.key === '2'){ stopDemo(); setType('ntc'); }
+    else if (e.key === '3'){ stopDemo(); setType('tc'); }
+    else if (e.key === '4'){ stopDemo(); setType('ic'); }
+    else if (e.key === '5'){ stopDemo(); setType('ir'); }
+    else if (e.key === 'w' || e.key === 'W'){ stopDemo(); setWire(({ '2':'3', '3':'4', '4':'2' })[S.wire]); }
+    else if (e.key === 'c' || e.key === 'C'){ setCJ(({ raw:'ice', ice:'wire', wire:'bridge', bridge:'raw' })[S.cj]); }
+    else if (e.key === ' '){
+      e.preventDefault();
+      if (playingKey){ stopDemo(); say('演示已暂停。'); }
+      else { var k = { rtd:'rtd', ntc:'ntc', tc:'tc', ic:'ic', ir:'ir' }[S.type]; if (DEMOS[k] && DEMOS[k].fn) DEMOS[k].fn(); }
+    }
+    else if (e.key === 'r' || e.key === 'R'){ $('reset').click(); }
+  });
+
+
+  DEMOS.rtd = { btn:'playRtd', label:'▶ 热电阻三线制', fn:demoRtd };
+  DEMOS.ntc = { btn:'playNtc', label:'▶ 热敏电阻 R–T', fn:demoNtc };
+  DEMOS.tc  = { btn:'playTc',  label:'▶ 热电偶与冷端', fn:demoTc };
+  DEMOS.ic  = { btn:'playIc',  label:'▶ PN结与集成',   fn:demoIc };
+  DEMOS.ir  = { btn:'playIr',  label:'▶ 热辐射测温',   fn:demoIr };
+  DEMOS.pts = { btn:'ptsPlay', label:'▶ 巡览要点',     fn:demoPoints };
+  bindDemos();
+
+  /* ============ 启动（URL 参数必须在第一次 paint 之前写入 S） ============ */
+  var q = new URLSearchParams(location.search);
+  if (q.has('type') && TYPES[q.get('type')]) S.type = q.get('type');
+  if (q.has('t')) S.t = clamp(parseFloat(q.get('t')) || 0, TYPES[S.type].tmin, TYPES[S.type].tmax);
+  else S.t = TYPES[S.type].tdef;
+  if (q.has('wire') && ['2','3','4'].indexOf(q.get('wire')) >= 0) S.wire = q.get('wire');
+  if (q.has('eps')) S.eps = clamp(parseFloat(q.get('eps')) || 0.8, 0.1, 1);
+  if (q.has('cj') && CJ_INFO[q.get('cj')]) S.cj = q.get('cj');
+  if (q.has('speed')) SPEED = clamp(parseFloat(q.get('speed')) || 1, 0.4, 2.5);
+  $('eps').value = S.eps; $('epsOut').textContent = S.eps.toFixed(2);
+  $('speed').value = SPEED; $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  $('t').value = S.t;
+  paint();
+  initDots();
+  runDots();
+  var AUTO = { '1':'rtd', '2':'ntc', '3':'tc', '4':'ic', '5':'ir' };
+  if (AUTO[q.get('auto')] && DEMOS[AUTO[q.get('auto')]].fn) DEMOS[AUTO[q.get('auto')]].fn();
+
+})();
+</script>
+
+<script>
+/* ==================== 板块布局引擎：拖动 / 缩放 / 记忆 ====================
+   由 _build/build.js 注入；章节的面板清单 / 记忆键 / 默认布局在构建时替换。 */
+(function(){
+  "use strict";
+  var BOARD = document.getElementById('board');
+  var COLS  = ['colA','colB','colC'];
+  var IDS   = ["ctrlCard","ptsCard","tempCard","cjCard","readCard","fmlCard","curveCard"];
+  var MINZ = 0.7, MAXZ = 1.6, MINCOL = 260;
+  var KEY = 'jh-temp-layout-v1';
+  var DEF = {"weight":{"colA":3,"colB":5.3,"colC":3.7},"col":{"colA":["ctrlCard","ptsCard"],"colB":["tempCard","cjCard","readCard"],"colC":["fmlCard","curveCard"]},"zoom":{}};
+  var L = null, focused = null;
+  function el(id){ return document.getElementById(id); }
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function load(){
+    var d;
+    try { d = JSON.parse(localStorage.getItem(KEY)); } catch (e) { d = null; }
+    if (!d || !d.col) return clone(DEF);
+    COLS.forEach(function(c){ if (!d.col[c]) d.col[c] = []; });
+    var seen = {};
+    COLS.forEach(function(c){
+      d.col[c] = d.col[c].filter(function(id){ if (IDS.indexOf(id) < 0 || seen[id]) return false; seen[id] = 1; return true; });
+    });
+    IDS.forEach(function(id){ if (!seen[id]){ d.col.colC.push(id); seen[id] = 1; } });
+    d.weight = d.weight || clone(DEF.weight);
+    d.zoom = d.zoom || {};
+    return d;
+  }
+  L = load();
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(L)); } catch (e) {} }
+  function render(){
+    COLS.forEach(function(cid){
+      var col = el(cid);
+      L.col[cid].forEach(function(pid){ var p = el(pid); if (p) col.appendChild(p); });
+      col.style.flexGrow = L.weight[cid] || 1;
+    });
+  }
+  function applyZoom(id){
+    var p = el(id); if (!p) return;
+    var b = p.querySelector('.pbody'); if (!b) return;
+    b.style.zoom = L.zoom[id] || 1;
+  }
+  function applyAll(){ render(); IDS.forEach(applyZoom); }
+
+  function startDrag(ev, p){
+    if (ev.button) return;
+    var x0 = ev.clientX, y0 = ev.clientY, moved = false, lastTarget = null;
+    function move(e){
+      if (!moved){
+        if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) < 6) return;
+        moved = true;
+        document.body.classList.add('layout-dragging');
+        p.classList.add('sorting');
+      }
+      var col = null, i, r;
+      for (i = 0; i < COLS.length; i++){
+        r = el(COLS[i]).getBoundingClientRect();
+        if (e.clientX >= r.left - 6 && e.clientX <= r.right + 6){ col = COLS[i]; break; }
+      }
+      if (!col) col = (e.clientX < BOARD.getBoundingClientRect().left + BOARD.clientWidth/2) ? COLS[0] : COLS[COLS.length - 1];
+      var list = L.col[col].filter(function(id){ return id !== p.id; });
+      var idx = list.length, j, q, qr;
+      for (j = 0; j < list.length; j++){
+        q = el(list[j]); if (!q) continue;
+        qr = q.getBoundingClientRect();
+        if (e.clientY < qr.top + qr.height/2){ idx = j; break; }
+      }
+      var key = col + ':' + idx;
+      if (key === lastTarget) return;
+      lastTarget = key;
+      COLS.forEach(function(c2){ L.col[c2] = L.col[c2].filter(function(id){ return id !== p.id; }); });
+      L.col[col].splice(idx, 0, p.id);
+      render();
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', up);
+      document.body.classList.remove('layout-dragging');
+      p.classList.remove('sorting');
+      if (moved) save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
+  }
+  function startSplit(ev, sp){
+    ev.preventDefault();
+    var left = el(sp.getAttribute('data-left')), right = el(sp.getAttribute('data-right'));
+    var total = left.offsetWidth + right.offsetWidth;
+    var wl = L.weight[left.id] || 1, wr = L.weight[right.id] || 1, sum = wl + wr;
+    var x0 = ev.clientX, pxPerWeight = total/sum;
+    document.body.classList.add('layout-dragging');
+    function move(e){
+      var d = (e.clientX - x0)/pxPerWeight;
+      var nl = Math.max(MINCOL/(total/sum), Math.min(sum - MINCOL/(total/sum), wl + d));
+      left.style.flexGrow = nl; right.style.flexGrow = sum - nl;
+      L.weight[left.id] = nl; L.weight[right.id] = sum - nl;
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.body.classList.remove('layout-dragging');
+      save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  }
+  function zoomPanel(id, d){
+    var z = Math.round(((L.zoom[id] || 1) + d)*100)/100;
+    L.zoom[id] = Math.max(MINZ, Math.min(MAXZ, z));
+    applyZoom(id); save();
+  }
+  function toggleFocus(id){
+    var p = el(id); if (!p) return;
+    if (focused === id){ p.classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    else {
+      if (focused) el(focused).classList.remove('focused');
+      p.classList.add('focused'); document.body.classList.add('has-focus'); focused = id;
+    }
+  }
+  function reset(){
+    L = clone(DEF);
+    if (focused){ el(focused).classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    applyAll(); save();
+  }
+  var back = document.createElement('div');
+  back.id = 'focusBack';
+  back.addEventListener('click', function(){ if (focused) toggleFocus(focused); });
+  document.body.appendChild(back);
+
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var head = p.querySelector('.phead');
+    if (head){
+      head.addEventListener('pointerdown', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        e.preventDefault(); startDrag(e, p);
+      });
+      head.addEventListener('dblclick', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        toggleFocus(id);
+      });
+    }
+    p.querySelectorAll('.ptool').forEach(function(b){
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        var a = b.getAttribute('data-act');
+        if (a === 'in') zoomPanel(id, 0.08);
+        else if (a === 'out') zoomPanel(id, -0.08);
+        else if (a === 'max') toggleFocus(id);
+      });
+    });
+  });
+  document.querySelectorAll('.vsplit').forEach(function(sp){
+    sp.addEventListener('pointerdown', function(e){ startSplit(e, sp); });
+  });
+  /* ---------- 折叠：滑过上方自动折叠，回到可视区自动展开；可手动锁定 ---------- */
+  function setFold(p, on){
+    p.classList.toggle('folded', on);
+    var btn = p.querySelector('.ptool[data-act="fold"]');
+    if (btn) btn.textContent = on ? '▸' : '▾';
+  }
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var tools = p.querySelector('.ptools');
+    if (!tools) return;
+    var fb = document.createElement('button');
+    fb.className = 'ptool';
+    fb.setAttribute('data-act', 'fold');
+    fb.title = '折叠 / 展开本板块（手动折叠后不会被自动展开）';
+    fb.textContent = '▾';
+    tools.insertBefore(fb, tools.firstChild);
+    fb.addEventListener('click', function(e){
+      e.stopPropagation();
+      var folded = p.classList.contains('folded');
+      setFold(p, !folded);
+      if (!folded) p.setAttribute('data-manual', '1'); else p.removeAttribute('data-manual');
+    });
+  });
+  var ticking = false;
+  function autoFold(){
+    ticking = false;
+    var vh = window.innerHeight || 900;
+    IDS.forEach(function(id){
+      var p = el(id); if (!p) return;
+      if (!p.parentNode || p.parentNode.id !== 'colB') return;    /* 只有中间列参与自动折叠（左右两列固定不动） */
+      var r = p.getBoundingClientRect();
+      if (r.bottom < 90){                                          /* 整块滑到上方之外 → 收起 */
+        if (!p.classList.contains('folded')) setFold(p, true);
+      } else if (r.top < vh - 30 && r.bottom > 60 && !p.hasAttribute('data-manual')){
+        if (p.classList.contains('folded')) setFold(p, false);      /* 回到可视区 → 展开 */
+      }
+    });
+  }
+  function onScrollOrWheel(){
+    if (!ticking){ ticking = true; requestAnimationFrame(autoFold); }
+  }
+  window.addEventListener('scroll', onScrollOrWheel, { passive:true });
+  window.addEventListener('wheel', onScrollOrWheel, { passive:true });
+  window.addEventListener('touchmove', onScrollOrWheel, { passive:true });
+  window.addEventListener('resize', function(){ if (window.__repack) window.__repack(); });
+  setTimeout(autoFold, 400);
+  window.__autoFold = autoFold;
+
+  var lr = document.getElementById('layReset');
+  if (lr) lr.addEventListener('click', reset);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && focused) toggleFocus(focused); });
+  window.addEventListener('resize', function(){ IDS.forEach(applyZoom); });
+  window.__repack = function(){};
+  applyAll();
+  window.addEventListener('load', applyAll);
+})();
+
+</script>
+</body>
+</html>

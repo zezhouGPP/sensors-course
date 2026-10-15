@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第12章 波式及射线式传感器 · 动态演示｜传感器原理与技术</title>
+<style>
+/* =====================================================================
+   公共样式（各章通用）· 由 _build/build.js 注入到每个单文件 HTML 的样式表顶部
+   与第4章保持同一套类名与观感；章节特有的语义色 / 版式写在章节模块的 extraCss 里
+   ===================================================================== */
+:root{
+  --jhu:#0e4a8e; --jhu2:#0a2f5c; --ink:#12233a; --muted:#5b6b80;
+  --line:#d5dfec; --bg:#eef3f9; --card:#ffffff;
+  --flux:#0d8b7f;      /* 磁通 / 场线（第4章起沿用） */
+  --cu:#c2703a;        /* 线圈 / 铜 */
+  --iron:#4b6b8f;      /* 铁芯 / 铁磁体 */
+  --gapm:#e08a1e;      /* 气隙 / 有效量 */
+  --eddy:#7c3aed;      /* 涡流 / 强调（紫） */
+  --hot:#d94a3d; --ok:#0f9d58;
+  --grid:rgba(14,74,142,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Source Han Sans SC","Hiragino Sans GB",system-ui,sans-serif;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    var(--bg);
+  color:var(--ink); font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+header{
+  background:linear-gradient(120deg,var(--jhu) 0%,var(--jhu2) 100%);
+  color:#fff; padding:8px 24px; display:flex; align-items:center; gap:16px;
+  box-shadow:0 3px 14px rgba(10,47,92,.28);
+}
+header h1{font-size:22px; margin:0; letter-spacing:1px; font-weight:700}
+header .sub{font-size:13px; opacity:.9; border-left:1px solid rgba(255,255,255,.45); padding-left:13px}
+header .right{margin-left:auto; text-align:right; font-size:12.5px; opacity:.92; line-height:1.3}
+header .right b{font-size:15px; letter-spacing:2px}
+#laybar{display:flex; align-items:center; gap:10px; padding:3px 20px; font-size:12px; color:#41566f;
+        background:#e4edf8; border-bottom:1px solid #cfdcec}
+#laybar button{border:1px solid #a9c1dd; background:#fff; color:var(--jhu); border-radius:7px;
+               font-size:12px; font-weight:700; padding:2px 10px; cursor:pointer; font-family:inherit}
+#laybar button:hover{background:#f2f7fd}
+#laybar .hint{color:#6b7d92}
+#boardWrap{padding:6px 14px 2px}
+#board{display:flex; align-items:flex-start}
+.col{display:flex; flex-direction:column; gap:6px; min-width:0; flex-grow:1; flex-basis:0}
+.colhead{font-size:11.5px; font-weight:700; color:#8296ad; letter-spacing:.4px; padding:0 3px 2px; border-bottom:1px dashed #dbe5f0}
+.vsplit{flex:0 0 13px; align-self:stretch; cursor:col-resize; position:relative; touch-action:none}
+.vsplit::before{content:""; position:absolute; left:5.5px; top:8px; bottom:8px; width:2px; border-radius:2px; background:#cfdcec}
+.vsplit:hover::before{background:var(--jhu); width:3px; left:5px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:13px;
+      box-shadow:0 2px 10px rgba(18,35,58,.06); padding:5px 9px}
+.card h2{margin:0 0 4px; font-size:14.5px; color:var(--jhu); font-weight:700; display:flex; align-items:center; gap:7px}
+.card h2::before{content:""; width:4px; height:15px; border-radius:3px; background:var(--jhu)}
+.card h2 small{font-weight:400; color:var(--muted); font-size:12px}
+.panel{position:relative; box-sizing:border-box}
+.panel > .phead{display:flex; align-items:center; gap:6px; cursor:move; touch-action:none; user-select:none; margin:-1px 0 4px}
+.panel > .phead h2{margin:0; flex:1; min-width:0; cursor:move}
+.ptools{display:flex; gap:3px; flex:none}
+.ptool{width:21px; height:21px; padding:0; line-height:1; border:1px solid var(--line); background:#fff;
+       color:var(--jhu); border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit}
+.ptool:hover{background:#eef4fc; border-color:#9fbedd}
+.panel.sorting{opacity:.6; outline:2px dashed var(--jhu); outline-offset:2px; pointer-events:none}
+.panel.focused{position:fixed; left:14px; right:14px; top:80px; bottom:14px; z-index:300; overflow:auto;
+               box-shadow:0 18px 50px rgba(10,47,92,.38); border-color:var(--jhu)}
+#focusBack{position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(10,30,55,.34); z-index:290; display:none}
+body.has-focus #focusBack{display:block}
+body.layout-dragging{user-select:none}
+svg{display:block; width:100%; height:auto}
+.tiny{font-size:12px; fill:var(--muted); color:var(--muted)}
+/* ---- 控件 ---- */
+.ctrl{display:flex; flex-direction:column; gap:2px; margin-bottom:2px}
+.ctrl .row{display:flex; align-items:center; gap:7px}
+.ctrl .name{font-size:12.8px; color:var(--muted); width:118px; flex:none}
+.ctrl .name b{color:var(--ink); font-size:14px}
+.ctrl output{font-size:18px; font-weight:800; min-width:96px; text-align:right; font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none; appearance:none; height:8px; border-radius:5px; background:#dce6f2; outline:none; flex:1; min-width:70px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:21px; height:21px; border-radius:50%;
+      background:#fff; border:3px solid var(--jhu); cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.seg{display:flex; gap:6px; flex-wrap:wrap}
+.seg button{flex:1 1 0; min-width:96px; padding:5px 8px; border-radius:9px; border:1px solid var(--line);
+            background:#fff; cursor:pointer; font-size:13px; font-weight:700; color:#33506f; font-family:inherit; line-height:1.3}
+.seg button small{display:block; font-weight:400; font-size:11px; color:var(--muted)}
+.seg button:hover{border-color:#9fbedd}
+.seg button.on{background:var(--jhu); border-color:var(--jhu); color:#fff}
+.seg button.on small{color:rgba(255,255,255,.85)}
+/* 紧凑小按钮（章节里的型式/模式细分按钮） */
+.seg.tight button{min-width:66px; flex:1 1 66px; padding:3px 4px; font-size:11.5px; line-height:1.25}
+.seg.tight button small{font-size:10px}
+.step{border:1px solid var(--line); background:#fff; color:var(--jhu); width:28px; height:28px;
+      border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; line-height:1}
+.actions{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap}
+.actions button{flex:1 1 92px; padding:5px 4px; border-radius:9px; border:1px solid var(--jhu);
+                background:var(--jhu); color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;
+                font-family:inherit; white-space:nowrap}
+.actions button.ghost{background:#fff; color:var(--jhu)}
+.actions button.running{background:var(--hot); border-color:var(--hot); color:#fff}
+.actions button:hover{filter:brightness(1.07)}
+.narrate{margin-top:4px; border-left:5px solid var(--flux); background:#f2fbf9; border-radius:0 10px 10px 0;
+         padding:3px 10px; font-size:12.4px; line-height:1.34; min-height:26px; color:#0a5f57}
+/* ---- 读数 ---- */
+.big{display:flex; align-items:baseline; gap:9px; background:linear-gradient(90deg,#f2f7ff,#fff);
+     border:1px solid #d9e5f5; border-radius:12px; padding:3px 12px}
+.big .cap{font-size:13px; color:var(--muted); margin-right:auto}
+.big .num{font-size:23px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
+.big .unit{font-size:15px; font-weight:700; color:var(--muted)}
+.kv{display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:5px}
+.kv .box{border:1px dashed var(--line); border-radius:9px; padding:2px 6px; font-size:10.5px; color:var(--muted)}
+.kv .box b{display:block; font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:1px}
+.fine{font-size:10.4px; color:var(--muted); margin-top:5px; line-height:1.5; font-variant-numeric:tabular-nums}
+.fine b{color:var(--ink)}
+/* ---- 比例条 / 图例 ---- */
+.rmbar{display:flex; height:15px; border-radius:5px; overflow:hidden; border:1px solid var(--line); background:#f4f8fd; margin-top:3px}
+.rmbar i{display:block; height:100%}
+.legend{display:flex; gap:8px; flex-wrap:wrap; font-size:10.4px; color:var(--muted); margin-top:1px}
+.legend i{display:inline-block; width:14px; height:9px; border-radius:2px; margin-right:5px}
+/* ---- 公式 ---- */
+.fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:10.9px; line-height:1.22; color:#16283d}
+.fml .row{display:block; border-bottom:1px dashed #e7eef7; padding:0}
+.fml .row:last-child{border-bottom:none}
+.fml .tag{display:inline-block; font-family:"Microsoft YaHei",sans-serif; font-size:11px; color:#fff;
+          background:var(--jhu); border-radius:5px; padding:0 6px; margin-right:5px; vertical-align:1px}
+.fml .tag.g{background:var(--gapm)} .fml .tag.f{background:var(--flux)} .fml .tag.v{background:var(--eddy)}
+.fml b{color:var(--hot)}
+.fml .note{font-family:"Microsoft YaHei",sans-serif; font-size:10.8px; color:var(--muted); line-height:1.4; margin-top:2px}
+.frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.88em; line-height:1.02; margin:0 .14em}
+.frac i{font-style:normal; padding:0 .3em}
+.frac b{font-weight:400; color:inherit; border-top:1.4px solid currentColor; padding:0 .3em}
+/* ---- 要点 ---- */
+ol.points{margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:4px}
+ol.points li{border:1px solid var(--line); border-left:4px solid #c8d6e6; border-radius:0 9px 9px 0;
+             padding:0 7px; font-size:10.9px; line-height:1.28; color:#3c5068; background:#fbfdff; transition:.25s}
+ol.points li.on{border-left-color:var(--ok); background:#f2fbf5; color:var(--ink); box-shadow:0 0 0 2px rgba(15,157,88,.12)}
+ol.points li .hl{color:var(--ok); font-weight:700}
+.hint{font-size:12px; color:var(--muted); margin-top:5px}
+footer{padding:3px 18px 5px; font-size:11px; color:var(--muted); line-height:1.5}
+footer b{color:var(--jhu)}
+.actions button.ptsB{flex:0 0 26px; padding:2px 0; font-size:11px; border-radius:6px}   /* 要点编号按钮：特异性需高于 .actions button */
+/* 左右两列都吸附固定；只有中间列（结构+读数）随页面滚动 */
+#colA, #colC{position:sticky; top:4px; align-self:flex-start;
+             max-height:calc(100vh - 10px); overflow-y:auto; overscroll-behavior:contain}
+#colA::-webkit-scrollbar, #colC::-webkit-scrollbar{width:6px}
+#colA::-webkit-scrollbar-thumb, #colC::-webkit-scrollbar-thumb{background:#c3d3e6; border-radius:3px}
+/* 中间列底部留白：让最后一张卡片也能滚动到屏幕中间 */
+#colB{padding-bottom:52vh}
+.panel > .pbody{max-height:2600px; overflow:hidden; transition:max-height .22s ease, opacity .18s ease}
+.panel.folded > .pbody{max-height:0 !important; opacity:0}
+.panel.folded{border-color:#bcd0e5; background:#f8fbff}
+.panel.folded > .phead h2{color:#5b6b80}
+.ptool[data-act="fold"]{font-size:11px}
+.readlabel{font-size:12.5px; font-weight:700; color:#5b6b80; margin:7px 0 3px; padding-top:6px; border-top:1px dashed #dbe5f0}
+.readwrap svg{max-height:196px}
+.pbody > svg{max-height:300px}
+.pbody > svg + svg{max-height:196px}
+@media (max-width:1200px){ #boardWrap{min-width:1180px} }
+
+  /* ---- 第12章语义色 ---- */
+  :root{ --wave:#0e7fa8; --gamma:#c2185b; --mw:#6a3fc0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>第 12 章 波式及射线式传感器</h1>
+  <div class="sub">超声波式（换能器 / 回波测厚）· 微波式 · 射线式（γ 射线测厚） | 动态演示</div>
+  <div class="right"><b>江汉大学</b><br>传感器原理与技术</div>
+</header>
+<div id="laybar">
+  <span style="font-weight:700;color:#0e4a8e">板块布局</span>
+  <button id="layReset">↺ 恢复默认（一屏）</button>
+  <span class="hint"><b>左右两列固定不动</b>（左＝型式与输入量＋要点，右＝数据/曲线/公式），只有<b>中间列</b>随页面滚动；每块标题栏的 <b>▾</b> 可折叠该板块；<b>滚轮下滑时滑过上方的那几块会自动收起、滚回来自动展开</b>（手动折起的不会被自动展开）；拖动<b>标题栏</b>可换列换位、拖<b>竖条</b>调列宽、<b>＋ －</b> 缩放、<b>⛶</b> 全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
+</div>
+
+<div id="boardWrap">
+<main id="board">
+
+  <!-- ================= 左列 ================= -->
+  <div class="col" id="colA">
+    <div class="colhead">① 型式与输入量 · 本章要点</div>
+
+
+    <section class="card panel" id="ctrlCard">
+      <div class="phead">
+        <h2>型式与输入量</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="ctrl">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px" id="typeName"><b>波式型式</b></span>
+          <div class="seg" id="segType" style="flex:1">
+            <button data-type="us" class="on">超声波式<small>机械波 · 换能器</small></button>
+            <button data-type="mw">微波式<small>电磁波 · 反射/透射</small></button>
+            <button data-type="ry">射线式<small>γ 电离辐射</small></button>
+          </div>
+        </div>
+        <div class="hint" id="typeHint">超声波式：压电换能器（逆压电发射 / 正压电接收）；脉冲回波法单探头兼收发、有盲区，穿透法双探头对置、无盲区。</div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b id="xName">工件厚度 δ</b><br><span class="tiny" id="xTxt">钢件纵波 c = 5900 m/s</span></span>
+          <button class="step" id="xM" title="减小">−</button>
+          <input type="range" id="x" min="0" max="100" step="1" value="25">
+          <button class="step" id="xP" title="增大">＋</button>
+          <output id="xOut">10.75 mm</output>
+        </div>
+      </div>
+      <div class="ctrl">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>工作方式</b><br><span class="tiny" id="modeNote">超声波式：测回波时间</span></span>
+          <div class="seg tight" id="segMode" style="flex:1">
+            <button data-mode="m0" class="on"><span id="mode0T">脉冲回波法</span><small id="mode0S">单探头兼收发</small></button>
+            <button data-mode="m1"><span id="mode1T">穿透法</span><small id="mode1S">双探头对置</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="ctrl">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>射线源</b><br><span class="tiny" id="srcTxt">仅射线式使用；源不同 → μ 不同</span></span>
+          <div class="seg tight" id="segSrc" style="flex:1">
+            <button data-src="cs" class="on">¹³⁷Cs<small>γ 0.66 MeV · 30.2 a</small></button>
+            <button data-src="co">⁶⁰Co<small>γ 1.25 MeV · 5.27 a</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="playEcho" class="ghost">▶ 超声回波测厚</button>
+        <button id="playTrans" class="ghost">▶ 穿透法与耦合</button>
+        <button id="playMw" class="ghost">▶ 微波反射/透射</button>
+        <button id="playRay" class="ghost">▶ γ 射线测厚</button>
+        <button id="reset" class="ghost" style="flex:0 0 58px">↺ 复位</button>
+      </div>
+      <div class="ctrl" style="margin-top:5px">
+        <div class="row">
+          <span class="name"><b>演示速度</b><br><span class="tiny">0.4× 慢 ～ 2.5× 快</span></span>
+          <input type="range" id="speed" min="0.4" max="2.5" step="0.1" value="1">
+          <output id="speedOut">1.0×</output>
+        </div>
+      </div>
+      <div class="narrate" id="narration">初始状态：超声波式 · 脉冲回波法，工件厚度 δ = 10.75 mm（钢，c = 5900 m/s）。四个演示按钮分别讲：超声回波测厚 / 穿透法与耦合 / 微波反射与透射 / γ 射线测厚；右边的「▶ 巡览要点」把 10 条要点过一遍。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="ptsCard">
+      <div class="phead">
+        <h2>本章要点</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="actions" style="margin-top:0">
+        <button id="ptsPlay" class="ghost" style="flex:0 0 98px">▶ 巡览要点</button>
+        <button id="ptsB0" class="ghost ptsB">1</button><button id="ptsB1" class="ghost ptsB">2</button>
+        <button id="ptsB2" class="ghost ptsB">3</button><button id="ptsB3" class="ghost ptsB">4</button>
+        <button id="ptsB4" class="ghost ptsB">5</button><button id="ptsB5" class="ghost ptsB">6</button>
+        <button id="ptsB6" class="ghost ptsB">7</button><button id="ptsB7" class="ghost ptsB">8</button>
+        <button id="ptsB8" class="ghost ptsB">9</button><button id="ptsB9" class="ghost ptsB">10</button>
+      </div>
+      <ol class="points" id="points"></ol>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colA" data-right="colB" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 中列 ================= -->
+  <div class="col" id="colB">
+    <div class="colhead">② 结构动态 ＋ 输出读数（成对显示）</div>
+
+
+    <section class="card panel" id="stCard">
+      <div class="phead">
+        <h2>结构动态 <small id="stSub">超声换能器 · 脉冲回波测厚（δ = c(t−t₀)/2）</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="st" viewBox="0 0 700 320" role="img" aria-label="波式及射线式传感器结构动态">
+        <!-- ============ (1) 超声：脉冲回波测厚（双晶直探头 + 延迟块） ============ -->
+        <g id="stUsEcho">
+          <text x="140" y="14" text-anchor="end" font-size="11.5" font-weight="700" fill="#33506f">双晶直探头</text>
+          <text x="140" y="30" text-anchor="end" font-size="10.5" fill="#5b6b80">逆压电发射</text>
+          <text x="140" y="46" text-anchor="end" font-size="10.5" fill="#5b6b80">正压电接收</text>
+          <text x="140" y="66" text-anchor="end" font-size="10.5" fill="var(--flux)">耦合剂</text>
+          <rect x="146" y="18" width="188" height="46" rx="8" fill="#e8eef7" stroke="#7d8fa6" stroke-width="1.4"/>
+          <rect x="160" y="26" width="52" height="13" fill="var(--gapm)" opacity=".85"/>
+          <rect x="268" y="26" width="52" height="13" fill="var(--efield)" opacity=".85"/>
+          <text x="186" y="36" text-anchor="middle" font-size="10" font-weight="700" fill="#5a3c00">发射 T</text>
+          <text x="294" y="36" text-anchor="middle" font-size="10" font-weight="700" fill="#0b3b6f">接收 R</text>
+          <rect x="160" y="41" width="160" height="19" fill="#cfe0f0" stroke="#9fb8d4" stroke-width="1"/>
+          <text x="240" y="55" text-anchor="middle" font-size="10.5" font-weight="700" fill="#33506f">延迟块（t₀ = 0.80 μs）</text>
+          <rect x="160" y="61" width="160" height="5" fill="var(--flux)" opacity=".75"/>
+          <rect id="usWork" x="140" y="67" width="200" height="120" fill="#eef3f9" stroke="#4b6b8f" stroke-width="1.6"/>
+          <text x="150" y="82" font-size="10.5" fill="#5b6b80">钢件（上表面）</text>
+          <line id="usBot" x1="140" y1="187" x2="340" y2="187" stroke="var(--hot)" stroke-width="2.6"/>
+          <text id="usBotTxt" x="240" y="201" text-anchor="middle" font-size="11" font-weight="700" fill="var(--hot)">底面（钢/空气界面，反射率≈1）</text>
+          <circle id="usFlash" cx="240" cy="187" r="7" fill="var(--hot)" opacity="0"/>
+          <g id="wpkE" transform="translate(212,90)"><path d="M0,-16 Q13,-12 0,-8 Q-13,-4 0,0 Q13,4 0,8 Q-13,12 0,16" fill="none" stroke="var(--gapm)" stroke-width="2.8"/></g>
+          <line id="usDim" x1="356" y1="67" x2="356" y2="187" stroke="var(--gapm)" stroke-width="2.4"/>
+          <line x1="349" y1="67" x2="363" y2="67" stroke="var(--gapm)" stroke-width="2.4"/>
+          <line id="usDimB" x1="349" y1="187" x2="363" y2="187" stroke="var(--gapm)" stroke-width="2.4"/>
+          <text id="usDimTxt" x="368" y="131" font-size="11.5" font-weight="700" fill="var(--gapm)">δ = 10.75 mm</text>
+          <text x="456" y="40" font-size="12" font-weight="700" fill="#0e4a8e">回波时间轴（A 扫描）</text>
+          <rect x="456" y="46" width="234" height="164" rx="7" fill="#fbfdff" stroke="#d5dfec"/>
+          <line x1="474" y1="190" x2="682" y2="190" stroke="#9fb2c8" stroke-width="1.5"/>
+          <line x1="474" y1="190" x2="474" y2="58" stroke="#9fb2c8" stroke-width="1.5"/>
+          <g id="usTicks"></g>
+          <path id="blipS" d="" fill="#233b57"/>
+          <path id="blipE" d="" fill="var(--hot)"/>
+          <path id="blipE2" d="" fill="var(--gapm)"/>
+          <path id="blipE3" d="" fill="#c9a227"/>
+          <line id="echoScan" x1="474" y1="58" x2="474" y2="190" stroke="var(--hot)" stroke-width="1.4" opacity=".7"/>
+          <text id="blipSTxt" x="478" y="76" font-size="10" fill="#233b57">始波</text>
+          <text id="blipETxt" x="531" y="126" text-anchor="middle" font-size="10" font-weight="700" fill="var(--hot)">底波</text>
+          <text id="blipE2Txt" x="589" y="142" text-anchor="middle" font-size="10" fill="#8a6100">二次底波</text>
+          <text id="blipE3Txt" x="620" y="152" text-anchor="middle" font-size="10" fill="#8a7300">三次底波</text>
+          <text id="usEchoOut" x="456" y="230" font-size="12.5" font-weight="700" fill="#0e4a8e">t = 2δ/c = 3.64 μs</text>
+          <text id="usT0Out" x="456" y="248" font-size="11" fill="#5b6b80">含延迟块 t₀ = 0.80 μs → 总时间 4.44 μs</text>
+          <text id="usNote" x="456" y="264" font-size="10.5" fill="#94a3b8">薄件时底波并入始波 = 近表面盲区；1 μs 计时误差在钢中对应 2.95 mm</text>
+        </g>
+        <!-- ============ (2) 超声：穿透法（双探头对置） ============ -->
+        <g id="stUsTrans" style="display:none">
+          <text x="142" y="30" text-anchor="end" font-size="11.5" font-weight="700" fill="#33506f">发射探头 T</text>
+          <text x="142" y="46" text-anchor="end" font-size="10.5" fill="#5b6b80">高频脉冲激励</text>
+          <rect x="150" y="18" width="180" height="42" rx="8" fill="#e8eef7" stroke="#7d8fa6" stroke-width="1.4"/>
+          <rect x="196" y="30" width="88" height="14" fill="var(--gapm)" opacity=".85"/>
+          <text x="240" y="41" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5a3c00">发射晶片</text>
+          <rect id="utWork" x="140" y="80" width="200" height="90" fill="#eef3f9" stroke="#4b6b8f" stroke-width="1.6"/>
+          <text x="150" y="94" font-size="10.5" fill="#5b6b80">钢件</text>
+          <ellipse id="utDef" cx="240" cy="140" rx="26" ry="9" fill="#c8d3e0" stroke="#7d8fa6" stroke-width="1.2"/>
+          <text id="utDefTxt" x="350" y="144" font-size="10.5" fill="#5b6b80">缺陷</text>
+          <line id="utBot" x1="140" y1="170" x2="340" y2="170" stroke="#4b6b8f" stroke-width="2.2"/>
+          <rect id="utRx" x="150" y="182" width="180" height="38" rx="8" fill="#e8eef7" stroke="#7d8fa6" stroke-width="1.4"/>
+          <rect id="utRxC" x="196" y="194" width="88" height="14" fill="var(--efield)" opacity=".85"/>
+          <text id="utRxTxt" x="142" y="206" text-anchor="end" font-size="11.5" font-weight="700" fill="#33506f">接收探头 R</text>
+          <g id="wpkT" transform="translate(240,60)"><path d="M0,-16 Q13,-12 0,-8 Q-13,-4 0,0 Q13,4 0,8 Q-13,12 0,16" fill="none" stroke="var(--flux)" stroke-width="2.8"/></g>
+          <line id="utDim" x1="356" y1="80" x2="356" y2="170" stroke="var(--gapm)" stroke-width="2.4"/>
+          <line x1="349" y1="80" x2="363" y2="80" stroke="var(--gapm)" stroke-width="2.4"/>
+          <line id="utDimB" x1="349" y1="170" x2="363" y2="170" stroke="var(--gapm)" stroke-width="2.4"/>
+          <text id="utDimTxt" x="368" y="129" font-size="11.5" font-weight="700" fill="var(--gapm)">δ = 10.75 mm</text>
+          <rect x="456" y="46" width="234" height="164" rx="7" fill="#fbfdff" stroke="#d5dfec"/>
+          <text x="466" y="66" font-size="12" font-weight="700" fill="#0e4a8e">接收声能（透射法）</text>
+          <rect x="468" y="80" width="30" height="110" fill="#f1f5fb" stroke="#d5dfec"/>
+          <rect id="utBar" x="468" y="80" width="30" height="110" fill="var(--flux)" opacity=".85"/>
+          <text id="utValTxt" x="508" y="102" font-size="13.5" font-weight="800" fill="var(--flux)">I/I₀ = 94.8 %</text>
+          <text id="utAlTxt" x="508" y="124" font-size="11" fill="#5b6b80">α·δ = 0.054 Np</text>
+          <text id="utNote2" x="508" y="146" font-size="10.5" fill="#94a3b8">α = 0.05 Np/cm（钢 2.5 MHz）</text>
+          <text id="utNote3" x="508" y="164" font-size="10.5" fill="#94a3b8">空气 40 kHz：1～2 Np/cm</text>
+          <text id="utNote4" x="508" y="182" font-size="10.5" fill="#94a3b8">有缺陷 → 再遮挡，只判有无</text>
+          <text id="utNote" x="20" y="252" font-size="11.5" fill="#5b6b80">穿透法：两探头分置工件两侧，测透射声能 I = I₀e^(−αδ)；不受盲区限制，适合板材与大厚度工件，但不能定位缺陷。</text>
+        </g>
+        <!-- ============ (3) 微波：反射式 / 透射式 ============ -->
+        <g id="stMw" style="display:none">
+          <g id="stMwR">
+            <text x="20" y="20" font-size="12.5" font-weight="700" fill="#0e4a8e">反射式：收发天线同侧，测回波功率或时延（对应图12-8 微波液位计）</text>
+            <rect x="20" y="32" width="120" height="44" rx="8" fill="#e8eef7" stroke="#7d8fa6" stroke-width="1.4"/>
+            <text x="80" y="50" text-anchor="middle" font-size="11.5" font-weight="700" fill="#33506f">微波振荡器</text>
+            <text id="mwSrcTxt" x="80" y="66" text-anchor="middle" font-size="10.5" fill="#5b6b80">9.4 GHz（X 波段）</text>
+            <line x1="140" y1="54" x2="250" y2="70" stroke="#7d8fa6" stroke-width="5" opacity=".45"/>
+            <text x="238" y="48" text-anchor="middle" font-size="11" font-weight="700" fill="#33506f">发射天线</text>
+            <text x="364" y="48" text-anchor="middle" font-size="11" font-weight="700" fill="#33506f">接收天线</text>
+            <g transform="rotate(-21 250 78)"><polygon points="236,58 264,58 284,98 216,98" fill="#cfd9e6" stroke="#7d8fa6" stroke-width="1.3"/></g>
+            <g transform="rotate(21 350 78)"><polygon points="336,58 364,58 384,98 316,98" fill="#cfd9e6" stroke="#7d8fa6" stroke-width="1.3"/></g>
+            <line id="mwBeam1" x1="255" y1="99" x2="300" y2="200" stroke="var(--eddy)" stroke-width="2.4" stroke-dasharray="9 7"/>
+            <line id="mwBeam2" x1="300" y1="200" x2="345" y2="99" stroke="var(--eddy)" stroke-width="2.4" stroke-dasharray="9 7"/>
+            <circle id="mwRefl" cx="300" cy="200" r="5" fill="var(--eddy)" opacity=".85"/>
+            <rect id="mwSurf" x="170" y="200" width="260" height="7" fill="#3f7ad6" opacity=".6"/>
+            <rect id="mwBody" x="170" y="207" width="260" height="80" fill="#dceafa" opacity=".7"/>
+            <text id="mwSurfTxt" x="436" y="204" font-size="10.5" fill="#33506f">被测面（金属面全反射）</text>
+            <line id="mwDim" x1="162" y1="99" x2="162" y2="200" stroke="var(--gapm)" stroke-width="2.2"/>
+            <line x1="155" y1="99" x2="169" y2="99" stroke="var(--gapm)" stroke-width="2.2"/>
+            <line id="mwDimB" x1="155" y1="200" x2="169" y2="200" stroke="var(--gapm)" stroke-width="2.2"/>
+            <text id="mwDimTxt" x="172" y="154" font-size="11.5" font-weight="700" fill="var(--gapm)">d = 63.5 mm</text>
+            <text id="mwRTxt1" x="20" y="252" font-size="12.5" font-weight="700" fill="#0e4a8e">P = P_tG_tG_rλ²/[(4π)²(s²+4d²)]（式 12-12）</text>
+            <text id="mwRTxt2" x="20" y="272" font-size="11.5" fill="#5b6b80">回波往返时延 Δt = 2d/c = 0.42 ns；相位法 Δd = (λ/4π)Δφ，2π 对应 λ/2 = 15.96 mm</text>
+            <text id="mwRTxt3" x="20" y="292" font-size="11.5" fill="#5b6b80">金属：自由电子形成反向电流 → 几乎全部反射（穿透仅微米量级），故微波不能测金属厚度</text>
+            <text id="mwRTxt4" x="20" y="310" font-size="10.5" fill="#94a3b8">波束虚线流动 = 微波传播；收发天线间存在直接耦合（泄漏）→ 零点漂移，工程上用收发分离或背景相消</text>
+          </g>
+          <g id="stMwT" style="display:none">
+            <text x="20" y="20" font-size="12.5" font-weight="700" fill="#0e4a8e">透射式（遮断式）：收发天线分置物料两侧，测透过功率 → 测厚 / 测湿</text>
+            <rect x="20" y="104" width="110" height="44" rx="8" fill="#e8eef7" stroke="#7d8fa6" stroke-width="1.4"/>
+            <text x="75" y="122" text-anchor="middle" font-size="11.5" font-weight="700" fill="#33506f">微波振荡器</text>
+            <text x="75" y="138" text-anchor="middle" font-size="10.5" fill="#5b6b80">9.4 GHz</text>
+            <line x1="130" y1="150" x2="150" y2="150" stroke="#7d8fa6" stroke-width="5" opacity=".45"/>
+            <text x="175" y="122" text-anchor="middle" font-size="11" font-weight="700" fill="#33506f">发射天线</text>
+            <text x="665" y="122" text-anchor="middle" font-size="11" font-weight="700" fill="#33506f">接收天线</text>
+            <polygon points="150,138 150,162 200,172 200,128" fill="#cfd9e6" stroke="#7d8fa6" stroke-width="1.3"/>
+            <polygon points="690,138 690,162 640,172 640,128" fill="#cfd9e6" stroke="#7d8fa6" stroke-width="1.3"/>
+            <rect id="mwSlab" x="300" y="92" width="60" height="120" fill="#eef3f9" stroke="#4b6b8f" stroke-width="1.5"/>
+            <text id="mwSlabTxt" x="330" y="84" text-anchor="middle" font-size="11.5" font-weight="700" fill="#33506f">物料 δ = 63.5 mm</text>
+            <line id="mwB1" x1="200" y1="150" x2="300" y2="150" stroke="var(--eddy)" stroke-width="2.6" stroke-dasharray="10 7"/>
+            <line id="mwB2" x1="300" y1="150" x2="360" y2="150" stroke="var(--eddy)" stroke-width="2.6" stroke-dasharray="10 7" opacity=".5"/>
+            <line id="mwB3" x1="360" y1="150" x2="640" y2="150" stroke="var(--eddy)" stroke-width="2.6" stroke-dasharray="10 7" opacity=".4"/>
+            <line id="mwTDim" x1="300" y1="222" x2="360" y2="222" stroke="var(--gapm)" stroke-width="2.2"/>
+            <line id="mwTDimA" x1="300" y1="215" x2="300" y2="229" stroke="var(--gapm)" stroke-width="2.2"/>
+            <line id="mwTDimB" x1="360" y1="215" x2="360" y2="229" stroke="var(--gapm)" stroke-width="2.2"/>
+            <text id="mwTDimTxt" x="330" y="244" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--gapm)">δ = 63.5 mm</text>
+            <text id="mwTTxt1" x="20" y="272" font-size="12.5" font-weight="700" fill="#0e4a8e">透射衰减 P = P₀e^(−αδ)：α 与含水量成正比</text>
+            <text id="mwTTxt2" x="20" y="292" font-size="11.5" fill="#5b6b80">水的 εᵣ ≈ 80，远大于一般物料的 2～10 → 含水量稍有变化，衰减与相速就显著改变（粮食、烟草、纸张测湿）</text>
+            <text id="mwTTxt3" x="20" y="310" font-size="10.5" fill="#94a3b8">遮断式只能判有无/测衰减；测厚精度受密度、堆积状态影响，需补偿或双频法</text>
+          </g>
+        </g>
+        <!-- ============ (4) 射线：γ 透射测厚 ============ -->
+        <g id="stRy" style="display:none">
+          <text x="20" y="20" font-size="12.5" font-weight="700" fill="#0e4a8e">γ 射线透射测厚：放射源 → 被测件 → 探测器（I = I₀e^(−μx)）</text>
+          <rect x="24" y="66" width="112" height="118" rx="10" fill="#9aa8b8" stroke="#4b6b8f" stroke-width="1.6"/>
+          <circle cx="80" cy="130" r="10" fill="var(--hot)"/>
+          <text x="80" y="58" text-anchor="middle" font-size="11.5" font-weight="700" fill="#33506f">放射源容器（铅）</text>
+          <text id="rySrcTxt" x="80" y="158" text-anchor="middle" font-size="10.5" font-weight="700" fill="#fff">¹³⁷Cs</text>
+          <text id="rySrcTxt2" x="80" y="174" text-anchor="middle" font-size="10" fill="#eef3f9">γ 0.66 MeV</text>
+          <rect x="120" y="118" width="26" height="14" fill="#f6f8fb" stroke="#7d8fa6" stroke-width="1"/>
+          <text x="133" y="112" text-anchor="middle" font-size="10" fill="#5b6b80">准直</text>
+          <line x1="146" y1="106" x2="468" y2="106" stroke="var(--hot)" stroke-width="1" stroke-dasharray="4 5" opacity=".45"/>
+          <line x1="146" y1="144" x2="468" y2="144" stroke="var(--hot)" stroke-width="1" stroke-dasharray="4 5" opacity=".45"/>
+          <rect id="ryWork" x="340" y="40" width="30" height="170" fill="#eef3f9" stroke="#4b6b8f" stroke-width="1.6"/>
+          <text x="340" y="32" font-size="11.5" font-weight="700" fill="#33506f">被测钢板</text>
+          <line id="ryDim" x1="340" y1="222" x2="370" y2="222" stroke="var(--gapm)" stroke-width="2.2"/>
+          <line id="ryDimA" x1="340" y1="215" x2="340" y2="229" stroke="var(--gapm)" stroke-width="2.2"/>
+          <line id="ryDimB" x1="370" y1="215" x2="370" y2="229" stroke="var(--gapm)" stroke-width="2.2"/>
+          <text id="ryDimTxt" x="355" y="244" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--gapm)">δ = 13.4 mm</text>
+          <circle id="ryHit" cx="472" cy="125" r="9" fill="var(--hot)" opacity="0"/>
+          <g id="ryIon">
+            <rect x="478" y="60" width="190" height="128" rx="8" fill="#eef3f9" stroke="#7d8fa6" stroke-width="1.5"/>
+            <line x1="516" y1="80" x2="516" y2="168" stroke="#233b57" stroke-width="2.6"/>
+            <line x1="616" y1="80" x2="616" y2="168" stroke="#233b57" stroke-width="2.6"/>
+            <text x="573" y="52" text-anchor="middle" font-size="11.5" font-weight="700" fill="#33506f">电离室（几百伏 · 饱和区）</text>
+            <text x="573" y="104" text-anchor="middle" font-size="10.5" fill="#5b6b80">电离电流 ∝ 辐射强度</text>
+            <line x1="566" y1="188" x2="566" y2="208" stroke="#233b57" stroke-width="1.8"/>
+            <circle cx="566" cy="220" r="12" fill="#fff" stroke="#233b57" stroke-width="1.6"/>
+            <text x="566" y="224" text-anchor="middle" font-size="11" font-weight="700" fill="#233b57">A</text>
+            <text id="ryIonVal" x="588" y="224" font-size="12.5" font-weight="800" fill="var(--hot)">i = 11.5 pA</text>
+          </g>
+          <g id="ryGm" style="display:none">
+            <rect x="488" y="96" width="160" height="36" rx="18" fill="#eef3f9" stroke="#7d8fa6" stroke-width="1.5"/>
+            <line x1="500" y1="114" x2="636" y2="114" stroke="#233b57" stroke-width="1.6"/>
+            <text x="568" y="86" text-anchor="middle" font-size="11.5" font-weight="700" fill="#33506f">盖革计数管（上千伏 · 死时间）</text>
+            <text x="568" y="152" text-anchor="middle" font-size="10.5" fill="#5b6b80">输出等幅脉冲 → 只能计数</text>
+            <rect x="498" y="176" width="140" height="46" rx="8" fill="#fbfdff" stroke="#d5dfec"/>
+            <text x="568" y="196" text-anchor="middle" font-size="10.5" fill="#5b6b80">计数率 n（cps）</text>
+            <text id="ryGmVal" x="568" y="214" text-anchor="middle" font-size="13" font-weight="800" fill="var(--hot)">5516 cps</text>
+          </g>
+          <text x="478" y="252" font-size="11" fill="#5b6b80">γ 粒子：未被吸收的才到探测器</text>
+          <text id="ryTxt1" x="20" y="270" font-size="12.5" font-weight="700" fill="#0e4a8e">I = I₀e^(−μh)：μ = 0.58 cm⁻¹、h = 1.34 cm → I/I₀ = 46.0 %</text>
+          <text id="ryTxt2" x="20" y="290" font-size="11.5" fill="#5b6b80">质量厚度 x = ρh = 10.5 g/cm²，μ_m = μ/ρ = 0.0739 cm²/g → 换材料可直接查表</text>
+          <text id="ryTxt3" x="20" y="310" font-size="11" fill="#5b6b80">防护三原则：时间 · 距离 · 屏蔽（¹³⁷Cs 十年后源强剩 79.5%，须定期标定）</text>
+          <g id="ryPts"></g>
+        </g>
+      </svg>
+      <div class="readlabel">输出读数：波的时间 / 幅度与几何量</div>
+      <div class="readwrap"><svg viewBox="0 0 620 200" role="img" aria-label="波式及射线式传感器输出读数">
+        <g transform="translate(30,20)">
+          <text id="in1" x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">超声：钢件 δ = 10.75 mm，c = 5900 m/s，f = 2.5 MHz</text>
+          <text id="in2" x="0" y="24" font-size="12" font-weight="700" fill="var(--hot)">回波时间 t = 2δ/c = 3.64 μs（含延迟块 t总 = 4.44 μs）</text>
+          <text id="in3" x="0" y="48" font-size="12" fill="#5b6b80">λ = c/f = 2.36 mm；衰减后强度 I/I₀ = e^(−αδ) = 94.8 %</text>
+          <rect x="0" y="62" width="320" height="16" rx="5" fill="#f4f8fd" stroke="#d5dfec"/>
+          <rect id="inBar" x="0" y="62" width="303" height="16" rx="5" fill="var(--hot)"/>
+          <text id="inBarTxt" x="0" y="98" font-size="12" font-weight="700" fill="var(--hot)">I/I₀ = 94.8 %（α = 0.05 Np/cm）</text>
+          <text id="in4" x="0" y="124" font-size="11" fill="#94a3b8">δ = c(t − t₀)/2 = 10.75 mm；测厚分辨力 0.01 mm</text>
+        </g>
+      </svg></div>
+      <div class="hint" id="stHint">脉冲回波法：一个探头兼收发，t = 2δ/c + t₀，扣掉延迟块即得厚度；薄件底波并入始波形成盲区。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="readCard">
+      <div class="phead">
+        <h2>输出读数</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="big">
+        <span class="cap" id="bigCap">工件厚度 δ</span>
+        <span class="num" id="bigNum">10.75</span><span class="unit" id="bigUnit">mm</span>
+      </div>
+      <div class="kv">
+        <div class="box"><span id="k1L">回波时间 t</span><b id="k1b">3.64 μs</b></div>
+        <div class="box"><span id="k2L">声速 c</span><b id="k2b">5900 m/s</b></div>
+        <div class="box"><span id="k3L">衰减后强度 I/I₀</span><b id="k3b">94.8 %</b></div>
+        <div class="box"><span id="k4L">波长 λ = c/f</span><b id="k4b">2.36 mm</b></div>
+      </div>
+      <div class="fine" id="readFine">t = 2δ/c = 2×10.75/5900×10⁶ = 3.64 μs；含延迟块 t_total = 4.44 μs，δ = c(t−t₀)/2 反算回 10.75 mm。</div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colB" data-right="colC" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 右列 ================= -->
+  <div class="col" id="colC">
+    <div class="colhead">③ 公式推导 · 特性曲线</div>
+
+
+    <section class="card panel" id="fmlCard">
+      <div class="phead">
+        <h2>公式推导 <small id="fmlTitle">超声波式 · 脉冲回波法</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody"><div class="fml" id="fmlBody"></div></div>
+    </section>
+
+    <section class="card panel" id="curveCard">
+      <div class="phead">
+        <h2>特性曲线 <small>t–δ 线性 · I/I₀–δ 指数</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="seg tight" id="segCurve" style="margin-bottom:4px">
+        <button data-cv="us" class="on">回波时间 t–δ<small>线性·超声</small></button>
+        <button data-cv="mw">透过功率 P/P₀<small>指数·微波</small></button>
+        <button data-cv="ry">强度 I/I₀<small>指数·射线</small></button>
+      </div>
+      <svg id="curve" viewBox="0 0 700 300" role="img" aria-label="波式及射线式传感器特性曲线">
+        <g id="cGrid"></g>
+        <line x1="64" y1="240" x2="672" y2="240" stroke="#9fb2c8" stroke-width="1.5"/>
+        <line x1="64" y1="30" x2="64" y2="240" stroke="#9fb2c8" stroke-width="1.5"/>
+        <path id="pUs" fill="none" stroke="var(--hot)" stroke-width="3.5"/>
+        <path id="pMw" fill="none" stroke="var(--eddy)" stroke-width="3"/>
+        <path id="pRy" fill="none" stroke="var(--flux)" stroke-width="3"/>
+        <line id="mkX" x1="0" y1="30" x2="0" y2="240" stroke="#0e4a8e" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <circle id="mkDot" r="5.5" fill="#0e4a8e" stroke="#fff" stroke-width="2"/>
+        <text id="xAxisLab" x="672" y="262" text-anchor="end" font-size="12.5" fill="#5b6b80">工件厚度 δ / mm</text>
+        <text id="yAxisLab" x="16" y="26" font-size="12.5" fill="#5b6b80">t / μs</text>
+      </svg>
+      <div class="legend">
+        <span><i style="background:#d94a3d"></i>回波时间 t–δ（超声，线性）</span>
+        <span><i style="background:#7c3aed"></i>透过功率 P/P₀（微波）</span>
+        <span><i style="background:#0d8b7f"></i>透射强度 I/I₀（射线）</span>
+        <span style="margin-left:auto" id="curveNote"></span>
+      </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+</div><!-- /#boardWrap -->
+
+<footer>
+<b>参数：</b>钢中纵波 c_L = 5900 m/s（式12-1 代入得 5848）、横波 3230、水 1480、空气 340 m/s；探头 1~40 mm 钢件测厚、f = 2.5 MHz、延迟块 t₀ = 0.80 μs；微波 9.4 GHz（λ = 31.9 mm）、距离/厚度 5~200 mm、α = 0.15 Np/cm；射线 γ ⁶⁰Co/¹³⁷Cs，钢板 2~40 mm、μ(钢) = 0.58/0.42 cm⁻¹、μ_m = μ/ρ、ρ = 7.85 g/cm³、n₀ = 12000 cps、i₀ = 25 pA。<b>关系式：</b>c = f·λ；c_L = √[E(1−μ)/(ρ(1+μ)(1−2μ))]；f = n·c/(2d)；s = c·t/2；δ = c(t−t₀)cosθ/2；I = I₀e^(−αd)；P = P_tG_tG_rλ²/[(4π)²(s²+4d²)]；Δd = (λ/4π)Δφ；f_d = 2v·cosθ·f₀/c；I = I₀e^(−μh) = I₀e^(−μ_m x)，x = ρh；H = (1/μ)ln(I₀/I)；h = ln(k)/μ。<b>课堂提问：</b>① 回声测距为什么要除以 2？忘了会怎样？② 为什么空气超声只能用几十 kHz，而钢中可以用 MHz？③ 为什么微波不能代替超声测金属厚度？④ 盖革计数管为什么只能计数、不能测能？⑤ 把 ⁶⁰Co 的 γ 衰减 100 倍需要多厚的铅？<b>网址参数：</b>?type=us|mw|ry&x=0~100&mode=m0|m1&src=cs|co&cv=us|mw|ry&auto=1~5&speed=0.4~2.5
+</footer>
+
+<script>
+(function(){
+  "use strict";
+/* =====================================================================
+   公共运行时（各章通用）· 由 _build/build.js 注入到主脚本的最前面
+   章节代码直接使用：$ / sfmt / frac / clamp / say / sleep / tween /
+   beginDemo / stopDemo / endDemo / bindDemos
+   约定：章节必须定义 var S = { ..., demoToken:0 }；
+        演示函数写成 async，每个 await 判断返回值，结尾 endDemo()；
+        章节 jsB 里用 DEMOS.<key> = {btn:'...', label:'...', fn:demoXxx} 注册，
+        随后调用 bindDemos() 绑定按钮点击。
+   注意：不内置任何语音朗读；演示按钮只由 bindDemos() 绑定一次。
+   ===================================================================== */
+var $ = function(id){ return document.getElementById(id); };
+function sfmt(a, d){ return (a >= 0 ? '+' : '−') + Math.abs(a).toFixed(d); }
+function frac(a, b){ return '<span class="frac"><i>' + a + '</i><b>' + b + '</b></span>'; }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+var DEMOS = {}, SPEED = 1, playingKey = null;
+function say(t){ $('narration').innerHTML = t; }
+function sleep(ms, tok){
+  return new Promise(function(res){ setTimeout(function(){ res(S.demoToken === tok); }, Math.max(60, ms/SPEED)); });
+}
+function tween(from, to, dur, set, tok){
+  dur = Math.max(160, dur/SPEED);
+  return new Promise(function(res){
+    var t0 = performance.now();
+    (function step(now){
+      if (S.demoToken !== tok) return res(false);
+      var p = (now - t0)/dur;
+      if (!isFinite(p)) p = 1;
+      p = clamp(p, 0, 1);
+      var e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
+      var v = from + (to - from)*e;
+      v = (from <= to) ? Math.min(to, Math.max(from, v)) : Math.max(to, Math.min(from, v));
+      set(v);
+      if (p < 1) requestAnimationFrame(step); else res(true);
+    })(performance.now());
+  });
+}
+function resetDemoButtons(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b){ b.textContent = DEMOS[k].label; b.classList.remove('running'); }
+  });
+}
+function stopDemo(){ S.demoToken++; playingKey = null; resetDemoButtons(); }
+function beginDemo(key){
+  stopDemo(); playingKey = key;
+  var d = DEMOS[key], b = d && $(d.btn);
+  if (b){ b.textContent = '⏸ 暂停演示'; b.classList.add('running'); }
+  return ++S.demoToken;
+}
+function endDemo(){ playingKey = null; resetDemoButtons(); }
+function bindDemos(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b) b.addEventListener('click', function(){
+      if (playingKey === k){ stopDemo(); say('演示已暂停。可继续拖动滑块手动观察，或点其它演示按钮。'); }
+      else if (DEMOS[k].fn){ DEMOS[k].fn(); }
+    });
+  });
+}
+(function(){
+  var spd = $('speed');
+  if (spd) spd.addEventListener('input', function(){
+    SPEED = parseFloat(this.value) || 1;
+    $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  });
+})();
+
+
+  /* ============ 1. 物理参数与状态 ============ */
+  var CFG = {
+    /* --- 声学（钢，20 ℃） --- */
+    cSteel:5900, cWater:1480, cAir:340,   /* m/s：钢/水/空气纵波声速 */
+    E:2.1e11, rho:7850, poi:0.28,         /* 钢：弹性模量 Pa / 密度 kg·m⁻³ / 泊松比 */
+    fUs:2.5e6,                            /* 探头工作频率 2.5 MHz */
+    alphaUs:0.05,                         /* 钢中 2.5 MHz 衰减系数 Np/cm（0.01~0.05） */
+    alphaAir:1.5,                         /* 空气 40 kHz 衰减系数 Np/cm（课件口径） */
+    t0:0.8,                               /* 双晶探头延迟块往返时间 μs */
+    dMin:1, dMax:40,                      /* 钢板测厚范围 mm */
+    /* --- 微波（X 波段） --- */
+    cLight:3e8, mwF:9.4e9,                /* 光速 / 9.4 GHz → λ = 31.9 mm */
+    mwMin:5, mwMax:200,                   /* 距离 / 物料厚度范围 mm */
+    mwAlpha:0.15,                         /* 含水物料衰减系数 Np/cm（示例） */
+    mwS:100,                              /* 收发天线水平间距 s = 100 mm（式12-12） */
+    beta:0.938,                           /* 水/钢 声压反射率（≈0.938，见要点） */
+    /* --- 射线 --- */
+    ryMin:2, ryMax:40,                    /* 钢板厚度范围 mm */
+    ryRho:7.85,                           /* 钢密度 g/cm³ */
+    muFe:{ cs:0.58, co:0.42 },            /* 钢的线吸收系数 cm⁻¹（¹³⁷Cs / ⁶⁰Co） */
+    muPb:{ cs:1.30, co:0.66 },            /* 铅的线吸收系数 cm⁻¹（⁶⁰Co 时 0.66，简报口径） */
+    halfT:{ cs:30.2, co:5.27 },           /* 半衰期 年 */
+    n0:12000, i0:25                       /* 空载计数率 cps / 空载电离电流 pA */
+  };
+  var TYPES = {
+    us: { name:'超声波式', unit:'mm', q:'工件厚度 δ',
+          hint:'超声波式：压电换能器——逆压电效应发射、正压电效应接收；直探头得纵波，斜探头经斜楔把纵波转成横波（27.2°~56.7° 得纯横波）。脉冲回波法单探头兼收发、能定位但有盲区；穿透法双探头对置、无盲区但只能判有无。' },
+    mw: { name:'微波式', unit:'mm', q:'距离/厚度 d',
+          hint:'微波式：λ = 1 m~1 mm（300 MHz~300 GHz）的电磁波，不需要介质。反射式（天线同侧）测回波功率或时延；透射式（遮断式，天线分置两侧）测透过功率 → 测厚、测湿。金属几乎全反射（穿透仅微米量级），故不能测金属厚度。' },
+    ry: { name:'射线式', unit:'mm', q:'钢板厚度 δ',
+          hint:'射线式：放射源 + 探测器。常用 γ 源 ⁶⁰Co（5.27 a）、¹³⁷Cs（30.2 a）；探测器有电离室（饱和区、电流 ∝ I）、闪烁计数器（碘化钠对 γ 效率 20%~30%）、盖革计数管（只能计数、有死时间）。透射式测厚 I = I₀e^(−μh)，必须做辐射防护。' }
+  };
+  /* 工作方式按钮的文字随型式变化 */
+  var MODETXT = {
+    us: [['脉冲回波法','单探头兼收发'], ['穿透法','双探头对置']],
+    mw: [['反射式','测回波功率/时延'], ['透射式（遮断）','测透过功率']],
+    ry: [['电离室','饱和区 · 电流 ∝ I'], ['盖革计数管','计数 · 有死时间']]
+  };
+  var MODENOTE = {
+    us: '回波法有盲区、能定位；穿透法无盲区、只能判有无',
+    mw: '反射式天线同侧；透射式天线分置物料两侧',
+    ry: '探测器的输出：电流 / 计数率'
+  };
+  var STHTXT = {
+    us: ['超声换能器 · 脉冲回波测厚（δ = c(t−t₀)/2）', '超声穿透法（两探头对置 · 测透射声能）'],
+    mw: ['微波反射式（测回波功率/时延）', '微波透射式（遮断式 · 测透过功率）'],
+    ry: ['γ 射线透射测厚 + 电离室', 'γ 射线透射测厚 + 盖革计数管']
+  };
+  var S = { type:'us', x:25, mode:'m0', src:'cs', curve:'us', demoToken:0 };
+
+  /* ============ 2. 模型（纯函数） ============ */
+  var TMAX_US = 16;                        /* 回波时间轴量程 μs */
+  function cL(){ return Math.sqrt(CFG.E*(1 - CFG.poi)/(CFG.rho*(1 + CFG.poi)*(1 - 2*CFG.poi))); } /* 式12-1 纵波 5848 m/s */
+  function cS(){ return Math.sqrt(CFG.E/(2*CFG.rho*(1 + CFG.poi))); }                              /* 式12-2 横波 3233 m/s */
+  function dMm(){                          /* 当前被测量（mm） */
+    if (S.type === 'us') return CFG.dMin + (CFG.dMax - CFG.dMin)*S.x/100;
+    if (S.type === 'mw') return CFG.mwMin + (CFG.mwMax - CFG.mwMin)*S.x/100;
+    return CFG.ryMin + (CFG.ryMax - CFG.ryMin)*S.x/100;
+  }
+  function usModel(){
+    var d = dMm(), c = CFG.cSteel;
+    var t  = 2*d/1000/c*1e6;                     /* 工件内往返时间 μs：t = 2δ/c */
+    var Irel = Math.exp(-CFG.alphaUs/10*d);      /* 式12-7：I = I₀e^(−αd)，α 换算成 Np/mm */
+    return { d:d, c:c, t:t, tTot:t + CFG.t0, Irel:Irel, lam:c/CFG.fUs*1000,
+             alNp:CFG.alphaUs/10*d, t0:CFG.t0, res:0.01 };
+  }
+  function mwModel(){
+    var d = dMm(), lam = CFG.cLight/CFG.mwF*1000;      /* λ = c/f = 31.9 mm */
+    var den = CFG.mwS*CFG.mwS + 4*d*d;                 /* 式12-12 的分母 */
+    var den0 = CFG.mwS*CFG.mwS + 4*CFG.mwMin*CFG.mwMin;
+    var ph = 2*Math.PI*(2*d/lam) % (2*Math.PI);        /* 相位法：Δφ = 4π d/λ */
+    return { d:d, lam:lam, dt:2*d/1000/CFG.cLight*1e9, /* 往返时延 ns */
+             Pref:den0/den, Prel:Math.exp(-CFG.mwAlpha/10*d),
+             dphi:ph, lam2:lam/2, s:CFG.mwS, alpha:CFG.mwAlpha };
+  }
+  function ryModel(){
+    var h = dMm(), mu = CFG.muFe[S.src], hcm = h/10;
+    var Irel = Math.exp(-mu*hcm);                      /* 式12-17：I = I₀e^(−μh) */
+    var mum = mu/CFG.ryRho, xm = CFG.ryRho*hcm;        /* 式12-18/12-19：μ_m、质量厚度 */
+    return { d:h, mu:mu, mum:mum, xm:xm, Irel:Irel, hcm:hcm,
+             n:CFG.n0*Irel, i:CFG.i0*Irel,
+             dec10:Math.exp(-0.693*10/CFG.halfT[S.src]),
+             shield:Math.log(100)/CFG.muPb.co, T:CFG.halfT[S.src] };
+  }
+  function model(){ return S.type === 'us' ? usModel() : (S.type === 'mw' ? mwModel() : ryModel()); }
+
+  /* ============ 3. 动画状态与初始化 ============ */
+  var ANIM = { t:0, off:0 };
+  var ST = { us:{ yBot:187, yBotT:190 }, ry:{ xL:340, xR:370 } };
+  var RYP = [], RYHIT = 0, RYTRANS = 0.46;
+  function initAnim(){
+    /* --- 回波时间轴刻度（0~TMAX_US） --- */
+    var html = '', t;
+    for (t = 0; t <= 14; t += 2){
+      var x = 474 + t*13;
+      html += '<line x1="' + x.toFixed(1) + '" y1="190" x2="' + x.toFixed(1) + '" y2="195" stroke="#9fb2c8" stroke-width="1"/>';
+      html += '<text x="' + x.toFixed(1) + '" y="206" text-anchor="middle" font-size="10" fill="#5b6b80">' + t + '</text>';
+    }
+    html += '<text x="682" y="206" text-anchor="end" font-size="10" fill="#94a3b8">t / μs</text>';
+    $('usTicks').innerHTML = html;
+    /* --- γ 射线粒子 --- */
+    var g = $('ryPts'), s2 = '', i;
+    for (i = 0; i < 15; i++){
+      s2 += '<circle cx="' + (150 + i*22) + '" cy="' + (108 + (i%5)*8) + '" r="3.4" fill="var(--hot)" opacity=".95"/>';
+    }
+    g.innerHTML = s2;
+    var els = g.querySelectorAll('circle');
+    RYP = [];
+    for (i = 0; i < els.length; i++){
+      RYP.push({ el:els[i], x:150 + Math.random()*330, y:104 + Math.random()*42,
+                 decided:false, pass:false, stop:0, fade:0, a:0.95, wait:Math.random()*300 });
+    }
+  }
+  function ryRespawn(q){
+    q.x = 146 + Math.random()*60;
+    q.y = 104 + Math.random()*42;
+    q.decided = false; q.pass = false; q.stop = 0; q.fade = 0; q.a = 0.95;
+    q.wait = Math.random()*220;
+    q.el.setAttribute('cy', q.y.toFixed(1));
+  }
+  /* 超声：波包往返（回波法）/ 单向传播（穿透法） */
+  function stepUs(dt){
+    var top = (S.mode === 'm0') ? 70 : 52;
+    var bot = (S.mode === 'm0') ? ST.us.yBot : ST.us.yBotT;
+    var span = Math.max(24, bot - top);
+    var per = 2000;                                   /* 一个往返 2 s */
+    var p = (ANIM.t % per)/per;
+    var down = p < 0.5, u = down ? p*2 : 2 - p*2;
+    var y = top + span*u;
+    if (S.mode === 'm0'){
+      var g = $('wpkE');
+      /* 双晶：左晶片发射（去程 x=212）、右晶片接收（回程 x=268） */
+      g.setAttribute('transform', 'translate(' + (down ? 212 : 268) + ',' + y.toFixed(1) + ')');
+      $('usFlash').setAttribute('opacity', (u > 0.9 ? 0.9*(u - 0.9)*10 : 0).toFixed(2));
+      /* A 扫描游标与包络闪烁 */
+      var sc = 474 + (p*TMAX_US)*13;
+      $('echoScan').setAttribute('x1', sc.toFixed(1));
+      $('echoScan').setAttribute('x2', sc.toFixed(1));
+      var tt = p*TMAX_US, u2 = usModel();
+      $('blipS').setAttribute('opacity', Math.abs(tt) < 0.8 ? 1 : 0.42);
+      $('blipE').setAttribute('opacity', Math.abs(tt - u2.tTot) < 0.9 ? 1 : 0.45);
+      $('blipE2').setAttribute('opacity', Math.abs(tt - (2*u2.t + u2.t0)) < 1 ? 1 : 0.4);
+      $('blipE3').setAttribute('opacity', Math.abs(tt - (3*u2.t + u2.t0)) < 1 ? 1 : 0.35);
+    } else {
+      $('wpkT').setAttribute('transform', 'translate(240,' + y.toFixed(1) + ')');
+    }
+  }
+  /* 微波：波束虚线流动（传播动画） */
+  function stepMw(){
+    ANIM.off = (ANIM.off + 1.6) % 34;
+    var o = ANIM.off.toFixed(1);
+    if (S.mode === 'm0'){
+      $('mwBeam1').setAttribute('stroke-dashoffset', (-o));
+      $('mwBeam2').setAttribute('stroke-dashoffset', o);
+    } else {
+      $('mwB1').setAttribute('stroke-dashoffset', (-o));
+      $('mwB2').setAttribute('stroke-dashoffset', (-o));
+      $('mwB3').setAttribute('stroke-dashoffset', (-o));
+    }
+  }
+  /* 射线：粒子飞行；进入工件后按 I/I₀ 抽签决定「被吸收 / 穿过」 */
+  function stepRy(dt){
+    var lx = ST.ry.xL, rx = ST.ry.xR, trans = RYTRANS, i;
+    for (i = 0; i < RYP.length; i++){
+      var q = RYP[i];
+      if (q.wait > 0){ q.wait -= dt; continue; }
+      q.x += dt*0.24;
+      if (!q.decided && q.x >= lx){
+        q.decided = true;
+        q.pass = Math.random() < trans;
+        if (!q.pass) q.stop = lx + (rx - lx)*0.55;
+      }
+      if (q.decided && !q.pass && !q.fade && q.x >= q.stop) q.fade = 1;
+      if (q.fade){ q.a -= dt/420; if (q.a <= 0){ ryRespawn(q); continue; } }
+      if (q.x > 470){ RYHIT = 1; ryRespawn(q); continue; }
+      q.el.setAttribute('cx', q.x.toFixed(1));
+      q.el.setAttribute('opacity', q.a.toFixed(2));
+    }
+    RYHIT = Math.max(0, RYHIT - dt/260);
+    $('ryHit').setAttribute('opacity', (RYHIT*0.75).toFixed(2));
+  }
+  function runAnim(){
+    var last = performance.now();
+    (function loop(now){
+      var dt = Math.min(90, now - last); last = now;
+      ANIM.t += dt;
+      if (S.type === 'us') stepUs(dt);
+      else if (S.type === 'mw') stepMw();
+      else stepRy(dt);
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+
+  /* ============ 4. 主刷新 ============ */
+  function paint(){
+    var t = S.type, m = S.mode;
+    /* --- 按钮态 / 提示 --- */
+    document.querySelectorAll('#segType button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-type') === S.type);
+    });
+    document.querySelectorAll('#segMode button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-mode') === S.mode);
+    });
+    document.querySelectorAll('#segSrc button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-src') === S.src);
+    });
+    document.querySelectorAll('#segCurve button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-cv') === S.curve);
+    });
+    $('typeHint').textContent = TYPES[t].hint;
+    var mt = MODETXT[t][m === 'm0' ? 0 : 1];
+    $('mode0T').textContent = MODETXT[t][0][0]; $('mode0S').textContent = MODETXT[t][0][1];
+    $('mode1T').textContent = MODETXT[t][1][0]; $('mode1S').textContent = MODETXT[t][1][1];
+    $('modeNote').textContent = MODENOTE[t];
+    $('stSub').textContent = STHTXT[t][m === 'm0' ? 0 : 1];
+    $('srcTxt').textContent = (t === 'ry')
+      ? ('μ(钢) = ' + CFG.muFe[S.src] + ' cm⁻¹ · T½ ' + CFG.halfT[S.src] + ' a')
+      : '仅射线式使用；源不同 → μ 不同';
+    $('xName').textContent = TYPES[t].q;
+    $('xTxt').textContent = t === 'us' ? '钢件纵波 5900 m/s'
+                          : (t === 'mw' ? (m === 'm0' ? '天线到被测面距离 d' : '非金属物料的厚度 δ')
+                                        : '钢板 ρ = 7.85 g/cm³');
+    $('xOut').textContent = dMm().toFixed(t === 'us' ? 2 : 1) + ' mm';
+    /* --- 结构可见性 --- */
+    $('stUsEcho').style.display  = (t === 'us' && m === 'm0') ? '' : 'none';
+    $('stUsTrans').style.display = (t === 'us' && m === 'm1') ? '' : 'none';
+    $('stMw').style.display      = (t === 'mw') ? '' : 'none';
+    $('stMwR').style.display     = (t === 'mw' && m === 'm0') ? '' : 'none';
+    $('stMwT').style.display     = (t === 'mw' && m === 'm1') ? '' : 'none';
+    $('stRy').style.display      = (t === 'ry') ? '' : 'none';
+    $('ryIon').style.display     = (t === 'ry' && m === 'm0') ? '' : 'none';
+    $('ryGm').style.display      = (t === 'ry' && m === 'm1') ? '' : 'none';
+    /* --- 几何动画 --- */
+    if (t === 'us') paintUs(m); else if (t === 'mw') paintMw(m); else paintRy();
+    /* --- 读数 / 曲线 / 公式 / 要点 --- */
+    paintRead();
+    drawCurves();
+    paintFormulas();
+    paintPoints();
+    if (window.__repack) window.__repack();
+  }
+  /* ---- 4.1 超声几何 ---- */
+  function paintUs(m){
+    var u = usModel(), i;
+    if (m === 'm0'){
+      var H1 = 36 + 140*(u.d/CFG.dMax);                 /* 67 → 243 */
+      $('usWork').setAttribute('height', H1.toFixed(1));
+      var yb = 67 + H1;
+      $('usBot').setAttribute('y1', yb.toFixed(1)); $('usBot').setAttribute('y2', yb.toFixed(1));
+      $('usBotTxt').setAttribute('y', (yb + 14).toFixed(1));
+      $('usFlash').setAttribute('cy', (yb - 4).toFixed(1));
+      $('usDim').setAttribute('y2', yb.toFixed(1));
+      $('usDimB').setAttribute('y1', yb.toFixed(1)); $('usDimB').setAttribute('y2', yb.toFixed(1));
+      $('usDimTxt').setAttribute('y', (67 + H1/2 + 4).toFixed(1));
+      $('usDimTxt').textContent = 'δ = ' + u.d.toFixed(2) + ' mm';
+      ST.us.yBot = yb - 3;
+      /* 回波时间轴：始波 — 底波 — 二次底波 — 三次底波 */
+      var defs = [
+        ['blipS',  0,                     62, false],
+        ['blipE',  u.tTot,                56, true ],
+        ['blipE2', 2*u.t + u.t0,          46, true ],
+        ['blipE3', 3*u.t + u.t0,          36, true ]
+      ];
+      for (i = 0; i < defs.length; i++){
+        var el = $(defs[i][0]), x = 474 + defs[i][1]*13, h = defs[i][2];
+        var vis = defs[i][1] <= TMAX_US - 0.3;
+        el.setAttribute('d', 'M' + (x - 4.5).toFixed(1) + ',190 L' + x.toFixed(1) + ',' + (190 - h) + ' L' + (x + 4.5).toFixed(1) + ',190 Z');
+        el.setAttribute('opacity', vis ? 1 : 0);
+      }
+      function lbl(id, xt, yy, txt, vis){
+        var e2 = $(id);
+        e2.setAttribute('x', clamp(xt, 500, 664).toFixed(1));
+        e2.setAttribute('y', yy.toFixed(1));
+        e2.textContent = txt;
+        e2.setAttribute('opacity', vis ? 1 : 0);
+      }
+      var xE = 474 + u.tTot*13, x2 = 474 + (2*u.t + u.t0)*13, x3 = 474 + (3*u.t + u.t0)*13;
+      lbl('blipETxt',  xE, 190 - 56 - 6, '底波 t = ' + u.tTot.toFixed(2) + ' μs', u.tTot <= TMAX_US - 0.3);
+      lbl('blipE2Txt', x2, 190 - 46 - 6, '二次底波', 2*u.t + u.t0 <= TMAX_US - 0.3);
+      lbl('blipE3Txt', x3, 190 - 36 - 6, '三次底波', 3*u.t + u.t0 <= TMAX_US - 0.3);
+      $('usEchoOut').textContent = 't = 2δ/c = ' + u.t.toFixed(2) + ' μs（δ = ' + u.d.toFixed(2) + ' mm）';
+      $('usT0Out').textContent = '含延迟块 t₀ = ' + u.t0.toFixed(2) + ' μs → 总时间 ' + u.tTot.toFixed(2) + ' μs';
+      $('usNote').textContent = (u.t < 1.2)
+        ? '厚度很小 → 底波并入始波：这就是近表面盲区（双晶探头 + 延迟块专治它）'
+        : '薄件时底波并入始波 = 近表面盲区；1 μs 计时误差在钢中对应 2.95 mm';
+    } else {
+      var H2 = 24 + 96*(u.d/CFG.dMax);                  /* 80 → 200 */
+      $('utWork').setAttribute('height', H2.toFixed(1));
+      var yb2 = 80 + H2;
+      $('utBot').setAttribute('y1', yb2.toFixed(1)); $('utBot').setAttribute('y2', yb2.toFixed(1));
+      $('utDef').setAttribute('cy', (80 + H2*0.45).toFixed(1));
+      $('utDefTxt').setAttribute('y', (80 + H2*0.45 + 4).toFixed(1));
+      var ry2 = yb2 + 12;
+      $('utRx').setAttribute('y', ry2.toFixed(1));
+      $('utRxC').setAttribute('y', (ry2 + 12).toFixed(1));
+      $('utRxTxt').setAttribute('y', (ry2 + 24).toFixed(1));
+      $('utDim').setAttribute('y2', yb2.toFixed(1));
+      $('utDimB').setAttribute('y1', yb2.toFixed(1)); $('utDimB').setAttribute('y2', yb2.toFixed(1));
+      $('utDimTxt').setAttribute('y', (80 + H2/2 + 4).toFixed(1));
+      $('utDimTxt').textContent = 'δ = ' + u.d.toFixed(2) + ' mm';
+      ST.us.yBotT = ry2 + 12;
+      $('utBar').setAttribute('height', Math.max(2, 110*u.Irel).toFixed(1));
+      $('utBar').setAttribute('y', (190 - Math.max(2, 110*u.Irel)).toFixed(1));
+      $('utValTxt').textContent = 'I/I₀ = ' + (u.Irel*100).toFixed(1) + ' %';
+      $('utAlTxt').textContent = 'α·δ = ' + u.alNp.toFixed(3) + ' Np，α = ' + CFG.alphaUs + ' Np/cm';
+      $('utNote2').textContent = 'α = ' + CFG.alphaUs + ' Np/cm（钢 2.5 MHz）';
+      $('utNote3').textContent = '空气 40 kHz：α ≈ ' + CFG.alphaAir + ' Np/cm';
+      $('utNote').textContent = '穿透法：两探头分置工件两侧，测透射声能 I = I₀e^(−αδ)；δ = ' + u.d.toFixed(2) +
+        ' mm → 透过 ' + (u.Irel*100).toFixed(1) + '%。不受盲区限制，适合板材与大厚度工件，但不能定位缺陷。';
+    }
+  }
+  /* ---- 4.2 微波几何 ---- */
+  function paintMw(m){
+    var w = mwModel(), i;
+    if (m === 'm0'){
+      var ys = 110 + (w.d - CFG.mwMin)/(CFG.mwMax - CFG.mwMin)*105;    /* 110 → 215 */
+      $('mwSurf').setAttribute('y', ys.toFixed(1));
+      $('mwBody').setAttribute('y', (ys + 7).toFixed(1));
+      $('mwBody').setAttribute('height', Math.max(6, 287 - ys - 7).toFixed(1));
+      $('mwBeam1').setAttribute('y2', ys.toFixed(1));
+      $('mwBeam2').setAttribute('y2', ys.toFixed(1));
+      $('mwRefl').setAttribute('cy', ys.toFixed(1));
+      $('mwDim').setAttribute('y2', ys.toFixed(1));
+      $('mwDimB').setAttribute('y1', ys.toFixed(1)); $('mwDimB').setAttribute('y2', ys.toFixed(1));
+      $('mwDimTxt').setAttribute('y', (99 + (ys - 99)/2 + 4).toFixed(1));
+      $('mwDimTxt').textContent = 'd = ' + w.d.toFixed(1) + ' mm';
+      $('mwSurfTxt').setAttribute('y', (ys + 4).toFixed(1));
+      $('mwRTxt1').textContent = 'P = P_tG_tG_rλ²/[(4π)²(s²+4d²)]（式 12-12）：d = ' + w.d.toFixed(1) +
+        ' mm → P/P₀ = ' + w.Pref.toFixed(3);
+      $('mwRTxt2').textContent = '回波往返时延 Δt = 2d/c = ' + w.dt.toFixed(3) + ' ns；相位法 Δd = (λ/4π)Δφ，2π 对应 λ/2 = ' +
+        w.lam2.toFixed(2) + ' mm';
+    } else {
+      var wpx = 40 + 90*(w.d - CFG.mwMin)/(CFG.mwMax - CFG.mwMin);     /* 40 → 130 */
+      var x0 = 330 - wpx/2, x1 = 330 + wpx/2;
+      $('mwSlab').setAttribute('x', x0.toFixed(1));
+      $('mwSlab').setAttribute('width', wpx.toFixed(1));
+      $('mwB1').setAttribute('x2', x0.toFixed(1));
+      $('mwB2').setAttribute('x1', x0.toFixed(1)); $('mwB2').setAttribute('x2', x1.toFixed(1));
+      $('mwB3').setAttribute('x1', x1.toFixed(1));
+      $('mwB2').setAttribute('opacity', (0.15 + 0.75*w.Prel).toFixed(2));
+      $('mwB3').setAttribute('opacity', (0.10 + 0.80*w.Prel).toFixed(2));
+      $('mwTDim').setAttribute('x1', x0.toFixed(1)); $('mwTDim').setAttribute('x2', x1.toFixed(1));
+      $('mwTDimA').setAttribute('x1', x0.toFixed(1)); $('mwTDimA').setAttribute('x2', x0.toFixed(1));
+      $('mwTDimB').setAttribute('x1', x1.toFixed(1)); $('mwTDimB').setAttribute('x2', x1.toFixed(1));
+      $('mwTDimTxt').textContent = 'δ = ' + w.d.toFixed(1) + ' mm';
+      $('mwSlabTxt').textContent = '物料 δ = ' + w.d.toFixed(1) + ' mm';
+      $('mwTTxt1').textContent = '透射衰减 P = P₀e^(−αδ)：α·δ = ' + (CFG.mwAlpha/10*w.d).toFixed(3) +
+        ' Np → P/P₀ = ' + w.Prel.toFixed(3);
+    }
+  }
+  /* ---- 4.3 射线几何与粒子 ---- */
+  function paintRy(){
+    var r = ryModel(), i;
+    var w3 = 14 + 60*(r.d - CFG.ryMin)/(CFG.ryMax - CFG.ryMin);        /* 14 → 74 */
+    $('ryWork').setAttribute('width', w3.toFixed(1));
+    $('ryDim').setAttribute('x2', (340 + w3).toFixed(1));
+    $('ryDimB').setAttribute('x1', (340 + w3).toFixed(1)); $('ryDimB').setAttribute('x2', (340 + w3).toFixed(1));
+    $('ryDimTxt').setAttribute('x', (340 + w3/2).toFixed(1));
+    $('ryDimTxt').textContent = 'δ = ' + r.d.toFixed(1) + ' mm';
+    $('rySrcTxt').textContent = (S.src === 'cs' ? '¹³⁷Cs' : '⁶⁰Co');
+    $('rySrcTxt2').textContent = (S.src === 'cs' ? 'γ 0.66 MeV' : 'γ 1.25 MeV');
+    $('ryIonVal').textContent = 'i = ' + r.i.toFixed(1) + ' pA';
+    $('ryGmVal').textContent = r.n.toFixed(0) + ' cps';
+    $('ryTxt1').textContent = 'I = I₀e^(−μh)：μ = ' + r.mu.toFixed(2) + ' cm⁻¹、h = ' + r.hcm.toFixed(2) +
+      ' cm → I/I₀ = ' + (r.Irel*100).toFixed(1) + ' %';
+    $('ryTxt2').textContent = '质量厚度 x = ρh = ' + r.xm.toFixed(1) + ' g/cm²，μ_m = μ/ρ = ' + r.mum.toFixed(4) +
+      ' cm²/g → 换材料可直接查表（式12-19）';
+    $('ryTxt3').textContent = '防护三原则：时间 · 距离 · 屏蔽（' + (S.src === 'cs' ? '¹³⁷Cs' : '⁶⁰Co') + ' 十年后源强剩 ' +
+      (r.dec10*100).toFixed(1) + '%，须定期标定）；γ 屏蔽 h = ln(k)/μ：铅衰减 100 倍需 ' + r.shield.toFixed(1) + ' cm';
+    ST.ry.xL = 340; ST.ry.xR = 340 + w3;
+    RYTRANS = r.Irel;
+    /* 粒子重新抽签（厚度变化后立即更新存活比例） */
+    for (i = 0; i < RYP.length; i++){ RYP[i].decided = false; RYP[i].pass = false; RYP[i].fade = 0; RYP[i].a = 0.95; }
+  }
+
+  /* ---- 4.4 读数（结构内嵌 + 输出读数卡） ---- */
+  function paintRead(){
+    var t = S.type, m = S.mode, i;
+    if (t === 'us'){
+      var u = usModel();
+      $('in1').textContent = '超声：钢件 δ = ' + u.d.toFixed(2) + ' mm，c = 5900 m/s，f = 2.5 MHz';
+      $('in2').textContent = '回波时间 t = 2δ/c = ' + u.t.toFixed(2) + ' μs（含延迟块总时间 ' + u.tTot.toFixed(2) + ' μs）';
+      $('in3').textContent = 'λ = c/f = ' + u.lam.toFixed(2) + ' mm；衰减后强度 I/I₀ = e^(−αδ) = ' + (u.Irel*100).toFixed(1) + ' %';
+      $('inBar').setAttribute('width', Math.max(2, 320*u.Irel).toFixed(1));
+      $('inBarTxt').textContent = 'I/I₀ = ' + (u.Irel*100).toFixed(1) + ' %（α = ' + CFG.alphaUs + ' Np/cm，αδ = ' + u.alNp.toFixed(3) + ' Np）';
+      $('in4').textContent = m === 'm0'
+        ? 'δ = c(t − t₀)/2 = ' + u.d.toFixed(2) + ' mm；测厚分辨力 0.01 mm；1 μs 计时误差 → 钢中 2.95 mm'
+        : '穿透法：I = I₀e^(−αδ)；α 随频率升高而增大 → 高频分辨力好、低频穿透深';
+      $('bigCap').textContent = '工件厚度 δ';
+      $('bigNum').textContent = u.d.toFixed(2);
+      $('bigUnit').textContent = 'mm';
+      $('k1L').textContent = m === 'm0' ? '回波时间 t' : '回波时间 t';
+      $('k1b').textContent = u.t.toFixed(2) + ' μs';
+      $('k2L').textContent = m === 'm0' ? '含延迟块总时间' : '透射声能 I/I₀';
+      $('k2b').textContent = m === 'm0' ? (u.tTot.toFixed(2) + ' μs') : ((u.Irel*100).toFixed(1) + ' %');
+      $('k3L').textContent = '衰减后强度 I/I₀';
+      $('k3b').textContent = (u.Irel*100).toFixed(1) + ' %';
+      $('k4L').textContent = '波长 λ = c/f';
+      $('k4b').textContent = u.lam.toFixed(2) + ' mm';
+      $('readFine').innerHTML = 't = 2δ/c = 2×' + u.d.toFixed(2) + '/5900 mm/(m/s) = <b>' + u.t.toFixed(2) +
+        ' μs</b>；总线时间 ' + u.tTot.toFixed(2) + ' μs，扣掉延迟块 <b>δ = c(t−t₀)/2 = ' + u.d.toFixed(2) +
+        ' mm</b>。声阻抗 Z = ρc = ' + (CFG.rho*CFG.cSteel/1e6).toFixed(1) + '×10⁶ Pa·s/m（水/钢声压反射率 ≈ ' +
+        CFG.beta + '，空气/钢 ≈ 0.99998 → 耦合剂不可省）。';
+      $('stHint').textContent = m === 'm0'
+        ? '脉冲回波法：t = 2δ/c + t₀，扣掉延迟块即得厚度；薄件底波并入始波 = 近表面盲区。'
+        : '穿透法：测透射声能，无盲区、只能判有无；耦合剂把空气换成声阻抗接近的介质，否则声波进不了工件。';
+    } else if (t === 'mw'){
+      var w = mwModel();
+      $('in1').textContent = '微波：f = 9.4 GHz，λ = c/f = ' + w.lam.toFixed(2) + ' mm（X 波段）';
+      if (m === 'm0'){
+        $('in2').textContent = '反射式：回波往返时延 Δt = 2d/c = ' + w.dt.toFixed(3) + ' ns（d = ' + w.d.toFixed(1) + ' mm）';
+        $('in3').textContent = 'P/P₀ = (s²+4d₀²)/(s²+4d²) = ' + w.Pref.toFixed(3) + '（s = ' + w.s.toFixed(0) + ' mm，d₀ = 5 mm）';
+        $('in4').textContent = '相位法：Δd = (λ/4π)Δφ → 2π ↔ λ/2 = ' + w.lam2.toFixed(2) + ' mm；金属面全反射，是最好的反射靶';
+      } else {
+        $('in2').textContent = '透射式：P/P₀ = e^(−αδ) = ' + w.Prel.toFixed(3) + '（δ = ' + w.d.toFixed(1) + ' mm）';
+        $('in3').textContent = 'α·δ = ' + (CFG.mwAlpha/10*w.d).toFixed(3) + ' Np = ' + (CFG.mwAlpha/10*w.d*8.686).toFixed(2) + ' dB';
+        $('in4').textContent = '水的 εᵣ ≈ 80 ≫ 一般物料 2~10 → 含水量变化即衰减变化（测湿）；金属不可穿透，不能测金属厚度';
+      }
+      $('inBar').setAttribute('width', Math.max(2, 320*(m === 'm0' ? w.Pref : w.Prel)).toFixed(1));
+      $('inBarTxt').textContent = m === 'm0'
+        ? 'P/P₀ = ' + w.Pref.toFixed(3) + '（式12-12：P 随 d 按平方规律衰减）'
+        : 'P/P₀ = ' + w.Prel.toFixed(3) + '（α = ' + CFG.mwAlpha + ' Np/cm）';
+      $('bigCap').textContent = m === 'm0' ? '天线到被测面距离 d' : '物料厚度 δ';
+      $('bigNum').textContent = w.d.toFixed(1);
+      $('bigUnit').textContent = 'mm';
+      $('k1L').textContent = '波长 λ = c/f';
+      $('k1b').textContent = w.lam.toFixed(2) + ' mm';
+      $('k2L').textContent = m === 'm0' ? '回波往返时延 Δt' : '透过功率 P/P₀';
+      $('k2b').textContent = m === 'm0' ? (w.dt.toFixed(3) + ' ns') : (w.Prel.toFixed(3));
+      $('k3L').textContent = m === 'm0' ? '回波功率 P/P₀' : '衰减 α·δ';
+      $('k3b').textContent = m === 'm0' ? w.Pref.toFixed(3)
+        : ((CFG.mwAlpha/10*w.d).toFixed(2) + ' Np');
+      $('k4L').textContent = '相位法分辨 λ/2';
+      $('k4b').textContent = w.lam2.toFixed(2) + ' mm';
+      $('readFine').innerHTML = m === 'm0'
+        ? '式 12-12：P = P_tG_tG_rλ²/[(4π)²(s²+4d²)]，代入 s = ' + w.s.toFixed(0) + ' mm、d = <b>' + w.d.toFixed(1) +
+          ' mm</b> → 相对功率 <b>' + w.Pref.toFixed(3) + '</b>；时延 Δt = 2d/c = ' + w.dt.toFixed(3) +
+          ' ns（1 ns 只有 0.3 m 的距离分辨力，所以工程上更常用相位法/调频法）。'
+        : '透射式（遮断式）：P = P₀e^(−αδ)，δ = <b>' + w.d.toFixed(1) + ' mm</b> → P/P₀ = <b>' + w.Prel.toFixed(3) +
+          '</b>。金属导体自由电子形成反向电流 → 穿透深度仅微米量级，微波<b>不能测金属厚度</b>（教材习题 12-3）。';
+      $('stHint').textContent = m === 'm0'
+        ? '反射式：天线同侧，测回波功率（∝1/(s²+4d²)）或时延/相位；金属面全反射，也是「金属屏蔽」的另一面。'
+        : '透射式：天线分置物料两侧，测透过功率的衰减 → 测厚、测湿；水的 εᵣ≈80，吸收最强。';
+    } else {
+      var r = ryModel();
+      $('in1').textContent = '射线：' + (S.src === 'cs' ? '¹³⁷Cs γ（0.662 MeV，T½ = 30.2 a）' : '⁶⁰Co γ（1.25 MeV，T½ = 5.27 a）') +
+        ' → 钢板 δ = ' + r.d.toFixed(1) + ' mm';
+      $('in2').textContent = 'I/I₀ = e^(−μh) = e^(−' + r.mu.toFixed(2) + '×' + r.hcm.toFixed(2) + ') = ' + (r.Irel*100).toFixed(1) + ' %';
+      $('in3').textContent = '质量厚度 x = ρh = ' + r.xm.toFixed(1) + ' g/cm²，μ_m = μ/ρ = ' + r.mum.toFixed(4) + ' cm²/g';
+      $('inBar').setAttribute('width', Math.max(2, 320*r.Irel).toFixed(1));
+      $('inBarTxt').textContent = '透射强度 I/I₀ = ' + (r.Irel*100).toFixed(1) + ' %（' + r.mu.toFixed(2) + ' cm⁻¹ × ' + r.hcm.toFixed(2) + ' cm）';
+      $('in4').textContent = m === 'm0'
+        ? '电离室：饱和区电流 i = i₀·I/I₀ = ' + r.i.toFixed(1) + ' pA（i₀ = ' + CFG.i0 + ' pA），输出严格正比于辐射强度'
+        : '盖革计数管：计数率 n = n₀·I/I₀ = ' + r.n.toFixed(0) + ' cps（n₀ = ' + CFG.n0 + ' cps）；有死时间，只能计数不能测能';
+      $('bigCap').textContent = m === 'm0' ? '电离电流 i' : '盖革管计数率 n';
+      $('bigNum').textContent = m === 'm0' ? r.i.toFixed(1) : r.n.toFixed(0);
+      $('bigUnit').textContent = m === 'm0' ? 'pA' : 'cps';
+      $('k1L').textContent = '透射强度 I/I₀';
+      $('k1b').textContent = (r.Irel*100).toFixed(1) + ' %';
+      $('k2L').textContent = '质量厚度 x = ρh';
+      $('k2b').textContent = r.xm.toFixed(1) + ' g/cm²';
+      $('k3L').textContent = '线吸收系数 μ';
+      $('k3b').textContent = r.mu.toFixed(2) + ' cm⁻¹';
+      $('k4L').textContent = m === 'm0' ? '空载电流 i₀' : '空载计数率 n₀';
+      $('k4b').textContent = m === 'm0' ? (CFG.i0 + ' pA') : (CFG.n0 + ' cps');
+      $('readFine').innerHTML = 'I = I₀e^(−μh)：μ = ' + r.mu.toFixed(2) + ' cm⁻¹（' + (S.src === 'cs' ? '¹³⁷Cs' : '⁶⁰Co') +
+        '，钢）、h = ' + r.hcm.toFixed(2) + ' cm → I/I₀ = <b>' + (r.Irel*100).toFixed(1) + ' %</b>；写成质量厚度形式 μ_m = μ/ρ = ' +
+        r.mum.toFixed(4) + ' cm²/g、x = ρh = ' + r.xm.toFixed(1) + ' g/cm² 后<b>换材料可直接查表</b>。' +
+        ' 半衰期 T = 0.693/λ：' + (S.src === 'cs' ? '¹³⁷Cs 30.2 年' : '⁶⁰Co 5.27 年') + '，十年后源强剩 ' +
+        (r.dec10*100).toFixed(1) + '%，须定期标定。';
+      $('stHint').textContent = m === 'm0'
+        ? '电离室工作在饱和区：射线电离气体 → 离子被收集 → 电流严格正比于辐射强度；电压过低会复合、过高进入盖革区。'
+        : '盖革计数管工作在雪崩区：输出脉冲幅度与粒子能量无关 → 只能计数；死时间几十~几百 μs，需做死时间修正。';
+    }
+  }
+
+  /* ============ 5. 特性曲线 ============ */
+  var CH = { x0:64, x1:672, y0:240, y1:30, mode:'' };
+  function cpx(u){ return CH.x0 + u*(CH.x1 - CH.x0); }
+  function cpy(v){ return CH.y0 - clamp(v, 0, 1)*(CH.y0 - CH.y1); }
+  function curveAxis(m){
+    if (m === 'us') return { n:6, xlab:'工件厚度 δ / mm（满量程 0~' + CFG.dMax + ' mm）', ylab:'t / μs',
+                             yt:function(v){ return (v*2*CFG.dMax/1000/CFG.cSteel*1e6).toFixed(2); },
+                             xt:function(v){ return (v*CFG.dMax).toFixed(0); } };
+    if (m === 'mw') return { n:5, xlab:'距离 / 厚度 d / mm（满量程 0~' + CFG.mwMax + ' mm）', ylab:'P/P₀',
+                             yt:function(v){ return v.toFixed(2); },
+                             xt:function(v){ return (v*CFG.mwMax).toFixed(0); } };
+    return { n:5, xlab:'钢板厚度 δ / mm（满量程 0~' + CFG.ryMax + ' mm）', ylab:'I/I₀ = n/n₀',
+             yt:function(v){ return v.toFixed(2); },
+             xt:function(v){ return (v*CFG.ryMax).toFixed(0); } };
+  }
+  var cureUs = null;
+  function drawCurves(){
+    var m = S.curve, ax = curveAxis(m);
+    if (CH.mode !== m){                                                   /* 坐标轴标签随曲线切换 */
+      var g = '', i, v;
+      for (i = 0; i <= 4; i++){
+        v = i/4;
+        g += '<line x1="' + CH.x0 + '" y1="' + cpy(v).toFixed(1) + '" x2="' + CH.x1 + '" y2="' + cpy(v).toFixed(1) + '" stroke="#e6edf6"/>';
+        g += '<text x="' + (CH.x0 - 8) + '" y="' + (cpy(v) + 4).toFixed(1) + '" text-anchor="end" font-size="11.5" fill="#5b6b80">' + ax.yt(v) + '</text>';
+      }
+      for (i = 0; i <= 4; i++){
+        v = i/4;
+        g += '<line x1="' + cpx(v).toFixed(1) + '" y1="' + CH.y1 + '" x2="' + cpx(v).toFixed(1) + '" y2="' + CH.y0 + '" stroke="#e6edf6"/>';
+        g += '<text x="' + cpx(v).toFixed(1) + '" y="' + (CH.y0 + 16) + '" text-anchor="middle" font-size="11.5" fill="#5b6b80">' + ax.xt(v) + '</text>';
+      }
+      $('cGrid').innerHTML = g;
+      $('xAxisLab').textContent = ax.xlab;
+      $('yAxisLab').textContent = ax.ylab;
+      CH.mode = m;
+    }
+    function pathOf(fn){
+      var d = '', first = true, i;
+      for (i = 0; i <= 100; i += 2){
+        var u = i/100;
+        d += (first ? 'M' : 'L') + cpx(u).toFixed(1) + ' ' + cpy(fn(u)).toFixed(1) + ' ';
+        first = false;
+      }
+      return d;
+    }
+    /* 回波时间 t = 2δ/c（严格线性，归一化到满量程） */
+    $('pUs').setAttribute('d', pathOf(function(u){ return u; }));
+    /* 微波 12-12：P/P₀ = (s²+4d_min²)/(s²+4d²) */
+    $('pMw').setAttribute('d', pathOf(function(u){
+      var d = CFG.mwMax*u, den = CFG.mwS*CFG.mwS + 4*d*d;
+      var den0 = CFG.mwS*CFG.mwS + 4*CFG.mwMin*CFG.mwMin;
+      return den0/den;
+    }));
+    /* 射线 12-17：I/I₀ = e^(−μh)，μ 随源改变 */
+    $('pRy').setAttribute('d', pathOf(function(u){
+      return Math.exp(-CFG.muFe[S.src]/10*CFG.ryMax*u);
+    }));
+    $('pUs').setAttribute('opacity', m === 'us' ? 1 : 0.22);
+    $('pMw').setAttribute('opacity', m === 'mw' ? 1 : 0.22);
+    $('pRy').setAttribute('opacity', m === 'ry' ? 1 : 0.22);
+    $('pUs').setAttribute('stroke-width', m === 'us' ? 3.8 : 2.6);
+    $('pMw').setAttribute('stroke-width', m === 'mw' ? 3.8 : 2.6);
+    $('pRy').setAttribute('stroke-width', m === 'ry' ? 3.8 : 2.6);
+    /* 工作点 */
+    var uu = S.x/100, val;
+    if (m === 'us'){ val = uu; }
+    else if (m === 'mw'){ var w = mwModel(); val = w.Pref; }
+    else { val = ryModel().Irel; }
+    $('mkX').setAttribute('x1', cpx(uu).toFixed(1)); $('mkX').setAttribute('x2', cpx(uu).toFixed(1));
+    $('mkDot').setAttribute('cx', cpx(uu).toFixed(1)); $('mkDot').setAttribute('cy', cpy(val).toFixed(1));
+    $('curveNote').textContent = m === 'us'
+      ? 't = 2δ/c 与厚度严格成正比（斜率 2/c = 0.339 μs/mm）'
+      : (m === 'mw' ? 'P/P₀ = 1 时无衰减；d↑ 按平方规律衰减（式12-12）'
+                    : 'I/I₀ = e^(−μh)：μ = ' + CFG.muFe[S.src] + ' cm⁻¹');
+  }
+
+  /* ============ 6. 公式卡 ============ */
+  function paintFormulas(){
+    var t = S.type, m = S.mode, html = '', F = frac, i;
+    html += '<div class="row"><span class="tag">基础</span><span>波速—频率—波长：c = f·λ，与频率无关（同介质）；钢中纵波 ' +
+      CFG.cSteel + '、水 ' + CFG.cWater + '、空气 ' + CFG.cAir + ' m/s。</span></div>';
+    if (t === 'us'){
+      var u = usModel();
+      html += '<div class="row"><span class="tag">式 12-1</span><span>纵波 c_L = ' + F('√[E(1−μ)]', 'ρ(1+μ)(1−2μ)') +
+        ' = 代入钢 E = 2.1×10¹¹ Pa、ρ = 7850、μ = 0.28 → c_L = <b>' + cL().toFixed(0) + ' m/s</b>（≈5900）</span></div>';
+      html += '<div class="row"><span class="tag">式 12-2</span><span>横波 c_S = ' + F('√E', '√[2ρ(1+μ)]') +
+        ' = <b>' + cS().toFixed(0) + ' m/s</b>；表面波（式12-3）c_R ≈ 0.7c_S = <b>' + (0.7*cS()).toFixed(0) +
+        ' m/s</b> —— 横波、表面波只能在固体中传播</span></div>';
+      html += '<div class="row"><span class="tag">式 12-4</span><span>' + F('sin α', 'c_L1') + ' = ' + F('sin β_L', 'c_L2') +
+        ' = ' + F('sin β_S', 'c_S2') + '　（斜楔有机玻璃 c_L1 = 2700 → 钢 c_L2 = 5900、c_S2 = 3230）</span></div>';
+      html += '<div class="row"><span class="tag">式 12-5</span><span>第一临界角 α₁ = sin⁻¹(c_L1/c_L2) = sin⁻¹(2700/5900) = <b>27.2°</b></span></div>';
+      html += '<div class="row"><span class="tag">式 12-6</span><span>第二临界角 α₂ = sin⁻¹(c_L1/c_S2) = sin⁻¹(2700/3230) = <b>56.7°</b> ' +
+        '→ 入射角取 27.2°~56.7° 得纯横波；常用 K1(45°)、K2(63.4°)</span></div>';
+      html += '<div class="row"><span class="tag">式 12-7</span><span>衰减 I = I₀e^(−αd)：α = ' + CFG.alphaUs + ' Np/cm、d = ' +
+        u.d.toFixed(2) + ' mm → I/I₀ = <b>' + (u.Irel*100).toFixed(1) + ' %</b>（αd = ' + u.alNp.toFixed(3) + ' Np）</span></div>';
+      html += '<div class="row"><span class="tag">式 12-8</span><span>探头（晶片）固有频率 f = ' + F('n·c', '2d') +
+        '：f = 2.5 MHz、n = 1 时晶片厚 d = c/(2f) = <b>1.18 mm</b>（共振时发射最强）</span></div>';
+      html += '<div class="row"><span class="tag g">回声测距</span><span>s = c·t/2（往返除 2）：t = 2δ/c = ' + u.t.toFixed(2) +
+        ' μs → s = δ = <b>' + u.d.toFixed(2) + ' mm</b>；1 μs 计时误差 → 钢中 2.95 mm、空气 0.17 mm</span></div>';
+      html += '<div class="row"><span class="tag g">测厚</span><span>δ = ' + F('c(t − t₀)cosθ', '2') + '：双晶直探头 θ = 0、t₀ = ' +
+        u.t0.toFixed(2) + ' μs → δ = c(' + u.tTot.toFixed(2) + ' − ' + u.t0.toFixed(2) + ')/2 = <b>' + u.d.toFixed(2) + ' mm</b></span></div>';
+      html += '<div class="row"><span class="tag g">式 12-9</span><span>液位参照物法：' + F('2h', 'c') + ' = t、' + F('2h₀', 'c') +
+        ' = t₀（h₀ 为标准参照物）→ 式12-10 h = h₀·t/t₀、式12-11 H = h₂ − h₀t/t₀ —— <b>声速 c 被消掉</b>，' +
+        '液位计精度可达 0.1%~0.5% FS（图12-6 探头装在测量直管内，避开液面波动）</span></div>';
+      html += '<div class="row"><span class="tag f">声阻抗</span><span>Z = ρc：钢 46.3×10⁶、水 1.48×10⁶、空气 0.0004×10⁶ Pa·s/m；' +
+        '声压反射率 r = (Z₂−Z₁)/(Z₂+Z₁)：水/钢 ≈ 0.938、空气/钢 ≈ 0.99998 → ' +
+        '<b>耦合剂的作用是把空气换成声阻抗接近的介质</b></span></div>';
+      html += '<div class="note">' + (m === 'm0'
+        ? '脉冲回波法：单探头兼收发，t = 2δ/c + t₀；薄件底波并入始波形成盲区，故用延迟块把发射脉冲与回波在时间轴上拉开。'
+        : '穿透法：测透射声能 I = I₀e^(−αδ)，无盲区、只能判有无；空气 40 kHz 的 α 达 1~2 Np/cm，比钢中大得多，故空气测距只能用几十 kHz。') + '</div>';
+    } else if (t === 'mw'){
+      var w = mwModel();
+      html += '<div class="row"><span class="tag">式 12-12</span><span>微波液位 P = ' + F('P_tG_tG_rλ²', '(4π)²(s²+4d²)') +
+        '：s = ' + w.s.toFixed(0) + ' mm、d = ' + w.d.toFixed(1) + ' mm → P/P₀ = <b>' + w.Pref.toFixed(3) +
+        '</b>（P 随距离按平方规律衰减）</span></div>';
+      html += '<div class="row"><span class="tag">式 12-14</span><span>开关式物位：物位升到设定高度时 P = ηP₀（η 由物料形状/性质决定）→ 输出开关量报警</span></div>';
+      html += '<div class="row"><span class="tag">波长</span><span>λ = c/f = 3×10⁸/9.4×10⁹ = <b>' + w.lam.toFixed(2) +
+        ' mm</b>（X 波段）；波长 10 cm 以上可用同轴线传输，短波长用波导管</span></div>';
+      html += '<div class="row"><span class="tag g">时延</span><span>反射式往返时延 Δt = 2d/c = <b>' + w.dt.toFixed(3) +
+        ' ns</b>（d = ' + w.d.toFixed(1) + ' mm）—— 电磁波太快，直接计时分辨力不够</span></div>';
+      html += '<div class="row"><span class="tag g">相位法</span><span>Δd = ' + F('λ', '4π') + 'Δφ：2π 相位变化对应 λ/2 = <b>' +
+        w.lam2.toFixed(2) + ' mm</b>；当前 Δφ = ' + w.dphi.toFixed(2) + ' rad</span></div>';
+      html += '<div class="row"><span class="tag v">多普勒</span><span>f_d = ' + F('2v cosθ·f₀', 'c') +
+        ' → v = c·f_d/(2f₀cosθ)：f_d = 1 kHz、f₀ = 9.4 GHz → v = <b>57.4 km/h</b>（10~250 km/h，误差约 ±1 km/h）</span></div>';
+      html += '<div class="row"><span class="tag g">透射衰减</span><span>P = P₀e^(−αδ)：δ = ' + w.d.toFixed(1) + ' mm → P/P₀ = <b>' +
+        w.Prel.toFixed(3) + '</b>（α = ' + CFG.mwAlpha + ' Np/cm，随含水量增大）</span></div>';
+      html += '<div class="note">' + (m === 'm0'
+        ? '反射式：天线同侧，测回波功率（式12-12）或时延/相位；金属导体把微波全部反射（穿透仅微米量级）。'
+        : '透射式（遮断式）：天线分置物料两侧，测透过功率；水的 εᵣ≈80 ≫ 一般物料 2~10，故对含水量最敏感 —— 测湿的基本依据。') + '</div>';
+    } else {
+      var r = ryModel();
+      html += '<div class="row"><span class="tag">式 12-15</span><span>放射源衰变 I = I₀exp(−λt)：源强只随时间下降，与温度、压力、化学状态无关</span></div>';
+      html += '<div class="row"><span class="tag">式 12-16</span><span>半衰期 T = ' + F('ln2', 'λ') + ' = 0.693/λ：' +
+        (S.src === 'cs' ? '¹³⁷Cs 30.2 a' : '⁶⁰Co 5.27 a') + ' → 十年后源强剩 <b>' + (r.dec10*100).toFixed(1) + ' %</b>，须定期标定</span></div>';
+      html += '<div class="row"><span class="tag">式 12-17</span><span>I = I₀e^(−μh)：μ = ' + r.mu.toFixed(2) + ' cm⁻¹（钢，' +
+        (S.src === 'cs' ? '¹³⁷Cs' : '⁶⁰Co') + '）、h = ' + r.hcm.toFixed(2) + ' cm → I/I₀ = <b>' + (r.Irel*100).toFixed(1) + ' %</b></span></div>';
+      html += '<div class="row"><span class="tag">式 12-18</span><span>I = I₀e^(−μ_mρh)：质量吸收系数 μ_m = μ/ρ = ' + r.mum.toFixed(4) +
+        ' cm²/g —— 除以密度后几乎与化学成分、物理状态无关，可直接查表</span></div>';
+      html += '<div class="row"><span class="tag">式 12-19</span><span>质量厚度 x = ρh = ' + r.xm.toFixed(1) +
+        ' g/cm²：把「多厚」与「多密」合成一个量 —— 纸张测克重、薄膜测面密度都靠它</span></div>';
+      html += '<div class="row"><span class="tag">式 12-20</span><span>物位 H = ' + F('1', 'μ') + 'ln(I₀/I)：例 I₀/I = ' + (1/r.Irel).toFixed(2) +
+        ' → H = ln(' + (1/r.Irel).toFixed(2) + ')/' + r.mu.toFixed(2) + ' = <b>' + (Math.log(1/r.Irel)/r.mu).toFixed(2) +
+        ' cm</b>（源与探测器分置容器两侧，可测高温高压强腐蚀介质）</span></div>';
+      html += '<div class="row"><span class="tag f">防护</span><span>由 I = I₀e^(−μh) 反算屏蔽厚度 h = ' + F('ln k', 'μ') +
+        '：把 ⁶⁰Co 的 γ 衰减 100 倍，铅（μ ≈ 0.66 cm⁻¹）需 h = ln100/0.66 ≈ <b>7.0 cm</b>；β 先用低 Z 材料再包铅（防韧致辐射）</span></div>';
+      html += '<div class="row"><span class="tag v">电流/计数</span><span>电离室（饱和区）i = i₀·I/I₀ = ' + r.i.toFixed(1) +
+        ' pA；盖革管 n = n₀·I/I₀ = ' + r.n.toFixed(0) + ' cps（死时间修正 n = m/(1−mτ)，碘化钠对 γ 效率 20%~30%）</span></div>';
+      html += '<div class="note">' + (m === 'm0'
+        ? '电离室：平行极板加几百伏，工作在饱和区 → 电流严格正比于辐射强度；α、β、γ 的电离室互不通用。'
+        : '盖革计数管：上千伏工作在雪崩区，输出等幅脉冲 → 只能计数、不能测能；死时间几十~几百 μs，计数率高时漏计严重。') + '</div>';
+    }
+    $('fmlTitle').textContent = TYPES[t].name + ' · ' + MODETXT[t][m === 'm0' ? 0 : 1][0] +
+      (t === 'ry' ? '（' + (S.src === 'cs' ? '¹³⁷Cs' : '⁶⁰Co') + '）' : '');
+    $('fmlBody').innerHTML = html;
+  }
+
+  /* ============ 7. 要点 ============ */
+  var PTS_TEXT = [
+    '波式及射线式传感器以<b>波</b>为载体：发射波 → 波与介质相互作用（反射、折射、衰减、频移）→ 接收波 → 反推被测量；分「<b>测时间、测强度、测频率</b>」三条路径。',
+    '<b>超声波是机械波</b>（＞20 kHz）：纵波、横波、表面波、兰姆波；横波与表面波只能在固体中传播，气体液体只传纵波。同介质中 c_L 最快，c_S ≈ 0.55c_L，c_R ≈ 0.7c_S。',
+    '声速 c = √(弹性率/密度) <b>与频率无关</b>：式12-1 钢中 c_L = 5848 m/s，式12-2 c_S = 3233 m/s；但空气声速随温度变（≈331.5+0.607t，20→40 ℃ 差 3.5%），是测距误差的主要来源。',
+    '<b>换能器靠压电效应</b>：逆压电效应发射、正压电效应接收；探头型式按波形选（直/斜/表面波/双晶/水浸）。斜楔折射（式12-4）第一临界角 27.2°、第二临界角 56.7°，其间得纯横波；晶片厚度决定工作频率 f = n·c/(2d)。',
+    '<b>回声测距必须除 2</b>：s = c·t/2；测厚要扣延迟块 δ = c(t−t₀)cosθ/2。1 μs 计时误差 → 钢中 2.95 mm、空气中 0.17 mm，所以测厚仪的计时电路精度要求远高于测距仪。',
+    '<b>脉冲回波法</b>（单探头兼收发）：能定位（缺陷深 h = c·t/2）、单面可测、应用最广，但有近表面盲区；<b>穿透法</b>（两探头对置）无盲区、适合板材与大厚度，但只能判有无。',
+    '<b>耦合剂的作用是把空气换成声阻抗接近的介质</b>：Z = ρc，空气/钢声压反射率 ≈ 0.99998（声波根本进不去），水/钢 ≈ 0.938；耦合轻重使回波高度可差一倍。',
+    '衰减 I = I₀e^(−αd)：<b>频率越高分辨力越高但衰减越快</b>——钢中 2.5 MHz 的 α ≈ 0.01~0.05 Np/cm，空气 40 kHz 的 α 达 1~2 Np/cm（大两个数量级），故金属用 MHz、空气用几十 kHz。',
+    '<b>微波</b>是 λ = 1 m~1 mm（300 MHz~300 GHz）的电磁波：反射式测回波功率/时延/相位，透射式（遮断式）测透过功率。<b>遇金属几乎全反射</b>（穿透仅微米量级）→ 不能测金属厚度；水的 εᵣ ≈ 80 ≫ 一般物料 2~10 → 测湿。',
+    '<b>射线</b>：源（γ ⁶⁰Co 5.27 a、¹³⁷Cs 30.2 a；β ⁹⁰Sr）+ 探测器（电离室 / 闪烁计数器 / 盖革计数管）；透射 I = I₀e^(−μh) = I₀e^(−μ_m x) 反解厚度，物位 H = (1/μ)ln(I₀/I)。' +
+    '防护守<b>时间·距离·屏蔽</b>三原则；盖革管只能计数、有死时间；⁶⁰Co 十年只剩 27%，须定期标定。'
+  ];
+  var PTS = { active:-1 };
+  function paintPoints(){
+    if (!$('points').children.length){
+      var html = '';
+      PTS_TEXT.forEach(function(t2, k){ html += '<li data-pi="' + k + '">' + t2 + '</li>'; });
+      $('points').innerHTML = html;
+    }
+  }
+  function setPt(i){
+    PTS.active = i;
+    var lis = $('points').children, k;
+    for (k = 0; k < lis.length; k++) lis[k].classList.toggle('on', k === i);
+    for (k = 0; k < PTS_TEXT.length; k++){
+      var bb = $('ptsB' + k);
+      if (bb) bb.classList.toggle('on', k === i);
+    }
+    if (i >= 0) say('<b>要点 ' + (i + 1) + '/' + PTS_TEXT.length + '</b>：' + PTS_TEXT[i]);
+  }
+  for (var pb = 0; pb < PTS_TEXT.length; pb++){
+    (function(k){ $('ptsB' + k).addEventListener('click', function(){ stopDemo(); setPt(k); }); })(pb);
+  }
+
+  /* ============ 8. 交互 ============ */
+  function setType(t){ S.type = t; S.curve = t; paint(); }
+  function setMode(m){ if (m !== 'm0' && m !== 'm1') return; S.mode = m; paint(); }
+  function setSrc(s){ if (!CFG.muFe[s]) return; S.src = s; paint(); }
+  function setX(v){ S.x = clamp(Math.round(v), 0, 100); $('x').value = S.x; paint(); }
+  function setCurve(cv){ S.curve = cv; paint(); }
+  $('x').addEventListener('input', function(){ stopDemo(); setX(+this.value); });
+  $('xM').addEventListener('click', function(){ stopDemo(); setX(S.x - 5); });
+  $('xP').addEventListener('click', function(){ stopDemo(); setX(S.x + 5); });
+  document.querySelectorAll('#segType button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setType(b.getAttribute('data-type')); say(TYPES[S.type].hint); });
+  });
+  document.querySelectorAll('#segMode button').forEach(function(b){
+    b.addEventListener('click', function(){
+      stopDemo(); setMode(b.getAttribute('data-mode'));
+      say('<b>' + MODETXT[S.type][S.mode === 'm0' ? 0 : 1][0] + '</b>：' + MODETXT[S.type][S.mode === 'm0' ? 0 : 1][1] + '。' + MODENOTE[S.type] + '。');
+    });
+  });
+  document.querySelectorAll('#segSrc button').forEach(function(b){
+    b.addEventListener('click', function(){
+      stopDemo(); setSrc(b.getAttribute('data-src'));
+      say('<b>' + (S.src === 'cs' ? '¹³⁷Cs（γ 0.662 MeV，T½ = 30.2 a）' : '⁶⁰Co（γ 1.25 MeV，T½ = 5.27 a）') +
+        '</b>：钢的 μ 从 ' + CFG.muFe.cs + ' / ' + CFG.muFe.co + ' cm⁻¹ 之间切换 —— 能量越高、μ 越小、穿透越强，但灵敏度下降。');
+    });
+  });
+  document.querySelectorAll('#segCurve button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setCurve(b.getAttribute('data-cv')); });
+  });
+  $('reset').addEventListener('click', function(){
+    stopDemo();
+    S.type = 'us'; S.mode = 'm0'; S.src = 'cs'; S.curve = 'us';
+    setX(25);
+    say('已复位：超声波式 · 脉冲回波法 · ¹³⁷Cs · δ = 10.75 mm（钢）。');
+  });
+
+  /* ============ 9. 演示 ============ */
+  async function demoEcho(){
+    var tok = beginDemo('echo');
+    setType('us'); setMode('m0'); setX(25);
+    say('【<b>超声波式 · 换能器</b>】压电晶片：<b>逆压电效应发射</b>（电→形变→声）、<b>正压电效应接收</b>（声→形变→电荷）；' +
+        '双晶直探头左晶片发射、右晶片接收，延迟块把发射脉冲与回波在时间轴上拉开。');
+    if (!await sleep(4400, tok)) return;
+    say('① 声速由介质的弹性与密度决定：钢中纵波 c_L = <b>' + cL().toFixed(0) + ' m/s</b>（式12-1），横波 c_S = ' +
+        cS().toFixed(0) + ' m/s。探头 f = 2.5 MHz → λ = c/f = <b>' + (CFG.cSteel/CFG.fUs*1000).toFixed(2) + ' mm</b>。');
+    if (!await sleep(4600, tok)) return;
+    say('② 让工件变厚：声波走的路程变长，底波在时间轴上<b>向右移动</b> —— 回声测距 s = c·t/2，注意必须除以 2（往返）。');
+    if (!await tween(8, 80, 3400, setX, tok)) return;
+    if (!await sleep(1500, tok)) return;
+    var u1 = usModel();
+    say('③ δ = <b>' + u1.d.toFixed(2) + ' mm</b> → 工件内往返 t = 2δ/c = <b>' + u1.t.toFixed(2) +
+        ' μs</b>；仪器读到的是含延迟块的总时间 ' + u1.tTot.toFixed(2) + ' μs。');
+    if (!await sleep(4200, tok)) return;
+    say('④ 测厚要把延迟块扣掉：δ = c(t − t₀)/2 = 5900×(' + u1.tTot.toFixed(2) + ' − ' + u1.t0.toFixed(2) +
+        ')μs/2 = <b>' + u1.d.toFixed(2) + ' mm</b> —— 这正是测厚与测距的区别（测的是工件厚度，不是探头到工件的距离）。');
+    if (!await sleep(4600, tok)) return;
+    say('⑤ 现在把工件减薄到 1 mm：底波并入始波，<b>分不开了</b> —— 这就是近表面盲区；延迟块与双晶探头正是为压缩盲区而设计的。');
+    if (!await tween(80, 0, 3000, setX, tok)) return;
+    if (!await sleep(2600, tok)) return;
+    setX(25);
+    say('【小结】s = c·t/2（除 2）；测厚 δ = c(t−t₀)/2（扣延迟块）。测厚分辨力可达 <b>0.01 mm</b>：钢中声速稳定、计时电路精密、t₀ 可用标准试块标定。');
+    if (!await sleep(3800, tok)) return;
+    endDemo();
+  }
+
+  async function demoTrans(){
+    var tok = beginDemo('trans');
+    setType('us'); setMode('m1'); setX(40);
+    say('【穿透法】发射、接收探头<b>分置工件两侧</b>，测的是透射声能 I = I₀e^(−αδ)。无缺陷时最强，有缺陷时被遮挡减弱 —— 只能判「有/无」，不能定位。');
+    if (!await sleep(4400, tok)) return;
+    say('① 拖到最大厚度：透过率降到 <b>' + (usModel().Irel*100).toFixed(1) + ' %</b>。与脉冲回波法对比：穿透法<b>不受盲区限制</b>，适合板材与大厚度工件。');
+    if (!await tween(100, 20, 3000, setX, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('② <b>耦合剂不可省</b>：声阻抗 Z = ρc —— 空气/钢的声压反射率 ≈ <b>0.99998</b>，不涂耦合剂声波几乎全被反射回去；水/钢 ≈ ' +
+        CFG.beta + '，所以水浸探头用一层水柱就够。耦合轻重还能让回波高度差一倍。');
+    if (!await sleep(5200, tok)) return;
+    say('③ <b>频率取舍</b>：f 越高 → λ 越短、分辨力越高、指向角 sinθ ≈ 1.22λ/D 越尖锐，但衰减越快。钢中可用 MHz 级（α ≈ ' +
+        CFG.alphaUs + ' Np/cm），空气中 40 kHz 的 α 就达 1~2 Np/cm，所以空气测距只能用几十 kHz、量程短、盲区 0.2~0.5 m。');
+    if (!await sleep(5400, tok)) return;
+    say('④ <b>探头频率由晶片厚度决定</b>：f = n·c/(2d)，n = 1、f = 2.5 MHz 时晶片厚 d = c/(2f) = <b>1.18 mm</b>；' +
+        '晶片工作温度必须低于居里点（石英 573 ℃、PZT 300 ℃、钛酸钡 120 ℃）。');
+    if (!await sleep(4600, tok)) return;
+    setX(25);
+    say('【小结】回波法测时间、能定位、有盲区；穿透法测强度、无盲区、只判有无。选法的关键：<b>缺陷在哪里、工件能不能两面接触</b>。');
+    if (!await sleep(3400, tok)) return;
+    endDemo();
+  }
+
+  async function demoMw(){
+    var tok = beginDemo('mw');
+    setType('mw'); setMode('m0'); setX(30);
+    say('【<b>微波式</b>】λ = 1 m~1 mm、f = 300 MHz~300 GHz 的电磁波：不需要传播介质（真空也能传）、接近直线传播、受烟尘强光影响小、<b>水吸收最强</b>。');
+    if (!await sleep(4400, tok)) return;
+    say('① <b>反射式</b>：收发天线在同侧，微波经被测面反射回来。看虚线流动方向 = 波束传播；金属面全反射，是最好的反射靶。');
+    if (!await sleep(3800, tok)) return;
+    say('② 由式12-12：P = P_tG_tG_rλ²/[(4π)²(s²+4d²)] —— 分母里的 s²+4d² 就是波往返路程的平方，<b>P 随距离按平方规律衰减</b>。');
+    if (!await tween(20, 85, 3200, setX, tok)) return;
+    if (!await sleep(1400, tok)) return;
+    var w1 = mwModel();
+    say('③ d = <b>' + w1.d.toFixed(1) + ' mm</b> → P/P₀ = ' + w1.Pref.toFixed(3) + '，往返时延只有 <b>' + w1.dt.toFixed(3) +
+        ' ns</b>。直接用计时法分辨力太低，工程上多用<b>相位法</b>：Δd = (λ/4π)Δφ，2π 对应 λ/2 = ' + w1.lam2.toFixed(2) + ' mm。');
+    if (!await sleep(4800, tok)) return;
+    setMode('m1'); setX(35);
+    say('④ 切到<b>透射式（遮断式）</b>：收发天线分置物料两侧，测透过功率 P = P₀e^(−αδ) —— 物料越厚、含水越多，透过越少，这就是<b>微波测厚与测湿</b>的原理。');
+    if (!await sleep(4400, tok)) return;
+    say('⑤ <b>金属屏蔽</b>：导体里的自由电子随微波电场形成反向电流，把微波几乎全部反射，穿透深度只有微米量级 —— 所以微波<b>不能测金属厚度</b>（教材习题 12-3），反过来金属板正好当反射靶。');
+    if (!await sleep(4600, tok)) return;
+    say('⑥ <b>测湿</b>：水的 εᵣ ≈ 80，远大于一般物料的 2~10，含水量稍有变化，衰减、相速与反射强度都显著改变；粮食、烟草、纸张的在线测湿就靠它。');
+    if (!await sleep(4200, tok)) return;
+    setMode('m0'); setX(30);
+    say('【小结】微波的三条路径：测时间（时延/相位）、测强度（衰减）、测频率（多普勒，v = c·f_d/(2f₀cosθ)，测速误差约 ±1 km/h）；测距精度厘米级。');
+    if (!await sleep(4000, tok)) return;
+    endDemo();
+  }
+
+  async function demoRay(){
+    var tok = beginDemo('ray');
+    setType('ry'); setMode('m0'); setSrc('cs'); setX(30);
+    say('【<b>射线式</b>】放射源 + 探测器。γ 源 ⁶⁰Co（5.27 a）、¹³⁷Cs（30.2 a）半衰期长、能量合适；可用同位素只有 20 种左右。源强度只随时间下降，须定期标定。');
+    if (!await sleep(4800, tok)) return;
+    say('① <b>透射式测厚</b>：I = I₀e^(−μh)。看红色 γ 粒子穿过钢板，只有一部分能到达探测器 —— 存活比例就是 I/I₀，与计数率读数一致。');
+    if (!await sleep(4200, tok)) return;
+    if (!await tween(20, 80, 3200, setX, tok)) return;
+    if (!await sleep(1400, tok)) return;
+    var r1 = ryModel();
+    say('② δ = <b>' + r1.d.toFixed(1) + ' mm</b>（h = ' + r1.hcm.toFixed(2) + ' cm）→ I/I₀ = <b>' + (r1.Irel*100).toFixed(1) +
+        ' %</b>；电离室输出电流 i = ' + r1.i.toFixed(1) + ' pA。工程上用已知厚度的<b>标准片标定曲线</b>（μ、I₀ 都难算准）。');
+    if (!await sleep(5000, tok)) return;
+    setSrc('co');
+    say('③ 换 <b>⁶⁰Co</b>：γ 能量从 0.66 升到 1.25 MeV，钢的 μ 从 ' + CFG.muFe.cs + ' 降到 ' + CFG.muFe.co +
+        ' cm⁻¹ → 穿透更强、同样厚度衰减更小（' + (ryModel().Irel*100).toFixed(1) + ' %），灵敏度下降 —— 这就是「大厚度用高能 γ」的取舍。');
+    if (!await sleep(5000, tok)) return;
+    say('④ 换成<b>盖革计数管</b>：上千伏工作在雪崩区，输出幅度与粒子能量无关 → 只能计数、不能测能；死时间几十~几百 μs，按 n = m/(1−mτ) 修正。' +
+        '（闪烁计数器用碘化钠测 γ，效率可达 20%~30%。）');
+    setMode('m1');
+    if (!await sleep(5000, tok)) return;
+    say('⑤ <b>质量厚度</b>x = ρh = ' + ryModel().xm.toFixed(1) + ' g/cm²、μ_m = μ/ρ = ' + ryModel().mum.toFixed(4) +
+        ' cm²/g：除以密度后与化学成分几乎无关，换材料可直接查表 —— 测纸张叫克重、测薄膜叫面密度。');
+    if (!await sleep(4400, tok)) return;
+    say('⑥ <b>防护三原则：时间、距离、屏蔽</b>。点源剂量率与距离平方成反比，退远最省事；γ 屏蔽 h = ln(k)/μ —— 铅把 ⁶⁰Co 衰减 100 倍需 ' +
+        ryModel().shield.toFixed(1) + ' cm。β 要先用低 Z 材料挡住再包铅，防韧致辐射。');
+    if (!await sleep(5200, tok)) return;
+    setMode('m0'); setSrc('cs'); setX(30);
+    say('【小结】I = I₀e^(−μh) = I₀e^(−μ_m x)：测厚靠衰减反解，物位 H = (1/μ)ln(I₀/I)；射线可穿透容器壁，所以能非接触地测量高温、高压、强腐蚀介质。');
+    if (!await sleep(4200, tok)) return;
+    endDemo();
+  }
+
+  async function demoPoints(){
+    var tok = beginDemo('pts');
+    say('【<b>本章要点</b>】共 10 条，逐条看一遍，也可点编号按钮单独回看。');
+    if (!await sleep(2000, tok)) return;
+    for (var i = 0; i < PTS_TEXT.length; i++){
+      setPt(i);
+      if (!await sleep(PTS_TEXT[i].length > 90 ? 3800 : 3000, tok)) return;
+    }
+    setPt(-1);
+    endDemo();
+  }
+
+  /* ============ 10. 键盘 ============ */
+  document.addEventListener('keydown', function(e){
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input') return;
+    if (e.key === 'ArrowLeft'){ stopDemo(); setX(S.x - 2); e.preventDefault(); }
+    else if (e.key === 'ArrowRight'){ stopDemo(); setX(S.x + 2); e.preventDefault(); }
+    else if (e.key === '1'){ stopDemo(); setType('us'); }
+    else if (e.key === '2'){ stopDemo(); setType('mw'); }
+    else if (e.key === '3'){ stopDemo(); setType('ry'); }
+    else if (e.key === 'm' || e.key === 'M'){ stopDemo(); setMode(S.mode === 'm0' ? 'm1' : 'm0'); }
+    else if (e.key === 's' || e.key === 'S'){ stopDemo(); setSrc(S.src === 'cs' ? 'co' : 'cs'); }
+    else if (e.key === 'c' || e.key === 'C'){
+      stopDemo();
+      setCurve(S.curve === 'us' ? 'mw' : (S.curve === 'mw' ? 'ry' : 'us'));
+    }
+    else if (e.key === ' '){
+      e.preventDefault();
+      if (playingKey){ stopDemo(); say('演示已暂停。'); }
+      else {
+        var k = { us:(S.mode === 'm0' ? 'echo' : 'trans'), mw:'mw', ry:'ray' }[S.type];
+        if (DEMOS[k] && DEMOS[k].fn) DEMOS[k].fn();
+      }
+    }
+    else if (e.key === 'r' || e.key === 'R'){ $('reset').click(); }
+  });
+
+
+  DEMOS.echo  = { btn:'playEcho',  label:'▶ 超声回波测厚', fn:demoEcho };
+  DEMOS.trans = { btn:'playTrans', label:'▶ 穿透法与耦合', fn:demoTrans };
+  DEMOS.mw    = { btn:'playMw',    label:'▶ 微波反射/透射', fn:demoMw };
+  DEMOS.ray   = { btn:'playRay',   label:'▶ γ 射线测厚', fn:demoRay };
+  DEMOS.pts   = { btn:'ptsPlay',   label:'▶ 巡览要点', fn:demoPoints };
+  bindDemos();
+
+  /* ============ 启动（URL 参数必须在第一次 paint() 之前写入 S） ============ */
+  var q = new URLSearchParams(location.search);
+  if (q.has('type') && TYPES[q.get('type')]) S.type = q.get('type');
+  if (q.has('mode') && (q.get('mode') === 'm0' || q.get('mode') === 'm1')) S.mode = q.get('mode');
+  if (q.has('src') && CFG.muFe[q.get('src')]) S.src = q.get('src');
+  if (q.has('x')) S.x = clamp(parseFloat(q.get('x')) || 0, 0, 100);
+  S.curve = S.type;
+  if (q.has('cv') && ['us','mw','ry'].indexOf(q.get('cv')) >= 0) S.curve = q.get('cv');
+  if (q.has('speed')) SPEED = clamp(parseFloat(q.get('speed')) || 1, 0.4, 2.5);
+  $('x').value = S.x;
+  $('speed').value = SPEED; $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  paint();
+  initAnim();
+  runAnim();
+  var AUTO = { '1':'echo', '2':'trans', '3':'mw', '4':'ray', '5':'pts' };
+  if (AUTO[q.get('auto')] && DEMOS[AUTO[q.get('auto')]].fn) DEMOS[AUTO[q.get('auto')]].fn();
+
+})();
+</script>
+
+<script>
+/* ==================== 板块布局引擎：拖动 / 缩放 / 记忆 ====================
+   由 _build/build.js 注入；章节的面板清单 / 记忆键 / 默认布局在构建时替换。 */
+(function(){
+  "use strict";
+  var BOARD = document.getElementById('board');
+  var COLS  = ['colA','colB','colC'];
+  var IDS   = ["ctrlCard","ptsCard","stCard","readCard","fmlCard","curveCard"];
+  var MINZ = 0.7, MAXZ = 1.6, MINCOL = 260;
+  var KEY = 'jh-wave-layout-v1';
+  var DEF = {"weight":{"colA":2.8,"colB":5.4,"colC":3.8},"col":{"colA":["ctrlCard","ptsCard"],"colB":["stCard","readCard"],"colC":["fmlCard","curveCard"]},"zoom":{}};
+  var L = null, focused = null;
+  function el(id){ return document.getElementById(id); }
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function load(){
+    var d;
+    try { d = JSON.parse(localStorage.getItem(KEY)); } catch (e) { d = null; }
+    if (!d || !d.col) return clone(DEF);
+    COLS.forEach(function(c){ if (!d.col[c]) d.col[c] = []; });
+    var seen = {};
+    COLS.forEach(function(c){
+      d.col[c] = d.col[c].filter(function(id){ if (IDS.indexOf(id) < 0 || seen[id]) return false; seen[id] = 1; return true; });
+    });
+    IDS.forEach(function(id){ if (!seen[id]){ d.col.colC.push(id); seen[id] = 1; } });
+    d.weight = d.weight || clone(DEF.weight);
+    d.zoom = d.zoom || {};
+    return d;
+  }
+  L = load();
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(L)); } catch (e) {} }
+  function render(){
+    COLS.forEach(function(cid){
+      var col = el(cid);
+      L.col[cid].forEach(function(pid){ var p = el(pid); if (p) col.appendChild(p); });
+      col.style.flexGrow = L.weight[cid] || 1;
+    });
+  }
+  function applyZoom(id){
+    var p = el(id); if (!p) return;
+    var b = p.querySelector('.pbody'); if (!b) return;
+    b.style.zoom = L.zoom[id] || 1;
+  }
+  function applyAll(){ render(); IDS.forEach(applyZoom); }
+
+  function startDrag(ev, p){
+    if (ev.button) return;
+    var x0 = ev.clientX, y0 = ev.clientY, moved = false, lastTarget = null;
+    function move(e){
+      if (!moved){
+        if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) < 6) return;
+        moved = true;
+        document.body.classList.add('layout-dragging');
+        p.classList.add('sorting');
+      }
+      var col = null, i, r;
+      for (i = 0; i < COLS.length; i++){
+        r = el(COLS[i]).getBoundingClientRect();
+        if (e.clientX >= r.left - 6 && e.clientX <= r.right + 6){ col = COLS[i]; break; }
+      }
+      if (!col) col = (e.clientX < BOARD.getBoundingClientRect().left + BOARD.clientWidth/2) ? COLS[0] : COLS[COLS.length - 1];
+      var list = L.col[col].filter(function(id){ return id !== p.id; });
+      var idx = list.length, j, q, qr;
+      for (j = 0; j < list.length; j++){
+        q = el(list[j]); if (!q) continue;
+        qr = q.getBoundingClientRect();
+        if (e.clientY < qr.top + qr.height/2){ idx = j; break; }
+      }
+      var key = col + ':' + idx;
+      if (key === lastTarget) return;
+      lastTarget = key;
+      COLS.forEach(function(c2){ L.col[c2] = L.col[c2].filter(function(id){ return id !== p.id; }); });
+      L.col[col].splice(idx, 0, p.id);
+      render();
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', up);
+      document.body.classList.remove('layout-dragging');
+      p.classList.remove('sorting');
+      if (moved) save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
+  }
+  function startSplit(ev, sp){
+    ev.preventDefault();
+    var left = el(sp.getAttribute('data-left')), right = el(sp.getAttribute('data-right'));
+    var total = left.offsetWidth + right.offsetWidth;
+    var wl = L.weight[left.id] || 1, wr = L.weight[right.id] || 1, sum = wl + wr;
+    var x0 = ev.clientX, pxPerWeight = total/sum;
+    document.body.classList.add('layout-dragging');
+    function move(e){
+      var d = (e.clientX - x0)/pxPerWeight;
+      var nl = Math.max(MINCOL/(total/sum), Math.min(sum - MINCOL/(total/sum), wl + d));
+      left.style.flexGrow = nl; right.style.flexGrow = sum - nl;
+      L.weight[left.id] = nl; L.weight[right.id] = sum - nl;
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.body.classList.remove('layout-dragging');
+      save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  }
+  function zoomPanel(id, d){
+    var z = Math.round(((L.zoom[id] || 1) + d)*100)/100;
+    L.zoom[id] = Math.max(MINZ, Math.min(MAXZ, z));
+    applyZoom(id); save();
+  }
+  function toggleFocus(id){
+    var p = el(id); if (!p) return;
+    if (focused === id){ p.classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    else {
+      if (focused) el(focused).classList.remove('focused');
+      p.classList.add('focused'); document.body.classList.add('has-focus'); focused = id;
+    }
+  }
+  function reset(){
+    L = clone(DEF);
+    if (focused){ el(focused).classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    applyAll(); save();
+  }
+  var back = document.createElement('div');
+  back.id = 'focusBack';
+  back.addEventListener('click', function(){ if (focused) toggleFocus(focused); });
+  document.body.appendChild(back);
+
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var head = p.querySelector('.phead');
+    if (head){
+      head.addEventListener('pointerdown', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        e.preventDefault(); startDrag(e, p);
+      });
+      head.addEventListener('dblclick', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        toggleFocus(id);
+      });
+    }
+    p.querySelectorAll('.ptool').forEach(function(b){
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        var a = b.getAttribute('data-act');
+        if (a === 'in') zoomPanel(id, 0.08);
+        else if (a === 'out') zoomPanel(id, -0.08);
+        else if (a === 'max') toggleFocus(id);
+      });
+    });
+  });
+  document.querySelectorAll('.vsplit').forEach(function(sp){
+    sp.addEventListener('pointerdown', function(e){ startSplit(e, sp); });
+  });
+  /* ---------- 折叠：滑过上方自动折叠，回到可视区自动展开；可手动锁定 ---------- */
+  function setFold(p, on){
+    p.classList.toggle('folded', on);
+    var btn = p.querySelector('.ptool[data-act="fold"]');
+    if (btn) btn.textContent = on ? '▸' : '▾';
+  }
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var tools = p.querySelector('.ptools');
+    if (!tools) return;
+    var fb = document.createElement('button');
+    fb.className = 'ptool';
+    fb.setAttribute('data-act', 'fold');
+    fb.title = '折叠 / 展开本板块（手动折叠后不会被自动展开）';
+    fb.textContent = '▾';
+    tools.insertBefore(fb, tools.firstChild);
+    fb.addEventListener('click', function(e){
+      e.stopPropagation();
+      var folded = p.classList.contains('folded');
+      setFold(p, !folded);
+      if (!folded) p.setAttribute('data-manual', '1'); else p.removeAttribute('data-manual');
+    });
+  });
+  var ticking = false;
+  function autoFold(){
+    ticking = false;
+    var vh = window.innerHeight || 900;
+    IDS.forEach(function(id){
+      var p = el(id); if (!p) return;
+      if (!p.parentNode || p.parentNode.id !== 'colB') return;    /* 只有中间列参与自动折叠（左右两列固定不动） */
+      var r = p.getBoundingClientRect();
+      if (r.bottom < 90){                                          /* 整块滑到上方之外 → 收起 */
+        if (!p.classList.contains('folded')) setFold(p, true);
+      } else if (r.top < vh - 30 && r.bottom > 60 && !p.hasAttribute('data-manual')){
+        if (p.classList.contains('folded')) setFold(p, false);      /* 回到可视区 → 展开 */
+      }
+    });
+  }
+  function onScrollOrWheel(){
+    if (!ticking){ ticking = true; requestAnimationFrame(autoFold); }
+  }
+  window.addEventListener('scroll', onScrollOrWheel, { passive:true });
+  window.addEventListener('wheel', onScrollOrWheel, { passive:true });
+  window.addEventListener('touchmove', onScrollOrWheel, { passive:true });
+  window.addEventListener('resize', function(){ if (window.__repack) window.__repack(); });
+  setTimeout(autoFold, 400);
+  window.__autoFold = autoFold;
+
+  var lr = document.getElementById('layReset');
+  if (lr) lr.addEventListener('click', reset);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && focused) toggleFocus(focused); });
+  window.addEventListener('resize', function(){ IDS.forEach(applyZoom); });
+  window.__repack = function(){};
+  applyAll();
+  window.addEventListener('load', applyAll);
+})();
+
+</script>
+</body>
+</html>

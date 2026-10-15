@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第8章 光电式传感器 · 动态演示｜传感器原理与技术</title>
+<style>
+/* =====================================================================
+   公共样式（各章通用）· 由 _build/build.js 注入到每个单文件 HTML 的样式表顶部
+   与第4章保持同一套类名与观感；章节特有的语义色 / 版式写在章节模块的 extraCss 里
+   ===================================================================== */
+:root{
+  --jhu:#0e4a8e; --jhu2:#0a2f5c; --ink:#12233a; --muted:#5b6b80;
+  --line:#d5dfec; --bg:#eef3f9; --card:#ffffff;
+  --flux:#0d8b7f;      /* 磁通 / 场线（第4章起沿用） */
+  --cu:#c2703a;        /* 线圈 / 铜 */
+  --iron:#4b6b8f;      /* 铁芯 / 铁磁体 */
+  --gapm:#e08a1e;      /* 气隙 / 有效量 */
+  --eddy:#7c3aed;      /* 涡流 / 强调（紫） */
+  --hot:#d94a3d; --ok:#0f9d58;
+  --grid:rgba(14,74,142,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Source Han Sans SC","Hiragino Sans GB",system-ui,sans-serif;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    var(--bg);
+  color:var(--ink); font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+header{
+  background:linear-gradient(120deg,var(--jhu) 0%,var(--jhu2) 100%);
+  color:#fff; padding:8px 24px; display:flex; align-items:center; gap:16px;
+  box-shadow:0 3px 14px rgba(10,47,92,.28);
+}
+header h1{font-size:22px; margin:0; letter-spacing:1px; font-weight:700}
+header .sub{font-size:13px; opacity:.9; border-left:1px solid rgba(255,255,255,.45); padding-left:13px}
+header .right{margin-left:auto; text-align:right; font-size:12.5px; opacity:.92; line-height:1.3}
+header .right b{font-size:15px; letter-spacing:2px}
+#laybar{display:flex; align-items:center; gap:10px; padding:3px 20px; font-size:12px; color:#41566f;
+        background:#e4edf8; border-bottom:1px solid #cfdcec}
+#laybar button{border:1px solid #a9c1dd; background:#fff; color:var(--jhu); border-radius:7px;
+               font-size:12px; font-weight:700; padding:2px 10px; cursor:pointer; font-family:inherit}
+#laybar button:hover{background:#f2f7fd}
+#laybar .hint{color:#6b7d92}
+#boardWrap{padding:6px 14px 2px}
+#board{display:flex; align-items:flex-start}
+.col{display:flex; flex-direction:column; gap:6px; min-width:0; flex-grow:1; flex-basis:0}
+.colhead{font-size:11.5px; font-weight:700; color:#8296ad; letter-spacing:.4px; padding:0 3px 2px; border-bottom:1px dashed #dbe5f0}
+.vsplit{flex:0 0 13px; align-self:stretch; cursor:col-resize; position:relative; touch-action:none}
+.vsplit::before{content:""; position:absolute; left:5.5px; top:8px; bottom:8px; width:2px; border-radius:2px; background:#cfdcec}
+.vsplit:hover::before{background:var(--jhu); width:3px; left:5px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:13px;
+      box-shadow:0 2px 10px rgba(18,35,58,.06); padding:5px 9px}
+.card h2{margin:0 0 4px; font-size:14.5px; color:var(--jhu); font-weight:700; display:flex; align-items:center; gap:7px}
+.card h2::before{content:""; width:4px; height:15px; border-radius:3px; background:var(--jhu)}
+.card h2 small{font-weight:400; color:var(--muted); font-size:12px}
+.panel{position:relative; box-sizing:border-box}
+.panel > .phead{display:flex; align-items:center; gap:6px; cursor:move; touch-action:none; user-select:none; margin:-1px 0 4px}
+.panel > .phead h2{margin:0; flex:1; min-width:0; cursor:move}
+.ptools{display:flex; gap:3px; flex:none}
+.ptool{width:21px; height:21px; padding:0; line-height:1; border:1px solid var(--line); background:#fff;
+       color:var(--jhu); border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit}
+.ptool:hover{background:#eef4fc; border-color:#9fbedd}
+.panel.sorting{opacity:.6; outline:2px dashed var(--jhu); outline-offset:2px; pointer-events:none}
+.panel.focused{position:fixed; left:14px; right:14px; top:80px; bottom:14px; z-index:300; overflow:auto;
+               box-shadow:0 18px 50px rgba(10,47,92,.38); border-color:var(--jhu)}
+#focusBack{position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(10,30,55,.34); z-index:290; display:none}
+body.has-focus #focusBack{display:block}
+body.layout-dragging{user-select:none}
+svg{display:block; width:100%; height:auto}
+.tiny{font-size:12px; fill:var(--muted); color:var(--muted)}
+/* ---- 控件 ---- */
+.ctrl{display:flex; flex-direction:column; gap:2px; margin-bottom:2px}
+.ctrl .row{display:flex; align-items:center; gap:7px}
+.ctrl .name{font-size:12.8px; color:var(--muted); width:118px; flex:none}
+.ctrl .name b{color:var(--ink); font-size:14px}
+.ctrl output{font-size:18px; font-weight:800; min-width:96px; text-align:right; font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none; appearance:none; height:8px; border-radius:5px; background:#dce6f2; outline:none; flex:1; min-width:70px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:21px; height:21px; border-radius:50%;
+      background:#fff; border:3px solid var(--jhu); cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.seg{display:flex; gap:6px; flex-wrap:wrap}
+.seg button{flex:1 1 0; min-width:96px; padding:5px 8px; border-radius:9px; border:1px solid var(--line);
+            background:#fff; cursor:pointer; font-size:13px; font-weight:700; color:#33506f; font-family:inherit; line-height:1.3}
+.seg button small{display:block; font-weight:400; font-size:11px; color:var(--muted)}
+.seg button:hover{border-color:#9fbedd}
+.seg button.on{background:var(--jhu); border-color:var(--jhu); color:#fff}
+.seg button.on small{color:rgba(255,255,255,.85)}
+/* 紧凑小按钮（章节里的型式/模式细分按钮） */
+.seg.tight button{min-width:66px; flex:1 1 66px; padding:3px 4px; font-size:11.5px; line-height:1.25}
+.seg.tight button small{font-size:10px}
+.step{border:1px solid var(--line); background:#fff; color:var(--jhu); width:28px; height:28px;
+      border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; line-height:1}
+.actions{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap}
+.actions button{flex:1 1 92px; padding:5px 4px; border-radius:9px; border:1px solid var(--jhu);
+                background:var(--jhu); color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;
+                font-family:inherit; white-space:nowrap}
+.actions button.ghost{background:#fff; color:var(--jhu)}
+.actions button.running{background:var(--hot); border-color:var(--hot); color:#fff}
+.actions button:hover{filter:brightness(1.07)}
+.narrate{margin-top:4px; border-left:5px solid var(--flux); background:#f2fbf9; border-radius:0 10px 10px 0;
+         padding:3px 10px; font-size:12.4px; line-height:1.34; min-height:26px; color:#0a5f57}
+/* ---- 读数 ---- */
+.big{display:flex; align-items:baseline; gap:9px; background:linear-gradient(90deg,#f2f7ff,#fff);
+     border:1px solid #d9e5f5; border-radius:12px; padding:3px 12px}
+.big .cap{font-size:13px; color:var(--muted); margin-right:auto}
+.big .num{font-size:23px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
+.big .unit{font-size:15px; font-weight:700; color:var(--muted)}
+.kv{display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:5px}
+.kv .box{border:1px dashed var(--line); border-radius:9px; padding:2px 6px; font-size:10.5px; color:var(--muted)}
+.kv .box b{display:block; font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:1px}
+.fine{font-size:10.4px; color:var(--muted); margin-top:5px; line-height:1.5; font-variant-numeric:tabular-nums}
+.fine b{color:var(--ink)}
+/* ---- 比例条 / 图例 ---- */
+.rmbar{display:flex; height:15px; border-radius:5px; overflow:hidden; border:1px solid var(--line); background:#f4f8fd; margin-top:3px}
+.rmbar i{display:block; height:100%}
+.legend{display:flex; gap:8px; flex-wrap:wrap; font-size:10.4px; color:var(--muted); margin-top:1px}
+.legend i{display:inline-block; width:14px; height:9px; border-radius:2px; margin-right:5px}
+/* ---- 公式 ---- */
+.fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:10.9px; line-height:1.22; color:#16283d}
+.fml .row{display:block; border-bottom:1px dashed #e7eef7; padding:0}
+.fml .row:last-child{border-bottom:none}
+.fml .tag{display:inline-block; font-family:"Microsoft YaHei",sans-serif; font-size:11px; color:#fff;
+          background:var(--jhu); border-radius:5px; padding:0 6px; margin-right:5px; vertical-align:1px}
+.fml .tag.g{background:var(--gapm)} .fml .tag.f{background:var(--flux)} .fml .tag.v{background:var(--eddy)}
+.fml b{color:var(--hot)}
+.fml .note{font-family:"Microsoft YaHei",sans-serif; font-size:10.8px; color:var(--muted); line-height:1.4; margin-top:2px}
+.frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.88em; line-height:1.02; margin:0 .14em}
+.frac i{font-style:normal; padding:0 .3em}
+.frac b{font-weight:400; color:inherit; border-top:1.4px solid currentColor; padding:0 .3em}
+/* ---- 要点 ---- */
+ol.points{margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:4px}
+ol.points li{border:1px solid var(--line); border-left:4px solid #c8d6e6; border-radius:0 9px 9px 0;
+             padding:0 7px; font-size:10.9px; line-height:1.28; color:#3c5068; background:#fbfdff; transition:.25s}
+ol.points li.on{border-left-color:var(--ok); background:#f2fbf5; color:var(--ink); box-shadow:0 0 0 2px rgba(15,157,88,.12)}
+ol.points li .hl{color:var(--ok); font-weight:700}
+.hint{font-size:12px; color:var(--muted); margin-top:5px}
+footer{padding:3px 18px 5px; font-size:11px; color:var(--muted); line-height:1.5}
+footer b{color:var(--jhu)}
+.actions button.ptsB{flex:0 0 26px; padding:2px 0; font-size:11px; border-radius:6px}   /* 要点编号按钮：特异性需高于 .actions button */
+/* 左右两列都吸附固定；只有中间列（结构+读数）随页面滚动 */
+#colA, #colC{position:sticky; top:4px; align-self:flex-start;
+             max-height:calc(100vh - 10px); overflow-y:auto; overscroll-behavior:contain}
+#colA::-webkit-scrollbar, #colC::-webkit-scrollbar{width:6px}
+#colA::-webkit-scrollbar-thumb, #colC::-webkit-scrollbar-thumb{background:#c3d3e6; border-radius:3px}
+/* 中间列底部留白：让最后一张卡片也能滚动到屏幕中间 */
+#colB{padding-bottom:52vh}
+.panel > .pbody{max-height:2600px; overflow:hidden; transition:max-height .22s ease, opacity .18s ease}
+.panel.folded > .pbody{max-height:0 !important; opacity:0}
+.panel.folded{border-color:#bcd0e5; background:#f8fbff}
+.panel.folded > .phead h2{color:#5b6b80}
+.ptool[data-act="fold"]{font-size:11px}
+.readlabel{font-size:12.5px; font-weight:700; color:#5b6b80; margin:7px 0 3px; padding-top:6px; border-top:1px dashed #dbe5f0}
+.readwrap svg{max-height:196px}
+.pbody > svg{max-height:300px}
+.pbody > svg + svg{max-height:196px}
+@media (max-width:1200px){ #boardWrap{min-width:1180px} }
+
+  /* ---- 第8章语义色 ---- */
+  :root{ --photon:#f2a900; --carrier:#2f6fd0; --hole:#d94a3d; --cell:#0d8b7f; }
+</style>
+</head>
+<body>
+<header>
+  <h1>第 8 章 光电式传感器</h1>
+  <div class="sub">光电效应 · 光敏电阻 / 光电二极管 / 光电三极管 / 光电池 · PSD 与 CCD · 红外与激光 | 动态演示</div>
+  <div class="right"><b>江汉大学</b><br>传感器原理与技术</div>
+</header>
+<div id="laybar">
+  <span style="font-weight:700;color:#0e4a8e">板块布局</span>
+  <button id="layReset">↺ 恢复默认（一屏）</button>
+  <span class="hint"><b>左右两列固定不动</b>（左＝型式与输入量＋要点，右＝数据/曲线/公式），只有<b>中间列</b>随页面滚动；每块标题栏的 <b>▾</b> 可折叠该板块；<b>滚轮下滑时滑过上方的那几块会自动收起、滚回来自动展开</b>（手动折起的不会被自动展开）；拖动<b>标题栏</b>可换列换位、拖<b>竖条</b>调列宽、<b>＋ －</b> 缩放、<b>⛶</b> 全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
+</div>
+
+<div id="boardWrap">
+<main id="board">
+
+  <!-- ================= 左列 ================= -->
+  <div class="col" id="colA">
+    <div class="colhead">① 型式与输入量</div>
+
+
+    <section class="card panel" id="ctrlCard">
+      <div class="phead">
+        <h2>器件与输入量</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="ctrl">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>器件型式</b></span>
+          <div class="seg tight" id="segType" style="flex:1">
+            <button data-type="tube">光电管<small>外光电</small></button>
+            <button data-type="ldr" class="on">光敏电阻<small>光电导</small></button>
+            <button data-type="pd">光电二极管<small>光生伏特</small></button>
+            <button data-type="pt">光电三极管<small>＋放大</small></button>
+            <button data-type="pv">光电池<small>自发电</small></button>
+          </div>
+        </div>
+        <div class="hint" id="typeHint">光敏电阻（光电导）：光照使载流子增多、阻值下降 —— 无极性，交直流均可；R 与照度成幂律（非线性），适合做光控开关。</div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b>光照 E</b><br><span class="tiny" id="eTxt">照度 0.01 ~ 1000 lx</span></span>
+          <button class="step" id="eM" title="减小">−</button>
+          <input type="range" id="e" min="0" max="100" step="0.5" value="100">
+          <button class="step" id="eP" title="增大">＋</button>
+          <output id="eOut">1000 lx</output>
+        </div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b id="uName">偏置电压 U</b><br><span class="tiny" id="uTxt">光电导：加偏置测电流</span></span>
+          <button class="step" id="uM" title="减小">−</button>
+          <input type="range" id="u" min="0.5" max="30" step="0.5" value="10">
+          <button class="step" id="uP" title="增大">＋</button>
+          <output id="uOut">10.0 V</output>
+        </div>
+      </div>
+      <div class="ctrl" id="tubeRow" style="display:none">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>外光电类型</b></span>
+          <div class="seg tight" id="segTube" style="flex:1">
+            <button data-tube="vacuum" class="on">真空光电管<small>无倍增</small></button>
+            <button data-tube="pmt">光电倍增管<small>σⁿ 倍增</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="playEffect" class="ghost">▶ 光电效应</button>
+        <button id="playLDR" class="ghost">▶ 光敏电阻</button>
+        <button id="playDiode" class="ghost">▶ 二极管/三极管</button>
+        <button id="playCell" class="ghost">▶ 光电池</button>
+        <button id="reset" class="ghost" style="flex:0 0 58px">↺ 复位</button>
+      </div>
+      <div class="ctrl" style="margin-top:5px">
+        <div class="row">
+          <span class="name"><b>演示速度</b><br><span class="tiny">0.4× 慢 ～ 2.5× 快</span></span>
+          <input type="range" id="speed" min="0.4" max="2.5" step="0.1" value="1">
+          <output id="speedOut">1.0×</output>
+        </div>
+      </div>
+      <div class="narrate" id="narration">初始状态：光敏电阻（光电导），照度 E = 1000 lx、偏置 U = 10 V。五个演示按钮分别讲：光电效应总览 / 光敏电阻 / 二极管与三极管 / 光电池 / 巡览要点。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="ptsCard">
+      <div class="phead">
+        <h2>本章要点</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="actions" style="margin-top:0">
+        <button id="ptsPlay" class="ghost" style="flex:0 0 98px">▶ 巡览要点</button>
+        <button id="ptsB0" class="ghost ptsB">1</button><button id="ptsB1" class="ghost ptsB">2</button>
+        <button id="ptsB2" class="ghost ptsB">3</button><button id="ptsB3" class="ghost ptsB">4</button>
+        <button id="ptsB4" class="ghost ptsB">5</button><button id="ptsB5" class="ghost ptsB">6</button>
+        <button id="ptsB6" class="ghost ptsB">7</button><button id="ptsB7" class="ghost ptsB">8</button>
+        <button id="ptsB8" class="ghost ptsB">9</button><button id="ptsB9" class="ghost ptsB">10</button>
+      </div>
+      <ol class="points" id="points"></ol>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colA" data-right="colB" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 中列 ================= -->
+  <div class="col" id="colB">
+    <div class="colhead">② 结构动态 ＋ 输出读数（成对显示）</div>
+
+
+    <section class="card panel" id="devCard">
+      <div class="phead">
+        <h2>结构动态 <small id="devSub">光敏电阻：光子 → 载流子 → 阻值下降</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="dev" viewBox="0 0 700 300" role="img" aria-label="光电式传感器结构动态">
+        <!-- ============ (a) 光电管 / 光电倍增管（外光电） ============ -->
+        <g id="stTube">
+          <circle cx="52" cy="44" r="13" fill="#fff3d0" stroke="#e0a800" stroke-width="2"/>
+          <path d="M52 24 V15 M52 64 v9 M32 44 h-9 M72 44 h9 M38 30 l-7 -7 M66 30 l7 -7 M38 58 l-7 7 M66 58 l7 7" stroke="#e0a800" stroke-width="2" fill="none"/>
+          <text x="22" y="98" font-size="11.5" fill="#94a3b8">入射光（光子 hf）</text>
+          <rect x="120" y="86" width="536" height="128" rx="18" fill="#eaf4ff" opacity="0.5" stroke="#7aa1c9" stroke-width="2"/>
+          <text x="130" y="80" font-size="11.5" fill="#5b6b80">玻璃外壳（真空 / 充气）</text>
+          <path d="M176 100 q-14 50 0 100" fill="none" stroke="#4a6fa5" stroke-width="7"/>
+          <path d="M178 106 q-9 44 0 88" fill="none" stroke="#9fd0a0" stroke-width="3"/>
+          <text x="118" y="234" font-size="11.5" fill="#33506f">光阴极 K（逸出功 W）</text>
+          <line x1="568" y1="120" x2="568" y2="180" stroke="#8a9bb0" stroke-width="7"/>
+          <text x="548" y="204" font-size="11.5" fill="#33506f">阳极 A</text>
+          <g id="tubePMT">
+            <line x1="207" y1="113" x2="223" y2="131" stroke="#8a6d3b" stroke-width="4"/>
+            <line x1="239" y1="173" x2="255" y2="191" stroke="#8a6d3b" stroke-width="4"/>
+            <line x1="271" y1="113" x2="287" y2="131" stroke="#8a6d3b" stroke-width="4"/>
+            <line x1="303" y1="173" x2="319" y2="191" stroke="#8a6d3b" stroke-width="4"/>
+            <line x1="335" y1="113" x2="351" y2="131" stroke="#8a6d3b" stroke-width="4"/>
+            <line x1="367" y1="173" x2="383" y2="191" stroke="#8a6d3b" stroke-width="4"/>
+            <line x1="399" y1="113" x2="415" y2="131" stroke="#8a6d3b" stroke-width="4"/>
+            <line x1="431" y1="173" x2="447" y2="191" stroke="#8a6d3b" stroke-width="4"/>
+            <line x1="463" y1="113" x2="479" y2="131" stroke="#8a6d3b" stroke-width="4"/>
+            <line x1="495" y1="173" x2="511" y2="191" stroke="#8a6d3b" stroke-width="4"/>
+            <line x1="527" y1="113" x2="543" y2="131" stroke="#8a6d3b" stroke-width="4"/>
+            <text x="231" y="156" text-anchor="middle" font-size="10.5" fill="#8a6d3b">×5</text>
+            <text x="359" y="156" text-anchor="middle" font-size="10.5" fill="#8a6d3b">×5</text>
+            <text x="487" y="156" text-anchor="middle" font-size="10.5" fill="#8a6d3b">×5</text>
+            <text x="360" y="60" text-anchor="middle" font-size="11.5" fill="#8a6d3b">倍增极 D₁…D₁₁（每级倍增率 σ ≈ 5）</text>
+          </g>
+          <line x1="170" y1="200" x2="170" y2="246" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="170" y1="246" x2="296" y2="246" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="296" y1="240" x2="296" y2="252" stroke="#233b57" stroke-width="2.4"/>
+          <line x1="310" y1="234" x2="310" y2="258" stroke="#233b57" stroke-width="2.4"/>
+          <line x1="310" y1="246" x2="568" y2="246" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="568" y1="180" x2="568" y2="246" stroke="#233b57" stroke-width="1.8"/>
+          <text x="322" y="236" font-size="11.5" font-weight="700" fill="#0e4a8e">U（极间电压）</text>
+          <text id="tubeIaTxt" x="40" y="278" font-size="13" font-weight="700" fill="#0e4a8e">I_a = —</text>
+          <text id="tubeGTxt" x="40" y="294" font-size="11.5" fill="#5b6b80">—</text>
+        </g>
+        <!-- ============ (b) 光敏电阻（光电导） ============ -->
+        <g id="stLdr" style="display:none">
+          <circle cx="52" cy="44" r="13" fill="#fff3d0" stroke="#e0a800" stroke-width="2"/>
+          <path d="M52 24 V15 M52 64 v9 M32 44 h-9 M72 44 h9 M38 30 l-7 -7 M66 30 l7 -7 M38 58 l-7 7 M66 58 l7 7" stroke="#e0a800" stroke-width="2" fill="none"/>
+          <text x="22" y="98" font-size="11.5" fill="#94a3b8">入射光（光子 hf ≥ E_g）</text>
+          <rect x="170" y="110" width="450" height="104" rx="8" fill="#f5eddc" stroke="#c9b48a" stroke-width="2"/>
+          <rect id="ldrLayer" x="190" y="124" width="410" height="76" fill="#a8cf7a" opacity="0.45"/>
+          <path d="M186 128 v68 M186 138 h66 M186 152 h66 M186 166 h66 M186 180 h66 M186 194 h66" fill="none" stroke="#8a6d3b" stroke-width="3.4"/>
+          <path d="M564 128 v68 M564 138 h-66 M564 152 h-66 M564 166 h-66 M564 180 h-66 M564 194 h-66" fill="none" stroke="#8a6d3b" stroke-width="3.4"/>
+          <text x="196" y="120" font-size="11" fill="#8a6d3b">梳状电极（增大受光面积、缩短载流子行程）</text>
+          <text x="480" y="106" font-size="11.5" fill="#5b6b80">陶瓷基片</text>
+          <text x="200" y="228" font-size="11.5" fill="#5b6b80">CdS 光敏层（光电导：光照 → 载流子 ↑ → 阻值 ↓）</text>
+          <line x1="186" y1="166" x2="110" y2="166" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="110" y1="166" x2="110" y2="252" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="110" y1="252" x2="296" y2="252" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="296" y1="246" x2="296" y2="258" stroke="#233b57" stroke-width="2.4"/>
+          <line x1="310" y1="240" x2="310" y2="264" stroke="#233b57" stroke-width="2.4"/>
+          <line x1="310" y1="252" x2="640" y2="252" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="640" y1="252" x2="640" y2="166" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="640" y1="166" x2="564" y2="166" stroke="#233b57" stroke-width="1.8"/>
+          <text x="322" y="242" font-size="11.5" font-weight="700" fill="#0e4a8e">U（偏置电压）</text>
+          <text id="ldrRTxt" x="40" y="280" font-size="13" font-weight="700" fill="#0e4a8e">R = —</text>
+          <text id="ldrITxt" x="40" y="296" font-size="11.5" fill="#5b6b80">—</text>
+        </g>
+        <!-- ============ (c) 光电二极管（光生伏特、反偏） ============ -->
+        <g id="stPd" style="display:none">
+          <circle cx="52" cy="44" r="13" fill="#fff3d0" stroke="#e0a800" stroke-width="2"/>
+          <path d="M52 24 V15 M52 64 v9 M32 44 h-9 M72 44 h9 M38 30 l-7 -7 M66 30 l7 -7 M38 58 l-7 7 M66 58 l7 7" stroke="#e0a800" stroke-width="2" fill="none"/>
+          <text x="22" y="112" font-size="11.5" fill="#94a3b8">入射光 hf ≥ E_g</text>
+          <rect x="180" y="92" width="392" height="14" fill="#f2c9c9" stroke="#c98d8d" stroke-width="1.4"/>
+          <rect x="180" y="106" width="392" height="58" fill="#dceaf9" stroke="#9fc0e0" stroke-width="1.4" stroke-dasharray="6 4"/>
+          <rect x="180" y="164" width="392" height="32" fill="#9fc0e0" stroke="#5f8fc8" stroke-width="1.4"/>
+          <rect x="180" y="196" width="392" height="12" fill="#8a9bb0"/>
+          <rect x="210" y="84" width="44" height="8" fill="#c9a227"/>
+          <rect x="500" y="84" width="44" height="8" fill="#c9a227"/>
+          <text x="556" y="74" font-size="11.5" fill="#5b6b80">增透膜 / 光窗</text>
+          <text x="576" y="103" font-size="11.5" fill="#a4514d">P⁺ 层（薄）</text>
+          <text x="576" y="142" text-anchor="end" font-size="11.5" fill="#2b6cb0">耗尽层（强电场）</text>
+          <text x="576" y="186" font-size="11.5" fill="#33506f">N 型硅</text>
+          <text x="576" y="208" font-size="11.5" fill="#5b6b80">背电极</text>
+          <line x1="210" y1="88" x2="150" y2="88" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="150" y1="88" x2="150" y2="246" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="150" y1="246" x2="270" y2="246" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="270" y1="240" x2="270" y2="252" stroke="#233b57" stroke-width="2.4"/>
+          <line x1="284" y1="234" x2="284" y2="258" stroke="#233b57" stroke-width="2.4"/>
+          <line x1="284" y1="246" x2="446" y2="246" stroke="#233b57" stroke-width="1.8"/>
+          <circle cx="482" cy="246" r="13" fill="#fff" stroke="#233b57" stroke-width="1.8"/>
+          <text x="482" y="250" text-anchor="middle" font-size="10" fill="#233b57">μA</text>
+          <line x1="495" y1="246" x2="640" y2="246" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="640" y1="246" x2="640" y2="202" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="640" y1="202" x2="572" y2="202" stroke="#233b57" stroke-width="1.8"/>
+          <text x="296" y="236" font-size="11.5" font-weight="700" fill="#0e4a8e">反向偏压</text>
+          <text id="pdITxt" x="40" y="282" font-size="13" font-weight="700" fill="#0e4a8e">I_p = —</text>
+          <text id="pdUTxt" x="40" y="294" font-size="11.5" fill="#5b6b80">—</text>
+        </g>
+        <!-- ============ (d) 光电三极管（光生伏特 + 电流放大） ============ -->
+        <g id="stPt" style="display:none">
+          <circle cx="330" cy="26" r="12" fill="#fff3d0" stroke="#e0a800" stroke-width="2"/>
+          <path d="M330 8 V2 M314 14 l-6 -6 M346 14 l6 -6" stroke="#e0a800" stroke-width="2" fill="none"/>
+          <rect x="200" y="150" width="360" height="50" fill="#a9c7e8" stroke="#5f8fc8" stroke-width="1.4"/>
+          <rect x="230" y="128" width="200" height="22" fill="#e8b0b0" stroke="#c98d8d" stroke-width="1.4"/>
+          <rect x="280" y="106" width="70" height="22" fill="#6a9ad4" stroke="#3d6ea8" stroke-width="1.4"/>
+          <text x="196" y="146" text-anchor="end" font-size="11.5" fill="#33506f">集电区 N</text>
+          <text x="440" y="144" font-size="11.5" fill="#a4514d">基区 P（受光窗）</text>
+          <text x="286" y="100" font-size="11.5" fill="#33506f">发射区 N⁺</text>
+          <text x="196" y="196" text-anchor="end" font-size="11.5" fill="#5b6b80">光生基极电流 I_b</text>
+          <line x1="305" y1="106" x2="305" y2="74" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="305" y1="74" x2="120" y2="74" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="120" y1="74" x2="120" y2="232" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="105" y1="232" x2="135" y2="232" stroke="#233b57" stroke-width="2.2"/>
+          <line x1="110" y1="240" x2="130" y2="240" stroke="#233b57" stroke-width="2.2"/>
+          <line x1="115" y1="248" x2="125" y2="248" stroke="#233b57" stroke-width="2.2"/>
+          <circle cx="305" cy="74" r="3.6" fill="#233b57"/>
+          <line x1="430" y1="139" x2="478" y2="139" stroke="#233b57" stroke-width="1.8"/>
+          <text x="484" y="132" font-size="11.5" fill="#233b57">基极 B（悬空）</text>
+          <line x1="556" y1="175" x2="640" y2="175" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="640" y1="175" x2="640" y2="190" stroke="#233b57" stroke-width="1.8"/>
+          <rect x="628" y="190" width="24" height="30" fill="#fff" stroke="#233b57" stroke-width="1.6"/>
+          <text x="658" y="209" font-size="11" fill="#233b57">R_L</text>
+          <line x1="640" y1="220" x2="640" y2="252" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="640" y1="252" x2="308" y2="252" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="308" y1="246" x2="308" y2="258" stroke="#233b57" stroke-width="2.4"/>
+          <line x1="296" y1="240" x2="296" y2="264" stroke="#233b57" stroke-width="2.4"/>
+          <line x1="296" y1="252" x2="120" y2="252" stroke="#233b57" stroke-width="1.8"/>
+          <text x="196" y="272" font-size="11.5" font-weight="700" fill="#0e4a8e">Vcc = 12 V</text>
+          <text id="ptIcTxt" x="40" y="288" font-size="13" font-weight="700" fill="#0e4a8e">I_c = —</text>
+        </g>
+        <!-- ============ (e) 光电池（光生伏特、自发电、近似恒流源） ============ -->
+        <g id="stPv" style="display:none">
+          <circle cx="100" cy="32" r="12" fill="#fff3d0" stroke="#e0a800" stroke-width="2"/>
+          <path d="M100 14 V8 M84 20 l-6 -6 M116 20 l6 -6" stroke="#e0a800" stroke-width="2" fill="none"/>
+          <rect x="170" y="94" width="400" height="16" fill="#a9c7e8" stroke="#5f8fc8" stroke-width="1.4"/>
+          <rect x="170" y="110" width="400" height="76" fill="#e8b0b0" stroke="#c98d8d" stroke-width="1.4"/>
+          <rect x="170" y="186" width="400" height="12" fill="#8a9bb0"/>
+          <line x1="170" y1="110" x2="570" y2="110" stroke="#a4514d" stroke-width="2" stroke-dasharray="7 4"/>
+          <rect x="230" y="86" width="20" height="8" fill="#c9a227"/>
+          <rect x="330" y="86" width="20" height="8" fill="#c9a227"/>
+          <rect x="430" y="86" width="20" height="8" fill="#c9a227"/>
+          <text x="578" y="108" font-size="11.5" fill="#33506f">N 型层（薄）</text>
+          <text x="578" y="118" font-size="11" fill="#a4514d">PN 结</text>
+          <text x="578" y="156" font-size="11.5" fill="#a4514d">P 型硅衬底（+）</text>
+          <text x="578" y="196" font-size="11.5" fill="#5b6b80">背电极</text>
+          <text x="186" y="84" font-size="11" fill="#8a6d3b">上电极（栅线，−）</text>
+          <line x1="240" y1="86" x2="110" y2="86" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="110" y1="86" x2="110" y2="252" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="110" y1="252" x2="280" y2="252" stroke="#233b57" stroke-width="1.8"/>
+          <rect x="280" y="242" width="30" height="20" fill="#fff" stroke="#233b57" stroke-width="1.6"/>
+          <text x="300" y="238" font-size="11" fill="#233b57">R_L</text>
+          <line x1="310" y1="252" x2="640" y2="252" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="640" y1="252" x2="640" y2="192" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="640" y1="192" x2="570" y2="192" stroke="#233b57" stroke-width="1.8"/>
+          <polygon points="330,268 316,262 316,274" fill="#d94a3d"/>
+          <text x="336" y="272" font-size="11.5" font-weight="700" fill="#d94a3d">I_sc（短路电流，与 E 线性、近似恒流源）</text>
+          <text id="pvScTxt" x="40" y="290" font-size="13" font-weight="700" fill="#0e4a8e">I_sc = —</text>
+          <text id="pvUocTxt" x="40" y="294" font-size="11.5" fill="#5b6b80">—</text>
+        </g>
+        <g id="phDots"></g>
+        <g id="caDots"></g>
+        <g id="hvDots"></g>
+      </svg>
+      <div class="readlabel" id="devRL">输出读数：器件工作点</div>
+      <div class="readwrap"><svg viewBox="0 0 620 224" role="img" aria-label="结构对应的输出读数">
+        <g transform="translate(30,22)">
+          <text id="dev1" x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">—</text>
+          <text id="dev2" x="0" y="22" font-size="12" fill="#5b6b80">—</text>
+          <text id="dev3" x="0" y="42" font-size="12" fill="#5b6b80">—</text>
+          <text id="devBig" x="0" y="74" font-size="15" font-weight="800" fill="#d94a3d">—</text>
+          <rect x="0" y="88" width="300" height="16" rx="5" fill="#f4f8fd" stroke="#d5dfec"/>
+          <rect id="devBar" x="0" y="88" width="0" height="16" rx="5" fill="#f2a900"/>
+          <text id="devBarTxt" x="0" y="124" font-size="12.5" font-weight="700" fill="#0e4a8e">—</text>
+          <text id="devAlt" x="0" y="152" font-size="12.5" font-weight="700" fill="#0e4a8e">—</text>
+          <text id="devNote" x="0" y="180" font-size="11" fill="#94a3b8">—</text>
+          <text x="0" y="202" font-size="11" fill="#94a3b8">金色光点＝入射光子（密度 ∝ 光强）；蓝色粒子＝载流子 / 电流（速度 ∝ 电流大小）</text>
+        </g>
+      </svg></div>
+      <div class="hint" id="devHint">—</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="readCard">
+      <div class="phead">
+        <h2>输出读数</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="big">
+        <span class="cap" id="bigCap">光亮电阻 R</span>
+        <span class="num" id="bigNum">1.04</span><span class="unit" id="bigUnit">kΩ</span>
+      </div>
+      <div class="kv">
+        <div class="box"><span id="kv1l">暗阻（0.01 lx）</span><b id="kv1v">32.8 MΩ</b></div>
+        <div class="box"><span id="kv2l">亮阻（1000 lx）</span><b id="kv2v">1.04 kΩ</b></div>
+        <div class="box"><span id="kv3l">电流 I = U/R</span><b id="kv3v">9.64 mA</b></div>
+        <div class="box"><span id="kv4l">功耗 P = UI</span><b id="kv4v">96.4 mW</b></div>
+      </div>
+      <div class="fine" id="readFine">—</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="extCard">
+      <div class="phead">
+        <h2>位置与图像 <small id="extSub">PSD：横向光电效应，位置信号与光强无关</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="seg tight" id="segExt" style="margin-bottom:4px">
+        <button data-ext="psd" class="on">PSD 位置传感器<small>P = (I₂−I₁)/(I₂+I₁) = x/L</small></button>
+        <button data-ext="ccd">CCD 图像传感器<small>势阱 + 三相时钟转移</small></button>
+      </div>
+      <div class="ctrl" id="pxRow">
+        <div class="row">
+          <span class="name"><b>光点位置 x</b><br><span class="tiny" id="pxTxt">x = 0.0 mm（中心）</span></span>
+          <input type="range" id="px" min="0" max="100" step="1" value="50">
+          <output id="pxOut">0.0 mm</output>
+        </div>
+      </div>
+      <svg id="ext" viewBox="0 0 700 300" role="img" aria-label="PSD 与 CCD 原理">
+        <!-- ============ PSD：一维 PIN 位置传感器 ============ -->
+        <g id="stPSD">
+          <circle cx="56" cy="30" r="11" fill="#fff3d0" stroke="#e0a800" stroke-width="2"/>
+          <path d="M56 12 V6 M42 18 l-6 -6" stroke="#e0a800" stroke-width="2" fill="none"/>
+          <rect x="150" y="116" width="400" height="20" fill="#f2c9c9" stroke="#c98d8d" stroke-width="1.4"/>
+          <rect x="150" y="136" width="400" height="40" fill="#dfe9f5" stroke="#9fc0e0" stroke-width="1.4"/>
+          <rect x="150" y="176" width="400" height="16" fill="#a9c7e8" stroke="#5f8fc8" stroke-width="1.4"/>
+          <rect x="134" y="116" width="16" height="76" fill="#c9a227"/>
+          <rect x="550" y="116" width="16" height="76" fill="#c9a227"/>
+          <circle id="psdSpot" cx="350" cy="114" r="10" fill="#fff3d0" stroke="#e0a800" stroke-width="2"/>
+          <text x="143" y="210" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8a6d3b">X₁</text>
+          <text x="558" y="210" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8a6d3b">X₂</text>
+          <line x1="134" y1="154" x2="116" y2="154" stroke="#233b57" stroke-width="1.8"/>
+          <circle cx="104" cy="154" r="12" fill="#fff" stroke="#233b57" stroke-width="1.8"/>
+          <text x="104" y="158" text-anchor="middle" font-size="10" fill="#233b57">I₁</text>
+          <line x1="92" y1="154" x2="64" y2="154" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="566" y1="154" x2="592" y2="154" stroke="#233b57" stroke-width="1.8"/>
+          <circle cx="604" cy="154" r="12" fill="#fff" stroke="#233b57" stroke-width="1.8"/>
+          <text x="604" y="158" text-anchor="middle" font-size="10" fill="#233b57">I₂</text>
+          <line x1="616" y1="154" x2="648" y2="154" stroke="#233b57" stroke-width="1.8"/>
+          <text id="psdI1Txt" x="104" y="186" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0e4a8e">—</text>
+          <text id="psdI2Txt" x="604" y="186" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0e4a8e">—</text>
+          <line x1="350" y1="192" x2="350" y2="204" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="336" y1="204" x2="364" y2="204" stroke="#233b57" stroke-width="2.4"/>
+          <line x1="342" y1="212" x2="358" y2="212" stroke="#233b57" stroke-width="2.4"/>
+          <line x1="350" y1="212" x2="350" y2="226" stroke="#233b57" stroke-width="1.8"/>
+          <text x="372" y="220" font-size="11.5" font-weight="700" fill="#0e4a8e">U_b（反向偏压）</text>
+          <text x="120" y="252" font-size="11.5" fill="#5b6b80">① P 型电阻层（光敏面，两端 X₁/X₂ 取电流）</text>
+          <text x="120" y="270" font-size="11.5" fill="#5b6b80">② I 层（高阻本征层，横向光电效应发生处）</text>
+          <text x="120" y="288" font-size="11.5" fill="#5b6b80">③ N 型公共电极（加反向偏压）</text>
+          <text id="psdPTxt" x="648" y="52" text-anchor="end" font-size="14" font-weight="800" fill="#d94a3d">P = —</text>
+          <text id="psdXTxt" x="648" y="74" text-anchor="end" font-size="11.5" fill="#5b6b80">—</text>
+        </g>
+        <!-- ============ CCD：MOS 势阱 + 三相时钟转移 ============ -->
+        <g id="stCCD" style="display:none">
+          <rect x="190" y="96" width="70" height="16" fill="#c9a227"/>
+          <rect x="270" y="96" width="70" height="16" fill="#c9a227"/>
+          <rect x="350" y="96" width="70" height="16" fill="#c9a227"/>
+          <rect x="430" y="96" width="70" height="16" fill="#c9a227"/>
+          <rect x="510" y="96" width="70" height="16" fill="#c9a227"/>
+          <line x1="225" y1="96" x2="225" y2="78" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="305" y1="96" x2="305" y2="78" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="385" y1="96" x2="385" y2="78" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="465" y1="96" x2="465" y2="78" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="545" y1="96" x2="545" y2="78" stroke="#233b57" stroke-width="1.6"/>
+          <text x="225" y="72" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8a6d3b">φ₁</text>
+          <text x="305" y="72" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8a6d3b">φ₂</text>
+          <text x="385" y="72" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8a6d3b">φ₃</text>
+          <text x="465" y="72" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8a6d3b">φ₁</text>
+          <text x="545" y="72" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8a6d3b">φ₂</text>
+          <text x="330" y="46" text-anchor="middle" font-size="11.5" fill="#5b6b80">三相时钟（2~4 组电极）：高电平 → 势阱变深 → 电荷包右移</text>
+          <rect x="150" y="112" width="480" height="12" fill="#cfe0f5" stroke="#9fc0e0" stroke-width="1.2"/>
+          <text x="146" y="122" text-anchor="end" font-size="11" fill="#5b6b80">SiO₂</text>
+          <rect x="150" y="124" width="480" height="56" fill="#dfe9f5" stroke="#b9cde4" stroke-width="1.2"/>
+          <text x="146" y="170" text-anchor="end" font-size="11" fill="#5b6b80">p 型硅</text>
+          <path id="ccdW0" fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-dasharray="5 3"/>
+          <path id="ccdW1" fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-dasharray="5 3"/>
+          <path id="ccdW2" fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-dasharray="5 3"/>
+          <path id="ccdW3" fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-dasharray="5 3"/>
+          <path id="ccdW4" fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-dasharray="5 3"/>
+          <text x="632" y="152" text-anchor="end" font-size="11.5" fill="#5b6b80">→ 末级统一放大输出</text>
+          <text x="632" y="170" text-anchor="end" font-size="11.5" fill="#5b6b80">（噪声低、一致性好）</text>
+          <text id="ccdPhaseTxt" x="160" y="206" font-size="11.5" font-weight="700" fill="#0e4a8e">—</text>
+          <text x="146" y="240" text-anchor="end" font-size="11.5" font-weight="700" fill="#8a6d3b">φ₁</text>
+          <text x="146" y="264" text-anchor="end" font-size="11.5" font-weight="700" fill="#8a6d3b">φ₂</text>
+          <text x="146" y="288" text-anchor="end" font-size="11.5" font-weight="700" fill="#8a6d3b">φ₃</text>
+          <g id="ccdWF"></g>
+          <line id="ccdHead" x1="160" y1="216" x2="160" y2="294" stroke="#d94a3d" stroke-width="1.6" stroke-dasharray="4 3"/>
+        </g>
+        <g id="pxDots"></g>
+        <g id="ppDots"></g>
+        <g id="ccdChg"></g>
+      </svg>
+      <div class="fml" id="extFml" style="margin-top:4px">—</div>
+      <div class="hint" id="extHint">—</div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colB" data-right="colC" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 右列 ================= -->
+  <div class="col" id="colC">
+    <div class="colhead">③ 公式推导 · 特性曲线 · 本章要点</div>
+
+
+    <section class="card panel" id="fmlCard">
+      <div class="phead">
+        <h2>公式推导 <small id="fmlTitle">光敏电阻 · 光电导</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody"><div class="fml" id="fmlBody"></div></div>
+    </section>
+
+    <section class="card panel" id="curveCard">
+      <div class="phead">
+        <h2>特性曲线 <small id="curveSub">光敏电阻 R–E 双对数（光电特性，图8-11）</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="seg tight" id="segCurve" style="margin-bottom:4px">
+        <button data-cm="light" class="on">光照特性<small>R–E / I–E</small></button>
+        <button data-cm="iv">伏安特性<small>I–U / I–V</small></button>
+      </div>
+      <svg id="curve" viewBox="0 0 700 320" role="img" aria-label="光电式传感器特性曲线">
+        <g id="cGrid"></g>
+        <line x1="72" y1="252" x2="664" y2="252" stroke="#9fb2c8" stroke-width="1.5"/>
+        <line x1="72" y1="26" x2="72" y2="252" stroke="#9fb2c8" stroke-width="1.5"/>
+        <path id="cp1" fill="none" stroke="#d94a3d" stroke-width="3"/>
+        <path id="cp2" fill="none" stroke="#0d8b7f" stroke-width="3"/>
+        <path id="cp3" fill="none" stroke="#7c3aed" stroke-width="2.4" stroke-dasharray="7 5"/>
+        <line id="mkX" x1="0" y1="26" x2="0" y2="252" stroke="#0e4a8e" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <circle id="mkDot" r="5.5" fill="#0e4a8e" stroke="#fff" stroke-width="2"/>
+        <text id="axX" x="664" y="290" text-anchor="end" font-size="12.5" fill="#5b6b80">照度 E / lx</text>
+        <text id="axY" x="80" y="18" font-size="12.5" fill="#5b6b80">R / Ω</text>
+        <text id="curveNote" x="664" y="310" text-anchor="end" font-size="11.5" fill="#94a3b8">—</text>
+      </svg>
+      <div class="legend" id="legend"></div>
+      </div>
+    </section>
+
+  </div>
+</main>
+</div><!-- /#boardWrap -->
+
+<footer>
+<b>参数：</b>照度 E = 0.01~1000 lx（对数）；555 nm 明视觉 683 lm/W；光电管受光窗 1 mm²、S_k = 40 μA/lm、11 级倍增 σ = 5 → G = 5¹¹；光敏电阻 R = 520 kΩ·E<sup>−0.9</sup>（1000 lx ≈ 1.04 kΩ、0.01 lx ≈ 32.8 MΩ）、额定 500 mW；光电二极管 1 cm²、S_p = 0.5 A/W、暗电流 1 nA；光电三极管 0.1 cm²、β = 200、Vcc = 12 V；光电池 20 cm²、0.4 A/W、U_oc = 50.5 mV·ln(1+E/0.1 lx)（1000 lx ≈ 465 mV）；PSD I₀ = 0.2 μA/lx、L = 10 mm。<b>关系式：</b>E_k = hf−W，f₀ = W/h，λ₀ = hc/E_g = 1293/E_g(nm)，R = R₁E^(−γ)，I_p = S_pΦ，I_c = βI_p，I_sc ∝ E，U_oc = mU_T ln(1+E/E₀)，P = (I₂−I₁)/(I₂+I₁) = x/L，n = 60f/N，M = dN/D_max，Δ = D_max/N，L = Nλ₀/(8n)。<b>课堂提问：</b>① 为什么"光越强越容易打出电子"是错的？② 光电二极管为什么必须反偏？③ 光电池为什么按恒流源而不是电压源使用？④ PSD 的位置信号为什么与光强无关？
+</footer>
+
+<script>
+(function(){
+  "use strict";
+/* =====================================================================
+   公共运行时（各章通用）· 由 _build/build.js 注入到主脚本的最前面
+   章节代码直接使用：$ / sfmt / frac / clamp / say / sleep / tween /
+   beginDemo / stopDemo / endDemo / bindDemos
+   约定：章节必须定义 var S = { ..., demoToken:0 }；
+        演示函数写成 async，每个 await 判断返回值，结尾 endDemo()；
+        章节 jsB 里用 DEMOS.<key> = {btn:'...', label:'...', fn:demoXxx} 注册，
+        随后调用 bindDemos() 绑定按钮点击。
+   注意：不内置任何语音朗读；演示按钮只由 bindDemos() 绑定一次。
+   ===================================================================== */
+var $ = function(id){ return document.getElementById(id); };
+function sfmt(a, d){ return (a >= 0 ? '+' : '−') + Math.abs(a).toFixed(d); }
+function frac(a, b){ return '<span class="frac"><i>' + a + '</i><b>' + b + '</b></span>'; }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+var DEMOS = {}, SPEED = 1, playingKey = null;
+function say(t){ $('narration').innerHTML = t; }
+function sleep(ms, tok){
+  return new Promise(function(res){ setTimeout(function(){ res(S.demoToken === tok); }, Math.max(60, ms/SPEED)); });
+}
+function tween(from, to, dur, set, tok){
+  dur = Math.max(160, dur/SPEED);
+  return new Promise(function(res){
+    var t0 = performance.now();
+    (function step(now){
+      if (S.demoToken !== tok) return res(false);
+      var p = (now - t0)/dur;
+      if (!isFinite(p)) p = 1;
+      p = clamp(p, 0, 1);
+      var e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
+      var v = from + (to - from)*e;
+      v = (from <= to) ? Math.min(to, Math.max(from, v)) : Math.max(to, Math.min(from, v));
+      set(v);
+      if (p < 1) requestAnimationFrame(step); else res(true);
+    })(performance.now());
+  });
+}
+function resetDemoButtons(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b){ b.textContent = DEMOS[k].label; b.classList.remove('running'); }
+  });
+}
+function stopDemo(){ S.demoToken++; playingKey = null; resetDemoButtons(); }
+function beginDemo(key){
+  stopDemo(); playingKey = key;
+  var d = DEMOS[key], b = d && $(d.btn);
+  if (b){ b.textContent = '⏸ 暂停演示'; b.classList.add('running'); }
+  return ++S.demoToken;
+}
+function endDemo(){ playingKey = null; resetDemoButtons(); }
+function bindDemos(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b) b.addEventListener('click', function(){
+      if (playingKey === k){ stopDemo(); say('演示已暂停。可继续拖动滑块手动观察，或点其它演示按钮。'); }
+      else if (DEMOS[k].fn){ DEMOS[k].fn(); }
+    });
+  });
+}
+(function(){
+  var spd = $('speed');
+  if (spd) spd.addEventListener('input', function(){
+    SPEED = parseFloat(this.value) || 1;
+    $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  });
+})();
+
+
+  /* ============ 1. 物理参数与状态 ============ */
+  var CFG = {
+    K683: 683,            /* 555 nm 明视觉：1 W = 683 lm（照度 → 光通量 → 光功率换算） */
+    Emin: 0.01, Emax: 1000,
+    /* --- 光电管 / 光电倍增管（外光电） --- */
+    A_tube: 1e-6,         /* 受光面积 1 mm² */
+    Sk: 40e-6,            /* 阴极积分灵敏度 40 μA/lm */
+    sig: 5, nDy: 11,      /* 倍增率 σ = 5、11 级 → G = 5¹¹ = 4.88×10⁷ */
+    Usat: 18, Uknee: 50,  /* 伏安：U > 50 V 进饱和区 */
+    RL_tube: 1e4,         /* 阳极负载 10 kΩ */
+    /* --- 光敏电阻（光电导） --- */
+    R1: 520e3, gam: 0.9,  /* R = R1·E^(−γ) → 1000 lx ≈ 1.04 kΩ；0.01 lx ≈ 32.8 MΩ */
+    Prated: 0.5,          /* 额定功耗 500 mW（图8-12） */
+    /* --- 光电二极管 --- */
+    A_pd: 1e-4, Sp: 0.5,  /* 1 cm²、响应度 0.5 A/W */
+    Id_pd: 1e-9,          /* 暗电流 1 nA（硅） */
+    /* --- 光电三极管 --- */
+    A_pt: 1e-5, beta: 200, Ikp: 15e-6,   /* 0.1 cm²、β = 200、增益压缩拐点 15 μA */
+    Vcc: 12,
+    /* --- 光电池 --- */
+    A_pv: 2e-3, Spv: 0.4,                /* 20 cm²、0.4 A/W */
+    UocA: 50.5e-3, UocE0: 0.1,           /* U_oc = 50.5 mV·ln(1+E/0.1lx) → 1000 lx: 465 mV */
+    /* --- PSD --- */
+    I_psd: 0.2e-6, Lpsd: 10,             /* 0.2 μA/lx；半长 L = 10 mm */
+    /* --- CCD（式 8-16 / 8-17） --- */
+    dPix: 10e-6, Npix: 1024, Dmax: 5e-3,
+    /* --- 激光干涉测长（式 8-18、习题8-10） --- */
+    lam: 632.8e-9, Ncnt: 102
+  };
+  var TYPES = {
+    tube: { name:'光电管（外光电）', sub:'光子把电子打出材料表面',
+            hint:'外光电（光电管 / 光电倍增管）：门槛 hf ≥ W，只在紫外与可见短波有效；真空管灵敏度仅几十 μA/lm，倍增管用 σⁿ 放大 10⁶~10⁸ —— 只能测微弱光。',
+            uName:'极间电压 U', uUnit:'V', uMin:0, uMax:300, uStep:5, uDef:100,
+            uTxt:'0~300 V：> 50 V 才饱和' },
+    ldr:  { name:'光敏电阻（光电导）', sub:'光子 → 载流子 ↑ → 阻值 ↓',
+            hint:'光敏电阻（光电导）：光照使载流子增多、阻值下降 —— 无极性，交直流均可；R 与照度成幂律（非线性），适合做光控开关。',
+            uName:'偏置电压 U', uUnit:'V', uMin:0.5, uMax:30, uStep:0.5, uDef:10,
+            uTxt:'0.5~30 V：注意额定 500 mW' },
+    pd:   { name:'光电二极管（光生伏特）', sub:'反偏使用，光照产生光电流',
+            hint:'光电二极管（光生伏特）：必须反偏 —— 反偏时暗电流最小、光生电流变化最明显；正向偏置时光电流被外电路电流淹没。零偏压仍有光电流。',
+            uName:'反向电压 U_R', uUnit:'V', uMin:0, uMax:30, uStep:0.5, uDef:5,
+            uTxt:'0~30 V：≥1 V 进恒流区' },
+    pt:   { name:'光电三极管', sub:'光生伏特 + 电流放大 I_c = βI_p',
+            hint:'光电三极管：内部有电流增益 I_c = βI_p（几十~几百）→ 比二极管灵敏得多，但更慢、线性更差；负载电阻越小频响越好（10 kΩ 优于 100 kΩ）。',
+            uName:'负载电阻 R_L', uUnit:'kΩ', uMin:1, uMax:100, uStep:1, uDef:10,
+            uTxt:'1~100 kΩ：越小频响越好' },
+    pv:   { name:'光电池（光生伏特）', sub:'自发电、近似恒流源',
+            hint:'光电池：短路电流与照度线性好（mA 级）、开路电压对数且约 2000 lx 饱和（≈0.5 V）→ 近似恒流源，须用 I/V 转换（虚地≈短路）或小负载电阻。',
+            uName:'负载电阻 R_L', uUnit:'kΩ', uMin:0.1, uMax:2, uStep:0.05, uDef:0.5,
+            uTxt:'0.1~2 kΩ：恒流 / I/V 转换' }
+  };
+  var S = { type:'ldr', e:1000, u:10, tube:'vacuum', ext:'psd', px:50, cm:'light', demoToken:0 };
+
+  /* ============ 2. 单位换算与格式化 ============ */
+  var SUPS = { '-':'⁻', '0':'⁰', '1':'¹', '2':'²', '3':'³', '4':'⁴', '5':'⁵', '6':'⁶', '7':'⁷', '8':'⁸', '9':'⁹' };
+  function sup10(e){ return String(e).split('').map(function(c){ return SUPS[c] || c; }).join(''); }
+  var SI = [{ f:1e9,p:'G' }, { f:1e6,p:'M' }, { f:1e3,p:'k' }, { f:1,p:'' },
+            { f:1e-3,p:'m' }, { f:1e-6,p:'μ' }, { f:1e-9,p:'n' }, { f:1e-12,p:'p' }, { f:1e-15,p:'f' }];
+  function siParts(x, unit){
+    if (!isFinite(x)) return { v:'—', u:unit };
+    if (x === 0) return { v:'0', u:unit };
+    var a = Math.abs(x), i;
+    for (i = 0; i < SI.length; i++){ if (a >= SI[i].f) break; }
+    if (i >= SI.length) i = SI.length - 1;
+    var v = x/SI[i].f, d = Math.abs(v) >= 100 ? 0 : (Math.abs(v) >= 10 ? 1 : 2);
+    return { v: v.toFixed(d), u: SI[i].p + unit };
+  }
+  function fmtSI(x, unit){ var p = siParts(x, unit); return p.v + ' ' + p.u; }
+  function sci(x, d, unit){
+    if (!isFinite(x) || x === 0) return '0 ' + (unit || '');
+    var s = x < 0 ? '−' : '', a = Math.abs(x);
+    var e = Math.floor(Math.log10(a)), m = a/Math.pow(10, e);
+    if (m >= 10){ m /= 10; e++; }
+    if (m < 1){ m *= 10; e--; }
+    return s + m.toFixed(d === undefined ? 2 : d) + '×10' + sup10(e) + ' ' + (unit || '');
+  }
+  function fmtLx(E){
+    if (E >= 100) return E.toFixed(0) + ' lx';
+    if (E >= 10) return E.toFixed(1) + ' lx';
+    if (E >= 1) return E.toFixed(2) + ' lx';
+    if (E >= 0.1) return E.toFixed(3) + ' lx';
+    return E.toFixed(4) + ' lx';
+  }
+  function lightPos(){ return clamp((Math.log10(S.e) + 2)/5*100, 0, 100); }
+  function lightFromPos(p){ return Math.pow(10, -2 + 5*clamp(p, 0, 100)/100); }
+
+  /* ============ 3. 模型（纯函数，不碰 DOM） ============ */
+  function model(){
+    var t = S.type, E = S.e, u = S.u, o = { t:t, E:E, u:u };
+    o.lp = lightPos(); o.ln = clamp(o.lp/100, 0, 1);
+    if (t === 'tube'){
+      o.Phi = E*CFG.A_tube;                                  /* 光通量 lm */
+      o.Ik = CFG.Sk*o.Phi;                                   /* 阴极光电流 A */
+      o.sat = 1 - Math.exp(-u/CFG.Usat);
+      o.G = (S.tube === 'pmt') ? Math.pow(CFG.sig, CFG.nDy) : 1;
+      o.Ia = o.Ik*o.sat*o.G;
+      o.Uo = o.Ia*CFG.RL_tube;
+      o.knee = (u >= CFG.Uknee);
+      o.over = (S.tube === 'pmt' && o.Ia > 1e-4);
+      o.flow = clamp((Math.log10(Math.max(o.Ia, 1e-13)) + 12)/12, 0.1, 1);
+      o.Rin = 200e6;
+    } else if (t === 'ldr'){
+      o.R = CFG.R1*Math.pow(E, -CFG.gam);
+      o.I = u/o.R; o.P = u*o.I;
+      o.Rd = CFG.R1*Math.pow(CFG.Emin, -CFG.gam);
+      o.Rl = CFG.R1*Math.pow(1000, -CFG.gam);
+      o.over = (o.P > CFG.Prated);
+      o.flow = clamp((Math.log10(Math.max(o.I, 1e-9)) + 6.5)/5, 0.1, 1);
+      o.Ulim = Math.sqrt(CFG.Prated*o.R);
+    } else if (t === 'pd'){
+      o.Popt = E*CFG.A_pd/CFG.K683;                          /* 光功率 W */
+      o.Ip = CFG.Sp*o.Popt;
+      o.Ip0 = 0.95*o.Ip;
+      o.Id = CFG.Id_pd;
+      o.It = o.Ip + o.Id;
+      o.cs = (u >= 1);
+      o.flow = clamp((Math.log10(Math.max(o.Ip, 1e-11)) + 9.5)/6.5, 0.1, 1);
+    } else if (t === 'pt'){
+      o.Popt = E*CFG.A_pt/CFG.K683;
+      o.Ip = CFG.Sp*o.Popt;
+      o.Ic = CFG.beta*o.Ip/(1 + o.Ip/CFG.Ikp);
+      o.beff = o.Ic/o.Ip;
+      o.Ilin = CFG.beta*o.Ip;
+      o.Uce = CFG.Vcc - o.Ic*u*1e3;
+      o.satL = (o.Uce < 0.2);
+      if (o.satL) o.Uce = 0.2;
+      o.flow = clamp((Math.log10(Math.max(o.Ic, 1e-11)) + 9)/6, 0.1, 1);
+    } else {
+      o.Popt = E*CFG.A_pv/CFG.K683;
+      o.Isc = CFG.Spv*o.Popt;
+      o.Uoc = CFG.UocA*Math.log(1 + E/CFG.UocE0);
+      o.Uload = Math.min(o.Isc*u*1e3, o.Uoc);
+      o.Iload = o.Uload/(u*1e3);
+      o.Uiv = o.Isc*u*1e3;
+      o.flow = clamp((Math.log10(Math.max(o.Isc, 1e-11)) + 8)/5.5, 0.1, 1);
+    }
+    return o;
+  }
+
+  /* ============ 4. 粒子动画引擎（光子 / 载流子 / 空穴 / PSD 光电流） ============ */
+  var DOTS = {
+    ph: { g:'phDots', els:null, segs:[], phase:0, f:1, count:true,  n:26, r:3.3, color:'#f2a900', spd:1.15 },
+    ca: { g:'caDots', els:null, segs:[], phase:0, f:0.5, count:false, n:30, r:3.0, color:'#2f6fd0', spd:1.0 },
+    hv: { g:'hvDots', els:null, segs:[], phase:0, f:0.5, count:false, n:16, r:2.8, color:'#d94a3d', spd:1.0 },
+    pp: { g:'ppDots', els:null, segs:[], phase:0, f:1, count:true,  n:16, r:3.1, color:'#f2a900', spd:1.0 },
+    px: { g:'pxDots', els:null, segs:[], phase:0, f:0.5, count:false, n:20, r:3.0, color:'#7c3aed', spd:1.0 }
+  };
+  var DOTLIST = ['ph', 'ca', 'hv', 'pp', 'px'];
+  function initDots(){
+    DOTLIST.forEach(function(k){
+      var s = DOTS[k], g = $(s.g), html = '', i;
+      for (i = 0; i < s.n; i++){
+        html += '<circle cx="-30" cy="-30" r="' + s.r + '" fill="' + s.color + '" stroke="#fff" stroke-width="0.8" opacity="0"/>';
+      }
+      g.innerHTML = html;
+      s.els = g.querySelectorAll('circle');
+    });
+  }
+  function segLen(s){ var dx = s.x2 - s.x1, dy = s.y2 - s.y1; return Math.sqrt(dx*dx + dy*dy) || 1; }
+  function runDots(){
+    var last = performance.now();
+    (function loop(now){
+      var dt = Math.min(60, now - last); last = now;
+      DOTLIST.forEach(function(k){
+        var sys = DOTS[k], els = sys.els, n = els ? els.length : 0;
+        if (!n) return;
+        var segs = sys.segs || [];
+        sys.phase = (sys.phase + dt/(1700*sys.spd)) % 1;
+        var total = 0, i;
+        for (i = 0; i < segs.length; i++) total += segLen(segs[i]);
+        var vis = n;
+        if (sys.count) vis = Math.round(clamp(3 + (n - 3)*clamp(sys.f, 0, 1), 3, n));
+        var pi = 0;
+        for (i = 0; i < segs.length; i++){
+          var s = segs[i], L = segLen(s);
+          var cnt = Math.max(1, Math.round(vis*L/(total || 1)));
+          var f = clamp(s.f === undefined ? sys.f : s.f, 0.12, 2.2);
+          for (var q = 0; q < cnt && pi < n; q++, pi++){
+            var tt = ((sys.phase*(0.35 + 0.75*f) + q/cnt) % 1 + 1) % 1;
+            els[pi].setAttribute('cx', (s.x1 + (s.x2 - s.x1)*tt).toFixed(1));
+            els[pi].setAttribute('cy', (s.y1 + (s.y2 - s.y1)*tt).toFixed(1));
+            els[pi].setAttribute('opacity', (pi < vis ? (0.35 + 0.55*Math.min(1, f/1.4)) : 0).toFixed(2));
+          }
+        }
+        for (; pi < n; pi++) els[pi].setAttribute('opacity', '0');
+      });
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+
+  /* ============ 5. CCD：势阱 + 三相时钟电荷转移 ============ */
+  var CCD = { xs:[225, 305, 385, 465, 545], pitch:80, T:1.2, t0:0 };
+  function initCCD(){
+    var d = '', i, x, lev, y, ph;
+    for (i = 0; i < 3; i++){
+      d = '';
+      for (x = 160; x <= 620; x += 4){
+        ph = (((x - 160)/240 - i/3) % 1 + 1) % 1;
+        lev = ph < 1/3 ? 1 : 0;
+        y = 238 + i*24 - lev*16;
+        d += (x === 160 ? 'M' : 'L') + x + ' ' + y + ' ';
+      }
+      $('ccdWF').innerHTML += '<path d="' + d + '" fill="none" stroke="#8a6d3b" stroke-width="2"/>';
+    }
+    var g = $('ccdChg'), html = '', j;
+    for (j = 0; j < 10; j++){
+      html += '<circle cx="-30" cy="-30" r="3.4" fill="#0e4a8e" stroke="#fff" stroke-width="0.8" opacity="0"/>';
+    }
+    g.innerHTML = html;
+  }
+  function runCCD(){
+    (function loop(now){
+      var t = now/1000, T = CCD.T, i, j;
+      var k = (t/T) % 4, kf = Math.floor(k);
+      /* 势阱深度：本相高电平时最深 */
+      var dep = 0, deps = [];
+      for (i = 0; i < 5; i++){
+        var c = (((t/(3*T)) - i/3) % 1 + 1) % 1;
+        var dj = 10 + 20*Math.exp(-Math.pow(c/0.25, 2));
+        deps.push(dj);
+        $('ccdW' + i).setAttribute('d', 'M ' + (CCD.xs[i] - 36) + ' 124 Q ' + CCD.xs[i] + ' ' + (124 + dj).toFixed(1) + ' ' + (CCD.xs[i] + 36) + ' 124');
+      }
+      var xc = CCD.xs[0] + CCD.pitch*k;
+      for (i = 0; i < 5; i++){
+        var kern = Math.exp(-Math.pow((xc - CCD.xs[i])/60, 2));
+        dep = Math.max(dep, deps[i]*kern);
+      }
+      var yc = 126 + dep*0.8;
+      var vis = 1;
+      if (k < 0.35) vis = k/0.35;
+      if (k > 3.65) vis = (4 - k)/0.35;
+      vis = clamp(vis, 0, 1);
+      var sp = 1 + 0.35*Math.abs(Math.sin(Math.PI*(xc - CCD.xs[0])/CCD.pitch));
+      var ch = $('ccdChg').children || [];
+      for (j = 0; j < ch.length; j++){
+        ch[j].setAttribute('cx', (xc + (j - 4.5)*5.4*sp).toFixed(1));
+        ch[j].setAttribute('cy', (yc + ((j % 2) ? 2.4 : -2.4)).toFixed(1));
+        ch[j].setAttribute('opacity', (vis*(0.65 + 0.35*((j % 3)/2))).toFixed(2));
+      }
+      $('ccdHead').setAttribute('x1', (160 + (t/T*CCD.pitch) % 460).toFixed(1));
+      $('ccdHead').setAttribute('x2', (160 + (t/T*CCD.pitch) % 460).toFixed(1));
+      var near = clamp(Math.round((xc - CCD.xs[0])/CCD.pitch), 0, 4);
+      $('ccdPhaseTxt').textContent = '电荷包位于第 ' + (near + 1) + ' 个电极下（' +
+        ['φ₁','φ₂','φ₃','φ₁','φ₂'][near] + ' 高电平 → 该势阱最深）';
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+
+  /* ============ 6. 主刷新（唯一入口） ============ */
+  function paint(){
+    var o = model(), T = TYPES[S.type];
+    /* --- 控件与按钮态 --- */
+    $('e').value = o.lp.toFixed(1);
+    $('eOut').textContent = fmtLx(S.e);
+    $('eTxt').textContent = '照度 0.01 ~ 1000 lx（对数）';
+    $('u').min = T.uMin; $('u').max = T.uMax; $('u').step = T.uStep; $('u').value = String(S.u);
+    $('uName').textContent = T.uName;
+    $('uTxt').textContent = T.uTxt;
+    $('uOut').textContent = (T.uStep >= 1 ? S.u.toFixed(0) : S.u.toFixed(1)) + ' ' + T.uUnit;
+    $('typeHint').textContent = T.hint;
+    $('tubeRow').style.display = (S.type === 'tube') ? '' : 'none';
+    document.querySelectorAll('#segType button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-type') === S.type);
+    });
+    document.querySelectorAll('#segTube button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-tube') === S.tube);
+    });
+    document.querySelectorAll('#segExt button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-ext') === S.ext);
+    });
+    document.querySelectorAll('#segCurve button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-cm') === S.cm);
+    });
+    paintStruct(o);
+    paintRead(o);
+    paintCurve(o);
+    paintExt(o);
+    paintFormulas(o);
+    paintPoints();
+    if (window.__repack) window.__repack();
+  }
+
+  /* ============ 7. 结构图与光照动画 ============ */
+  function paintStruct(o){
+    var t = S.type, pmt = (S.tube === 'pmt');
+    $('stTube').style.display = (t === 'tube') ? '' : 'none';
+    $('stLdr').style.display  = (t === 'ldr')  ? '' : 'none';
+    $('stPd').style.display   = (t === 'pd')   ? '' : 'none';
+    $('stPt').style.display   = (t === 'pt')   ? '' : 'none';
+    $('stPv').style.display   = (t === 'pv')   ? '' : 'none';
+    $('tubePMT').style.display = pmt ? '' : 'none';
+    var ph = [], ca = [], hv = [];
+    var pf = 0.5 + 0.6*o.ln, cf = 0.15 + 1.5*o.flow;
+    function g(x1, y1, x2, y2, f){ return { x1:x1, y1:y1, x2:x2, y2:y2, f:f }; }
+
+    if (t === 'tube'){
+      ph = [g(66,52,166,108,pf), g(66,52,166,150,pf), g(66,52,166,192,pf)];
+      if (pmt){
+        var dxx = [215,247,279,311,343,375,407,439,471,503,535], dyy = [122,182,122,182,122,182,122,182,122,182,122];
+        ca.push(g(176,150,215,122,0.3));
+        for (var i = 1; i < 11; i++) ca.push(g(dxx[i-1], dyy[i-1], dxx[i], dyy[i], 0.3 + 1.5*i/11));
+        ca.push(g(535,122,566,150,1.8));
+      } else {
+        ca = [g(176,150,560,150,cf)];
+      }
+      $('tubeIaTxt').textContent = 'I_a = ' + fmtSI(o.Ia, 'A') + (pmt ? '（倍增管阳极）' : '（真空管）');
+      $('tubeGTxt').textContent = pmt
+        ? ('倍增增益 G = σⁿ = 5¹¹ = ' + sci(o.G, 2) + '；阴极 I_k = ' + fmtSI(o.Ik, 'A'))
+        : ('无倍增：阴极光电流 I_k = ' + fmtSI(o.Ik, 'A') + '，内阻数百 MΩ 需高阻放大');
+    } else if (t === 'ldr'){
+      ph = [g(66,50,230,122,pf), g(66,50,290,122,pf), g(66,50,350,122,pf), g(66,50,410,122,pf)];
+      ca = [g(256,138,494,138,cf), g(256,152,494,152,cf), g(256,166,494,166,cf), g(256,180,494,180,cf), g(256,194,494,194,cf)];
+      $('ldrLayer').setAttribute('opacity', (0.16 + 0.5*o.ln).toFixed(2));
+      $('ldrRTxt').textContent = 'R = ' + fmtSI(o.R, 'Ω') + '（E = ' + fmtLx(S.e) + '）';
+      $('ldrITxt').textContent = 'I = U/R = ' + fmtSI(o.I, 'A') + '，P = ' + fmtSI(o.P, 'W') +
+        (o.over ? '　⚠ 超过额定功耗 500 mW！' : '　（额定 500 mW 以内）');
+    } else if (t === 'pd'){
+      ph = [g(66,50,280,92,pf), g(66,50,350,92,pf), g(66,50,420,92,pf), g(66,50,470,92,pf)];
+      ca = [g(250,136,250,162,cf), g(320,136,320,162,cf), g(390,136,390,162,cf), g(460,136,460,162,cf),
+            g(640,212,640,244,cf), g(630,246,300,246,cf), g(170,240,152,100,cf), g(158,86,222,86,cf)];
+      hv = [g(250,136,250,108,cf), g(320,136,320,108,cf), g(390,136,390,108,cf), g(460,136,460,108,cf)];
+      $('pdITxt').textContent = 'I_p = ' + fmtSI(o.Ip, 'A') + '　（Φ = ' + fmtSI(o.Popt, 'W') + '）';
+      $('pdUTxt').textContent = 'U_R = ' + S.u.toFixed(1) + ' V' + (o.cs ? '：已进入恒流区（暗电流最小 ' + fmtSI(o.Id, 'A') + '）' : '：< 1 V，尚未完全反偏');
+    } else if (t === 'pt'){
+      ph = [g(340,38,355,126,pf), g(340,38,385,126,pf), g(340,38,415,126,pf)];
+      ca = [g(270,124,270,162,cf), g(305,124,305,162,cf), g(340,124,340,162,cf), g(640,198,640,246,cf)];
+      hv = [g(440,139,476,139,0.25 + 0.9*o.flow)];
+      $('ptIcTxt').textContent = 'I_c = ' + fmtSI(o.Ic, 'A') + '（I_p = ' + fmtSI(o.Ip, 'A') + '）';
+    } else {
+      ph = [g(112,44,200,94,pf), g(112,44,280,94,pf), g(112,44,390,94,pf), g(112,44,490,94,pf)];
+      ca = [g(200,180,200,102,cf), g(280,180,280,102,cf), g(360,180,360,102,cf), g(440,180,440,102,cf),
+            g(110,100,110,246,cf), g(120,252,268,252,cf), g(322,252,630,252,cf), g(640,248,640,200,cf)];
+      $('pvScTxt').textContent = 'I_sc = ' + fmtSI(o.Isc, 'A') + '　U_oc = ' + fmtSI(o.Uoc, 'V');
+      $('pvUocTxt').textContent = 'Φ = ' + fmtSI(o.Popt, 'W') + '；R_L 上 U_L = ' + fmtSI(o.Uload, 'V') + '，I_L = ' + fmtSI(o.Iload, 'A');
+    }
+    DOTS.ph.f = o.ln; DOTS.ph.segs = ph;
+    DOTS.ca.f = o.flow; DOTS.ca.segs = ca;
+    DOTS.hv.f = o.flow; DOTS.hv.segs = hv;
+    $('devSub').textContent = TYPES[t].name + '：' + TYPES[t].sub;
+  }
+
+  /* ============ 8. 读数（内嵌成对读数 + 读数卡） ============ */
+  function paintRead(o){
+    var t = S.type, d1, d2, d3, big, bigTxt, bigU, bar, barTxt, alt, note, kv, fine, cap;
+    if (t === 'tube'){
+      d1 = '光通量 Φ = ' + sci(o.Phi, 2, 'lm') + '（受光面积 1 mm²）';
+      d2 = '阴极光电流 I_k = S_k·Φ = ' + fmtSI(o.Ik, 'A') + '（S_k = 40 μA/lm）';
+      d3 = '极间电压 U = ' + S.u.toFixed(0) + ' V，饱和因子 ' + o.sat.toFixed(3) + (o.knee ? '（> 50 V 饱和区）' : '（< 50 V 未饱和）');
+      big = siParts(o.Ia, 'A').v; bigU = siParts(o.Ia, 'A').u; bigTxt = 'I_a = ' + fmtSI(o.Ia, 'A');
+      bar = clamp((Math.log10(Math.max(o.Ia, 1e-13)) + 12)/12, 0.02, 1);
+      barTxt = '电流量级 ' + sci(o.Ia, 1, 'A') + '（对数刻度条）';
+      alt = (S.tube === 'pmt') ? ('倍增增益 G = 5¹¹ = ' + sci(o.G, 2) + '；阳极负载 10 kΩ → U_o = ' + fmtSI(o.Uo, 'V'))
+                               : ('输出内阻 ≈ ' + fmtSI(o.Rin, 'Ω') + ' → 必须接高阻放大器/静电计');
+      note = (S.tube === 'pmt')
+        ? (o.over ? '⚠ 阳极电流已超额定（0.1 mA）—— 倍增管只能在微弱光下工作（E ≲ 0.1 lx）' : '暗电流源于热电子发射/漏电，约 nA 级（图8-9 光电特性）')
+        : '真空管线性好、速度快（可 > 1 MHz），但灵敏度低；充气型灵敏度高却慢、有非线性与温漂';
+      cap = '阳极电流 I_a';
+      kv = [['光通量 Φ', sci(o.Phi, 2, 'lm')], ['阴极光电流 I_k', fmtSI(o.Ik, 'A')],
+            ['倍增增益 G', (S.tube === 'pmt') ? sci(o.G, 2) : '1（无倍增）'], ['阳极输出 U_o', fmtSI(o.Uo, 'V')]];
+      fine = 'Φ = E·A = ' + fmtLx(S.e) + '×1 mm² = ' + sci(o.Phi, 2, 'lm') + '；I_a = G·I_k·sat(U) = ' +
+        (S.tube === 'pmt' ? sci(o.G, 2) + '×' : '') + fmtSI(o.Ik, 'A') + '×' + o.sat.toFixed(3) + ' = <b>' + fmtSI(o.Ia, 'A') + '</b>。' +
+        (S.tube === 'pmt' ? '倍增极 11 级、每级 σ ≈ 5：G = 5¹¹ ≈ 4.88×10⁷（图8-6~8-9）。' : '光电管伏安特性 U > 50 V 才饱和（图8-3）。');
+    } else if (t === 'ldr'){
+      d1 = '照度 E = ' + fmtLx(S.e) + '，偏置电压 U = ' + S.u.toFixed(1) + ' V';
+      d2 = '电阻 R = R₁E^(−γ) = 520 kΩ×E^(−0.9) = ' + fmtSI(o.R, 'Ω');
+      d3 = '电流 I = U/R = ' + fmtSI(o.I, 'A') + '，功耗 P = UI = ' + fmtSI(o.P, 'W') + (o.over ? '　⚠ 超额定 500 mW' : '（额定 500 mW 以内）');
+      big = siParts(o.R, 'Ω').v; bigU = siParts(o.R, 'Ω').u; bigTxt = 'R = ' + fmtSI(o.R, 'Ω');
+      bar = clamp((Math.log10(o.R) - 2)/6, 0.02, 1);
+      barTxt = '阻值量级 ' + sci(o.R, 1, 'Ω') + '（对数刻度条：越亮越小）';
+      alt = '暗阻 R(0.01 lx) = ' + fmtSI(o.Rd, 'Ω') + '　亮阻 R(1000 lx) = ' + fmtSI(o.Rl, 'Ω') + '（相差 ' + sci(o.Rd/o.Rl, 1) + ' 倍）';
+      note = o.over ? '⚠ 已超过额定功耗 500 mW —— 光敏电阻没有饱和段，超功耗即热损坏（图8-12）'
+                    : '伏安特性为过原点直线（无饱和段）；安全工作电压上限 U_max = √(P·R) ≈ ' + o.Ulim.toFixed(0) + ' V（光照越弱 R 越大、允许电压越高，但功率不得超 500 mW）';
+      cap = '光亮电阻 R';
+      kv = [['暗阻（0.01 lx）', fmtSI(o.Rd, 'Ω')], ['亮阻（1000 lx）', fmtSI(o.Rl, 'Ω')],
+            ['电流 I = U/R', fmtSI(o.I, 'A')], ['功耗 P = UI', fmtSI(o.P, 'W')]];
+      fine = 'R = 520 kΩ×(' + fmtLx(S.e) + ')^(−0.9) = ' + fmtSI(o.R, 'Ω') + '；I = U/R = ' + S.u.toFixed(1) + ' V / ' + fmtSI(o.R, 'Ω') +
+        ' = <b>' + fmtSI(o.I, 'A') + '</b>，P = UI = ' + fmtSI(o.P, 'W') + '。光电特性非线性（双对数下为直线）→ 适合作开关而非精密测量。';
+    } else if (t === 'pd'){
+      d1 = '光功率 Φ = E·A/683 = ' + fmtSI(o.Popt, 'W') + '（受光面积 1 cm²）';
+      d2 = '光电流 I_p = S_p·Φ = 0.5 A/W × Φ = ' + fmtSI(o.Ip, 'A') + '（响应度 S_p ≈ 0.5 A/W）';
+      d3 = '反向电压 U_R = ' + S.u.toFixed(1) + ' V' + (o.cs ? '（≥1 V，恒流区）' : '（< 1 V，未完全反偏）') + '，暗电流 I_d = ' + fmtSI(o.Id, 'A');
+      big = siParts(o.Ip, 'A').v; bigU = siParts(o.Ip, 'A').u; bigTxt = 'I_p = ' + fmtSI(o.Ip, 'A');
+      bar = clamp((Math.log10(Math.max(o.Ip, 1e-11)) + 9.5)/6.5, 0.02, 1);
+      barTxt = '光电流量级 ' + sci(o.Ip, 1, 'A') + '（对数刻度条）';
+      alt = '总电流 I = I_p + I_d = ' + fmtSI(o.It, 'A') + '；零偏压仍有 I_p′ ≈ 0.95I_p = ' + fmtSI(o.Ip0, 'A');
+      note = '硅管测可见光与炽热物体（峰值 ~0.9 μm），锗管测红外但暗电流大（μA 级）；高速型有 PIN / 雪崩 / 肖特基，响应纳秒级';
+      cap = '光电流 I_p';
+      kv = [['光功率 Φ', fmtSI(o.Popt, 'W')], ['响应度 S_p', '0.5 A/W'], ['暗电流 I_d', fmtSI(o.Id, 'A')],
+            ['信噪比 I_p/I_d', sci(o.Ip/o.Id, 1)]];
+      fine = 'I_p = S_p·Φ = 0.5 A/W × ' + fmtSI(o.Popt, 'W') + ' = <b>' + fmtSI(o.Ip, 'A') + '</b>；光照特性 I–E 为过原点直线（图8-15）。' +
+        '必须反偏：反偏时暗电流最小、光生电流几乎不随 U 变化（恒流）。';
+    } else if (t === 'pt'){
+      d1 = '光功率 Φ = ' + fmtSI(o.Popt, 'W') + '（受光面积 0.1 cm²）';
+      d2 = '等效基极光电流 I_p = S_p·Φ = ' + fmtSI(o.Ip, 'A');
+      d3 = '负载 R_L = ' + S.u.toFixed(0) + ' kΩ（Vcc = 12 V）→ U_ce = ' + o.Uce.toFixed(2) + ' V' + (o.satL ? '：⚠ 已饱和（U_ce ≈ 0.2 V）' : '：放大区');
+      big = siParts(o.Ic, 'A').v; bigU = siParts(o.Ic, 'A').u; bigTxt = 'I_c = ' + fmtSI(o.Ic, 'A');
+      bar = clamp((Math.log10(Math.max(o.Ic, 1e-11)) + 9)/6, 0.02, 1);
+      barTxt = '集电极电流量级 ' + sci(o.Ic, 1, 'A') + '（对数刻度条）';
+      alt = '有效增益 I_c/I_p = ' + o.beff.toFixed(0) + '（β = 200，大电流时 β 下降 → 线性变差）';
+      note = o.satL ? '⚠ R_L 过大 → 集电极电流被负载"压死"，输出停在 0.2 V；同时频响变差（教材：10 kΩ 比 100 kΩ 好）'
+                    : '三极管 = 光电二极管 + 电流放大：灵敏但慢、线性差；硅管峰值 900 nm、锗管 1500 nm（锗管 f ≤ 5 kHz）';
+      cap = '集电极电流 I_c';
+      kv = [['基极光电流 I_p', fmtSI(o.Ip, 'A')], ['电流增益 β', '200'],
+            ['集电极电流 I_c', fmtSI(o.Ic, 'A')], ['U_ce = Vcc−I_cR_L', o.Uce.toFixed(2) + ' V']];
+      fine = 'I_c = βI_p/(1+I_p/I_k) = 200×' + fmtSI(o.Ip, 'A') + '/(1+' + fmtSI(o.Ip, 'A') + '/15 μA) = <b>' + fmtSI(o.Ic, 'A') + '</b>；' +
+        '线性外推 βI_p = ' + fmtSI(o.Ilin, 'A') + '（实际偏小 → 大电流时增益压缩）。';
+    } else {
+      d1 = '光功率 Φ = ' + fmtSI(o.Popt, 'W') + '（受光面积 20 cm²）';
+      d2 = '短路电流 I_sc = S·Φ = 0.4 A/W × Φ = ' + fmtSI(o.Isc, 'A') + '（与照度线性好）';
+      d3 = '开路电压 U_oc = 50.5 mV×ln(1+E/0.1 lx) = ' + fmtSI(o.Uoc, 'V') + '（对数，约 2000 lx 饱和于 0.5 V）';
+      big = siParts(o.Isc, 'A').v; bigU = siParts(o.Isc, 'A').u; bigTxt = 'I_sc = ' + fmtSI(o.Isc, 'A');
+      bar = clamp(o.Isc/1.2e-3, 0.02, 1);
+      barTxt = 'I_sc = ' + sci(o.Isc, 2, 'A') + '（相对 1000 lx 的 1.17 mA）';
+      alt = '负载 R_L = ' + (S.u*1e3).toFixed(0) + ' Ω：U_L = min(I_scR_L, U_oc) = ' + fmtSI(o.Uload, 'V') + '，I_L = ' + fmtSI(o.Iload, 'A');
+      note = '若改接 I/V 转换（虚地≈短路）：U_out = −I_sc·R_L = −' + fmtSI(o.Uiv, 'V') + ' —— 输出与照度严格线性（课件照度检测电路）';
+      cap = '短路电流 I_sc';
+      kv = [['短路电流 I_sc', fmtSI(o.Isc, 'A')], ['开路电压 U_oc', fmtSI(o.Uoc, 'V')],
+            ['负载电压 U_L', fmtSI(o.Uload, 'V')], ['负载电流 I_L', fmtSI(o.Iload, 'A')]];
+      fine = 'I_sc = 0.4 A/W × ' + fmtSI(o.Popt, 'W') + ' = <b>' + fmtSI(o.Isc, 'A') + '</b>（∝E，线性）；U_oc = ' +
+        fmtSI(o.Uoc, 'V') + '（∝ln E）。因为 I_sc 线性而 U_oc 饱和，光电池按<b>恒流源</b>使用：R_L 小时 I_L ≈ I_sc，' +
+        'R_L 大时电压被 U_oc 削顶。';
+    }
+    $('devRL').textContent = '输出读数：' + TYPES[t].name + '（' + (t === 'tube' ? (S.tube === 'pmt' ? '光电倍增管' : '真空光电管') : 'E = ' + fmtLx(S.e)) + '）';
+    $('dev1').textContent = d1; $('dev2').textContent = d2; $('dev3').textContent = d3;
+    $('devBig').textContent = bigTxt; 
+    $('devBar').setAttribute('width', (bar*300).toFixed(1));
+    $('devBar').setAttribute('fill', t === 'ldr' ? '#f2a900' : (t === 'tube' ? '#7c3aed' : '#2f6fd0'));
+    $('devBarTxt').textContent = barTxt;
+    $('devAlt').textContent = alt;
+    $('devNote').textContent = note;
+    $('devHint').textContent = TYPES[t].hint;
+    $('bigCap').textContent = cap;
+    $('bigNum').textContent = big; $('bigUnit').textContent = bigU;
+    $('kv1l').textContent = kv[0][0]; $('kv1v').textContent = kv[0][1];
+    $('kv2l').textContent = kv[1][0]; $('kv2v').textContent = kv[1][1];
+    $('kv3l').textContent = kv[2][0]; $('kv3v').textContent = kv[2][1];
+    $('kv4l').textContent = kv[3][0]; $('kv4v').textContent = kv[3][1];
+    $('readFine').innerHTML = fine;
+  }
+
+  /* ============ 9. 特性曲线 ============ */
+  var PL = { x0:72, x1:664, y0:252, y1:26, key:'' };
+  function pxs(u){ return PL.x0 + clamp(u, 0, 1)*(PL.x1 - PL.x0); }
+  function pys(v){ return PL.y0 - clamp(v, 0, 1)*(PL.y0 - PL.y1); }
+  function polyPath(fn, n){
+    var d = '', first = true, i;
+    for (i = 0; i <= n; i++){
+      var pt = fn(i/n);
+      if (!pt){ first = true; continue; }
+      d += (first ? 'M' : 'L') + pxs(pt[0]).toFixed(1) + ' ' + pys(pt[1]).toFixed(1) + ' ';
+      first = false;
+    }
+    return d;
+  }
+  function setTicks(key, xs, ys){
+    if (PL.key === key) return;
+    PL.key = key;
+    var h = '', i;
+    for (i = 0; i < xs.length; i++){
+      h += '<line x1="' + pxs(xs[i][0]).toFixed(1) + '" y1="' + PL.y1 + '" x2="' + pxs(xs[i][0]).toFixed(1) + '" y2="' + PL.y0 + '" stroke="#e6edf6"/>';
+      h += '<text x="' + pxs(xs[i][0]).toFixed(1) + '" y="' + (PL.y0 + 15) + '" text-anchor="middle" font-size="11" fill="#5b6b80">' + xs[i][1] + '</text>';
+    }
+    for (i = 0; i < ys.length; i++){
+      h += '<line x1="' + PL.x0 + '" y1="' + pys(ys[i][0]).toFixed(1) + '" x2="' + PL.x1 + '" y2="' + pys(ys[i][0]).toFixed(1) + '" stroke="#e6edf6"/>';
+      h += '<text x="' + (PL.x0 - 6) + '" y="' + (pys(ys[i][0]) + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="#5b6b80">' + ys[i][1] + '</text>';
+    }
+    $('cGrid').innerHTML = h;
+  }
+  function legendOf(items){
+    var h = '';
+    items.forEach(function(it){ h += '<span><i style="background:' + it[0] + '"></i>' + it[1] + '</span>'; });
+    $('legend').innerHTML = h;
+  }
+  function hideAll(){
+    $('cp1').setAttribute('d', ''); $('cp2').setAttribute('d', ''); $('cp3').setAttribute('d', '');
+    $('cp1').setAttribute('opacity', 0); $('cp2').setAttribute('opacity', 0); $('cp3').setAttribute('opacity', 0);
+    $('mkDot').setAttribute('opacity', 0);
+  }
+  function paintCurve(o){
+    var t = S.type, cm = S.cm, E = S.e, u = S.u, key = t + '/' + cm;
+    hideAll();
+    $('curveSub').textContent = TYPES[t].name + (cm === 'light' ? '：光照特性' : '：伏安特性');
+    if (t === 'tube' && cm === 'light'){
+      /* 双对数：I_a–E，两条平行线（真空管 / 倍增管） */
+      setTicks(key, [[0, '0.01'],[0.2,'0.1'],[0.4,'1'],[0.6,'10'],[0.8,'100'],[1,'1000']],
+        [[1/14,'1 pA'],[4/14,'1 nA'],[7/14,'1 μA'],[10/14,'1 mA'],[13/14,'1 A'],[1,'10 A']]);
+      function IaOf(tp, x){ var EE = Math.pow(10, -2 + 5*x); var Ik = CFG.Sk*EE*CFG.A_tube; var G = tp === 'pmt' ? Math.pow(CFG.sig, CFG.nDy) : 1; return Ik*(1 - Math.exp(-u/CFG.Usat))*G; }
+      function yOf(I){ var lg = Math.log10(Math.max(I, 1e-13)); return (lg + 13)/14; }
+      $('cp1').setAttribute('d', polyPath(function(x){ return [x, yOf(IaOf(S.tube, x))]; }, 60));
+      var other = S.tube === 'pmt' ? 'vacuum' : 'pmt';
+      $('cp2').setAttribute('d', polyPath(function(x){ return [x, yOf(IaOf(other, x))]; }, 60));
+      $('cp1').setAttribute('opacity', 1); $('cp2').setAttribute('opacity', 1);
+      $('axX').textContent = '照度 E / lx（对数）'; $('axY').textContent = 'I_a / A（对数）';
+      legendOf([['#d94a3d', TYPES.tube.name + '·当前 ' + (S.tube === 'pmt' ? '倍增管' : '真空管')],
+                ['#0d8b7f', '对照：' + (other === 'pmt' ? '光电倍增管（×4.88×10⁷）' : '真空光电管')]]);
+      var ym = yOf(o.Ia);
+      $('mkDot').setAttribute('cx', pxs(o.lp/100).toFixed(1)); $('mkDot').setAttribute('cy', pys(ym).toFixed(1));
+      $('mkDot').setAttribute('opacity', 1);
+      $('mkX').setAttribute('x1', pxs(o.lp/100).toFixed(1)); $('mkX').setAttribute('x2', pxs(o.lp/100).toFixed(1));
+      $('curveNote').textContent = 'I_a ∝ Φ ∝ E：双对数下是两条平行直线 —— 倍增只是把整条线抬高 G 倍，线性度不变';
+    } else if (t === 'tube' && cm === 'iv'){
+      setTicks(key, [[0,'0'],[50/300,'50'],[100/300,'100'],[150/300,'150'],[200/300,'200'],[250/300,'250'],[1,'300']],
+        [[0,'0'],[0.25,'25%'],[0.5,'50%'],[0.75,'75%'],[1,'100%']]);
+      var I3 = CFG.Sk*E*CFG.A_tube*3*(1 - Math.exp(-300/CFG.Usat))*(S.tube === 'pmt' ? Math.pow(CFG.sig, CFG.nDy) : 1);
+      function iu(U, mul){ return CFG.Sk*E*CFG.A_tube*mul*(1 - Math.exp(-U/CFG.Usat))*(S.tube === 'pmt' ? Math.pow(CFG.sig, CFG.nDy) : 1)/I3; }
+      $('cp1').setAttribute('d', polyPath(function(x){ return [x, iu(300*x, 1)]; }, 80));
+      $('cp2').setAttribute('d', polyPath(function(x){ return [x, Math.min(1, iu(300*x, 3))]; }, 80));
+      $('cp1').setAttribute('opacity', 1); $('cp2').setAttribute('opacity', 1);
+      $('cp3').setAttribute('d', 'M ' + pxs(50/300).toFixed(1) + ' ' + PL.y1 + ' L ' + pxs(50/300).toFixed(1) + ' ' + PL.y0);
+      $('cp3').setAttribute('opacity', 1);
+      $('axX').textContent = '极间电压 U / V'; $('axY').textContent = 'I_a（归一化到 3Φ 饱和值）';
+      legendOf([['#d94a3d', '当前光通量 Φ 的伏安特性（图8-3）'], ['#0d8b7f', '3Φ（对照）'], ['#7c3aed', 'U = 50 V：饱和拐点']]);
+      $('mkDot').setAttribute('cx', pxs(S.u/300).toFixed(1)); $('mkDot').setAttribute('cy', pys(iu(S.u, 1)).toFixed(1));
+      $('mkDot').setAttribute('opacity', 1);
+      $('mkX').setAttribute('x1', pxs(S.u/300).toFixed(1)); $('mkX').setAttribute('x2', pxs(S.u/300).toFixed(1));
+      $('curveNote').textContent = 'U < 50 V 时电流随电压上升（未饱和）；U > 50 V 后曲线变平 —— 光电流只由光通量决定';
+    } else if (t === 'ldr' && cm === 'light'){
+      setTicks(key, [[0,'0.01'],[0.2,'0.1'],[0.4,'1'],[0.6,'10'],[0.8,'100'],[1,'1000']],
+        [[0,'100 Ω'],[1/6,'1 k'],[2/6,'10 k'],[3/6,'100 k'],[4/6,'1 M'],[5/6,'10 M'],[1,'100 M']]);
+      function yOf(R){ return (Math.log10(R) - 2)/6; }
+      function xOf(EE){ return (Math.log10(EE) + 2)/5; }
+      $('cp1').setAttribute('d', polyPath(function(x){ var EE = Math.pow(10, -2 + 5*x); var RR = CFG.R1*Math.pow(EE, -CFG.gam); var yy = yOf(RR); return (yy >= -0.05 && yy <= 1.05) ? [x, yy] : null; }, 80));
+      var Rref1000 = CFG.R1*Math.pow(1000, -CFG.gam);
+      $('cp2').setAttribute('d', polyPath(function(x){ var EE = Math.pow(10, -2 + 5*x); var RR = Rref1000*1000/EE; var yy = yOf(RR); return (yy >= -0.05 && yy <= 1.05) ? [x, yy] : null; }, 80));
+      $('cp1').setAttribute('opacity', 1); $('cp2').setAttribute('opacity', 1);
+      $('axX').textContent = '照度 E / lx（对数）'; $('axY').textContent = 'R / Ω（对数）';
+      legendOf([['#d94a3d', 'R = 520 kΩ×E^(−0.9)（γ = 0.9）'], ['#0d8b7f', 'γ = 1 参考线（斜率 −1）']]);
+      $('mkDot').setAttribute('cx', pxs(xOf(E)).toFixed(1)); $('mkDot').setAttribute('cy', pys(yOf(o.R)).toFixed(1));
+      $('mkDot').setAttribute('opacity', 1);
+      $('mkX').setAttribute('x1', pxs(xOf(E)).toFixed(1)); $('mkX').setAttribute('x2', pxs(xOf(E)).toFixed(1));
+      $('curveNote').textContent = '双对数坐标下是直线 → R ∝ E^(−γ)；暗阻 >1 MΩ、亮阻 ~1 kΩ（图8-11 光电特性）';
+    } else if (t === 'ldr' && cm === 'iv'){
+      setTicks(key, [[0,'0'],[1/6,'5'],[2/6,'10'],[3/6,'15'],[4/6,'20'],[5/6,'25'],[1,'30']],
+        [[0,'0'],[0.2,'10'],[0.4,'20'],[0.6,'30'],[0.8,'40'],[1,'50 mA']]);
+      var Imax = 0.05;
+      $('cp1').setAttribute('d', polyPath(function(x){ return [x, Math.min(1, (30*x)/o.R/Imax)]; }, 40));
+      $('cp2').setAttribute('d', polyPath(function(x){ return [x, Math.min(1, (30*x)/(o.R*10)/Imax)]; }, 40));
+      $('cp3').setAttribute('d', polyPath(function(x){ var U = 30*x; var I = (U > 0.4) ? CFG.Prated/U : null; return I ? [x, Math.min(1, I/Imax)] : null; }, 80));
+      $('cp1').setAttribute('opacity', 1); $('cp2').setAttribute('opacity', 1); $('cp3').setAttribute('opacity', 1);
+      $('axX').textContent = '偏置电压 U / V'; $('axY').textContent = '电流 I / mA';
+      legendOf([['#d94a3d', '当前照度 ' + fmtLx(E)], ['#0d8b7f', '照度 ÷10'], ['#7c3aed', '额定功耗 500 mW（P = UI）']]);
+      var Iu = S.u/o.R;
+      $('mkDot').setAttribute('cx', pxs(S.u/30).toFixed(1)); $('mkDot').setAttribute('cy', pys(Math.min(1, Iu/Imax)).toFixed(1));
+      $('mkDot').setAttribute('opacity', 1);
+      $('mkX').setAttribute('x1', pxs(S.u/30).toFixed(1)); $('mkX').setAttribute('x2', pxs(S.u/30).toFixed(1));
+      $('curveNote').textContent = '伏安特性是过原点的直线（欧姆性、无饱和段）；曲线越出 500 mW 线即超额定（图8-12）';
+    } else if (t === 'pd' && cm === 'light'){
+      setTicks(key, [[0,'0'],[0.2,'200'],[0.4,'400'],[0.6,'600'],[0.8,'800'],[1,'1000']],
+        [[0,'0'],[0.25,'20'],[0.5,'40'],[0.75,'60'],[1,'80 μA']]);
+      var IpAx = 80e-6;
+      $('cp1').setAttribute('d', polyPath(function(x){ return [x, (1000*x)*CFG.Sp*CFG.A_pd/CFG.K683/IpAx]; }, 40));
+      $('cp2').setAttribute('d', polyPath(function(x){ return [x, 0.95*(1000*x)*CFG.Sp*CFG.A_pd/CFG.K683/IpAx]; }, 40));
+      $('cp1').setAttribute('opacity', 1); $('cp2').setAttribute('opacity', 1);
+      $('axX').textContent = '照度 E / lx'; $('axY').textContent = '光电流 I_p / μA';
+      legendOf([['#d94a3d', '反偏 ' + S.u.toFixed(1) + ' V：I_p = S_pΦ'], ['#0d8b7f', '零偏压（0.95I_p，仍有光电流）']]);
+      $('mkDot').setAttribute('cx', pxs(E/1000).toFixed(1)); $('mkDot').setAttribute('cy', pys(o.Ip/IpAx).toFixed(1));
+      $('mkDot').setAttribute('opacity', 1);
+      $('mkX').setAttribute('x1', pxs(E/1000).toFixed(1)); $('mkX').setAttribute('x2', pxs(E/1000).toFixed(1));
+      $('curveNote').textContent = '光照特性 I–E 为过原点直线（图8-15）；暗电流仅 ' + fmtSI(o.Id, 'A') + '，在微光下才成为误差';
+    } else if (t === 'pd' && cm === 'iv'){
+      setTicks(key, [[0,'0'],[0.25,'7.5'],[0.5,'15'],[0.75,'22.5'],[1,'30']],
+        [[0,'0.1 nA'],[0.25,'1 nA'],[0.5,'10 nA'],[0.75,'1 μA'],[1,'100 μA']]);
+      function yl(I){ var lg = Math.log10(Math.max(I, 1e-11)); return (lg + 11)/8; }
+      $('cp1').setAttribute('d', polyPath(function(x){ var U = 30*x; return [x, yl(o.Ip*(0.95 + 0.05*(1 - Math.exp(-U/0.3))))]; }, 60));
+      $('cp2').setAttribute('d', polyPath(function(x){ return [x, yl(o.Id)]; }, 20));
+      $('cp1').setAttribute('opacity', 1); $('cp2').setAttribute('opacity', 1);
+      $('axX').textContent = '反向电压 U_R / V'; $('axY').textContent = '电流 I（对数）';
+      legendOf([['#d94a3d', '光电流 I_p = ' + fmtSI(o.Ip, 'A') + '（与 U 基本无关）'],
+                ['#0d8b7f', '暗电流 I_d = ' + fmtSI(o.Id, 'A') + '（反偏最小）']]);
+      $('mkDot').setAttribute('cx', pxs(S.u/30).toFixed(1)); $('mkDot').setAttribute('cy', pys(yl(o.Ip)).toFixed(1));
+      $('mkDot').setAttribute('opacity', 1);
+      $('mkX').setAttribute('x1', pxs(S.u/30).toFixed(1)); $('mkX').setAttribute('x2', pxs(S.u/30).toFixed(1));
+      $('curveNote').textContent = '反偏：光电流恒定（恒流）、暗电流最小；正向偏置时光电流被外电路电流淹没 → 测不出';
+    } else if (t === 'pt' && cm === 'light'){
+      setTicks(key, [[0,'0'],[0.2,'200'],[0.4,'400'],[0.6,'600'],[0.8,'800'],[1,'1000']],
+        [[0,'0'],[0.25,'0.4'],[0.5,'0.8'],[0.75,'1.2'],[1,'1.6 mA']]);
+      var Imax2 = 1.6e-3;
+      function IcOf(EE){ var Ip = CFG.Sp*(EE*CFG.A_pt/CFG.K683); return CFG.beta*Ip/(1 + Ip/CFG.Ikp); }
+      function IlinOf(EE){ return CFG.beta*CFG.Sp*(EE*CFG.A_pt/CFG.K683); }
+      $('cp1').setAttribute('d', polyPath(function(x){ return [x, Math.min(1, IcOf(1000*x)/Imax2)]; }, 60));
+      $('cp2').setAttribute('d', polyPath(function(x){ return [x, Math.min(1, IlinOf(1000*x)/Imax2)]; }, 60));
+      $('cp1').setAttribute('opacity', 1); $('cp2').setAttribute('opacity', 1);
+      $('axX').textContent = '照度 E / lx'; $('axY').textContent = 'I_c / mA';
+      legendOf([['#d94a3d', 'I_c = βI_p/(1+I_p/I_k)（含增益压缩）'], ['#0d8b7f', '线性外推 βI_p（β 恒定）']]);
+      $('mkDot').setAttribute('cx', pxs(E/1000).toFixed(1)); $('mkDot').setAttribute('cy', pys(clamp(o.Ic/Imax2, 0, 1)).toFixed(1));
+      $('mkDot').setAttribute('opacity', 1);
+      $('mkX').setAttribute('x1', pxs(E/1000).toFixed(1)); $('mkX').setAttribute('x2', pxs(E/1000).toFixed(1));
+      $('curveNote').textContent = '三极管增益远大于二极管（' + fmtSI(o.Ic, 'A') + ' vs ' + fmtSI(o.Ip, 'A') + '），但大电流下 β 下降 → 线性变差';
+    } else if (t === 'pt' && cm === 'iv'){
+      setTicks(key, [[0,'0'],[0.25,'3'],[0.5,'6'],[0.75,'9'],[1,'12']],
+        [[0,'0'],[0.25,'0.4'],[0.5,'0.8'],[0.75,'1.2'],[1,'1.6 mA']]);
+      var Iax = 1.6e-3, RL = S.u*1e3, Vcc = CFG.Vcc;
+      function IcU(EE, Uce){ var Ip = CFG.Sp*(EE*CFG.A_pt/CFG.K683); var Im = CFG.beta*Ip/(1 + Ip/CFG.Ikp); return Im*(1 - Math.exp(-Uce/0.15)); }
+      $('cp1').setAttribute('d', polyPath(function(x){ return [x, Math.min(1, IcU(E, 12*x)/Iax)]; }, 60));
+      $('cp2').setAttribute('d', polyPath(function(x){ return [x, Math.min(1, IcU(E/3, 12*x)/Iax)]; }, 60));
+      $('cp3').setAttribute('d', polyPath(function(x){ var Uce = 12*x; var I = (Vcc - Uce)/RL; if (I < 0) return null; return [x, Math.min(1, I/Iax)]; }, 60));
+      $('cp1').setAttribute('opacity', 1); $('cp2').setAttribute('opacity', 1); $('cp3').setAttribute('opacity', 1);
+      $('axX').textContent = 'U_ce / V'; $('axY').textContent = 'I_c / mA';
+      legendOf([['#d94a3d', 'E = ' + fmtLx(E)], ['#0d8b7f', 'E/3（对照）'], ['#7c3aed', '负载线 R_L = ' + S.u.toFixed(0) + ' kΩ']]);
+      $('mkDot').setAttribute('cx', pxs(o.Uce/12).toFixed(1)); $('mkDot').setAttribute('cy', pys(clamp(o.Ic/Iax, 0, 1)).toFixed(1));
+      $('mkDot').setAttribute('opacity', 1);
+      $('mkX').setAttribute('x1', pxs(o.Uce/12).toFixed(1)); $('mkX').setAttribute('x2', pxs(o.Uce/12).toFixed(1));
+      $('curveNote').textContent = '负载线与光照曲线的交点即工作点（蓝点）；R_L 越大负载线越平、越易饱和（U_ce → 0.2 V）';
+    } else if (t === 'pv' && cm === 'light'){
+      setTicks(key, [[0,'0'],[0.2,'200'],[0.4,'400'],[0.6,'600'],[0.8,'800'],[1,'1000']],
+        [[0,'0'],[0.25,'25%'],[0.5,'50%'],[0.75,'75%'],[1,'100%']]);
+      var IscMax = CFG.Spv*(1000*CFG.A_pv/CFG.K683);
+      $('cp1').setAttribute('d', polyPath(function(x){ return [x, (1000*x)*CFG.Spv*CFG.A_pv/CFG.K683/IscMax]; }, 40));
+      $('cp2').setAttribute('d', polyPath(function(x){ return [x, CFG.UocA*Math.log(1 + 1000*x/CFG.UocE0)/0.500]; }, 80));
+      $('cp1').setAttribute('opacity', 1); $('cp2').setAttribute('opacity', 1);
+      $('axX').textContent = '照度 E / lx'; $('axY').textContent = '归一化（I_sc 满量程 ' + fmtSI(IscMax, 'A') + '；U_oc 满量程 0.50 V）';
+      legendOf([['#d94a3d', '短路电流 I_sc ∝ E（线性，测量用）'], ['#0d8b7f', '开路电压 U_oc ∝ ln E（约 2000 lx 饱和）']]);
+      $('mkDot').setAttribute('cx', pxs(E/1000).toFixed(1)); $('mkDot').setAttribute('cy', pys(o.Isc/IscMax).toFixed(1));
+      $('mkDot').setAttribute('opacity', 1);
+      $('mkX').setAttribute('x1', pxs(E/1000).toFixed(1)); $('mkX').setAttribute('x2', pxs(E/1000).toFixed(1));
+      $('curveNote').textContent = '图8-27：I_sc 线性好、U_oc 呈对数饱和 —— 这就是"光电池按恒流源使用"的原因';
+    } else {
+      /* pv / iv：第四象限 I–V + 恒流源近似 + 负载线（自适应坐标） */
+      var Vm = Math.max(o.Uoc*1.15, 1e-3), Im = Math.max(o.Isc*1.15, 1e-9);
+      setTicks(t + '/iv/' + Vm.toFixed(4) + '/' + Im.toExponential(2), [[0,'0'],[0.25,(Vm*0.25*1000).toFixed(0)],[0.5,(Vm*0.5*1000).toFixed(0)],[0.75,(Vm*0.75*1000).toFixed(0)],[1,(Vm*1000).toFixed(0)]],
+        [[0,'0'],[0.25,sci(Im*0.25, 1, 'A')],[0.5,sci(Im*0.5, 1, 'A')],[0.75,sci(Im*0.75, 1, 'A')],[1,sci(Im, 1, 'A')]]);
+      var aV = 0.05;
+      $('cp1').setAttribute('d', polyPath(function(x){ var U = Vm*x; var I = o.Isc*(1 - Math.exp((U - o.Uoc)/aV)); return [x, Math.max(0, Math.min(1.05, I/Im))]; }, 60));
+      $('cp2').setAttribute('d', polyPath(function(x){ return [x, o.Isc/Im]; }, 20));
+      $('cp3').setAttribute('d', polyPath(function(x){ var U = Vm*x; return [x, Math.min(1.05, U/(S.u*1e3)/Im)]; }, 60));
+      $('cp1').setAttribute('opacity', 1); $('cp2').setAttribute('opacity', 1); $('cp3').setAttribute('opacity', 1);
+      $('axX').textContent = '负载电压 U / V（0 ~ ' + (Vm*1000).toFixed(0) + ' mV）'; $('axY').textContent = 'I / A（0 ~ ' + sci(Im, 1, 'A') + '）';
+      legendOf([['#d94a3d', '光电池 I–V（U_oc ' + fmtSI(o.Uoc, 'V') + ' 处电流为 0）'],
+                ['#0d8b7f', '恒流源近似 I ≈ I_sc = ' + fmtSI(o.Isc, 'A')],
+                ['#7c3aed', '负载线 I = U/R_L（R_L = ' + (S.u*1e3).toFixed(0) + ' Ω）']]);
+      $('mkDot').setAttribute('cx', pxs(o.Uload/Vm).toFixed(1)); $('mkDot').setAttribute('cy', pys(clamp(o.Iload/Im, 0, 1)).toFixed(1));
+      $('mkDot').setAttribute('opacity', 1);
+      $('mkX').setAttribute('x1', pxs(o.Uload/Vm).toFixed(1)); $('mkX').setAttribute('x2', pxs(o.Uload/Vm).toFixed(1));
+      $('curveNote').textContent = '负载线越陡（R_L 越小）交点越靠近恒流段 → I_L ≈ I_sc；R_L 越大工作点越靠近 U_oc（电流塌陷）';
+    }
+  }
+
+  /* ============ 10. PSD / CCD 扩展卡 ============ */
+  function paintExt(o){
+    var psd = (S.ext === 'psd');
+    $('stPSD').style.display = psd ? '' : 'none';
+    $('stCCD').style.display = psd ? 'none' : '';
+    $('pxRow').style.display = psd ? '' : 'none';
+    $('extSub').textContent = psd ? 'PSD：横向光电效应，位置信号与光强无关'
+                                  : 'CCD：MOS 势阱存储 + 三相时钟转移，末端统一放大';
+    if (psd){
+      var xm = (S.px - 50)/50*9.5;                    /* −9.5 ~ +9.5 mm */
+      var spotX = 176 + S.px*(508 - 176)/100;
+      $('psdSpot').setAttribute('cx', spotX.toFixed(1));
+      var I0 = CFG.I_psd*o.E;
+      var I1 = I0*(CFG.Lpsd - xm)/(2*CFG.Lpsd);
+      var I2 = I0*(CFG.Lpsd + xm)/(2*CFG.Lpsd);
+      var P = (I2 - I1)/(I2 + I1);
+      $('psdI1Txt').textContent = 'I₁ = ' + fmtSI(I1, 'A');
+      $('psdI2Txt').textContent = 'I₂ = ' + fmtSI(I2, 'A');
+      $('psdPTxt').textContent = 'P = ' + (P >= 0 ? '+' : '−') + Math.abs(P).toFixed(3);
+      $('psdXTxt').textContent = 'x = ' + (xm >= 0 ? '+' : '−') + Math.abs(xm).toFixed(1) + ' mm（L = ±10 mm，I₀ = ' + fmtSI(I0, 'A') + '）';
+      $('pxOut').textContent = (xm >= 0 ? '+' : '−') + Math.abs(xm).toFixed(1) + ' mm';
+      $('pxTxt').textContent = 'x = ' + xm.toFixed(1) + ' mm，P = x/L = ' + P.toFixed(3);
+      DOTS.pp.f = o.ln;
+      DOTS.pp.segs = [{ x1:68, y1:38, x2:spotX, y2:104, f:0.6 + 0.6*o.ln }];
+      DOTS.px.segs = [{ x1:144, y1:126, x2:spotX, y2:126, f:I1/(I0/2) },
+                      { x1:spotX, y1:126, x2:556, y2:126, f:I2/(I0/2) }];
+      var h = '';
+      h += '<div class="row"><span class="tag">式 8-8</span><span>I₀ = I₁ + I₂ = ' + fmtSI(I0, 'A') + '　（光生总电流只由光强决定）</span></div>';
+      h += '<div class="row"><span class="tag">式 8-9</span><span>I₁/I₂ = (L−x)/(L+x) = ' + (I1/I2).toFixed(3) + '　（L = 10 mm，x = ' + xm.toFixed(1) + ' mm）</span></div>';
+      h += '<div class="row"><span class="tag">式 8-10</span><span>I₁ = I₀(L−x)/2L = ' + fmtSI(I1, 'A') + '　（式 8-11：I₂ = I₀(L+x)/2L = ' + fmtSI(I2, 'A') + '）</span></div>';
+      h += '<div class="row"><span class="tag">式 8-12</span><span>P = ' + frac('I₂−I₁', 'I₂+I₁') + ' = ' + frac('x', 'L') +
+           ' = <b>' + P.toFixed(3) + '</b> —— 位置信号只与光点位置有关，<b>与光强无关</b></span></div>';
+      h += '<div class="row"><span class="tag g">式 8-15</span><span>测微小角度：θ = ' + frac('S', '2L') + '（S 为光斑位移、L 为反射点到 PSD 的距离）</span></div>';
+      h += '<div class="note">PSD 用横向光电效应、光敏面无象限分隔线 → 位置连续输出（图 8-43）；四象限器件有分隔线，按式 8-5 / 8-6 由 V_x、V_y 求偏移（如四象限光电流仅几 nA，需运放 I/V 后计算）。</div>';
+      $('extFml').innerHTML = h;
+      $('extHint').textContent = '拖动"光点位置 x"：光点右移 → 到 X₂ 的路程短、I₂ 大；P = x/L 只反映位置，把光照从 0.01 lx 调到 1000 lx，P 不变 —— 这正是 PSD 相对四象限器件的最大优点。';
+    } else {
+      DOTS.pp.segs = []; DOTS.px.segs = [];
+      var M = CFG.dPix*CFG.Npix/CFG.Dmax;
+      var h2 = '';
+      h2 += '<div class="row"><span class="tag">式 8-16</span><span>M = ' + frac('d·N', 'D_max') + ' = 10 μm×1024 / 5 mm = <b>' + M.toFixed(3) + '</b>　（CCD 测线径的放大倍率）</span></div>';
+      h2 += '<div class="row"><span class="tag">式 8-17</span><span>分辨率 Δ = ' + frac('D_max', 'N') + ' = 5 mm/1024 ≈ <b>' + (CFG.Dmax/CFG.Npix*1e6).toFixed(1) +
+            ' μm</b>；教材例：d·N = 512 → Δ ≈ 9.8 μm；习题8-6：M = 10、d = 10 μm → Δ = d/M = 1 μm</span></div>';
+      h2 += '<div class="row"><span class="tag g">式 8-18</span><span>激光干涉测长 L = ' + frac('Nλ₀', '8n') + '：632.8 nm×' + CFG.Ncnt +
+            '/8 ≈ <b>' + (CFG.lam*CFG.Ncnt/8*1e6).toFixed(2) + ' μm</b>（四细分辨向，1 个计数脉冲 = λ/8）</span></div>';
+      h2 += '<div class="row"><span class="tag f">式 8-7</span><span>光电转速表 n = ' + frac('60f', 'N') + '（N 为孔数或黑白条纹数；反射式轴涂条纹 / 透射式调制盘）</span></div>';
+      h2 += '<div class="row"><span class="tag v">激光</span><span>三角法测距 d = ' + frac('f·s', 'x') + '（式 8-19：f 焦距、s 激光器与成像系统中心距、x 光点在 CCD 上到一侧边缘的距离）</span></div>';
+      h2 += '<div class="note">CCD：MOS 势阱存储电荷 ＋ 多相（2~4 组）时钟转移 → 末端统一放大，噪声低、一致性好（图 8-46~8-49）。CMOS 像素内放大 → 可随机访问、低功耗、低成本。</div>';
+      $('extFml').innerHTML = h2;
+      $('extHint').textContent = '三相时钟 φ₁→φ₂→φ₃ 依次加高电平：该电极下势阱最深、电荷包"落入"深阱；把 φ₂ 也升高时两阱连通、电荷分享 —— 这就是电荷的转移过程（图8-48 的 t₁~t₆）。';
+    }
+  }
+
+  /* ============ 11. 公式推导 ============ */
+  function paintFormulas(o){
+    var t = S.type, h = '';
+    h += '<div class="row"><span class="tag">式 8-1</span><span>E_k = hf − W —— 光电子最大动能；<b>能否发射只看频率 f</b>（须 hf ≥ W），光强只决定光电子<b>数目</b>（光电流大小）</span></div>';
+    h += '<div class="row"><span class="tag">式 8-2</span><span>红限频率 f₀ = ' + frac('W', 'h') + '；f &lt; f₀ 时无论光多强都没有光电发射</span></div>';
+    h += '<div class="row"><span class="tag">式 8-3</span><span>本征光电导条件 ' + frac('hc', 'λ') + ' ≥ E_g → 临界波长 λ₀ = ' + frac('hc', 'E_g') +
+         ' = 1293/E_g (nm)（教材口径）；课件口径 λ_c = 1.24/E_g (μm)。硅 E_g = 1.12 eV → 1.11~1.15 μm，<b>不能响应 1.5 μm 红外</b>（习题8-1）</span></div>';
+    h += '<div class="row"><span class="tag">式 8-4</span><span>杂质型 λ₀ = ' + frac('hc', 'E_D') + '：E_D ≪ E_g → 临界波长比本征型长得多（PbS / PbSe / InSb 可测中远红外 → 图8-13）</span></div>';
+    if (t === 'tube'){
+      h += '<div class="row"><span class="tag f">器件式</span><span>光通量 Φ = E·A = ' + fmtLx(S.e) + '×1 mm² = ' + sci(o.Phi, 2, 'lm') + '（A 为受光面积）</span></div>';
+      h += '<div class="row"><span class="tag f">器件式</span><span>阴极光电流 I_k = S_k·Φ = 40 μA/lm × ' + sci(o.Phi, 2, 'lm') + ' = ' + fmtSI(o.Ik, 'A') + '</span></div>';
+      h += '<div class="row"><span class="tag f">器件式</span><span>倍增极：G = σⁿ = 5¹¹ = ' + sci(o.G, 2) +
+           (S.tube === 'pmt' ? '；I_a = G·I_k·sat(U) = <b>' + fmtSI(o.Ia, 'A') + '</b>' : '（当前为真空管，G = 1）') + '</span></div>';
+      h += '<div class="row"><span class="tag g">伏安</span><span>饱和判据 U &gt; 50 V：当前 U = ' + S.u.toFixed(0) + ' V，饱和因子 1−e^(−U/18) = ' + o.sat.toFixed(3) +
+           '；阳极负载 ' + fmtSI(CFG.RL_tube, 'Ω') + ' → U_o = ' + fmtSI(o.Uo, 'V') + '</span></div>';
+      h += '<div class="note">光电管伏安特性 U &gt; 50 V 才饱和（图8-3）；倍增管暗电流来自热电子发射 / 漏电 / 场致发射；光通量 &gt; 0.1 lm 时严重非线性 → 只能测弱光。</div>';
+    } else if (t === 'ldr'){
+      h += '<div class="row"><span class="tag f">器件式</span><span>R = R₁·E^(−γ) = 520 kΩ×(' + fmtLx(S.e) + ')^(−0.9) = <b>' + fmtSI(o.R, 'Ω') + '</b>（R₁ = 520 kΩ、γ = 0.9）</span></div>';
+      h += '<div class="row"><span class="tag f">器件式</span><span>亮阻 R(1000 lx) = ' + fmtSI(o.Rl, 'Ω') + '；暗阻 R(0.01 lx) = ' + fmtSI(o.Rd, 'Ω') +
+           '（教材：暗阻 &gt; 1 MΩ、可达 100 MΩ；课件：亮阻几千欧~几十千欧）</span></div>';
+      h += '<div class="row"><span class="tag f">器件式</span><span>I = ' + frac('U', 'R') + ' = ' + S.u.toFixed(1) + ' V / ' + fmtSI(o.R, 'Ω') + ' = ' + fmtSI(o.I, 'A') +
+           '；P = UI = ' + fmtSI(o.P, 'W') + (o.over ? ' <b>⚠ 超额定</b>' : '') + '</span></div>';
+      h += '<div class="row"><span class="tag g">功耗限</span><span>U_max = √(P·R) = ' + o.Ulim.toFixed(1) + ' V（500 mW 额定线，图8-12）；曲线上无"平"段，超功耗即热损坏</span></div>';
+      h += '<div class="note">上升时间常数 = 电导升到饱和值 63% 的时间，下降 = 降到 37%（毫秒级、有疲劳/光照历史效应）；无极性，交直流均可。</div>';
+    } else if (t === 'pd'){
+      h += '<div class="row"><span class="tag f">器件式</span><span>光功率 Φ = ' + frac('E·A', '683') + ' = ' + fmtLx(S.e) + '×1 cm²/683 = ' + fmtSI(o.Popt, 'W') +
+           '（555 nm 明视觉 683 lm/W）</span></div>';
+      h += '<div class="row"><span class="tag f">器件式</span><span>I_p = S_p·Φ = 0.5 A/W × ' + fmtSI(o.Popt, 'W') + ' = <b>' + fmtSI(o.Ip, 'A') + '</b>（响应度 ~0.5 A/W）</span></div>';
+      h += '<div class="row"><span class="tag f">器件式</span><span>I = I_p + I_d：暗电流 I_d = ' + fmtSI(o.Id, 'A') + '（硅，nA 级；锗管 μA 级）</span></div>';
+      h += '<div class="row"><span class="tag g">偏置</span><span>U_R = ' + S.u.toFixed(1) + ' V' + (o.cs ? '（≥1 V → 恒流区：光电流不随 U 变化）' : '（&lt; 1 V，尚未完全反偏）') +
+           '；零偏压仍有 I_p′ = 0.95I_p = ' + fmtSI(o.Ip0, 'A') + '</span></div>';
+      h += '<div class="note">为什么必须反偏：反偏使耗尽层变宽、暗电流最小、光生载流子被强电场全部扫出 → 光电流变化最明显；正向偏置时电流由外电路决定，光电流被"淹没"。</div>';
+    } else if (t === 'pt'){
+      h += '<div class="row"><span class="tag f">器件式</span><span>等效基极光电流 I_p = S_p·Φ = 0.5 A/W × ' + fmtSI(o.Popt, 'W') + ' = ' + fmtSI(o.Ip, 'A') + '</span></div>';
+      h += '<div class="row"><span class="tag f">器件式</span><span>I_c = ' + frac('βI_p', '1 + I_p/I_k') + ' = 200×' + fmtSI(o.Ip, 'A') +
+           ' / (1 + ' + fmtSI(o.Ip, 'A') + '/15 μA) = <b>' + fmtSI(o.Ic, 'A') + '</b>（β = 200、增益压缩拐点 15 μA）</span></div>';
+      h += '<div class="row"><span class="tag f">器件式</span><span>有效增益 I_c/I_p = ' + o.beff.toFixed(0) + '（线性外推 βI_p = ' + fmtSI(o.Ilin, 'A') + '）</span></div>';
+      h += '<div class="row"><span class="tag g">输出</span><span>U_ce = Vcc − I_c·R_L = 12 V − ' + fmtSI(o.Ic, 'A') + '×' + (S.u*1e3).toFixed(0) + ' Ω = ' + o.Uce.toFixed(2) + ' V' +
+           (o.satL ? '（<b>已饱和</b>：R_L 过大）' : '（放大区）') + '</span></div>';
+      h += '<div class="note">三极管 = 光电二极管 + 电流放大：灵敏但慢、线性差；负载电阻越小频响越好（10 kΩ 优于 100 kΩ）；硅管峰值 900 nm、锗管 1500 nm（锗管调制频率须 ≤ 5 kHz）。</div>';
+    } else {
+      h += '<div class="row"><span class="tag f">器件式</span><span>I_sc = S·Φ = 0.4 A/W × ' + fmtSI(o.Popt, 'W') + ' = <b>' + fmtSI(o.Isc, 'A') + '</b>（短路电流与照度线性好）</span></div>';
+      h += '<div class="row"><span class="tag f">器件式</span><span>U_oc = mU_T·ln(1 + ' + frac('E', 'E₀') + ') = 50.5 mV×ln(1 + ' + fmtLx(S.e) + '/0.1 lx) = ' + fmtSI(o.Uoc, 'V') +
+           '（对数，约 2000 lx 饱和于 0.5 V）</span></div>';
+      h += '<div class="row"><span class="tag f">器件式</span><span>U_L = min(I_sc·R_L, U_oc) = min(' + fmtSI(o.Isc, 'A') + '×' + (S.u*1e3).toFixed(0) + ' Ω, ' + fmtSI(o.Uoc, 'V') +
+           ') = <b>' + fmtSI(o.Uload, 'V') + '</b>，I_L = ' + fmtSI(o.Iload, 'A') + '</span></div>';
+      h += '<div class="row"><span class="tag g">课件式</span><span>I/V 转换（虚地 ≈ 短路）：U_out = −I_sc·R_f = −' + fmtSI(o.Uiv, 'V') +
+           ' —— 与照度严格线性（照度检测：&lt;700 lx 开灯、&gt;1000 lx 关灯，滞环防抖）</span></div>';
+      h += '<div class="note">光电池近似恒流源：I_sc 线性（作测量）、U_oc 对数饱和（不能直接测电压）。硅光电池 0.4~1.2 μm、硒 0.38~0.75 μm；温度升高使 U_oc 快降、I_sc 缓增。</div>';
+    }
+    $('fmlTitle').textContent = TYPES[t].name + '（' + (t === 'tube' ? (S.tube === 'pmt' ? '光电倍增管' : '真空光电管') : 'E = ' + fmtLx(S.e)) + '）';
+    $('fmlBody').innerHTML = h;
+  }
+
+  /* ============ 12. 要点 ============ */
+  var PTS_TEXT = [
+    '光电效应的判据是<b>频率</b>：只有 hf ≥ W（或 hc/λ ≥ E_g）才有光电发射；<b>光强只改变光电子/光电流的数目</b>，不改变单个光电子的动能 ——"光越强越容易打出电子"是错的。',
+    '界分：电子<b>跑出材料表面</b>＝外光电（光电管、光电倍增管）；电子留在内部＝内光电，再分<b>光电导</b>（光敏电阻：阻值变化、无极性）与<b>光生伏特</b>（光电池、光电二极管/三极管：产生电动势、有极性）。',
+    '红限/临界波长：λ₀ = 1293/E_g (nm)（课件 λ_c = 1.24/E_g μm）；硅 E_g = 1.12 eV → 约 1.11~1.15 μm，<b>不能响应 1.5 μm 红外</b>（习题8-1）；杂质型 λ₀ = hc/E_D 更长 → PbS/PbSe/InSb 测中远红外。',
+    '<b>光敏电阻</b>（CdS）：暗阻 &gt; 1 MΩ（可达 100 MΩ）、亮阻 1 kΩ 级；R 与照度成幂律 <b>非线性</b> → 适合作光控开关而非精密测量；伏安无饱和、受<b>额定功耗</b>限制（500 mW，超功耗即热损坏）；响应毫秒级、有疲劳。',
+    '<b>光电二极管必须反偏</b>：反偏时暗电流最小、光生电流变化最明显；正向偏置时光电流被外电路电流淹没而测不出；零偏压仍有光电流。响应度 S_p ≈ 0.5 A/W（硅，峰值 ~0.9 μm），暗电流 nA 级（锗管 μA 级）。',
+    '<b>光电三极管</b>：内部有电流增益 I_c = βI_p（几十~几百）→ 比二极管灵敏得多，但<b>更慢、线性更差</b>；负载电阻越小频响越好（10 kΩ 优于 100 kΩ），锗管调制频率 ≤ 5 kHz。',
+    '<b>光电池</b>：短路电流与照度<b>线性好</b>（mA 级）、开路电压<b>对数且约 2000 lx 饱和</b>（≈0.5 V）→ 近似<b>恒流源</b>：须用 I/V 转换（虚地≈短路）或小负载电阻，不能直接接大负载测电压。',
+    '六项特性：光电（量程）、伏安（光电管 U &gt; 50 V 才饱和）、光谱（波长匹配）、温度、疲劳、惯性（最高调制频率）—— 任何光电元件都按这六项考查。',
+    '<b>光电倍增管</b>：σⁿ 倍增（本演示 5¹¹ ≈ 4.9×10⁷），可探测弱光/单光子；但光通量 &gt; 0.1 lm 时严重非线性、暗电流来自热电子发射/漏电/场致发射 → <b>只能工作在微弱光</b>下。',
+    '<b>PSD 与 CCD</b>：PSD 用横向光电效应，P = (I₂−I₁)/(I₂+I₁) = x/L <b>只与光点位置有关、与光强无关</b>；CCD 靠势阱存储＋多相时钟转移、末端统一放大 → 噪声低、一致性好。应用：转速表 n = 60f/N、CCD 测线径 Δ = D_max/N、干涉测长 1 脉冲 = λ/8、三角法测距 d = f·s/x。'
+  ];
+  var PTS = { active:-1 };
+  function paintPoints(){
+    if (!$('points').children.length){
+      var html = '';
+      PTS_TEXT.forEach(function(t2, k){ html += '<li data-pi="' + k + '">' + t2 + '</li>'; });
+      $('points').innerHTML = html;
+    }
+  }
+  function setPt(i){
+    PTS.active = i;
+    var lis = $('points').children, k;
+    for (k = 0; k < lis.length; k++) lis[k].classList.toggle('on', k === i);
+    for (k = 0; k < PTS_TEXT.length; k++){
+      var bb = $('ptsB' + k);
+      if (bb) bb.classList.toggle('on', k === i);
+    }
+    if (i >= 0) say('<b>要点 ' + (i + 1) + '/' + PTS_TEXT.length + '</b>：' + PTS_TEXT[i]);
+  }
+  for (var pb = 0; pb < PTS_TEXT.length; pb++){
+    (function(k){ $('ptsB' + k).addEventListener('click', function(){ stopDemo(); setPt(k); }); })(pb);
+  }
+
+  /* ============ 13. 交互 ============ */
+  function setType(t){ S.type = t; S.u = TYPES[t].uDef; paint(); }
+  function setTube(tb){ S.tube = tb; paint(); }
+  function setExt(e2){ S.ext = e2; paint(); }
+  function setCm(c){ S.cm = c; paint(); }
+  function setPx(v){ S.px = clamp(Math.round(v), 0, 100); paint(); }
+  function setE(v){ S.e = clamp(v, CFG.Emin, CFG.Emax); paint(); }
+  function setEPos(p){ setE(lightFromPos(p)); }
+  function setU(v){
+    var T = TYPES[S.type];
+    S.u = clamp(Math.round(v/T.uStep)*T.uStep, T.uMin, T.uMax);
+    S.u = Math.round(S.u*100)/100;
+    paint();
+  }
+  $('e').addEventListener('input', function(){ stopDemo(); setEPos(+this.value); });
+  $('u').addEventListener('input', function(){ stopDemo(); setU(+this.value); });
+  $('px').addEventListener('input', function(){ stopDemo(); setPx(+this.value); });
+  $('eM').addEventListener('click', function(){ stopDemo(); setEPos(lightPos() - 5); });
+  $('eP').addEventListener('click', function(){ stopDemo(); setEPos(lightPos() + 5); });
+  $('uM').addEventListener('click', function(){ stopDemo(); setU(S.u - TYPES[S.type].uStep); });
+  $('uP').addEventListener('click', function(){ stopDemo(); setU(S.u + TYPES[S.type].uStep); });
+  document.querySelectorAll('#segType button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setType(b.getAttribute('data-type')); say(TYPES[S.type].hint); });
+  });
+  document.querySelectorAll('#segTube button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setTube(b.getAttribute('data-tube')); say(TYPES.tube.hint); });
+  });
+  document.querySelectorAll('#segExt button').forEach(function(b){
+    b.addEventListener('click', function(){
+      stopDemo(); setExt(b.getAttribute('data-ext'));
+      say(S.ext === 'psd' ? 'PSD（位置敏感器件）：利用<b>横向光电效应</b>，光敏面无象限分隔线，两端电流之比只与光点位置有关。'
+                          : 'CCD：MOS 势阱存储电荷，靠<b>多相时钟</b>把电荷包逐级转移，末端统一放大 —— 噪声低、一致性好。');
+    });
+  });
+  document.querySelectorAll('#segCurve button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setCm(b.getAttribute('data-cm')); });
+  });
+  /* 演示按钮由 bindDemos() 统一绑定（此处不再重复绑定，避免同一次点击触发两次） */
+  $('reset').addEventListener('click', function(){
+    stopDemo();
+    S.type = 'ldr'; S.e = 1000; S.u = 10; S.tube = 'vacuum'; S.ext = 'psd'; S.px = 50; S.cm = 'light';
+    paint();
+    say('已复位：光敏电阻、E = 1000 lx、U = 10 V、PSD 光点在中心。');
+  });
+
+  /* ============ 14. 演示脚本 ============ */
+  async function demoEffect(){
+    var tok = beginDemo('effect');
+    setType('tube'); setTube('vacuum'); setE(1000); setU(100);
+    say('【<b>光电效应</b>】式 8-1：E_k = hf − W —— 光子把能量交给电子。<b>能不能打出电子只看频率</b>（要 hf ≥ W），光强只决定电子数目。外光电 = 电子真的跑出材料表面。');
+    if (!await sleep(4000, tok)) return;
+    var m1 = model();
+    say('① <b>真空光电管</b>：E = 1000 lx、受光窗 1 mm² → 光通量 Φ = ' + sci(m1.Phi, 2, 'lm') +
+        '，阴极光电流只有 <b>' + fmtSI(m1.Ik, 'A') + '</b>（40 μA/lm）——太弱，几乎测不了。');
+    if (!await sleep(4000, tok)) return;
+    say('② 改成 <b>光电倍增管</b>：11 级倍增极、每级 σ ≈ 5 → G = σⁿ = 5¹¹ = ' + sci(Math.pow(CFG.sig, CFG.nDy), 2) +
+        '。现在把光调暗到 0.01 lx（微弱光），看阳极电流。');
+    setTube('pmt');
+    if (!await tween(lightPos(), 0, 2600, setEPos, tok)) return;
+    if (!await sleep(1200, tok)) return;
+    var m2 = model();
+    say('③ 0.01 lx 时阴极只有 ' + fmtSI(m2.Ik, 'A') + '，但阳极是 <b>' + fmtSI(m2.Ia, 'A') + '</b>（放大 ' + sci(m2.G, 1) +
+        ' 倍）—— 这就是倍增管能探测单光子的原因；反过来，光一强（1000 lx）阳极电流会到 ' + fmtSI(m2.G*CFG.Sk*1000*CFG.A_tube, 'A') + ' 级，<b>必须工作在微弱光下</b>。');
+    if (!await sleep(4600, tok)) return;
+    say('④ 再看 <b>内光电</b>：电子留在内部。先是<b>光电导</b>——光敏电阻，光子把载流子"解放"出来，阻值下降（无极性）。');
+    setType('ldr'); setE(1000);
+    if (!await sleep(2000, tok)) return;
+    if (!await tween(100, 40, 2600, setEPos, tok)) return;
+    if (!await sleep(1000, tok)) return;
+    say('⑤ 从 1000 lx 暗到 1 lx：阻值从 ' + fmtSI(CFG.R1*Math.pow(1000, -CFG.gam), 'Ω') + ' 升到 ' + fmtSI(model().R, 'Ω') + '；继续调暗到 0.01 lx 就是 MΩ 级暗阻。');
+    if (!await sleep(3200, tok)) return;
+    say('⑥ 第三种是 <b>光生伏特</b>：光电池不需要外加电源，自己产生电动势（有极性）；光电二极管/三极管也属这一类，但要反偏使用。');
+    setType('pv'); setE(1000); setU(0.5);
+    if (!await sleep(4200, tok)) return;
+    setType('ldr'); setE(1000); setU(10);
+    say('【小结】外光电（电子出表面）/ 光电导（阻值变）/ 光生伏特（自发电）—— 后面四个演示分别细看光敏电阻、二极管/三极管、光电池。');
+    if (!await sleep(3600, tok)) return;
+    endDemo();
+  }
+
+  async function demoLDR(){
+    var tok = beginDemo('ldr');
+    setType('ldr'); setE(1000); setU(10);
+    say('【<b>光敏电阻</b>】现在 E = 1000 lx，R = ' + fmtSI(model().R, 'Ω') + '，I = ' + fmtSI(model().I, 'A') + '。注意蓝色载流子流得快 = 电流大。');
+    if (!await sleep(3400, tok)) return;
+    say('① 慢慢调暗：光照越弱，光生载流子越少，阻值按幂律 R ∝ E^(−0.9) 上升 —— 看双对数曲线上的蓝点沿直线走。');
+    if (!await tween(100, 0, 4200, setEPos, tok)) return;
+    if (!await sleep(1400, tok)) return;
+    var o1 = model();
+    say('② 0.01 lx（近暗）：R = <b>' + fmtSI(o1.R, 'Ω') + '</b> —— 这就是<b>暗阻</b>（MΩ 级；教材说 >1 MΩ、可达 100 MΩ）；亮阻在 1000 lx 时是 ' + fmtSI(o1.Rl, 'Ω') + '，两者相差 ' + sci(o1.Rd/o1.Rl, 1) + ' 倍。');
+    if (!await sleep(4600, tok)) return;
+    say('③ 因为是<b>非线性</b>（双对数才是直线），光敏电阻适合作光控开关，不作精密测量；而且响应是<b>毫秒级</b>的，还带光照历史效应（疲劳）。');
+    if (!await sleep(4400, tok)) return;
+    if (!await tween(0, 100, 2200, setEPos, tok)) return;
+    if (!await sleep(800, tok)) return;
+    say('④ 再看伏安特性：曲线是过原点的直线（欧姆性、没有饱和段），但绝不能越过 <b>500 mW</b> 额定功耗线。现在把偏置升到 30 V。');
+    if (!await tween(10, 30, 2400, setU, tok)) return;
+    if (!await sleep(1000, tok)) return;
+    var o2 = model();
+    say('⑤ 30 V 下 P = ' + fmtSI(o2.P, 'W') + (o2.over ? ' —— <b>已超额定 500 mW</b>，实际器件会热损坏！' : '（仍在额定内）') +
+        ' 安全工作电压上限 U_max = √(P·R) = ' + o2.Ulim.toFixed(1) + ' V。');
+    if (!await sleep(4000, tok)) return;
+    setU(10);
+    say('【小结】光敏电阻：无极性、灵敏、便宜、毫秒级；但非线性、受功耗限制 → 开关/照度粗测。');
+    if (!await sleep(2800, tok)) return;
+    endDemo();
+  }
+
+  async function demoDiode(){
+    var tok = beginDemo('diode');
+    setType('pd'); setE(1000); setU(5);
+    say('【<b>光电二极管</b>】反偏 5 V：光功率 Φ = ' + fmtSI(model().Popt, 'W') + '，光电流 I_p = S_p·Φ = 0.5 A/W×Φ = <b>' + fmtSI(model().Ip, 'A') + '</b>。');
+    if (!await sleep(3800, tok)) return;
+    say('① 为什么要反偏？反偏使耗尽层变宽、内建电场强，光生电子-空穴被迅速拉开；同时<b>暗电流最小</b>。把电压降到 0 看：光电流还在（0.95 倍），但正向偏置时就会被外电路电流淹没。');
+    if (!await tween(5, 0, 2200, setU, tok)) return;
+    if (!await sleep(1200, tok)) return;
+    if (!await tween(0, 5, 1800, setU, tok)) return;
+    if (!await sleep(800, tok)) return;
+    say('② 光照特性：I_p ∝ E 是过原点的<b>直线</b>（图8-15）—— 暗电流只有 ' + fmtSI(model().Id, 'A') + '，在 1000 lx 下可以忽略；微光时才成为误差。');
+    if (!await tween(100, 30, 2600, setEPos, tok)) return;
+    if (!await sleep(1000, tok)) return;
+    if (!await tween(30, 100, 2200, setEPos, tok)) return;
+    if (!await sleep(800, tok)) return;
+    say('③ 换成 <b>光电三极管</b>：同一片光照下它多了电流放大 I_c = βI_p（β 几十~几百）—— 灵敏得多。');
+    setType('pt'); setU(10);
+    if (!await sleep(3400, tok)) return;
+    var m = model();
+    say('④ 现在 I_p = ' + fmtSI(m.Ip, 'A') + '，但 I_c = <b>' + fmtSI(m.Ic, 'A') + '</b>，有效增益 ' + m.beff.toFixed(0) +
+        ' 倍。看集电极回路里的蓝色粒子又快又密。');
+    if (!await sleep(3800, tok)) return;
+    say('⑤ 代价是：负载电阻 R_L 越大越容易饱和（U_ce 被压到 0.2 V）、频响也越差。把 R_L 从 10 kΩ 加到 100 kΩ 试试。');
+    if (!await tween(10, 100, 2600, setU, tok)) return;
+    if (!await sleep(1400, tok)) return;
+    say('⑥ 100 kΩ 时 U_ce = ' + model().Uce.toFixed(2) + ' V —— <b>已饱和</b>，三极管退化成"开关"；教材结论：10 kΩ 比 100 kΩ 频响好。');
+    if (!await sleep(3800, tok)) return;
+    setU(10);
+    say('【小结】二极管线性好、响应快、暗电流小；三极管灵敏但慢、线性差 —— 测光用二极管，开关/放大用三极管。');
+    if (!await sleep(3200, tok)) return;
+    endDemo();
+  }
+
+  async function demoCell(){
+    var tok = beginDemo('cell');
+    setType('pv'); setE(1000); setU(0.2);
+    say('【<b>光电池</b>】零偏压、自发电：I_sc = 0.4 A/W×' + fmtSI(model().Popt, 'W') + ' = <b>' + fmtSI(model().Isc, 'A') +
+        '</b>，U_oc = ' + fmtSI(model().Uoc, 'V') + '。负载 200 Ω 时 U_L = ' + fmtSI(model().Uload, 'V') + '，I_L ≈ I_sc（恒流源）。');
+    if (!await sleep(4600, tok)) return;
+    say('① <b>短路电流与照度线性</b>（曲线上的直线），把光从 1000 lx 调到 10 lx，看 I_sc 成比例下降、而 U_oc 只降一点点 —— 因为 U_oc 是对数关系。');
+    if (!await tween(100, 40, 3200, setEPos, tok)) return;
+    if (!await sleep(1200, tok)) return;
+    say('② 10 lx：I_sc = ' + fmtSI(model().Isc, 'A') + '（降到 1/100），U_oc = ' + fmtSI(model().Uoc, 'V') +
+        '（只降到 ' + (model().Uoc/0.4650*100).toFixed(0) + '%）。');
+    if (!await sleep(3600, tok)) return;
+    if (!await tween(40, 100, 2600, setEPos, tok)) return;
+    if (!await sleep(1000, tok)) return;
+    say('③ 增大负载电阻：U_L = min(I_sc·R_L, U_oc)。把 R_L 加到 1.5 kΩ，看电压被 <b>U_oc 削顶</b>、电流塌陷 —— 所以不能直接接大负载测电压。');
+    if (!await tween(0.2, 1.5, 3000, setU, tok)) return;
+    if (!await sleep(1400, tok)) return;
+    var m = model();
+    say('④ R_L = 1.5 kΩ：U_L 被钳在 ' + fmtSI(m.Uload, 'V') + '（= U_oc），I_L 只有 ' + fmtSI(m.Iload, 'A') + '。改用 I/V 转换（虚地≈短路）则是 U_out = −I_sc·R_f = −' + fmtSI(m.Isc*1500, 'V') + '，严格线性。');
+    if (!await sleep(4800, tok)) return;
+    setU(0.2);
+    say('⑤ 应用：硅光电池 + 运放 I/V 转换做照度检测 —— 照度 <700 lx 开灯、>1000 lx 关灯，中间保持（滞环防继电器抖振）。');
+    if (!await sleep(4000, tok)) return;
+    endDemo();
+  }
+
+  async function demoPoints(){
+    var tok = beginDemo('pts');
+    say('【<b>本章要点</b>】共 10 条，逐条看一遍，也可点编号按钮单独回看。');
+    if (!await sleep(2000, tok)) return;
+    for (var i = 0; i < PTS_TEXT.length; i++){
+      setPt(i);
+      if (!await sleep(PTS_TEXT[i].length > 90 ? 4200 : 3200, tok)) return;
+    }
+    setPt(-1);
+    endDemo();
+  }
+
+  /* ============ 15. 键盘 ============ */
+  document.addEventListener('keydown', function(e){
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input') return;
+    if (e.key === 'ArrowLeft'){ stopDemo(); setEPos(lightPos() - 3); e.preventDefault(); }
+    else if (e.key === 'ArrowRight'){ stopDemo(); setEPos(lightPos() + 3); e.preventDefault(); }
+    else if (e.key === 'ArrowDown'){ stopDemo(); setU(S.u - TYPES[S.type].uStep); e.preventDefault(); }
+    else if (e.key === 'ArrowUp'){ stopDemo(); setU(S.u + TYPES[S.type].uStep); e.preventDefault(); }
+    else if (e.key === '1'){ stopDemo(); setType('tube'); }
+    else if (e.key === '2'){ stopDemo(); setType('ldr'); }
+    else if (e.key === '3'){ stopDemo(); setType('pd'); }
+    else if (e.key === '4'){ stopDemo(); setType('pt'); }
+    else if (e.key === '5'){ stopDemo(); setType('pv'); }
+    else if (e.key === 'e'){ stopDemo(); setExt(S.ext === 'psd' ? 'ccd' : 'psd'); }
+    else if (e.key === ' '){
+      e.preventDefault();
+      if (playingKey){ stopDemo(); say('演示已暂停。'); }
+      else {
+        var k = { tube:'effect', ldr:'ldr', pd:'diode', pt:'diode', pv:'cell' }[S.type];
+        if (DEMOS[k] && DEMOS[k].fn) DEMOS[k].fn();
+      }
+    }
+    else if (e.key === 'r' || e.key === 'R'){ $('reset').click(); }
+  });
+
+
+  DEMOS.effect = { btn:'playEffect', label:'▶ 光电效应', fn:demoEffect };
+  DEMOS.ldr    = { btn:'playLDR',    label:'▶ 光敏电阻', fn:demoLDR };
+  DEMOS.diode  = { btn:'playDiode',  label:'▶ 二极管/三极管', fn:demoDiode };
+  DEMOS.cell   = { btn:'playCell',   label:'▶ 光电池', fn:demoCell };
+  DEMOS.pts    = { btn:'ptsPlay',    label:'▶ 巡览要点', fn:demoPoints };
+  bindDemos();
+
+  /* ============ 启动（URL 参数必须在第一次 paint() 之前写入 S） ============ */
+  var q = new URLSearchParams(location.search);
+  if (q.has('type') && TYPES[q.get('type')]) S.type = q.get('type');
+  if (q.has('tube') && ['vacuum','pmt'].indexOf(q.get('tube')) >= 0) S.tube = q.get('tube');
+  if (q.has('ext') && ['psd','ccd'].indexOf(q.get('ext')) >= 0) S.ext = q.get('ext');
+  if (q.has('cm') && ['light','iv'].indexOf(q.get('cm')) >= 0) S.cm = q.get('cm');
+  if (q.has('px')){ var pvx = parseFloat(q.get('px')); if (isFinite(pvx)) S.px = clamp(pvx, 0, 100); }
+  if (q.has('e')){ var ev = parseFloat(q.get('e')); if (isFinite(ev)) S.e = clamp(ev, CFG.Emin, CFG.Emax); }
+  if (q.has('u')){ var uv = parseFloat(q.get('u')); if (isFinite(uv)) S.u = clamp(uv, TYPES[S.type].uMin, TYPES[S.type].uMax); }
+  else S.u = TYPES[S.type].uDef;
+  if (q.has('speed')) SPEED = clamp(parseFloat(q.get('speed')) || 1, 0.4, 2.5);
+  $('speed').value = SPEED; $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  paint();
+  initDots();
+  runDots();
+  initCCD();
+  runCCD();
+  var AUTO = { '1':'effect', '2':'ldr', '3':'diode', '4':'cell', '5':'pts' };
+  if (AUTO[q.get('auto')] && DEMOS[AUTO[q.get('auto')]].fn) DEMOS[AUTO[q.get('auto')]].fn();
+
+})();
+</script>
+
+<script>
+/* ==================== 板块布局引擎：拖动 / 缩放 / 记忆 ====================
+   由 _build/build.js 注入；章节的面板清单 / 记忆键 / 默认布局在构建时替换。 */
+(function(){
+  "use strict";
+  var BOARD = document.getElementById('board');
+  var COLS  = ['colA','colB','colC'];
+  var IDS   = ["ctrlCard","ptsCard","devCard","readCard","extCard","fmlCard","curveCard"];
+  var MINZ = 0.7, MAXZ = 1.6, MINCOL = 260;
+  var KEY = 'jh-photo-layout-v1';
+  var DEF = {"weight":{"colA":2.9,"colB":5,"colC":4.1},"col":{"colA":["ctrlCard","ptsCard"],"colB":["devCard","readCard","extCard"],"colC":["fmlCard","curveCard"]},"zoom":{}};
+  var L = null, focused = null;
+  function el(id){ return document.getElementById(id); }
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function load(){
+    var d;
+    try { d = JSON.parse(localStorage.getItem(KEY)); } catch (e) { d = null; }
+    if (!d || !d.col) return clone(DEF);
+    COLS.forEach(function(c){ if (!d.col[c]) d.col[c] = []; });
+    var seen = {};
+    COLS.forEach(function(c){
+      d.col[c] = d.col[c].filter(function(id){ if (IDS.indexOf(id) < 0 || seen[id]) return false; seen[id] = 1; return true; });
+    });
+    IDS.forEach(function(id){ if (!seen[id]){ d.col.colC.push(id); seen[id] = 1; } });
+    d.weight = d.weight || clone(DEF.weight);
+    d.zoom = d.zoom || {};
+    return d;
+  }
+  L = load();
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(L)); } catch (e) {} }
+  function render(){
+    COLS.forEach(function(cid){
+      var col = el(cid);
+      L.col[cid].forEach(function(pid){ var p = el(pid); if (p) col.appendChild(p); });
+      col.style.flexGrow = L.weight[cid] || 1;
+    });
+  }
+  function applyZoom(id){
+    var p = el(id); if (!p) return;
+    var b = p.querySelector('.pbody'); if (!b) return;
+    b.style.zoom = L.zoom[id] || 1;
+  }
+  function applyAll(){ render(); IDS.forEach(applyZoom); }
+
+  function startDrag(ev, p){
+    if (ev.button) return;
+    var x0 = ev.clientX, y0 = ev.clientY, moved = false, lastTarget = null;
+    function move(e){
+      if (!moved){
+        if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) < 6) return;
+        moved = true;
+        document.body.classList.add('layout-dragging');
+        p.classList.add('sorting');
+      }
+      var col = null, i, r;
+      for (i = 0; i < COLS.length; i++){
+        r = el(COLS[i]).getBoundingClientRect();
+        if (e.clientX >= r.left - 6 && e.clientX <= r.right + 6){ col = COLS[i]; break; }
+      }
+      if (!col) col = (e.clientX < BOARD.getBoundingClientRect().left + BOARD.clientWidth/2) ? COLS[0] : COLS[COLS.length - 1];
+      var list = L.col[col].filter(function(id){ return id !== p.id; });
+      var idx = list.length, j, q, qr;
+      for (j = 0; j < list.length; j++){
+        q = el(list[j]); if (!q) continue;
+        qr = q.getBoundingClientRect();
+        if (e.clientY < qr.top + qr.height/2){ idx = j; break; }
+      }
+      var key = col + ':' + idx;
+      if (key === lastTarget) return;
+      lastTarget = key;
+      COLS.forEach(function(c2){ L.col[c2] = L.col[c2].filter(function(id){ return id !== p.id; }); });
+      L.col[col].splice(idx, 0, p.id);
+      render();
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', up);
+      document.body.classList.remove('layout-dragging');
+      p.classList.remove('sorting');
+      if (moved) save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
+  }
+  function startSplit(ev, sp){
+    ev.preventDefault();
+    var left = el(sp.getAttribute('data-left')), right = el(sp.getAttribute('data-right'));
+    var total = left.offsetWidth + right.offsetWidth;
+    var wl = L.weight[left.id] || 1, wr = L.weight[right.id] || 1, sum = wl + wr;
+    var x0 = ev.clientX, pxPerWeight = total/sum;
+    document.body.classList.add('layout-dragging');
+    function move(e){
+      var d = (e.clientX - x0)/pxPerWeight;
+      var nl = Math.max(MINCOL/(total/sum), Math.min(sum - MINCOL/(total/sum), wl + d));
+      left.style.flexGrow = nl; right.style.flexGrow = sum - nl;
+      L.weight[left.id] = nl; L.weight[right.id] = sum - nl;
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.body.classList.remove('layout-dragging');
+      save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  }
+  function zoomPanel(id, d){
+    var z = Math.round(((L.zoom[id] || 1) + d)*100)/100;
+    L.zoom[id] = Math.max(MINZ, Math.min(MAXZ, z));
+    applyZoom(id); save();
+  }
+  function toggleFocus(id){
+    var p = el(id); if (!p) return;
+    if (focused === id){ p.classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    else {
+      if (focused) el(focused).classList.remove('focused');
+      p.classList.add('focused'); document.body.classList.add('has-focus'); focused = id;
+    }
+  }
+  function reset(){
+    L = clone(DEF);
+    if (focused){ el(focused).classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    applyAll(); save();
+  }
+  var back = document.createElement('div');
+  back.id = 'focusBack';
+  back.addEventListener('click', function(){ if (focused) toggleFocus(focused); });
+  document.body.appendChild(back);
+
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var head = p.querySelector('.phead');
+    if (head){
+      head.addEventListener('pointerdown', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        e.preventDefault(); startDrag(e, p);
+      });
+      head.addEventListener('dblclick', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        toggleFocus(id);
+      });
+    }
+    p.querySelectorAll('.ptool').forEach(function(b){
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        var a = b.getAttribute('data-act');
+        if (a === 'in') zoomPanel(id, 0.08);
+        else if (a === 'out') zoomPanel(id, -0.08);
+        else if (a === 'max') toggleFocus(id);
+      });
+    });
+  });
+  document.querySelectorAll('.vsplit').forEach(function(sp){
+    sp.addEventListener('pointerdown', function(e){ startSplit(e, sp); });
+  });
+  /* ---------- 折叠：滑过上方自动折叠，回到可视区自动展开；可手动锁定 ---------- */
+  function setFold(p, on){
+    p.classList.toggle('folded', on);
+    var btn = p.querySelector('.ptool[data-act="fold"]');
+    if (btn) btn.textContent = on ? '▸' : '▾';
+  }
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var tools = p.querySelector('.ptools');
+    if (!tools) return;
+    var fb = document.createElement('button');
+    fb.className = 'ptool';
+    fb.setAttribute('data-act', 'fold');
+    fb.title = '折叠 / 展开本板块（手动折叠后不会被自动展开）';
+    fb.textContent = '▾';
+    tools.insertBefore(fb, tools.firstChild);
+    fb.addEventListener('click', function(e){
+      e.stopPropagation();
+      var folded = p.classList.contains('folded');
+      setFold(p, !folded);
+      if (!folded) p.setAttribute('data-manual', '1'); else p.removeAttribute('data-manual');
+    });
+  });
+  var ticking = false;
+  function autoFold(){
+    ticking = false;
+    var vh = window.innerHeight || 900;
+    IDS.forEach(function(id){
+      var p = el(id); if (!p) return;
+      if (!p.parentNode || p.parentNode.id !== 'colB') return;    /* 只有中间列参与自动折叠（左右两列固定不动） */
+      var r = p.getBoundingClientRect();
+      if (r.bottom < 90){                                          /* 整块滑到上方之外 → 收起 */
+        if (!p.classList.contains('folded')) setFold(p, true);
+      } else if (r.top < vh - 30 && r.bottom > 60 && !p.hasAttribute('data-manual')){
+        if (p.classList.contains('folded')) setFold(p, false);      /* 回到可视区 → 展开 */
+      }
+    });
+  }
+  function onScrollOrWheel(){
+    if (!ticking){ ticking = true; requestAnimationFrame(autoFold); }
+  }
+  window.addEventListener('scroll', onScrollOrWheel, { passive:true });
+  window.addEventListener('wheel', onScrollOrWheel, { passive:true });
+  window.addEventListener('touchmove', onScrollOrWheel, { passive:true });
+  window.addEventListener('resize', function(){ if (window.__repack) window.__repack(); });
+  setTimeout(autoFold, 400);
+  window.__autoFold = autoFold;
+
+  var lr = document.getElementById('layReset');
+  if (lr) lr.addEventListener('click', reset);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && focused) toggleFocus(focused); });
+  window.addEventListener('resize', function(){ IDS.forEach(applyZoom); });
+  window.__repack = function(){};
+  applyAll();
+  window.addEventListener('load', applyAll);
+})();
+
+</script>
+</body>
+</html>

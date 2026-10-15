@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第9章 光纤传感器 · 动态演示｜传感器原理与技术</title>
+<style>
+/* =====================================================================
+   公共样式（各章通用）· 由 _build/build.js 注入到每个单文件 HTML 的样式表顶部
+   与第4章保持同一套类名与观感；章节特有的语义色 / 版式写在章节模块的 extraCss 里
+   ===================================================================== */
+:root{
+  --jhu:#0e4a8e; --jhu2:#0a2f5c; --ink:#12233a; --muted:#5b6b80;
+  --line:#d5dfec; --bg:#eef3f9; --card:#ffffff;
+  --flux:#0d8b7f;      /* 磁通 / 场线（第4章起沿用） */
+  --cu:#c2703a;        /* 线圈 / 铜 */
+  --iron:#4b6b8f;      /* 铁芯 / 铁磁体 */
+  --gapm:#e08a1e;      /* 气隙 / 有效量 */
+  --eddy:#7c3aed;      /* 涡流 / 强调（紫） */
+  --hot:#d94a3d; --ok:#0f9d58;
+  --grid:rgba(14,74,142,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Source Han Sans SC","Hiragino Sans GB",system-ui,sans-serif;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    var(--bg);
+  color:var(--ink); font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+header{
+  background:linear-gradient(120deg,var(--jhu) 0%,var(--jhu2) 100%);
+  color:#fff; padding:8px 24px; display:flex; align-items:center; gap:16px;
+  box-shadow:0 3px 14px rgba(10,47,92,.28);
+}
+header h1{font-size:22px; margin:0; letter-spacing:1px; font-weight:700}
+header .sub{font-size:13px; opacity:.9; border-left:1px solid rgba(255,255,255,.45); padding-left:13px}
+header .right{margin-left:auto; text-align:right; font-size:12.5px; opacity:.92; line-height:1.3}
+header .right b{font-size:15px; letter-spacing:2px}
+#laybar{display:flex; align-items:center; gap:10px; padding:3px 20px; font-size:12px; color:#41566f;
+        background:#e4edf8; border-bottom:1px solid #cfdcec}
+#laybar button{border:1px solid #a9c1dd; background:#fff; color:var(--jhu); border-radius:7px;
+               font-size:12px; font-weight:700; padding:2px 10px; cursor:pointer; font-family:inherit}
+#laybar button:hover{background:#f2f7fd}
+#laybar .hint{color:#6b7d92}
+#boardWrap{padding:6px 14px 2px}
+#board{display:flex; align-items:flex-start}
+.col{display:flex; flex-direction:column; gap:6px; min-width:0; flex-grow:1; flex-basis:0}
+.colhead{font-size:11.5px; font-weight:700; color:#8296ad; letter-spacing:.4px; padding:0 3px 2px; border-bottom:1px dashed #dbe5f0}
+.vsplit{flex:0 0 13px; align-self:stretch; cursor:col-resize; position:relative; touch-action:none}
+.vsplit::before{content:""; position:absolute; left:5.5px; top:8px; bottom:8px; width:2px; border-radius:2px; background:#cfdcec}
+.vsplit:hover::before{background:var(--jhu); width:3px; left:5px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:13px;
+      box-shadow:0 2px 10px rgba(18,35,58,.06); padding:5px 9px}
+.card h2{margin:0 0 4px; font-size:14.5px; color:var(--jhu); font-weight:700; display:flex; align-items:center; gap:7px}
+.card h2::before{content:""; width:4px; height:15px; border-radius:3px; background:var(--jhu)}
+.card h2 small{font-weight:400; color:var(--muted); font-size:12px}
+.panel{position:relative; box-sizing:border-box}
+.panel > .phead{display:flex; align-items:center; gap:6px; cursor:move; touch-action:none; user-select:none; margin:-1px 0 4px}
+.panel > .phead h2{margin:0; flex:1; min-width:0; cursor:move}
+.ptools{display:flex; gap:3px; flex:none}
+.ptool{width:21px; height:21px; padding:0; line-height:1; border:1px solid var(--line); background:#fff;
+       color:var(--jhu); border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit}
+.ptool:hover{background:#eef4fc; border-color:#9fbedd}
+.panel.sorting{opacity:.6; outline:2px dashed var(--jhu); outline-offset:2px; pointer-events:none}
+.panel.focused{position:fixed; left:14px; right:14px; top:80px; bottom:14px; z-index:300; overflow:auto;
+               box-shadow:0 18px 50px rgba(10,47,92,.38); border-color:var(--jhu)}
+#focusBack{position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(10,30,55,.34); z-index:290; display:none}
+body.has-focus #focusBack{display:block}
+body.layout-dragging{user-select:none}
+svg{display:block; width:100%; height:auto}
+.tiny{font-size:12px; fill:var(--muted); color:var(--muted)}
+/* ---- 控件 ---- */
+.ctrl{display:flex; flex-direction:column; gap:2px; margin-bottom:2px}
+.ctrl .row{display:flex; align-items:center; gap:7px}
+.ctrl .name{font-size:12.8px; color:var(--muted); width:118px; flex:none}
+.ctrl .name b{color:var(--ink); font-size:14px}
+.ctrl output{font-size:18px; font-weight:800; min-width:96px; text-align:right; font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none; appearance:none; height:8px; border-radius:5px; background:#dce6f2; outline:none; flex:1; min-width:70px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:21px; height:21px; border-radius:50%;
+      background:#fff; border:3px solid var(--jhu); cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.seg{display:flex; gap:6px; flex-wrap:wrap}
+.seg button{flex:1 1 0; min-width:96px; padding:5px 8px; border-radius:9px; border:1px solid var(--line);
+            background:#fff; cursor:pointer; font-size:13px; font-weight:700; color:#33506f; font-family:inherit; line-height:1.3}
+.seg button small{display:block; font-weight:400; font-size:11px; color:var(--muted)}
+.seg button:hover{border-color:#9fbedd}
+.seg button.on{background:var(--jhu); border-color:var(--jhu); color:#fff}
+.seg button.on small{color:rgba(255,255,255,.85)}
+/* 紧凑小按钮（章节里的型式/模式细分按钮） */
+.seg.tight button{min-width:66px; flex:1 1 66px; padding:3px 4px; font-size:11.5px; line-height:1.25}
+.seg.tight button small{font-size:10px}
+.step{border:1px solid var(--line); background:#fff; color:var(--jhu); width:28px; height:28px;
+      border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; line-height:1}
+.actions{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap}
+.actions button{flex:1 1 92px; padding:5px 4px; border-radius:9px; border:1px solid var(--jhu);
+                background:var(--jhu); color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;
+                font-family:inherit; white-space:nowrap}
+.actions button.ghost{background:#fff; color:var(--jhu)}
+.actions button.running{background:var(--hot); border-color:var(--hot); color:#fff}
+.actions button:hover{filter:brightness(1.07)}
+.narrate{margin-top:4px; border-left:5px solid var(--flux); background:#f2fbf9; border-radius:0 10px 10px 0;
+         padding:3px 10px; font-size:12.4px; line-height:1.34; min-height:26px; color:#0a5f57}
+/* ---- 读数 ---- */
+.big{display:flex; align-items:baseline; gap:9px; background:linear-gradient(90deg,#f2f7ff,#fff);
+     border:1px solid #d9e5f5; border-radius:12px; padding:3px 12px}
+.big .cap{font-size:13px; color:var(--muted); margin-right:auto}
+.big .num{font-size:23px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
+.big .unit{font-size:15px; font-weight:700; color:var(--muted)}
+.kv{display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:5px}
+.kv .box{border:1px dashed var(--line); border-radius:9px; padding:2px 6px; font-size:10.5px; color:var(--muted)}
+.kv .box b{display:block; font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:1px}
+.fine{font-size:10.4px; color:var(--muted); margin-top:5px; line-height:1.5; font-variant-numeric:tabular-nums}
+.fine b{color:var(--ink)}
+/* ---- 比例条 / 图例 ---- */
+.rmbar{display:flex; height:15px; border-radius:5px; overflow:hidden; border:1px solid var(--line); background:#f4f8fd; margin-top:3px}
+.rmbar i{display:block; height:100%}
+.legend{display:flex; gap:8px; flex-wrap:wrap; font-size:10.4px; color:var(--muted); margin-top:1px}
+.legend i{display:inline-block; width:14px; height:9px; border-radius:2px; margin-right:5px}
+/* ---- 公式 ---- */
+.fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:10.9px; line-height:1.22; color:#16283d}
+.fml .row{display:block; border-bottom:1px dashed #e7eef7; padding:0}
+.fml .row:last-child{border-bottom:none}
+.fml .tag{display:inline-block; font-family:"Microsoft YaHei",sans-serif; font-size:11px; color:#fff;
+          background:var(--jhu); border-radius:5px; padding:0 6px; margin-right:5px; vertical-align:1px}
+.fml .tag.g{background:var(--gapm)} .fml .tag.f{background:var(--flux)} .fml .tag.v{background:var(--eddy)}
+.fml b{color:var(--hot)}
+.fml .note{font-family:"Microsoft YaHei",sans-serif; font-size:10.8px; color:var(--muted); line-height:1.4; margin-top:2px}
+.frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.88em; line-height:1.02; margin:0 .14em}
+.frac i{font-style:normal; padding:0 .3em}
+.frac b{font-weight:400; color:inherit; border-top:1.4px solid currentColor; padding:0 .3em}
+/* ---- 要点 ---- */
+ol.points{margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:4px}
+ol.points li{border:1px solid var(--line); border-left:4px solid #c8d6e6; border-radius:0 9px 9px 0;
+             padding:0 7px; font-size:10.9px; line-height:1.28; color:#3c5068; background:#fbfdff; transition:.25s}
+ol.points li.on{border-left-color:var(--ok); background:#f2fbf5; color:var(--ink); box-shadow:0 0 0 2px rgba(15,157,88,.12)}
+ol.points li .hl{color:var(--ok); font-weight:700}
+.hint{font-size:12px; color:var(--muted); margin-top:5px}
+footer{padding:3px 18px 5px; font-size:11px; color:var(--muted); line-height:1.5}
+footer b{color:var(--jhu)}
+.actions button.ptsB{flex:0 0 26px; padding:2px 0; font-size:11px; border-radius:6px}   /* 要点编号按钮：特异性需高于 .actions button */
+/* 左右两列都吸附固定；只有中间列（结构+读数）随页面滚动 */
+#colA, #colC{position:sticky; top:4px; align-self:flex-start;
+             max-height:calc(100vh - 10px); overflow-y:auto; overscroll-behavior:contain}
+#colA::-webkit-scrollbar, #colC::-webkit-scrollbar{width:6px}
+#colA::-webkit-scrollbar-thumb, #colC::-webkit-scrollbar-thumb{background:#c3d3e6; border-radius:3px}
+/* 中间列底部留白：让最后一张卡片也能滚动到屏幕中间 */
+#colB{padding-bottom:52vh}
+.panel > .pbody{max-height:2600px; overflow:hidden; transition:max-height .22s ease, opacity .18s ease}
+.panel.folded > .pbody{max-height:0 !important; opacity:0}
+.panel.folded{border-color:#bcd0e5; background:#f8fbff}
+.panel.folded > .phead h2{color:#5b6b80}
+.ptool[data-act="fold"]{font-size:11px}
+.readlabel{font-size:12.5px; font-weight:700; color:#5b6b80; margin:7px 0 3px; padding-top:6px; border-top:1px dashed #dbe5f0}
+.readwrap svg{max-height:196px}
+.pbody > svg{max-height:300px}
+.pbody > svg + svg{max-height:196px}
+@media (max-width:1200px){ #boardWrap{min-width:1180px} }
+
+  /* ---- 第9章语义色 ---- */
+  :root{ --fcore:#f7d98b; --fclad:#cfe6f7; --fcoat:#c3ccd8; --ray:#e8590c; --leak:#8b5cf6; }
+</style>
+</head>
+<body>
+<header>
+  <h1>第 9 章 光纤传感器</h1>
+  <div class="sub">光纤基础（全反射 / 数值孔径）· 传感型与传光型 · 强度与相位调制 · 典型应用 | 动态演示</div>
+  <div class="right"><b>江汉大学</b><br>传感器原理与技术</div>
+</header>
+<div id="laybar">
+  <span style="font-weight:700;color:#0e4a8e">板块布局</span>
+  <button id="layReset">↺ 恢复默认（一屏）</button>
+  <span class="hint"><b>左右两列固定不动</b>（左＝型式与输入量＋要点，右＝数据/曲线/公式），只有<b>中间列</b>随页面滚动；每块标题栏的 <b>▾</b> 可折叠该板块；<b>滚轮下滑时滑过上方的那几块会自动收起、滚回来自动展开</b>（手动折起的不会被自动展开）；拖动<b>标题栏</b>可换列换位、拖<b>竖条</b>调列宽、<b>＋ －</b> 缩放、<b>⛶</b> 全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
+</div>
+
+<div id="boardWrap">
+<main id="board">
+
+  <!-- ================= 左列 ================= -->
+  <div class="col" id="colA">
+    <div class="colhead">① 型式与输入量</div>
+
+
+    <section class="card panel" id="ctrlCard">
+      <div class="phead">
+        <h2>型式与输入量</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="ctrl">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>型式 / 器件</b></span>
+          <div class="seg" id="segType" style="flex:1">
+            <button data-type="tir" class="on">光纤导光基础<small>全反射 · NA</small></button>
+            <button data-type="micro">微弯损耗型<small>功能型 · 强度调制</small></button>
+            <button data-type="refl">反射式位移<small>传光型 · 强度调制</small></button>
+            <button data-type="mzi">马赫-曾德干涉<small>相位调制</small></button>
+          </div>
+        </div>
+        <div class="hint" id="typeHint">光纤导光基础：n₁ &gt; n₂ 是前提，界面入射角 θ ≥ θ_c = arcsin(n₂/n₁) 才全反射；端面接收角由 NA 决定。</div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b id="xName">端面入射角 θ₀</b><br><span class="tiny" id="xTxt">θ₀ = 0.0°</span></span>
+          <button class="step" id="xM" title="减小">−</button>
+          <input type="range" id="x" min="0" max="100" step="1" value="0">
+          <button class="step" id="xP" title="增大">＋</button>
+          <output id="xOut">0.0°</output>
+        </div>
+      </div>
+      <div class="ctrl" id="optRow">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b id="optName">折射率分布</b></span>
+          <div class="seg tight" id="segOpt" style="flex:1">
+            <button data-mode="tir" data-opt="step" class="on">阶跃型<small>界面突变</small></button>
+            <button data-mode="tir" data-opt="grad">渐变型<small>正弦轨迹</small></button>
+            <button data-mode="micro" data-opt="0.5">Λ = 0.5 mm<small>失配拍长</small></button>
+            <button data-mode="micro" data-opt="1.5" class="on">Λ = 1.5 mm<small>匹配拍长</small></button>
+            <button data-mode="micro" data-opt="2.5">Λ = 2.5 mm<small>失配拍长</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b>包层折射率 n₂</b><br><span class="tiny" id="n2Txt">纤芯 n₁ = 1.500（固定）</span></span>
+          <input type="range" id="n" min="1.44" max="1.499" step="0.0005" value="1.485">
+          <output id="nOut">1.4850</output>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="playTir" class="ghost">▶ 光纤导光</button>
+        <button id="playMicro" class="ghost">▶ 微弯调制</button>
+        <button id="playRefl" class="ghost">▶ 反射式位移</button>
+        <button id="playMzi" class="ghost">▶ 相位调制</button>
+        <button id="reset" class="ghost" style="flex:0 0 58px">↺ 复位</button>
+      </div>
+      <div class="ctrl" style="margin-top:5px">
+        <div class="row">
+          <span class="name"><b>演示速度</b><br><span class="tiny">0.4× 慢 ～ 2.5× 快</span></span>
+          <input type="range" id="speed" min="0.4" max="2.5" step="0.1" value="1">
+          <output id="speedOut">1.0×</output>
+        </div>
+      </div>
+      <div class="narrate" id="narration">初始状态：光纤导光基础（阶跃型），n₁ = 1.500、n₂ = 1.485，端面入射角 θ₀ = 0°。四个演示按钮分别讲：光纤导光 / 微弯调制 / 反射式位移 / 相位调制。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="ptsCard">
+      <div class="phead">
+        <h2>本章要点</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="actions" style="margin-top:0">
+        <button id="ptsPlay" class="ghost" style="flex:0 0 98px">▶ 巡览要点</button>
+        <button id="ptsB0" class="ghost ptsB">1</button><button id="ptsB1" class="ghost ptsB">2</button>
+        <button id="ptsB2" class="ghost ptsB">3</button><button id="ptsB3" class="ghost ptsB">4</button>
+        <button id="ptsB4" class="ghost ptsB">5</button><button id="ptsB5" class="ghost ptsB">6</button>
+        <button id="ptsB6" class="ghost ptsB">7</button><button id="ptsB7" class="ghost ptsB">8</button>
+        <button id="ptsB8" class="ghost ptsB">9</button><button id="ptsB9" class="ghost ptsB">10</button>
+      </div>
+      <ol class="points" id="points"></ol>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colA" data-right="colB" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 中列 ================= -->
+  <div class="col" id="colB">
+    <div class="colhead">② 结构动态 ＋ 输出读数（成对显示）</div>
+
+
+    <section class="card panel" id="stCard">
+      <div class="phead">
+        <h2>结构动态 <small id="stSub">纤芯 / 包层 / 涂覆三层 · 全反射与接收锥</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="fibr" viewBox="0 0 700 330" role="img" aria-label="光纤传感器结构动态">
+        <!-- ============ (1) 光纤导光基础：三层结构 + 全反射锯齿光路 ============ -->
+        <g id="stTir">
+          <text x="14" y="21" font-size="12.5" font-weight="700" fill="#0e4a8e">光纤导光：芯-包层界面上的全反射</text>
+          <text id="tirWarn" x="686" y="21" text-anchor="end" font-size="12.5" font-weight="700" fill="var(--ok)">全反射 · 光被约束在纤芯内</text>
+          <rect x="60" y="118" width="580" height="104" rx="4" fill="var(--fcoat)" opacity=".45"/>
+          <rect x="60" y="128" width="580" height="84" rx="3" fill="var(--fclad)"/>
+          <rect id="tirCore" x="60" y="148" width="580" height="44" fill="var(--fcore)"/>
+          <line x1="60" y1="112" x2="60" y2="228" stroke="#64748b" stroke-width="1.8"/>
+          <rect x="8" y="156" width="28" height="28" rx="5" fill="#233b57"/>
+          <text x="22" y="175" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">LD</text>
+          <text x="22" y="203" text-anchor="middle" font-size="10" fill="#5b6b80">1550 nm</text>
+          <polygon id="tirCone" points="60,170 14,160 14,180" fill="var(--gapm)" opacity=".22"/>
+          <line id="tirLimA" x1="60" y1="170" x2="14" y2="160" stroke="var(--gapm)" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <line id="tirLimB" x1="60" y1="170" x2="14" y2="180" stroke="var(--gapm)" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text id="tirConeTxt" x="14" y="146" font-size="10.5" font-weight="700" fill="#b5711a">接收锥</text>
+          <line id="tirIn" x1="14" y1="170" x2="60" y2="170" stroke="var(--ray)" stroke-width="2.6"/>
+          <polyline id="tirFan1" fill="none" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="4 4" points="60,170 640,170"/>
+          <polyline id="tirFan2" fill="none" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="4 4" points="60,170 640,170"/>
+          <polyline id="tirRay" fill="none" stroke="var(--ray)" stroke-width="2.6" stroke-linejoin="round" points="60,170 640,170"/>
+          <polyline id="tirRay2" fill="none" stroke="var(--ray)" stroke-width="2.6" stroke-linejoin="round" opacity=".9" points="60,170 640,170"/>
+          <polyline id="tirLeak" fill="none" stroke="var(--leak)" stroke-width="2.2" stroke-dasharray="6 5" opacity="0" points="60,192 640,205"/>
+          <text id="tirLeakTxt" x="240" y="230" font-size="10.5" font-weight="700" fill="var(--leak)" opacity="0">折射漏光 →（包层模 / 辐射模）</text>
+          <text id="tirR1" x="14" y="256" font-size="11.5" fill="#33506f">端面：n₀sinθ₀ = n₁sinγ</text>
+          <text id="tirR2" x="14" y="276" font-size="11.5" fill="#33506f">界面：θ = 90°−γ 与 θ_c 比较</text>
+          <text id="tirR3" x="14" y="296" font-size="11.5" fill="#33506f">接收锥 2θ₀（NA）</text>
+          <rect x="14" y="303" width="14" height="9" fill="var(--fcore)" stroke="#c9a227"/>
+          <text x="34" y="311" font-size="10.5" fill="#5b6b80">纤芯 n₁</text>
+          <rect x="118" y="303" width="14" height="9" fill="var(--fclad)" stroke="#8fb6d4"/>
+          <text x="138" y="311" font-size="10.5" fill="#5b6b80">包层 n₂</text>
+          <rect x="222" y="303" width="14" height="9" fill="var(--fcoat)"/>
+          <text x="242" y="311" font-size="10.5" fill="#5b6b80">涂覆层（机械保护）</text>
+          <text x="686" y="311" text-anchor="end" font-size="10.5" fill="#94a3b8">示意：芯径已放大约 400 倍；单模芯 8~10 μm，多模芯 50 / 62.5 μm</text>
+        </g>
+        <!-- ============ (2) 微弯损耗型：周期齿形变形器 + 芯模→包层模 ============ -->
+        <g id="stMicro" style="display:none">
+          <text x="14" y="21" font-size="12.5" font-weight="700" fill="#0e4a8e">微弯损耗式（功能型）：周期齿形变形器</text>
+          <text id="mbWarn" x="686" y="21" text-anchor="end" font-size="12.5" font-weight="700" fill="#b5711a">芯模 → 包层模 → 辐射模</text>
+          <path id="mbCoat" fill="none" stroke="var(--fcoat)" stroke-width="56" stroke-linejoin="round" opacity=".5" d="M 30 180 L 670 180"/>
+          <path id="mbClad" fill="none" stroke="var(--fclad)" stroke-width="40" stroke-linejoin="round" d="M 30 180 L 670 180"/>
+          <path id="mbCore" fill="none" stroke="var(--fcore)" stroke-width="18" stroke-linejoin="round" d="M 30 180 L 670 180"/>
+          <g id="mbUp" transform="translate(0,0)">
+            <rect x="30" y="112" width="600" height="10" rx="3" fill="#8fa3b8"/>
+            <polyline id="mbUpTeeth" fill="#c3d0de" stroke="#7b8fa6" stroke-width="1.2" points=""/>
+          </g>
+          <g id="mbDn" transform="translate(0,0)">
+            <rect x="30" y="238" width="600" height="10" rx="3" fill="#8fa3b8"/>
+            <polyline id="mbDnTeeth" fill="#c3d0de" stroke="#7b8fa6" stroke-width="1.2" points=""/>
+          </g>
+          <text x="14" y="60" font-size="10.5" fill="#5b6b80">齿形变形器（齿距 Λ 见左栏）</text>
+          <rect x="668" y="166" width="24" height="28" rx="4" fill="#233b57"/>
+          <text x="680" y="184" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">PD</text>
+          <text x="680" y="210" text-anchor="middle" font-size="10" fill="#5b6b80">探测器</text>
+          <text id="mbTxt1" x="14" y="278" font-size="11.5" fill="#33506f">齿距 Λ / 压入位移 y / 损耗 α</text>
+          <text id="mbTxt2" x="14" y="298" font-size="11.5" fill="#33506f">透过率 P_o / P_i</text>
+        </g>
+        <!-- ============ (3) 反射式位移（传光型）：发射束 + 接收束 + 反射面 ============ -->
+        <g id="stRefl" style="display:none">
+          <text x="14" y="21" font-size="12.5" font-weight="700" fill="#0e4a8e">反射式光纤位移传感器（强度调制 · 传光型）</text>
+          <text id="rfWarn" x="686" y="21" text-anchor="end" font-size="12.5" font-weight="700" fill="var(--hot)">死区</text>
+          <text x="300" y="26" text-anchor="middle" font-size="10.5" font-weight="700" fill="#33506f">发射纤</text>
+          <text x="400" y="26" text-anchor="middle" font-size="10.5" font-weight="700" fill="#33506f">接收纤</text>
+          <rect x="270" y="30" width="160" height="56" rx="6" fill="var(--fcoat)" opacity=".5"/>
+          <rect id="rfTX" x="280" y="30" width="40" height="56" fill="var(--fcore)"/>
+          <rect id="rfRX" x="380" y="30" width="40" height="56" fill="var(--fcore)"/>
+          <line x1="270" y1="86" x2="430" y2="86" stroke="#64748b" stroke-width="1.6"/>
+          <line id="rfTXa" x1="280" y1="86" x2="280" y2="200" stroke="var(--ray)" stroke-width="1.4" stroke-dasharray="5 4"/>
+          <line id="rfTXb" x1="320" y1="86" x2="320" y2="200" stroke="var(--ray)" stroke-width="1.4" stroke-dasharray="5 4"/>
+          <line id="rfRXa" x1="380" y1="86" x2="380" y2="200" stroke="var(--ok)" stroke-width="1.4" stroke-dasharray="5 4"/>
+          <line id="rfRXb" x1="420" y1="86" x2="420" y2="200" stroke="var(--ok)" stroke-width="1.4" stroke-dasharray="5 4"/>
+          <line id="rfDim" x1="120" y1="86" x2="120" y2="200" stroke="var(--gapm)" stroke-width="1.8"/>
+          <line id="rfDimT1" x1="112" y1="86" x2="128" y2="86" stroke="var(--gapm)" stroke-width="1.8"/>
+          <line id="rfDimT2" x1="112" y1="200" x2="128" y2="200" stroke="var(--gapm)" stroke-width="1.8"/>
+          <text id="rfDimTxt" x="108" y="150" text-anchor="end" font-size="11.5" font-weight="700" fill="#b5711a">z = 0 μm</text>
+          <rect id="rfOv" x="300" y="197" width="0" height="7" rx="3" fill="var(--gapm)" opacity=".9"/>
+          <line id="rfMirror" x1="250" y1="200" x2="470" y2="200" stroke="#475569" stroke-width="2.6"/>
+          <rect id="rfObject" x="250" y="201" width="220" height="9" fill="#94a3b8"/>
+          <text id="rfObjTxt" x="486" y="208" font-size="10.5" fill="#5b6b80">被测物体（反射面）</text>
+          <text id="rfR1" x="14" y="278" font-size="11.5" fill="#33506f">光斑半径 R = a + z·tanθ_a</text>
+          <text id="rfR2" x="14" y="298" font-size="11.5" fill="#33506f">死区 → 前坡 → 峰值 → 后坡</text>
+        </g>
+        <!-- ============ (4) 马赫-曾德干涉仪：相位调制 ============ -->
+        <g id="stMzi" style="display:none">
+          <text x="14" y="21" font-size="12.5" font-weight="700" fill="#0e4a8e">马赫-曾德干涉仪：把相位差转成光强</text>
+          <text id="mzWarn" x="686" y="21" text-anchor="end" font-size="12.5" font-weight="700" fill="var(--eddy)">干涉条纹移动</text>
+          <text id="mzDphi" x="325" y="42" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--hot)">Δφ = 0.00 rad</text>
+          <rect x="16" y="150" width="34" height="30" rx="5" fill="#233b57"/>
+          <text x="33" y="170" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">LD</text>
+          <text x="33" y="198" text-anchor="middle" font-size="10" fill="#5b6b80">1550 nm</text>
+          <line x1="50" y1="165" x2="104" y2="165" stroke="var(--ray)" stroke-width="2.6"/>
+          <rect x="104" y="150" width="34" height="30" rx="9" fill="#eef4fb" stroke="#94a3b8"/>
+          <text x="121" y="198" text-anchor="middle" font-size="9.5" fill="#5b6b80">耦合器 1</text>
+          <rect x="230" y="76" width="190" height="50" rx="6" fill="#fff5f2" stroke="var(--hot)" stroke-width="1.4" stroke-dasharray="5 4"/>
+          <text x="325" y="68" text-anchor="middle" font-size="10" fill="#b5711a">传感臂（温度 ΔT / 应变 ε）</text>
+          <text id="mzTxt1" x="325" y="118" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b5711a">ΔT = 0.00 ℃</text>
+          <path id="mzArm1" d="M 138 162 L 168 162 L 196 100 L 448 100 L 476 162" fill="none" stroke="var(--ray)" stroke-width="3" stroke-linejoin="round"/>
+          <path id="mzArm2" d="M 138 168 L 168 168 L 196 220 L 448 220 L 476 168" fill="none" stroke="var(--ray)" stroke-width="3" stroke-linejoin="round" opacity=".75"/>
+          <rect x="230" y="196" width="190" height="50" rx="6" fill="#f1f7ff" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="5 4"/>
+          <text x="325" y="240" text-anchor="middle" font-size="10" fill="#5b6b80">参考臂（隔离外界 · 稳频）</text>
+          <rect x="476" y="150" width="34" height="30" rx="9" fill="#eef4fb" stroke="#94a3b8"/>
+          <text x="493" y="198" text-anchor="middle" font-size="9.5" fill="#5b6b80">耦合器 2</text>
+          <line x1="510" y1="165" x2="556" y2="165" stroke="var(--ray)" stroke-width="2.6"/>
+          <rect x="556" y="148" width="30" height="34" rx="4" fill="#eef4fb" stroke="#94a3b8"/>
+          <text x="571" y="170" text-anchor="middle" font-size="10" font-weight="700" fill="#233b57">PD</text>
+          <text x="571" y="198" text-anchor="middle" font-size="9.5" fill="#5b6b80">探测器</text>
+          <text x="640" y="52" text-anchor="middle" font-size="10" fill="#5b6b80">干涉条纹</text>
+          <rect x="596" y="60" width="88" height="140" rx="6" fill="#1b2735" stroke="#64748b"/>
+          <clipPath id="mzClip"><rect x="597" y="61" width="86" height="138"/></clipPath>
+          <g clip-path="url(#mzClip)"><g id="mzFr"></g></g>
+          <rect x="596" y="216" width="88" height="16" rx="4" fill="#eef2f7" stroke="#cbd5e1"/>
+          <rect id="mzBar" x="597" y="217" width="0" height="14" rx="3" fill="var(--eddy)"/>
+          <text id="mzITxt" x="640" y="250" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--eddy)">I/I₀ = 50.0 %</text>
+          <text id="mzTxt2" x="14" y="286" font-size="11.5" fill="#33506f">Δφ / 条纹数 / 输出光强</text>
+          <text x="14" y="308" font-size="10.5" fill="#94a3b8">探测器只感知光强、不感知相位 —— 必须用干涉仪把 Δφ 转成光强；等分束时 I/I₀ = (1+cosΔφ)/2</text>
+        </g>
+        <!-- 光线粒子（全部型式共用一层） -->
+        <g id="rayDots"></g>
+        <g id="leakDots"></g>
+      </svg>
+      <div class="hint" id="stHint">左：三层结构与全反射锯齿光路；灰色虚线为能全反射的极限方向（±γ_max）</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="readCard">
+      <div class="phead">
+        <h2>输出读数</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="big">
+        <span class="cap" id="rdCap">数值孔径 NA</span>
+        <span class="num" id="rdNum">0.212</span><span class="unit" id="rdUnit">≈ sin θ₀max</span>
+      </div>
+      <div class="kv">
+        <div class="box"><span id="kvL1">接收角 2θ₀</span><b id="kvV1">—</b></div>
+        <div class="box"><span id="kvL2">临界角 θ_c</span><b id="kvV2">—</b></div>
+        <div class="box"><span id="kvL3">芯内最大角 γ_max</span><b id="kvV3">—</b></div>
+        <div class="box"><span id="kvL4">V 参数（d = 9 μm）</span><b id="kvV4">—</b></div>
+      </div>
+      <div class="fine" id="readFine">NA = √(n₁²−n₂²)</div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colB" data-right="colC" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 右列 ================= -->
+  <div class="col" id="colC">
+    <div class="colhead">③ 公式推导 · 特性曲线 · 本章要点</div>
+
+
+    <section class="card panel" id="fmlCard">
+      <div class="phead">
+        <h2>公式推导 <small id="fmlTitle">光纤导光基础</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody"><div class="fml" id="fmlBody"></div></div>
+    </section>
+
+    <section class="card panel" id="curveCard">
+      <div class="phead">
+        <h2>特性曲线 <small>NA 截止 · 微弯损耗 · 反射式光强–位移 · 干涉输出</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="curve" viewBox="0 0 700 300" role="img" aria-label="光纤传感器特性曲线">
+        <g id="cGrid"></g>
+        <rect id="rgDead"  x="60" y="30" width="0" height="210" fill="#94a3b8" opacity="0"/>
+        <rect id="rgSlope" x="60" y="30" width="0" height="210" fill="var(--ok)" opacity="0"/>
+        <rect id="rgBack"  x="60" y="30" width="0" height="210" fill="var(--hot)" opacity="0"/>
+        <line x1="60" y1="240" x2="672" y2="240" stroke="#9fb2c8" stroke-width="1.5"/>
+        <line x1="60" y1="30" x2="60" y2="240" stroke="#9fb2c8" stroke-width="1.5"/>
+        <path id="pMicroF1" fill="none" stroke="#0d8b7f" stroke-width="2.2" opacity="0"/>
+        <path id="pMicroF2" fill="none" stroke="#0d8b7f" stroke-width="2.2" opacity="0"/>
+        <path id="pMicro" fill="none" stroke="#0d8b7f" stroke-width="3.4" opacity="0"/>
+        <path id="pTir"  fill="none" stroke="#d94a3d" stroke-width="3.4" opacity="0"/>
+        <path id="pRefl" fill="none" stroke="#d94a3d" stroke-width="3.4" opacity="0"/>
+        <path id="pMzi"  fill="none" stroke="#7c3aed" stroke-width="2.6" opacity="0"/>
+        <line id="pWork" x1="0" y1="0" x2="0" y2="0" stroke="#0e4a8e" stroke-width="2.2" stroke-dasharray="7 5" opacity="0"/>
+        <line id="mLim" x1="0" y1="30" x2="0" y2="240" stroke="var(--eddy)" stroke-width="1.6" stroke-dasharray="6 4" opacity="0"/>
+        <text id="mLimTxt" x="0" y="46" font-size="10.5" font-weight="700" fill="var(--eddy)" opacity="0">截止</text>
+        <line id="mkX" x1="0" y1="30" x2="0" y2="240" stroke="#0e4a8e" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <circle id="mkDot" r="5.5" fill="#0e4a8e" stroke="#fff" stroke-width="2"/>
+        <text id="cYLab" x="14" y="26" font-size="12.5" fill="#5b6b80">相对量</text>
+        <text id="cXLab" x="672" y="282" text-anchor="end" font-size="12.5" fill="#5b6b80">工作点 / %</text>
+      </svg>
+      <div class="legend">
+        <span id="lg1"><i style="background:#d94a3d"></i>当前型式曲线</span>
+        <span id="lg2"><i style="background:#0d8b7f"></i>对比曲线</span>
+        <span id="lg3"><i style="background:#7c3aed"></i>特征点 / 区段</span>
+        <span style="margin-left:auto" id="curveNote"></span>
+      </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+</div><!-- /#boardWrap -->
+
+<footer>
+<b>参数：</b>纤芯 n₁ = 1.500、包层 n₂ = 1.485（可调 1.440~1.499）、波长 1550 nm；单模芯 8~10 μm、多模芯 50 / 62.5 μm、包层 125 μm；微弯：满量程压入 200 μm、匹配齿距 1.5 mm（失配宽度 0.8 mm）、满量程损耗 20 dB；反射式：收发纤半径 a = 20 μm、中心距 s = 100 μm、扫描 0~500 μm；马赫-曾德：传感臂 100 mm、α_T = 5.5×10⁻⁷/℃、ξ = 8.0×10⁻⁶/℃、温度扫描 0~5 ℃（λ = 1550 nm）。<b>关系式：</b>θ_c = arcsin(n₂/n₁)，n₀sinθ₀ = n₁sinγ₀ = √(n₁²−n₂²)，NA = √(n₁²−n₂²)，α = 10lg(P_i/P_o)，微弯 α ∝ W(Λ)·y²，反射式 I/I₀ = η_ov·a²/(4z²)，马赫-曾德 Δφ = 2πnL/λ = (2πnL/λ)(α_T+ξ)ΔT。<b>网址参数：</b>?type=tir|micro|refl|mzi&amp;x=0~100（工作点 %）&amp;n=包层折射率(1.44~1.499)&amp;opt=step|grad|0.5|1.5|2.5&amp;auto=1~5&amp;speed=0.4~2.5。<b>课堂提问：</b>① 为什么 NA 只由 n₁、n₂ 决定，与光源功率无关？② 微弯损耗为什么必须“周期性 + 匹配拍长”？③ 反射式为什么要避开峰值与死区？④ 相位调制灵敏度最高，代价是什么？
+</footer>
+
+<script>
+(function(){
+  "use strict";
+/* =====================================================================
+   公共运行时（各章通用）· 由 _build/build.js 注入到主脚本的最前面
+   章节代码直接使用：$ / sfmt / frac / clamp / say / sleep / tween /
+   beginDemo / stopDemo / endDemo / bindDemos
+   约定：章节必须定义 var S = { ..., demoToken:0 }；
+        演示函数写成 async，每个 await 判断返回值，结尾 endDemo()；
+        章节 jsB 里用 DEMOS.<key> = {btn:'...', label:'...', fn:demoXxx} 注册，
+        随后调用 bindDemos() 绑定按钮点击。
+   注意：不内置任何语音朗读；演示按钮只由 bindDemos() 绑定一次。
+   ===================================================================== */
+var $ = function(id){ return document.getElementById(id); };
+function sfmt(a, d){ return (a >= 0 ? '+' : '−') + Math.abs(a).toFixed(d); }
+function frac(a, b){ return '<span class="frac"><i>' + a + '</i><b>' + b + '</b></span>'; }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+var DEMOS = {}, SPEED = 1, playingKey = null;
+function say(t){ $('narration').innerHTML = t; }
+function sleep(ms, tok){
+  return new Promise(function(res){ setTimeout(function(){ res(S.demoToken === tok); }, Math.max(60, ms/SPEED)); });
+}
+function tween(from, to, dur, set, tok){
+  dur = Math.max(160, dur/SPEED);
+  return new Promise(function(res){
+    var t0 = performance.now();
+    (function step(now){
+      if (S.demoToken !== tok) return res(false);
+      var p = (now - t0)/dur;
+      if (!isFinite(p)) p = 1;
+      p = clamp(p, 0, 1);
+      var e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
+      var v = from + (to - from)*e;
+      v = (from <= to) ? Math.min(to, Math.max(from, v)) : Math.max(to, Math.min(from, v));
+      set(v);
+      if (p < 1) requestAnimationFrame(step); else res(true);
+    })(performance.now());
+  });
+}
+function resetDemoButtons(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b){ b.textContent = DEMOS[k].label; b.classList.remove('running'); }
+  });
+}
+function stopDemo(){ S.demoToken++; playingKey = null; resetDemoButtons(); }
+function beginDemo(key){
+  stopDemo(); playingKey = key;
+  var d = DEMOS[key], b = d && $(d.btn);
+  if (b){ b.textContent = '⏸ 暂停演示'; b.classList.add('running'); }
+  return ++S.demoToken;
+}
+function endDemo(){ playingKey = null; resetDemoButtons(); }
+function bindDemos(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b) b.addEventListener('click', function(){
+      if (playingKey === k){ stopDemo(); say('演示已暂停。可继续拖动滑块手动观察，或点其它演示按钮。'); }
+      else if (DEMOS[k].fn){ DEMOS[k].fn(); }
+    });
+  });
+}
+(function(){
+  var spd = $('speed');
+  if (spd) spd.addEventListener('input', function(){
+    SPEED = parseFloat(this.value) || 1;
+    $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  });
+})();
+
+
+  /* ============ 1. 物理参数与状态 ============ */
+  var CFG = {
+    n1: 1.5,              /* 纤芯折射率 */
+    n2d: 1.485,           /* 包层折射率默认值 */
+    n2lo: 1.44, n2hi: 1.499,
+    coreSM: 9e-6,         /* 单模芯径 9 μm（8~10 μm） */
+    coreMM: 50e-6,        /* 多模芯径 50 μm（62.5 μm 同类） */
+    cladD: 125e-6,        /* 包层直径 */
+    lam: 1550e-9,         /* 波长 1550 nm（通信窗口） */
+    vCut: 2.405,          /* 单模条件 V < 2.405 */
+    yFS: 200e-6,          /* 微弯满量程压入位移 200 μm */
+    alphMax: 20,          /* 齿距匹配时满量程损耗 20 dB */
+    lamB: 1.5e-3,         /* 与模式拍长匹配的齿距 1.5 mm */
+    lamW: 0.8e-3,         /* 齿距失配宽度 */
+    aB: 20e-6,            /* 反射式：收发纤芯半径 a = 20 μm */
+    sB: 100e-6,           /* 反射式：收发纤中心距 s = 100 μm */
+    zFS: 500e-6,          /* 反射式：扫描 0~500 μm */
+    Lmz: 0.1,             /* 马赫-曾德：传感臂长 100 mm */
+    alT: 5.5e-7,          /* 石英热膨胀系数 α_T /℃ */
+    xi: 8.0e-6,           /* 热光系数 ξ = (1/n)dn/dT /℃ */
+    dTFS: 5.0,            /* 温度扫描 0~5 ℃ */
+    th0FS: 25.0           /* 端面入射角扫描 0~25° */
+  };
+  var TYPES = {
+    tir:  { name:'光纤导光基础', stroke:'25°',
+            hint:'光纤导光基础：n₁ &gt; n₂ 是前提，界面入射角 θ ≥ θ_c = arcsin(n₂/n₁) 才全反射；端面接收角由 NA = √(n₁²−n₂²) 决定（2θ₀ 锥外的光进不去）。' },
+    micro:{ name:'微弯损耗型（功能型）', stroke:'200 μm',
+            hint:'微弯损耗型（功能型）：周期齿形变形器把芯模能量耦合到包层模 → 辐射模，损耗 α = 10lg(P_i/P_o)（式9-5）；齿距必须与模式拍长匹配，否则几乎无损耗。' },
+    refl: { name:'反射式位移（传光型）', stroke:'500 μm',
+            hint:'反射式位移（传光型）：发射束 → 反射面 → 接收束，用光强变化测距离；死区 → 前坡（准线性工作段）→ 峰值 → 后坡 ∝ 1/z²，量程小、非接触、分辨力高。' },
+    mzi:  { name:'马赫-曾德（相位调制）', stroke:'5.0 ℃',
+            hint:'相位调制：探测器只能感知光强，必须用干涉仪把相位差转成光强；马赫-曾德 φ = 2πnL/λ，温度/应变使 Δφ 变化 → 干涉条纹移动，灵敏度最高。' }
+  };
+  var S = { type:'tir', x:0, n2:CFG.n2d, opt:{ tir:'step', micro:'1.5' }, demoToken:0 };
+
+  /* ============ 2. 模型（纯函数，不碰 DOM） ============ */
+  function naOf(n2){ return Math.sqrt(Math.max(0, CFG.n1*CFG.n1 - n2*n2)); }            /* 式9-4 */
+  function thetacOf(n2){ return Math.asin(clamp(n2/CFG.n1, -1, 1))*180/Math.PI; }       /* 式9-1，度 */
+  function th0maxOf(n2){ return Math.asin(clamp(naOf(n2), 0, 1))*180/Math.PI; }         /* 端面最大接收角，度 */
+  function gamOf(th0){ return Math.asin(clamp(Math.sin(th0*Math.PI/180)/CFG.n1, -1, 1))*180/Math.PI; } /* 芯内角，度 */
+  function vOf(n2, d){ return Math.PI*d/CFG.lam*naOf(n2); }                             /* 归一化频率（课堂补充） */
+  function vText(v){ return v.toFixed(2) + (v < CFG.vCut ? '（单模）' : '（多模）'); }
+  /* 微弯：耦合效率 W(Λ) 与损耗 α（课堂简化模型，趋势与教材图9-5一致） */
+  function microW(L){ var u = (L - CFG.lamB)/CFG.lamW; return Math.exp(-u*u); }
+  function microAlpha(y, L){ var r = y/CFG.yFS; return CFG.alphMax*microW(L)*r*r; }
+  function microT(y, L){ return Math.pow(10, -microAlpha(y, L)/10); }
+  /* 反射式：发射锥/接收锥在镜面上的重叠 → 收集效率（课堂简化模型）
+     R(z) = a + z·tanθ_a（θ_a = arcsin NA）；η_ov = 重叠面积/(πR²)；η_g = a²/(4z²)（往返 2z） */
+  function reflModel(n2){
+    var tanT = Math.tan(Math.asin(clamp(naOf(n2), 0, 0.99)));
+    var a = CFG.aB, s = CFG.sB, zFS = CFG.zFS, i;
+    function Rof(z){ return a + z*tanT; }
+    function etaOv(z){                                        /* 两圆盘（半径 R，中心距 s）的重叠面积比 */
+      if (z <= 0) return 0;
+      var R = Rof(z);
+      if (2*R <= s) return 0;
+      var Aov = 2*R*R*Math.acos(clamp(s/(2*R), -1, 1)) - (s/2)*Math.sqrt(Math.max(0, 4*R*R - s*s));
+      return Aov/(Math.PI*R*R);
+    }
+    function eta(z){ return z <= 0 ? 0 : etaOv(z)*(a*a/(4*z*z)); }   /* ×接收几何因子 a²/(4z²) */
+    var zp = 0, ep = 0, N = 240, z, e;
+    for (i = 0; i <= N; i++){ z = zFS*i/N; e = eta(z); if (e > ep){ ep = e; zp = z; } }
+    var zd = (s/2 - a)/tanT;                                  /* 死区终点（解析） */
+    /* 前坡内找一段“准线性工作段”：弦斜率 ≥ 0.6×平均斜率，取端基非线性最小者 */
+    var win = null, avg = ep/Math.max(1e-12, zp - zd), m, k;
+    [0.25, 0.3, 0.35, 0.4, 0.45].forEach(function(w){
+      for (m = 0; m <= 40; m++){
+        var z1 = zd + (zp - zd - 1e-9)*m/40, z2 = z1 + w*(zp - zd);
+        if (z2 > zp) continue;
+        var e1 = eta(z1), e2 = eta(z2), span = e2 - e1;
+        if (span <= 0 || span/(z2 - z1) < 0.6*avg) continue;
+        var dev = 0;
+        for (k = 0; k <= 40; k++){
+          var zz = z1 + (z2 - z1)*k/40, lin = e1 + span*(zz - z1)/(z2 - z1), d = Math.abs(eta(zz) - lin);
+          if (d > dev) dev = d;
+        }
+        var nl = dev/span*100;
+        if (!win || nl < win.nl) win = { nl:nl, z1:z1, z2:z2 };
+      }
+    });
+    return { tanT:tanT, eta:eta, etaOv:etaOv, Rof:Rof, zd:zd, zp:zp, ep:ep, win:win };
+  }
+  var REFL_CACHE = { n2:-1, m:null };
+  function reflOf(n2){
+    if (REFL_CACHE.n2 !== n2){ REFL_CACHE.n2 = n2; REFL_CACHE.m = reflModel(n2); }
+    return REFL_CACHE.m;
+  }
+  function reflNorm(m, z){ return m.ep > 0 ? m.eta(z)/m.ep : 0; }                          /* I/I₀（峰值归一） */
+  function reflSegName(m, z){
+    if (m.eta(z) <= 0) return '死区（锥不重叠）';
+    if (Math.abs(z - m.zp) <= 0.02*CFG.zFS) return '峰值附近';
+    if (z < m.zp) return '前坡（上升段）';
+    return '后坡（∝ 1/z²）';
+  }
+  /* 马赫-曾德：Δφ = (2πnL/λ)(α_T+ξ)ΔT；等分束 I/I₀ = (1+cosΔφ)/2 */
+  function mziKT(){ return 2*Math.PI*CFG.n1*CFG.Lmz/CFG.lam*(CFG.alT + CFG.xi); }
+  function mziDphi(dT){ return mziKT()*dT; }
+  function mziI(dphi){ return (1 + Math.cos(dphi))/2; }
+  /* 各型式的实际输入量（由滑块 x = 0~100 % 映射） */
+  function xPhys(){
+    var u = S.x/100;
+    if (S.type === 'tir')  return { th0: CFG.th0FS*u, gam: gamOf(CFG.th0FS*u) };
+    if (S.type === 'micro') return { y: CFG.yFS*u, L: parseFloat(S.opt.micro)*1e-3 };
+    if (S.type === 'refl') return { z: CFG.zFS*u };
+    return { dT: CFG.dTFS*u };
+  }
+  /* 滑块名称 / 读数 / 细化说明（随型式变化） */
+  function xInfo(){
+    var p = xPhys();
+    if (S.type === 'tir'){
+      return { name:'端面入射角 θ₀', out:p.th0.toFixed(1) + '°',
+               txt:'θ₀ = ' + p.th0.toFixed(1) + '°　芯内 γ = ' + p.gam.toFixed(2) + '°（0~25°）' };
+    }
+    if (S.type === 'micro'){
+      return { name:'压入位移 y', out:(p.y*1e6).toFixed(1) + ' μm',
+               txt:'y = ' + (p.y*1e6).toFixed(1) + ' μm（0~200 μm，齿距 Λ = ' + S.opt.micro + ' mm）' };
+    }
+    if (S.type === 'refl'){
+      return { name:'反射面间距 z', out:(p.z*1e6).toFixed(1) + ' μm',
+               txt:'z = ' + (p.z*1e6).toFixed(1) + ' μm（0~500 μm，非接触）' };
+    }
+    return { name:'温度变化 ΔT', out:p.dT.toFixed(2) + ' ℃',
+             txt:'ΔT = ' + p.dT.toFixed(2) + ' ℃（0~5.0 ℃，传感臂）' };
+  }
+
+  /* ============ 3. 绘制助手 ============ */
+  /* 芯内锯齿光路：从 (x0,y0) 出发，角 gamDeg（>0 向上 / <0 向下），到 x1 止 */
+  function zigPts(x0, y0, x1, h, yc, gamDeg){
+    var g = Math.abs(gamDeg)*Math.PI/180, t = Math.tan(g);
+    var up = (gamDeg >= 0), pts = [{ x:x0, y:y0 }], x = x0, y = y0, guard = 0, wall, dx, nx, uu;
+    if (t < 1e-4){ pts.push({ x:x1, y:y0 }); return pts; }
+    while (x < x1 - 0.01 && guard++ < 40){
+      wall = up ? (yc - h) : (yc + h);
+      dx = Math.abs(wall - y)/t;
+      nx = x + dx;
+      if (nx >= x1){ uu = (x1 - x)/dx; y = y + (wall - y)*uu; x = x1; pts.push({ x:x, y:y }); break; }
+      x = nx; y = wall; pts.push({ x:x, y:y }); up = !up;
+    }
+    return pts;
+  }
+  /* 折线 → 带累积长度的粒子路径段（op = 该段光点透明度） */
+  function mkSec(pts, op){
+    var cum = [0], L = 0, i, dx, dy;
+    for (i = 1; i < pts.length; i++){
+      dx = pts[i].x - pts[i-1].x; dy = pts[i].y - pts[i-1].y;
+      L += Math.sqrt(dx*dx + dy*dy); cum.push(L);
+    }
+    return { pts:pts, cum:cum, len:L, op:(op === undefined ? 1 : op) };
+  }
+  function ptOn(sec, t){
+    var L = sec.len*clamp(t, 0, 1), i, d, u;
+    for (i = 1; i < sec.pts.length; i++){
+      if (sec.cum[i] >= L || i === sec.pts.length - 1){
+        d = sec.cum[i] - sec.cum[i-1]; u = d > 0 ? (L - sec.cum[i-1])/d : 0;
+        return { x: sec.pts[i-1].x + (sec.pts[i].x - sec.pts[i-1].x)*u,
+                 y: sec.pts[i-1].y + (sec.pts[i].y - sec.pts[i-1].y)*u };
+      }
+    }
+    return sec.pts[sec.pts.length - 1];
+  }
+  function ptStr(pts){ var s = '', i; for (i = 0; i < pts.length; i++) s += pts[i].x.toFixed(1) + ',' + pts[i].y.toFixed(1) + ' '; return s; }
+  /* 正弦（渐变型）轨迹 */
+  function sinPts(x0, x1, yc, A, T){
+    var pts = [], n = 60, i, x, y;
+    for (i = 0; i <= n; i++){
+      x = x0 + (x1 - x0)*i/n;
+      y = yc - A*Math.sin(2*Math.PI*(x - x0)/T);
+      pts.push({ x:x, y:y });
+    }
+    return pts;
+  }
+
+  /* ============ 4. 光线粒子动画引擎 ============ */
+  var BANK_MAIN = { els:[], secs:[], phase:0, speed:1 };
+  var BANK_LEAK = { els:[], secs:[], phase:0, speed:1 };
+  var RAY = { banks:[BANK_MAIN, BANK_LEAK] };
+  function dotBank(gid, n, r, fill){
+    var g = $(gid), html = '', i;
+    for (i = 0; i < n; i++) html += '<circle cx="-30" cy="-30" r="' + r + '" fill="' + fill + '" opacity="0"/>';
+    if (g) g.innerHTML = html;
+    return g ? g.querySelectorAll('circle') : [];
+  }
+  function initRay(){
+    BANK_MAIN.els = dotBank('rayDots', 30, 3.1, 'var(--ray)');
+    BANK_LEAK.els = dotBank('leakDots', 16, 2.8, 'var(--leak)');
+  }
+  function advance(bank, dt){
+    var secs = bank.secs, n = bank.els.length;
+    if (!n || !secs.length) return;
+    var total = 0, i, acc, j, t, pt, done;
+    for (i = 0; i < secs.length; i++) total += secs[i].len;
+    if (total <= 0) return;
+    bank.phase = (bank.phase + dt*0.00017*bank.speed) % 1;
+    for (i = 0; i < n; i++){
+      var s = (bank.phase + i/n) % 1;
+      acc = 0; done = false;
+      for (j = 0; j < secs.length; j++){
+        if (s <= acc + secs[j].len/total || j === secs.length - 1){
+          pt = ptOn(secs[j], (s - acc)/(secs[j].len/total || 1));
+          bank.els[i].setAttribute('cx', pt.x.toFixed(1));
+          bank.els[i].setAttribute('cy', pt.y.toFixed(1));
+          bank.els[i].setAttribute('opacity', clamp(secs[j].op, 0, 1).toFixed(2));
+          done = true; break;
+        }
+        acc += secs[j].len/total;
+      }
+      if (!done) bank.els[i].setAttribute('opacity', '0');
+    }
+  }
+  function runRay(){
+    var last = performance.now();
+    (function loop(now){
+      var dt = Math.min(80, now - last); last = now;
+      var b;
+      for (b = 0; b < RAY.banks.length; b++) advance(RAY.banks[b], dt);
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+
+  /* ============ 5. 主刷新 ============ */
+  function paint(){
+    var t = S.type;
+    /* --- 按钮态 --- */
+    document.querySelectorAll('#segType button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-type') === t);
+    });
+    document.querySelectorAll('#segOpt button').forEach(function(b){
+      var m = b.getAttribute('data-mode');
+      b.style.display = (m === t) ? '' : 'none';
+      b.classList.toggle('on', m === t && b.getAttribute('data-opt') === S.opt[t]);
+    });
+    $('typeHint').innerHTML = TYPES[t].hint;
+    $('optRow').style.display = (t === 'tir' || t === 'micro') ? '' : 'none';
+    $('optName').textContent = (t === 'tir') ? '折射率分布' : (t === 'micro' ? '齿距 Λ' : '—');
+    $('n2Txt').textContent = '纤芯 n₁ = ' + CFG.n1.toFixed(3) + '（固定）';
+    $('nOut').textContent = S.n2.toFixed(4);
+    var xi = xInfo();
+    $('xName').textContent = xi.name;
+    $('xOut').textContent = xi.out;
+    $('xTxt').textContent = xi.txt;
+    /* --- 结构切换 --- */
+    $('stTir').style.display   = (t === 'tir')   ? '' : 'none';
+    $('stMicro').style.display = (t === 'micro') ? '' : 'none';
+    $('stRefl').style.display  = (t === 'refl')  ? '' : 'none';
+    $('stMzi').style.display   = (t === 'mzi')   ? '' : 'none';
+    /* --- 各型式：结构 + 读数 --- */
+    if (t === 'tir') paintTir();
+    else if (t === 'micro') paintMicro();
+    else if (t === 'refl') paintRefl();
+    else paintMzi();
+    /* --- 曲线 / 公式 --- */
+    drawCurves();
+    paintFormulas();
+    paintPoints();
+    if (window.__repack) window.__repack();
+  }
+
+  /* ---------- 5.1 光纤导光基础 ---------- */
+  function paintTir(){
+    var ph = xPhys(), th0 = ph.th0, gam = ph.gam;
+    var n2 = S.n2, NA = naOf(n2), tc = thetacOf(n2), t0m = th0maxOf(n2);
+    var gmax = 90 - tc;                                       /* 能全反射的最大芯内角 */
+    var wall = 90 - Math.abs(gam);                            /* 界面入射角 */
+    var leak = (Math.abs(gam) > gmax + 1e-9);
+    var v9 = vOf(n2, CFG.coreSM), v50 = vOf(n2, CFG.coreMM);
+    var grad = (S.opt.tir === 'grad');
+    /* 光路：阶跃型=锯齿全反射；渐变型=正弦（自聚焦）轨迹；两者都从端面起向下走 */
+    var pts, fanUp, fanDn, i;
+    var tG = Math.tan(Math.abs(gam)*Math.PI/180), tMax = Math.tan(gmax*Math.PI/180);
+    if (grad){
+      /* 渐变型：幅值 A ∝ tanγ（到极限角时正好触及芯壁），周期 T = 2πA/tanγ —— 保证起点斜率与真实芯内角一致 */
+      var A2 = clamp(22*Math.max(1e-3, tG)/Math.max(1e-6, tMax), 2, 22);
+      var Tp = 2*Math.PI*A2/Math.max(1e-3, tG);
+      pts = sinPts(60, 640, 170, A2, Tp).map(function(p2){ return { x:p2.x, y:340 - p2.y }; });
+      var Tf = 2*Math.PI*22/Math.max(1e-3, tMax), fs = sinPts(60, 640, 170, 22, Tf);
+      fanUp = fs.map(function(p2){ return { x:p2.x, y:340 - p2.y }; });
+      fanDn = fs.map(function(p2){ return { x:p2.x, y:p2.y }; });
+    } else {
+      pts = zigPts(60, 170, 640, 22, 170, gam === 0 ? 0 : -gam);
+      fanUp = zigPts(60, 170, 640, 22, 170, gmax);
+      fanDn = zigPts(60, 170, 640, 22, 170, -gmax);
+    }
+    var li = 1;
+    for (i = 1; i < pts.length; i++){
+      if (Math.abs(pts[i].y - 170) >= (grad ? 0.9*A2 : 20.5)){ li = i; break; }
+    }
+    var cut = pts.slice(0, Math.min(li + 1, pts.length));
+    var rest = pts.slice(li);
+    $('tirRay').setAttribute('points', ptStr(cut));
+    $('tirRay2').setAttribute('points', ptStr(rest));
+    $('tirRay2').setAttribute('opacity', leak ? '.28' : '.95');
+    if (leak) $('tirRay2').setAttribute('stroke-dasharray', '5 5'); else $('tirRay2').setAttribute('stroke-dasharray', '');
+    $('tirFan1').setAttribute('points', ptStr(fanUp));
+    $('tirFan2').setAttribute('points', ptStr(fanDn));
+    /* 入射光线 + 端面接收锥（2θ₀max） */
+    var dx = 46, half = dx*Math.tan(t0m*Math.PI/180);
+    var yIn = 170 - dx*Math.tan(th0*Math.PI/180), yUp = 170 - half, yDn = 170 + half;
+    $('tirIn').setAttribute('x1', (60 - dx).toFixed(1));
+    $('tirIn').setAttribute('y1', yIn.toFixed(1));
+    $('tirLimA').setAttribute('y2', yUp.toFixed(1));
+    $('tirLimB').setAttribute('y2', yDn.toFixed(1));
+    $('tirCone').setAttribute('points', '60,170 14,' + yUp.toFixed(1) + ' 14,' + yDn.toFixed(1));
+    $('tirConeTxt').textContent = '接收锥';
+    $('tirConeTxt').setAttribute('y', (yUp - 6).toFixed(1));
+    /* 漏光：第一个反射点按折射定律逸出（θ < θ_c 时折射光几乎沿界面掠射入包层） */
+    if (leak && pts.length > 1){
+      var p1 = pts[li];
+      var thR = Math.asin(clamp((CFG.n1/n2)*Math.sin(wall*Math.PI/180), -1, 1))*180/Math.PI;
+      var dirX = Math.sin(thR*Math.PI/180), dirY = Math.cos(thR*Math.PI/180)*(p1.y >= 170 ? 1 : -1);
+      var len = (640 - p1.x)/Math.max(0.05, dirX);
+      var lp = [{ x:p1.x, y:p1.y }, { x:p1.x + len*dirX, y:p1.y + len*dirY }];
+      $('tirLeak').setAttribute('points', ptStr(lp));
+      $('tirLeak').setAttribute('opacity', '.95');
+      $('tirLeakTxt').setAttribute('opacity', '1');
+      $('tirLeakTxt').setAttribute('x', clamp(p1.x + 24, 100, 430).toFixed(0));
+      $('tirLeakTxt').setAttribute('y', clamp(p1.y + (dirY > 0 ? 34 : -14), 30, 232).toFixed(0));
+      BANK_MAIN.secs = [mkSec(pts, 1)];
+      BANK_LEAK.secs = [mkSec(lp, .95)];
+    } else {
+      $('tirLeak').setAttribute('opacity', '0');
+      $('tirLeakTxt').setAttribute('opacity', '0');
+      BANK_MAIN.secs = [mkSec(pts, 1)];
+      BANK_LEAK.secs = [];
+    }
+    /* 状态与读数 */
+    $('tirWarn').textContent = leak ? '漏光！θ < θ_c → 光折射进包层' : '全反射 · 光被约束在纤芯内';
+    $('tirWarn').setAttribute('fill', leak ? 'var(--hot)' : 'var(--ok)');
+    $('tirR1').textContent = '端面折射：n₀sinθ₀ = n₁sinγ → γ = ' + Math.abs(gam).toFixed(2) + '°（芯内光线几乎掠射）';
+    $('tirR2').textContent = '界面入射角 θ = 90°−γ = ' + wall.toFixed(2) + '°　' +
+      (leak ? '<' : '≥') + '　θ_c = ' + tc.toFixed(2) + '°　→　' + (leak ? '折射漏光' : '全反射');
+    $('tirR3').textContent = '最大接收角 2θ₀ = ' + (2*t0m).toFixed(2) + '°（NA = ' + NA.toFixed(4) + '）　γ_max = ' + gmax.toFixed(2) + '°';
+    $('stSub').textContent = grad ? '渐变型（梯度）折射率分布 · 正弦轨迹自聚焦' : '纤芯 / 包层 / 涂覆三层 · 阶跃型全反射';
+    $('stHint').textContent = '灰色虚线 = 能全反射的极限方向（±γ_max = ±' + gmax.toFixed(2) + '°）；橙色 = 当前光线（' +
+      (leak ? '已超出接收角，折射漏光' : '在接收锥内，全程全反射') + '）';
+    /* 读数卡 */
+    $('rdCap').textContent = '数值孔径 NA = √(n₁²−n₂²)';
+    $('rdNum').textContent = NA.toFixed(3);
+    $('rdUnit').textContent = '≈ sin θ₀max';
+    $('kvL1').textContent = '接收角 2θ₀max';
+    $('kvV1').textContent = (2*t0m).toFixed(2) + '°';
+    $('kvL2').textContent = '临界角 θ_c = arcsin(n₂/n₁)';
+    $('kvV2').textContent = tc.toFixed(2) + '°';
+    $('kvL3').textContent = '芯内最大全反射角 γ_max';
+    $('kvV3').textContent = gmax.toFixed(2) + '°';
+    $('kvL4').textContent = 'V = πd·NA/λ（d = 9 μm / 50 μm）';
+    $('kvV4').textContent = vText(v9) + ' / ' + vText(v50);
+    $('readFine').innerHTML = 'NA = √(' + CFG.n1.toFixed(3) + '²−' + n2.toFixed(4) + '²) = <b>' + NA.toFixed(4) +
+      '</b>；Δ = (n₁−n₂)/n₁ = ' + ((CFG.n1 - n2)/CFG.n1*100).toFixed(3) + '%；θ_c = arcsin(' + n2.toFixed(4) + '/' +
+      CFG.n1.toFixed(3) + ') = ' + tc.toFixed(2) + '°。单模条件 V = πd·NA/λ &lt; ' + CFG.vCut.toFixed(3) +
+      '：n₂ = ' + n2.toFixed(4) + ' 时 9 μm 芯的 V = ' + v9.toFixed(3) + '（' + (v9 < CFG.vCut ? '单模' : '多模') +
+      '）；包层直径 ' + (CFG.cladD*1e6).toFixed(0) + ' μm，把 n₂ 调到 1.4942（Δ ≈ 0.39%）附近才进入单模 —— 这就是单模光纤 NA ≈ 0.1 的由来。';
+  }
+
+  /* ---------- 5.2 微弯损耗型 ---------- */
+  function paintMicro(){
+    var ph = xPhys(), y = ph.y, L = ph.L;
+    var alpha = microAlpha(y, L), tr = microT(y, L), W = microW(L);
+    var A = 16*(y/CFG.yFS), N = MB.N, P = MB.P, x0 = 90, i, x, yy;
+    var lossN = clamp(alpha/CFG.alphMax, 0, 1);
+    /* 光纤波状路径（三条粗细不同的描边路径共用一条 d） */
+    var d = 'M 30 180 L ' + x0 + ' 180', wave = [{ x:30, y:180 }, { x:x0, y:180 }];
+    for (i = 0; i <= N*8; i++){
+      x = x0 + i*P/8;
+      yy = 180 - A*Math.sin(2*Math.PI*(x - x0)/P);
+      d += ' L ' + x.toFixed(1) + ' ' + yy.toFixed(1);
+      wave.push({ x:x, y:yy });
+    }
+    d += ' L 610 180 L 670 180';
+    wave.push({ x:610, y:180 }); wave.push({ x:670, y:180 });
+    $('mbCoat').setAttribute('d', d);
+    $('mbClad').setAttribute('d', d);
+    $('mbCore').setAttribute('d', d);
+    /* 齿形变形器随压入位移闭合 */
+    $('mbUp').setAttribute('transform', 'translate(0,' + (-A).toFixed(1) + ')');
+    $('mbDn').setAttribute('transform', 'translate(0,' + A.toFixed(1) + ')');
+    /* 芯模光点：沿程衰减（分成 6 段梯度） */
+    var segs = [], nSeg = 6, k;
+    for (k = 0; k < nSeg; k++){
+      var i1 = Math.round(wave.length*k/nSeg), i2 = Math.round(wave.length*(k+1)/nSeg) - 1;
+      segs.push(mkSec(wave.slice(i1, i2 + 1), Math.pow(10, -alpha*((k + 0.5)/nSeg)/10)));
+    }
+    BANK_MAIN.secs = segs;
+    /* 包层模（漏光）：弯曲处向外逸出，损耗越大、逸出点越多越亮 */
+    var nleak = Math.round(lossN*N), leakPts = [];
+    for (k = 0; k < nleak; k++){
+      var xt = x0 + P/4 + k*P;
+      leakPts.push([{ x:xt, y:180 - A - 28 }, { x:xt + 13, y:180 - A - 28 - 34 }]);
+      var xv = x0 + 3*P/4 + k*P;
+      leakPts.push([{ x:xv, y:180 + A + 28 }, { x:xv + 13, y:180 + A + 28 + 30 }]);
+    }
+    var lsecs = [];
+    for (k = 0; k < leakPts.length; k++) lsecs.push(mkSec(leakPts[k], clamp(0.25 + lossN, 0.1, 1)));
+    BANK_LEAK.secs = lsecs;
+    /* 读数 */
+    var lmm = (L*1e3).toFixed(1);
+    $('mbTxt1').textContent = '齿距 Λ = ' + lmm + ' mm　压入位移 y = ' + (y*1e6).toFixed(1) + ' μm　损耗 α = ' + alpha.toFixed(2) + ' dB';
+    $('mbTxt2').textContent = '透过率 P_o/P_i = 10^(−α/10) = ' + (tr*100).toFixed(2) + '%　耦合效率 W(Λ) = ' + W.toFixed(3) +
+      (W > 0.9 ? '（匹配拍长，损耗最大）' : '（失配，几乎不耦合）');
+    $('mbWarn').textContent = W > 0.9 ? '周期匹配拍长 → 耦合最强' : '周期失配 → 几乎无损耗';
+    $('mbWarn').setAttribute('fill', W > 0.9 ? 'var(--hot)' : '#b5711a');
+    $('stSub').textContent = '周期齿形变形器 · 芯模 → 包层模 → 辐射模（功能型）';
+    $('stHint').textContent = '齿距失配（Λ = 0.5 / 2.5 mm，W = ' + microW(0.5e-3).toFixed(3) + '）时，同一压入位移下的损耗只有匹配齿距（1.5 mm）的 ' +
+      (microW(0.5e-3)*100).toFixed(0) + '%（见曲线卡中三条 Λ 曲线）—— 微弯损耗必须“周期性 + 匹配拍长”。';
+    $('rdCap').textContent = '微弯损耗 α = 10lg(P_i/P_o)';
+    $('rdNum').textContent = alpha.toFixed(2);
+    $('rdUnit').textContent = 'dB';
+    $('kvL1').textContent = '压入位移 y';
+    $('kvV1').textContent = (y*1e6).toFixed(1) + ' μm';
+    $('kvL2').textContent = '齿距 Λ（匹配 1.5 mm）';
+    $('kvV2').textContent = lmm + ' mm（W = ' + W.toFixed(3) + '）';
+    $('kvL3').textContent = '透过率 P_o/P_i';
+    $('kvV3').textContent = (tr*100).toFixed(2) + ' %';
+    $('kvL4').textContent = '灵敏度 dα/dy（满量程处）';
+    $('kvV4').textContent = (2*CFG.alphMax*W/CFG.yFS*1e-6).toFixed(3) + ' dB/μm';
+    $('readFine').innerHTML = 'α = 10lg(P_i/P_o)（式9-5）→ P_o/P_i = 10<sup>−α/10</sup> = <b>' + (tr*100).toFixed(2) +
+      '%</b>；课堂简化模型 α = W(Λ)·' + CFG.alphMax + ' dB·(y/' + (CFG.yFS*1e6).toFixed(0) + ' μm)²，W(Λ) = exp{−[(Λ−1.5 mm)/0.8 mm]²} = ' +
+      W.toFixed(3) + '。周期性变形使芯模耦合到包层模、最终成为辐射模；周期匹配拍长时耦合最强（教材图9-5）。';
+  }
+
+  /* ---------- 5.3 反射式位移 ---------- */
+  function paintRefl(){
+    var ph = xPhys(), z = ph.z, m = reflOf(S.n2), R = m.Rof(z), Rpx = R*1e6;
+    var I = reflNorm(m, z);
+    var ym = 86 + z/CFG.zFS*150;                              /* 反射面 y（纵向比例已压缩） */
+    var ov = 2*Rpx - CFG.sB*1e6;
+    $('rfTXa').setAttribute('x2', (300 - Rpx).toFixed(1)); $('rfTXa').setAttribute('y2', ym.toFixed(1));
+    $('rfTXb').setAttribute('x2', (300 + Rpx).toFixed(1)); $('rfTXb').setAttribute('y2', ym.toFixed(1));
+    $('rfRXa').setAttribute('x2', (400 - Rpx).toFixed(1)); $('rfRXa').setAttribute('y2', ym.toFixed(1));
+    $('rfRXb').setAttribute('x2', (400 + Rpx).toFixed(1)); $('rfRXb').setAttribute('y2', ym.toFixed(1));
+    $('rfOv').setAttribute('x', (400 - Rpx).toFixed(1));
+    $('rfOv').setAttribute('y', (ym - 3.5).toFixed(1));
+    $('rfOv').setAttribute('width', Math.max(0, ov).toFixed(1));
+    $('rfOv').setAttribute('opacity', ov > 0.5 ? '.9' : '0');
+    $('rfMirror').setAttribute('x1', (300 - Rpx - 40).toFixed(1)); $('rfMirror').setAttribute('x2', (400 + Rpx + 40).toFixed(1));
+    $('rfMirror').setAttribute('y1', ym.toFixed(1)); $('rfMirror').setAttribute('y2', ym.toFixed(1));
+    $('rfObject').setAttribute('x', (300 - Rpx - 40).toFixed(1)); $('rfObject').setAttribute('width', (2*Rpx + 180).toFixed(1));
+    $('rfObject').setAttribute('y', (ym + 1).toFixed(1));
+    $('rfObjTxt').setAttribute('x', (400 + Rpx + 56).toFixed(1)); $('rfObjTxt').setAttribute('y', (ym + 8).toFixed(1));
+    $('rfDim').setAttribute('y2', ym.toFixed(1));
+    $('rfDimT2').setAttribute('y1', ym.toFixed(1)); $('rfDimT2').setAttribute('y2', ym.toFixed(1));
+    $('rfDimTxt').setAttribute('y', (86 + (ym - 86)/2 + 4).toFixed(1));
+    $('rfDimTxt').textContent = 'z = ' + (z*1e6).toFixed(1) + ' μm';
+    /* 光点：发射 → 镜面 → 接收（死区内不返回） */
+    var mid = 350;
+    BANK_MAIN.secs = [
+      mkSec([{ x:300, y:86 }, { x:mid, y:ym }], .95),
+      mkSec([{ x:mid, y:ym }, { x:400, y:86 }], I > 0.005 ? clamp(.35 + .65*I, .1, 1) : 0)
+    ];
+    BANK_LEAK.secs = [];
+    var seg = reflSegName(m, z);
+    $('rfWarn').textContent = seg;
+    $('rfWarn').setAttribute('fill', (z < m.zd) ? 'var(--hot)' : (z < m.zp ? 'var(--ok)' : '#b5711a'));
+    $('rfR1').textContent = '光斑半径 R = a + z·tanθ_a = ' + (m.Rof(0)*1e6).toFixed(0) + ' + ' +
+      (z*1e6).toFixed(0) + '×' + m.tanT.toFixed(3) + ' = ' + Rpx.toFixed(1) + ' μm；重叠宽度 = ' + Math.max(0, ov).toFixed(0) + ' μm';
+    $('rfR2').textContent = '区段：' + seg + '　死区 0~' + (m.zd*1e6).toFixed(0) + ' μm　峰值 z_p ≈ ' + (m.zp*1e6).toFixed(0) +
+      ' μm' + (m.zp > 0.97*CFG.zFS ? '（已超出图示范围）' : '') + '　（纵向比例已压缩）';
+    $('stSub').textContent = '发射束 + 接收束 + 反射面：光斑与接收锥的重叠决定光强';
+    $('stHint').textContent = '橙色虚线 = 发射锥，绿色虚线 = 接收锥；两锥在镜面上的重叠（橙带）才是被接收的光。' +
+      (z < m.zd ? '当前 z 太小：两锥不重叠 → 死区。' : '公共光路半径中点固定，靠重叠面积随 z 变化调制光强。');
+    $('rdCap').textContent = '相对光强 I/I₀（峰值归一）';
+    $('rdNum').textContent = (I*100).toFixed(1);
+    $('rdUnit').textContent = '%';
+    $('kvL1').textContent = '反射面间距 z';
+    $('kvV1').textContent = (z*1e6).toFixed(1) + ' μm';
+    $('kvL2').textContent = '区段';
+    $('kvV2').textContent = seg;
+    $('kvL3').textContent = '重叠因子 η_ov = A_交/(πR²)';
+    $('kvV3').textContent = m.etaOv(z).toFixed(3);
+    $('kvL4').textContent = '峰值位置 z_p（' + (m.win ? '工作段 ' + (m.win.z1*1e6).toFixed(0) + '~' + (m.win.z2*1e6).toFixed(0) + ' μm' : '前坡') + '）';
+    $('kvV4').textContent = (m.zp*1e6).toFixed(1) + ' μm' + (m.zp > 0.97*CFG.zFS ? '（超出图示）' : '');
+    $('readFine').innerHTML = '死区 0~' + (m.zd*1e6).toFixed(1) + ' μm（发射锥与接收锥在镜面上不重叠 → 收不到光）；峰值 z_p = <b>' +
+      (m.zp*1e6).toFixed(1) + ' μm</b>（I/I₀ = 100%）；后坡按 η ≈ η_ov·a²/(4z²) ∝ 1/z² 下降（z = 500 μm 时 I/I₀ = ' +
+      (reflNorm(m, CFG.zFS)*100).toFixed(1) + '%）。前坡存在准线性工作段' +
+      (m.win ? '（' + (m.win.z1*1e6).toFixed(0) + '~' + (m.win.z2*1e6).toFixed(0) + ' μm，端基非线性 ≈ ' + m.win.nl.toFixed(1) + '%）' : '') +
+      '，量程小（&lt; 100 μm）、非接触、分辨力高。';
+  }
+
+  /* ---------- 5.4 马赫-曾德（相位调制） ---------- */
+  function paintMzi(){
+    var ph = xPhys(), dT = ph.dT;
+    var kT = mziKT(), dphi = mziDphi(dT), N = dphi/(2*Math.PI), I = mziI(dphi);
+    var shift = ((N % 1) + 1) % 1*14;                          /* 条纹平移像素（周期 14 px） */
+    $('mzFr').setAttribute('transform', 'translate(' + (-shift).toFixed(2) + ',0)');
+    $('mzBar').setAttribute('width', (I*86).toFixed(1));
+    $('mzDphi').textContent = 'Δφ = ' + dphi.toFixed(2) + ' rad = ' + N.toFixed(3) + ' 条纹';
+    $('mzTxt1').textContent = 'ΔT = ' + dT.toFixed(2) + ' ℃';
+    $('mzITxt').textContent = 'I/I₀ = ' + (I*100).toFixed(1) + ' %';
+    $('mzTxt2').textContent = 'Δφ = (2πnL/λ)(α_T+ξ)ΔT = ' + kT.toFixed(3) + ' rad/℃ × ' + dT.toFixed(2) +
+      ' ℃ = ' + dphi.toFixed(2) + ' rad　条纹数 N = ' + N.toFixed(3) + '　I/I₀ = (1+cosΔφ)/2 = ' + (I*100).toFixed(1) + '%';
+    $('mzWarn').textContent = '干涉条纹移动 ' + N.toFixed(2) + ' 条';
+    BANK_MAIN.secs = [
+      mkSec([{ x:50, y:165 }, { x:104, y:165 }], .9),
+      mkSec([{ x:138, y:162 }, { x:168, y:162 }, { x:196, y:100 }, { x:448, y:100 }, { x:476, y:162 }], .95),
+      mkSec([{ x:138, y:168 }, { x:168, y:168 }, { x:196, y:220 }, { x:448, y:220 }, { x:476, y:168 }], .8),
+      mkSec([{ x:510, y:165 }, { x:556, y:165 }], .9)
+    ];
+    BANK_LEAK.secs = [];
+    $('stSub').textContent = '马赫-曾德干涉仪：两臂相位差 → 干涉条纹 → 输出光强';
+    $('stHint').textContent = '温度（或应变）只改变传感臂的 nL，相位差 Δφ 使干涉条纹平移；探测器把条纹移动计成光强变化 —— ' +
+      '相位调制灵敏度最高（1 ℃ 就有 ' + (kT/(2*Math.PI)).toFixed(3) + ' 条条纹）。';
+    $('rdCap').textContent = '干涉相位差 Δφ = (2πnL/λ)(α_T+ξ)ΔT';
+    $('rdNum').textContent = dphi.toFixed(2);
+    $('rdUnit').textContent = 'rad';
+    $('kvL1').textContent = '传感臂温度变化 ΔT';
+    $('kvV1').textContent = dT.toFixed(2) + ' ℃';
+    $('kvL2').textContent = '条纹移动数 N = Δφ/2π';
+    $('kvV2').textContent = N.toFixed(3);
+    $('kvL3').textContent = '输出光强 I/I₀ = (1+cosΔφ)/2';
+    $('kvV3').textContent = (I*100).toFixed(1) + ' %';
+    $('kvL4').textContent = '相位灵敏度 Δφ/ΔT';
+    $('kvV4').textContent = kT.toFixed(3) + ' rad/℃';
+    $('readFine').innerHTML = 'φ = 2πnL/λ = 2π×' + CFG.n1.toFixed(2) + '×' + (CFG.Lmz*1000).toFixed(0) + ' mm/1550 nm = ' +
+      (2*Math.PI*CFG.n1*CFG.Lmz/CFG.lam).toFixed(0) + ' rad；Δφ = φ·(α_T+ξ)ΔT = ' + (2*Math.PI*CFG.n1*CFG.Lmz/CFG.lam).toFixed(0) +
+      '×' + ((CFG.alT + CFG.xi)).toExponential(2) + '×' + dT.toFixed(2) + ' = <b>' + dphi.toFixed(2) + ' rad</b>（' + N.toFixed(3) +
+      ' 条纹，α_T = ' + CFG.alT.toExponential(1) + '/℃ 热膨胀、ξ = ' + CFG.xi.toExponential(1) +
+      '/℃ 热光）。第一级干涉（Δφ = 2π）只需 ΔT = ' + (2*Math.PI/kT).toFixed(3) + ' ℃；应变 1 με ≈ ' +
+      (2*Math.PI*CFG.n1*CFG.Lmz/CFG.lam*1e-6).toFixed(3) + ' rad。';
+  }
+
+  /* ============ 6. 特性曲线 ============ */
+  var CH = { x0:60, x1:672, y0:240, y1:30, ymax:1, gridKey:'' };
+  function cpx(u){ return CH.x0 + u*(CH.x1 - CH.x0); }
+  function cpy(v){ return CH.y0 - (clamp(v, 0, CH.ymax)/CH.ymax)*(CH.y0 - CH.y1); }
+  function pathOf(fn, n){
+    var d = '', i, u;
+    n = n || 120;
+    for (i = 0; i <= n; i++){
+      u = i/n;
+      d += (i ? 'L' : 'M') + cpx(u).toFixed(1) + ' ' + cpy(fn(u)).toFixed(1) + ' ';
+    }
+    return d;
+  }
+  function setPath(id, on){ $(id).setAttribute('opacity', on ? 1 : 0); }
+  function drawCurves(){
+    var t = S.type, m = reflOf(S.n2);
+    CH.ymax = (t === 'micro') ? 24 : 1;
+    if (CH.gridKey !== t){
+      CH.gridKey = t;
+      var g = '', i, n = (t === 'micro' ? 6 : 4), v;
+      for (i = 0; i <= n; i++){
+        v = CH.ymax*i/n;
+        g += '<line x1="' + CH.x0 + '" y1="' + cpy(v).toFixed(1) + '" x2="' + CH.x1 + '" y2="' + cpy(v).toFixed(1) + '" stroke="#e6edf6"/>';
+        g += '<text x="52" y="' + (cpy(v) + 4).toFixed(1) + '" text-anchor="end" font-size="12" fill="#5b6b80">' + v.toFixed(t === 'micro' ? 0 : 1) + '</text>';
+      }
+      for (i = 0; i <= 5; i++){
+        g += '<line x1="' + cpx(i/5).toFixed(1) + '" y1="' + CH.y1 + '" x2="' + cpx(i/5).toFixed(1) + '" y2="' + CH.y0 + '" stroke="#e6edf6"/>';
+        g += '<text x="' + cpx(i/5).toFixed(1) + '" y="' + (CH.y0 + 16) + '" text-anchor="middle" font-size="12" fill="#5b6b80">' + (i*20) + '</text>';
+      }
+      $('cGrid').innerHTML = g;
+    }
+    /* 各曲线 */
+    var t0m = th0maxOf(S.n2), NA = naOf(S.n2);
+    $('pTir').setAttribute('d', pathOf(function(u){
+      var th = CFG.th0FS*u;
+      return th <= t0m ? 1 : clamp(1 - Math.pow((th - t0m)/3.2, 2), 0, 1);
+    }));
+    var fam = [['pMicroF1', 0.5], ['pMicro', 1.5], ['pMicroF2', 2.5]];
+    fam.forEach(function(f){
+      $(f[0]).setAttribute('d', pathOf(function(u){ return microAlpha(CFG.yFS*u, f[1]*1e-3); }));
+      var on = (parseFloat(S.opt.micro) === f[1]);
+      $(f[0]).setAttribute('opacity', (t === 'micro') ? (on ? 1 : 0.38) : 0);
+      $(f[0]).setAttribute('stroke-width', on ? 3.4 : 2.2);
+    });
+    $('pRefl').setAttribute('d', pathOf(function(u){ return reflNorm(m, CFG.zFS*u); }));
+    $('pMzi').setAttribute('d', pathOf(function(u){ return mziI(mziDphi(CFG.dTFS*u)); }, 240));
+    setPath('pTir', t === 'tir');
+    setPath('pRefl', t === 'refl');
+    setPath('pMzi', t === 'mzi');
+    /* 反射式区段底色 */
+    var isR = (t === 'refl');
+    function band(id, u1, u2, fill){
+      $(id).setAttribute('x', cpx(u1).toFixed(1));
+      $(id).setAttribute('width', Math.max(0, cpx(u2) - cpx(u1)).toFixed(1));
+      $(id).setAttribute('opacity', (isR && u2 > u1) ? fill : 0);
+    }
+    band('rgDead', 0, m.zd/CFG.zFS, .10);
+    band('rgSlope', m.zd/CFG.zFS, m.zp/CFG.zFS, .12);
+    band('rgBack', m.zp/CFG.zFS, 1, .10);
+    /* 工作段端基线 */
+    if (isR && m.win){
+      var z1 = m.win.z1, z2 = m.win.z2;
+      $('pWork').setAttribute('x1', cpx(z1/CFG.zFS).toFixed(1)); $('pWork').setAttribute('y1', cpy(reflNorm(m, z1)).toFixed(1));
+      $('pWork').setAttribute('x2', cpx(z2/CFG.zFS).toFixed(1)); $('pWork').setAttribute('y2', cpy(reflNorm(m, z2)).toFixed(1));
+      $('pWork').setAttribute('opacity', 1);
+    } else $('pWork').setAttribute('opacity', 0);
+    /* 特征线 + 游标 */
+    var limU = -1, limTxt = '';
+    if (t === 'tir'){ limU = t0m/CFG.th0FS; limTxt = 'NA 截止 ' + t0m.toFixed(2) + '°'; }
+    else if (t === 'refl'){ limU = m.zp/CFG.zFS; limTxt = '峰值 ' + (m.zp*1e6).toFixed(0) + ' μm'; }
+    else if (t === 'mzi'){ limU = (2*Math.PI/mziKT())/CFG.dTFS; limTxt = '第一级干涉 ' + (2*Math.PI/mziKT()).toFixed(2) + ' ℃'; }
+    if (limU >= 0 && limU <= 1){
+      $('mLim').setAttribute('x1', cpx(limU).toFixed(1)); $('mLim').setAttribute('x2', cpx(limU).toFixed(1));
+      $('mLim').setAttribute('opacity', 1);
+      $('mLimTxt').setAttribute('x', (cpx(limU) + 5).toFixed(1));
+      $('mLimTxt').setAttribute('y', (CH.y1 + 16));
+      $('mLimTxt').textContent = limTxt;
+      $('mLimTxt').setAttribute('opacity', 1);
+    } else { $('mLim').setAttribute('opacity', 0); $('mLimTxt').setAttribute('opacity', 0); }
+    var u = S.x/100, cur;
+    if (t === 'tir') cur = (CFG.th0FS*u <= t0m) ? 1 : clamp(1 - Math.pow((CFG.th0FS*u - t0m)/3.2, 2), 0, 1);
+    else if (t === 'micro') cur = microAlpha(CFG.yFS*u, parseFloat(S.opt.micro)*1e-3);
+    else if (t === 'refl') cur = reflNorm(m, CFG.zFS*u);
+    else cur = mziI(mziDphi(CFG.dTFS*u));
+    $('mkX').setAttribute('x1', cpx(u).toFixed(1)); $('mkX').setAttribute('x2', cpx(u).toFixed(1));
+    $('mkDot').setAttribute('cx', cpx(u).toFixed(1)); $('mkDot').setAttribute('cy', cpy(cur).toFixed(1));
+    /* 轴标题 / 图例 / 说明 */
+    if (t === 'tir'){
+      $('cYLab').textContent = '导光效率 η';
+      $('cXLab').textContent = '端面入射角 θ₀ / °（0~25°，横轴刻度 = % 满量程）';
+      $('lg1').innerHTML = '<i style="background:#d94a3d"></i>导光效率 η(θ₀)：2θ₀ 锥内全反射，η = 1';
+      $('lg2').innerHTML = '<i style="background:#c8d6e6"></i>θ₀ &gt; θ₀max：折射漏光，η 迅速降到 0';
+      $('lg3').innerHTML = '<i style="background:#7c3aed"></i>NA 截止角 θ₀max';
+      $('curveNote').textContent = 'NA = ' + NA.toFixed(4) + '，θ₀max = ' + t0m.toFixed(2) + '°（2θ₀ = ' + (2*t0m).toFixed(2) + '°）';
+    } else if (t === 'micro'){
+      $('cYLab').textContent = '微弯损耗 α / dB';
+      $('cXLab').textContent = '压入位移 y / %（0~200 μm）';
+      $('lg1').innerHTML = '<i style="background:#0d8b7f"></i>α(y) = W(Λ)·20 dB·(y/200 μm)²';
+      $('lg2').innerHTML = '<i style="background:#0d8b7f;opacity:.4"></i>Λ = 0.5 / 2.5 mm（失配）';
+      $('lg3').innerHTML = '<i style="background:#7c3aed"></i>α = 10lg(P_i/P_o)（式9-5）';
+      var Lc = parseFloat(S.opt.micro);
+      $('curveNote').textContent = '当前 Λ = ' + Lc.toFixed(1) + ' mm（W = ' + microW(Lc*1e-3).toFixed(3) + '），满量程 α = ' +
+        microAlpha(CFG.yFS, Lc*1e-3).toFixed(2) + ' dB';
+    } else if (t === 'refl'){
+      $('cYLab').textContent = '相对光强 I/I₀';
+      $('cXLab').textContent = '反射面间距 z / %（0~500 μm）';
+      $('lg1').innerHTML = '<i style="background:#d94a3d"></i>I/I₀(z)（峰值归一）';
+      $('lg2').innerHTML = '<i style="background:#0e4a8e"></i>工作段端基线 + 区段底色';
+      $('lg3').innerHTML = '<i style="background:#7c3aed"></i>峰值位置 z_p';
+      $('curveNote').textContent = '死区 0~' + (m.zd*1e6).toFixed(0) + ' μm → 前坡 → 峰值 ' + (m.zp*1e6).toFixed(0) +
+        ' μm → 后坡 ∝ 1/z²';
+    } else {
+      $('cYLab').textContent = '输出光强 I/I₀';
+      $('cXLab').textContent = '传感臂温度变化 ΔT / %（0~5.0 ℃）';
+      $('lg1').innerHTML = '<i style="background:#7c3aed"></i>I/I₀ = (1+cosΔφ)/2 干涉条纹';
+      $('lg2').innerHTML = '<i style="background:#0d8b7f"></i>Δφ = (2πnL/λ)(α_T+ξ)ΔT';
+      $('lg3').innerHTML = '<i style="background:#7c3aed"></i>第一级干涉 ΔT = ' + (2*Math.PI/mziKT()).toFixed(2) + ' ℃';
+      $('curveNote').textContent = '灵敏度 ' + mziKT().toFixed(3) + ' rad/℃ = ' + (mziKT()/(2*Math.PI)).toFixed(3) + ' 条纹/℃（L = 100 mm）';
+    }
+  }
+
+  /* ============ 7. 公式推导 ============ */
+  function paintFormulas(){
+    var t = S.type, h = '', ph = xPhys();
+    if (t === 'tir'){
+      var NA = naOf(S.n2), tc = thetacOf(S.n2), t0m = th0maxOf(S.n2), gmax = 90 - tc, gam = Math.abs(ph.gam);
+      h += '<div class="row"><span class="tag">式 9-1</span><span>全反射条件：θ ≥ θ_c = arcsin(n₂/n₁) = arcsin(' +
+        S.n2.toFixed(4) + '/' + CFG.n1.toFixed(3) + ') = <b>' + tc.toFixed(2) + '°</b>（前提 n₁ &gt; n₂；n₂ ≥ n₁ 时无解）</span></div>';
+      h += '<div class="row"><span class="tag">式 9-2</span><span>端面折射：n₀sinθ₀ = n₁sinγ₀ → γ = arcsin(sin' + ph.th0.toFixed(1) +
+        '°/' + CFG.n1.toFixed(2) + ') = <b>' + gam.toFixed(2) + '°</b>（芯内光线几乎沿轴掠射，γ ≤ γ_max = ' + gmax.toFixed(2) + '°）</span></div>';
+      h += '<div class="row"><span class="tag">式 9-3</span><span>n₁sinγ₀ = √(n₁²−n₂²)：界面入射角 θ = 90°−γ = ' + (90 - gam).toFixed(2) +
+        '° ' + (gam <= gmax ? '≥' : '&lt;') + ' θ_c → <b>' + (gam <= gmax ? '全反射，光被约束在纤芯内' : '折射漏光（包层模 / 辐射模）') + '</b></span></div>';
+      h += '<div class="row"><span class="tag">式 9-4</span><span>数值孔径 NA = n₀sinθ₀max = √(n₁²−n₂²) = √(' + (CFG.n1*CFG.n1).toFixed(3) + '−' +
+        (S.n2*S.n2).toFixed(4) + ') = <b>' + NA.toFixed(4) + '</b> → 只接收 2θ₀ = ' + (2*t0m).toFixed(2) + '° 锥内的光</span></div>';
+      h += '<div class="row"><span class="tag f">补充</span><span>归一化频率 V = ' + frac('πd', 'λ') + '·NA = ' +
+        frac('π×' + (CFG.coreSM*1e6).toFixed(0) + ' μm', '1550 nm') + '×' + NA.toFixed(4) + ' = <b>' + vOf(S.n2, CFG.coreSM).toFixed(2) +
+        '</b>（d = 9 μm）；V &lt; ' + CFG.vCut + ' 才是单模 —— 多模芯 50 μm 时 V = ' + vOf(S.n2, CFG.coreMM).toFixed(1) + '（模式数 ∝ V²/2）</span></div>';
+      h += '<div class="row"><span class="tag f">对照</span><span>损耗 α = 10lg(P_i/P_o)（式9-5）；NA 大 → 集光强、易耦合，但模式多、畸变重；单模 NA ≈ 0.1、芯 8~10 μm</span></div>';
+      h += '<div class="note">阶跃型：芯内 n₁ 均匀、界面突变，光线走锯齿；渐变型（梯度）：n 沿半径渐降，光线走近似正弦轨迹、模式色散小。</div>';
+    } else if (t === 'micro'){
+      var Lm = parseFloat(S.opt.micro)*1e-3, W = microW(Lm), y = ph.y, al = microAlpha(y, Lm), tr = microT(y, Lm);
+      h += '<div class="row"><span class="tag">式 9-5</span><span>损耗定义：α = 10lg' + frac('P_i', 'P_o') + ' = <b>' + al.toFixed(2) +
+        ' dB</b>　→　透过率 P_o/P_i = 10^(−α/10) = ' + (tr*100).toFixed(2) + '%</span></div>';
+      h += '<div class="row"><span class="tag g">微弯</span><span>机理：周期齿形变形器使芯内模式与包层模耦合 → 辐射模耗散（功能型：光纤既是敏感元件又是传光元件）</span></div>';
+      h += '<div class="row"><span class="tag f">简化模型</span><span>α = W(Λ)·' + CFG.alphMax + ' dB·(y/' + (CFG.yFS*1e6).toFixed(0) +
+        ' μm)²，W(Λ) = exp{−[(Λ−1.5 mm)/0.8 mm]²}：Λ = ' + (Lm*1e3).toFixed(1) + ' mm → W = <b>' + W.toFixed(3) +
+        '</b>；y = ' + (y*1e6).toFixed(1) + ' μm → α = ' + al.toFixed(2) + ' dB</span></div>';
+      h += '<div class="row"><span class="tag g">结论</span><span>齿距必须与模式拍长匹配（这里 1.5 mm）；失配齿距（Λ = 0.5 / 2.5 mm）的耦合效率只有匹配时的 ' +
+        (microW(0.5e-3)*100).toFixed(0) + '%（曲线卡中三条 Λ 曲线）</span></div>';
+      h += '<div class="row"><span class="tag v">灵敏度</span><span>dα/dy = 2W·' + CFG.alphMax + '/(y_FS) = ' + (2*CFG.alphMax*W/CFG.yFS*1e-6).toFixed(3) +
+        ' dB/μm（满量程处最大）；k = ΔP/(P·Δy) 随工作点变化，属非线性（平方律）</span></div>';
+      h += '<div class="note">强度调制最简、最常用，但受光源老化、连接与弯曲损耗影响 → 须用双光路（参考通道）补偿（教材图9-6）。</div>';
+    } else if (t === 'refl'){
+      var m = reflOf(S.n2), z = ph.z, NA = naOf(S.n2), ta = Math.tan(Math.asin(clamp(NA, 0, 0.99)));
+      h += '<div class="row"><span class="tag">式 9-5</span><span>光强调制：I/I₀ = η(z)/η(z_p)，η = η_ov·η_g（课堂简化模型，教材图9-23 为定性描述）</span></div>';
+      h += '<div class="row"><span class="tag g">发射锥</span><span>镜面光斑半径 R(z) = a + z·tanθ_a = ' + (CFG.aB*1e6).toFixed(0) + ' μm + z×' +
+        ta.toFixed(3) + '，θ_a = arcsin NA = ' + (Math.asin(clamp(NA, 0, 1))*180/Math.PI).toFixed(2) + '°；当前 z = ' + (z*1e6).toFixed(1) +
+        ' μm → R = ' + (m.Rof(z)*1e6).toFixed(1) + ' μm</span></div>';
+      h += '<div class="row"><span class="tag g">重叠因子</span><span>η_ov = ' + frac('A_交', 'πR²') + '（收发纤中心距 s = ' + (CFG.sB*1e6).toFixed(0) +
+        ' μm；两圆盘不交叠时 η_ov = 0 → 死区）　<b>死区终点 z_d = (s/2−a)/tanθ_a = ' + (m.zd*1e6).toFixed(1) + ' μm</b></span></div>';
+      h += '<div class="row"><span class="tag g">几何收集</span><span>η_g = ' + frac('a²', '4z²') + '（往返 2z，接收半径 a）→ 后坡 ∝ 1/z²；峰值 z_p = <b>' +
+        (m.zp*1e6).toFixed(1) + ' μm</b>（η_ov 上升与 η_g 下降的折中）</span></div>';
+      h += '<div class="row"><span class="tag v">工作段</span><span>前坡内准线性段' +
+        (m.win ? '（' + (m.win.z1*1e6).toFixed(0) + '~' + (m.win.z2*1e6).toFixed(0) + ' μm，端基非线性 ≈ ' + m.win.nl.toFixed(1) +
+        '%、输出 ' + (reflNorm(m, m.win.z1)*100).toFixed(0) + '%~' + (reflNorm(m, m.win.z2)*100).toFixed(0) + '% 峰值）' : '') +
+        '；教材口径“中间段近似线性、两端饱和”，量程 &lt; 100 μm</span></div>';
+      h += '<div class="note">传光型（非功能型）：光纤只负责传光，敏感靠反射面与光强——用普通通信光纤即可，成本低、最常见。</div>';
+    } else {
+      var kT = mziKT(), dT = ph.dT, dphi = mziDphi(dT), N = dphi/(2*Math.PI), I = mziI(dphi);
+      h += '<div class="row"><span class="tag">式 9-7</span><span>马赫-曾德：φ = 2πnL/λ，Δφ = KΔL = 2πΔL/λ（双臂等长时只看变化量）</span></div>';
+      h += '<div class="row"><span class="tag g">温度</span><span>Δφ = ' + frac('2πnL', 'λ') + '(α_T+ξ)ΔT = ' + (2*Math.PI*CFG.n1*CFG.Lmz/CFG.lam).toFixed(0) +
+        '×(' + CFG.alT.toExponential(1) + '+' + CFG.xi.toExponential(1) + ')×' + dT.toFixed(2) + ' = <b>' + dphi.toFixed(2) +
+        ' rad</b>　（α_T 热膨胀、ξ = (1/n)dn/dT 热光，L = ' + (CFG.Lmz*1000).toFixed(0) + ' mm）</span></div>';
+      h += '<div class="row"><span class="tag g">灵敏度</span><span>Δφ/ΔT = ' + kT.toFixed(3) + ' rad/℃ = ' + (kT/(2*Math.PI)).toFixed(3) +
+        ' 条纹/℃；第一级干涉（Δφ = 2π）只需 ΔT = ' + (2*Math.PI/kT).toFixed(3) + ' ℃　—— 1 ℃ 就有近一条条纹</span></div>';
+      h += '<div class="row"><span class="tag g">输出</span><span>I = I₁+I₂+2√(I₁I₂)cosΔφ → 等分束 I/I₀ = ' + frac('1+cosΔφ', '2') + ' = <b>' +
+        (I*100).toFixed(1) + '%</b>（条纹数 N = Δφ/2π = ' + N.toFixed(3) + '）—— 探测器只测光强，须靠干涉仪把相位转成光强</span></div>';
+      h += '<div class="row"><span class="tag f">对照</span><span>式9-6 迈克尔逊 Δφ = 2KΔL = 4πΔL/λ（反射往返，系数×2）；式9-10 法-泊 Δφ = 4πnLcosθ/λ；' +
+        '式9-9 塞格纳克（陀螺）Δφ = 8πANΩ/(λc)</span></div>';
+      h += '<div class="note">相位调制灵敏度最高（教材：已知最灵敏的探测技术之一），但需单模高双折射光纤、稳频光源与相位解调（PGC/零差）；频率、偏振调制与光强无关，稳定但解调复杂。</div>';
+    }
+    $('fmlTitle').textContent = TYPES[t].name;
+    $('fmlBody').innerHTML = h;
+  }
+
+  /* ============ 8. 要点 ============ */
+  var PTS_TEXT = [
+    '<b>全反射</b>：n₁ &gt; n₂ 是前提，界面入射角 θ ≥ θ_c = arcsin(n₂/n₁)（式9-1）时发生全反射 —— 纤芯-包层结构把光“困”在芯内向前传播。',
+    '<b>数值孔径</b>：式9-2/9-3 n₀sinθ₀ = n₁sinγ₀ = √(n₁²−n₂²)，式9-4 <b>NA = √(n₁²−n₂²)</b>；只接收 2θ₀ 张角内的光。NA 由纤芯-包层折射率差决定，与光源功率无关。',
+    '<b>结构与分类</b>：纤芯（单模 8~10 μm / 多模 50、62.5 μm）→ 包层（125 μm，兼顾光学与机械）→ 涂覆层；阶跃型（界面突变、锯齿光路）与渐变型（n 渐降、正弦轨迹）。',
+    '<b>V 参数与单模条件</b>：V = πd·NA/λ（课堂补充），V &lt; 2.405 才是单模；单模要求 Δ = (n₁−n₂)/n₁ ≈ 0.3%~0.5%、NA ≈ 0.1 → 芯小、集光少、模式色散小（带宽大）。',
+    '<b>传感型（功能型）vs 传光型（非功能型）</b>：判据“拆掉光纤还能不能工作”。传感型：传/感合一、无电子元件（本质安全），但需特殊处理光纤、温度-应变交叉敏感（微弯损耗式、光纤陀螺）；传光型：光纤只传光、用普通通信光纤、成本低 —— 占绝大多数。',
+    '<b>强度调制</b>：最简、最常用（光强 → 光电探测器 → 电信号）；缺点是受光源老化、连接与弯曲损耗、反射率变化影响 → 必须用双光路（参考通道）补偿（教材图9-6）。',
+    '<b>微弯损耗式（功能型）</b>：周期齿形变形器使芯模能量耦合到包层模 → 辐射模耗散，α = 10lg(P_i/P_o)（式9-5）；齿距必须与模式拍长匹配，失配时几乎无损耗；位移量程大、结构简单。',
+    '<b>反射式位移（传光型）</b>：发射束 → 反射面 → 接收束，用接收光强测距离：死区 → 前坡（准线性工作段）→ <b>峰值 z_p</b> → 后坡 ∝ 1/z²；量程小（&lt; 100 μm）、非接触、分辨力高。',
+    '<b>相位调制</b>：探测器只能感知光强、不能感知相位 → 必须用干涉仪（迈克尔逊/马赫-曾德/塞格纳克/法-泊）把相位差转成光强；Δφ = 2πnL/λ，温度/应变使 nL 变化；<b>灵敏度最高</b>，需单模高双折射光纤与稳频光源。',
+    '<b>频率/偏振调制与典型应用</b>：多普勒 Δf = f·v/c（外差测拍频）；法拉第 θ = VHL、普克尔与光弹效应（与光强无关、稳定但解调复杂）。应用：光纤陀螺（塞格纳克）、ROTDR 分布式测温、光纤水听器、光纤电流传感器、FBG（λ_B = 2n_effΛ）、半导体吸收式测温、接近开关。'
+  ];
+  var PTS = { active:-1 };
+  function paintPoints(){
+    if (!$('points').children.length){
+      var h = '';
+      PTS_TEXT.forEach(function(x, k){ h += '<li data-pi="' + k + '">' + x + '</li>'; });
+      $('points').innerHTML = h;
+    }
+  }
+  function setPt(i){
+    PTS.active = i;
+    var lis = $('points').children, k;
+    for (k = 0; k < lis.length; k++) lis[k].classList.toggle('on', k === i);
+    for (k = 0; k < PTS_TEXT.length; k++){
+      var bb = $('ptsB' + k);
+      if (bb) bb.classList.toggle('on', k === i);
+    }
+    if (i >= 0) say('<b>要点 ' + (i+1) + '/' + PTS_TEXT.length + '</b>：' + PTS_TEXT[i]);
+  }
+  for (var pbk = 0; pbk < PTS_TEXT.length; pbk++){
+    (function(k){ $('ptsB' + k).addEventListener('click', function(){ stopDemo(); setPt(k); }); })(pbk);
+  }
+
+  /* ============ 9. 交互 ============ */
+  function setType(t){
+    if (!TYPES[t]) return;
+    S.type = t;
+    if (t === 'micro') buildMicro();
+    paint();
+  }
+  function setX(v){ S.x = clamp(Math.round(v), 0, 100); $('x').value = S.x; paint(); }
+  function setN2(v){
+    v = clamp(Math.round(v/0.0005)*0.0005, CFG.n2lo, CFG.n2hi);
+    S.n2 = Math.round(v*1e4)/1e4;
+    $('n').value = S.n2;
+    paint();
+  }
+  function setOpt(o){
+    S.opt[S.type] = o;
+    if (S.type === 'micro') buildMicro();
+    paint();
+  }
+  /* 齿形变形器齿排（按 Λ 决定周期数；示意：周期数与真实比例不同） */
+  var MB = { N:6, P:520/6 };
+  function buildMicro(){
+    var Lmm = parseFloat(S.opt.micro);
+    var N = (Lmm <= 0.6 ? 10 : (Lmm <= 1.8 ? 6 : 4));
+    var P = 520/N, x0 = 90, up = '', dn = '', k, xc;
+    MB.N = N; MB.P = P;
+    up = x0.toFixed(1) + ',124 ';
+    for (k = 0; k < N; k++){
+      xc = x0 + P/4 + k*P;
+      up += xc.toFixed(1) + ',152 ' + (xc + P/2).toFixed(1) + ',124 ';
+    }
+    dn = x0.toFixed(1) + ',236 ';
+    for (k = 0; k < N; k++){
+      xc = x0 + 3*P/4 + k*P;
+      dn += xc.toFixed(1) + ',208 ' + (xc + P/2).toFixed(1) + ',236 ';
+    }
+    $('mbUpTeeth').setAttribute('points', up);
+    $('mbDnTeeth').setAttribute('points', dn);
+  }
+  /* 马赫-曾德干涉条纹（周期 14 px，随 Δφ 平移） */
+  function buildFringe(){
+    var h = '', i;
+    for (i = 0; i < 16; i++) h += '<rect x="' + (583 + i*14) + '" y="61" width="7" height="138" fill="#e8eefc"/>';
+    $('mzFr').innerHTML = h;
+  }
+  $('x').addEventListener('input', function(){ stopDemo(); setX(+this.value); });
+  $('n').addEventListener('input', function(){ stopDemo(); setN2(+this.value); });
+  $('xM').addEventListener('click', function(){ stopDemo(); setX(S.x - 5); });
+  $('xP').addEventListener('click', function(){ stopDemo(); setX(S.x + 5); });
+  document.querySelectorAll('#segType button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setType(b.getAttribute('data-type')); say(TYPES[S.type].hint); });
+  });
+  document.querySelectorAll('#segOpt button').forEach(function(b){
+    b.addEventListener('click', function(){
+      var m = b.getAttribute('data-mode');
+      if (m !== S.type) return;
+      stopDemo(); setOpt(b.getAttribute('data-opt'));
+      var t = S.type, o = S.opt[t];
+      say(t === 'tir'
+        ? (o === 'grad' ? '<b>渐变型（梯度）光纤</b>：纤芯折射率沿半径渐降，光线走近似正弦的自聚焦轨迹，模式色散小、带宽大（多用于多模传输）。'
+                        : '<b>阶跃型光纤</b>：纤芯折射率均匀、界面突变，光线在界面上“锯齿”式全反射前进。')
+        : (o === '1.5' ? '<b>齿距 Λ = 1.5 mm（与模式拍长匹配）</b>：芯模与包层模耦合最强 —— 同样的压入位移下损耗最大（曲线卡里最陡的那条）。'
+                       : '<b>齿距 Λ = ' + o + ' mm（与拍长失配）</b>：能量几乎不耦合到包层模，压到底也没多少损耗（曲线卡里最平的那条）—— 微弯损耗必须“周期性 + 匹配拍长”。'));
+    });
+  });
+  $('reset').addEventListener('click', function(){
+    stopDemo();
+    S.x = 0; S.n2 = CFG.n2d; S.opt.tir = 'step'; S.opt.micro = '1.5';
+    $('n').value = S.n2; $('speed').value = 1; SPEED = 1; $('speedOut').textContent = '1.0×';
+    buildFringe(); setType('tir');
+    say('已复位：光纤导光基础（阶跃型）、n₁ = 1.500、n₂ = 1.485、θ₀ = 0°、演示速度 1.0×。');
+  });
+
+  /* ============ 10. 演示脚本 ============ */
+  async function demoTir(){
+    var tok = beginDemo('tir');
+    setN2(1.485); setX(0);
+    say('【<b>光纤导光原理</b>】三层结构：纤芯 n₁ = ' + CFG.n1.toFixed(3) + '、包层 n₂ = ' + S.n2.toFixed(4) +
+        '、外层涂覆（机械保护）。光从端面进入纤芯，只要芯-包层界面上的入射角 θ ≥ θ_c = arcsin(n₂/n₁) = <b>' +
+        thetacOf(S.n2).toFixed(2) + '°</b>，就发生<b>全反射</b> —— 光被约束在纤芯内向前传。');
+    if (!await sleep(4600, tok)) return;
+    say('① 现在 θ₀ = 0：芯内角 γ = 0（沿轴前进），界面入射角 90° ≥ θ_c，全反射成立 —— 近轴光线几乎不碰壁。加大端面入射角看看。');
+    if (!await sleep(3400, tok)) return;
+    if (!await tween(0, 48, 3000, setX, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    var ph = xPhys(), gmax = 90 - thetacOf(S.n2);
+    say('② θ₀ = ' + ph.th0.toFixed(1) + '°：芯内角 γ = arcsin(sinθ₀/n₁) = <b>' + Math.abs(ph.gam).toFixed(2) +
+        '°</b>，界面入射角 θ = 90°−γ = ' + (90 - Math.abs(ph.gam)).toFixed(2) + '° 仍 ≥ θ_c —— 还是全反射，但反射更密。' +
+        '这个极限就是<b>接收锥</b>：θ₀max = ' + th0maxOf(S.n2).toFixed(2) + '°（NA = ' + naOf(S.n2).toFixed(3) + '）。');
+    if (!await sleep(4600, tok)) return;
+    say('③ 继续加大到 20°：γ = ' + Math.abs(gamOf(20)).toFixed(2) + '° > γ_max = ' + gmax.toFixed(2) +
+        '°，界面入射角已经小于 θ_c —— <b>全反射条件被破坏</b>，光在第一个反射点就折射进包层（漏光），纤芯里的能量沿程衰减。');
+    if (!await tween(48, 80, 2600, setX, tok)) return;
+    if (!await sleep(2600, tok)) return;
+    say('④ 再看 NA 的来历：把包层折射率 n₂ 调到 1.4975（n₁−n₂ 只差 0.17%），NA 掉到 ' + naOf(1.4975).toFixed(3) +
+        '、接收角只有 ±' + th0maxOf(1.4975).toFixed(2) + '°，而且 V = ' + vOf(1.4975, CFG.coreSM).toFixed(2) +
+        ' &lt; 2.405 —— <b>进入单模</b>！这就是单模光纤 NA ≈ 0.1 的由来：芯细、折射率差小。');
+    setN2(1.4975);
+    if (!await tween(80, 16, 2400, setX, tok)) return;
+    if (!await sleep(2400, tok)) return;
+    say('【小结】n₁ &gt; n₂ 是前提；θ ≥ θ_c = arcsin(n₂/n₁) 全反射；端面只有 2θ₀max 锥内的光能进来，NA = √(n₁²−n₂²)。' +
+        'NA 大 → 集光强、易耦合，但模式多、畸变大。');
+    if (!await sleep(3400, tok)) return;
+    setN2(1.485); setX(0);
+    endDemo();
+  }
+
+  async function demoMicro(){
+    var tok = beginDemo('micro');
+    setType('micro'); setOpt('1.5'); setX(0);
+    say('【<b>微弯损耗式（功能型 / 传感型）</b>】上下两排齿形变形器周期性地“咬”住光纤：弯曲处芯模能量耦合到包层模、再变成辐射模散掉。' +
+        '齿距 Λ 必须与<b>模式拍长</b>匹配（这里取 1.5 mm），否则几乎不产生损耗。');
+    if (!await sleep(4600, tok)) return;
+    if (!await tween(0, 100, 3600, setX, tok)) return;
+    if (!await sleep(1800, tok)) return;
+    say('① Λ = 1.5 mm（匹配）：压入 ' + (CFG.yFS*1e6).toFixed(0) + ' μm 时损耗 α = <b>' + microAlpha(CFG.yFS, 1.5e-3).toFixed(2) +
+        ' dB</b>，透过率只剩 ' + (microT(CFG.yFS, 1.5e-3)*100).toFixed(2) + '% —— 注意损耗随位移是<b>平方</b>增长（看曲线卡的抛物线）。');
+    if (!await sleep(3800, tok)) return;
+    say('② 把齿距换成 0.5 mm（失配）：同样的 ' + (CFG.yFS*1e6).toFixed(0) + ' μm 压入位移，损耗只有 <b>' +
+        microAlpha(CFG.yFS, 0.5e-3).toFixed(2) + ' dB</b>（耦合效率 W = ' + microW(0.5e-3).toFixed(3) +
+        '）—— 齿排压到底，光几乎不衰减。这就是“微弯必须周期性且匹配拍长”的含义。');
+    setOpt('0.5');
+    if (!await sleep(4200, tok)) return;
+    say('③ 换回 1.5 mm 并减小位移：曲线回到抛物线顶部；实际使用时通常取一段单调区间做位移/压力/声压的测量。');
+    setOpt('1.5');
+    if (!await tween(100, 40, 2400, setX, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('【小结】功能型（传感型）＝“传光 + 感测”合在一根光纤里：结构简单、本质安全、无电子元件；缺点是需要特殊处理光纤，' +
+        '而且温度、应变都会引起损耗变化（交叉敏感）。强度调制最常用，但必须做参考通道补偿。');
+    if (!await sleep(4200, tok)) return;
+    setX(0);
+    endDemo();
+  }
+
+  async function demoRefl(){
+    var tok = beginDemo('refl');
+    setType('refl'); setX(0);
+    say('【<b>反射式光纤位移传感器（传光型）</b>】发射束把光打到被测反射面上，接收束收集反射光 —— 光纤只负责传光，' +
+        '光强随间距 z 变化。现在 z = 0（贴住），发射锥与接收锥在镜面上还没有交叠 → <b>死区</b>，接收纤收不到光。');
+    if (!await sleep(4600, tok)) return;
+    var m = reflOf(S.n2);
+    if (!await tween(0, 30, 2600, setX, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('① z = ' + (xPhys().z*1e6).toFixed(0) + ' μm：刚出死区（z_d = ' + (m.zd*1e6).toFixed(1) +
+        ' μm），两锥开始交叠，光强从 0 快速上升 —— 这一段是<b>前坡</b>。');
+    if (!await sleep(3600, tok)) return;
+    if (!await tween(30, 52, 2600, setX, tok)) return;
+    if (!await sleep(1800, tok)) return;
+    say('② z = ' + (xPhys().z*1e6).toFixed(0) + ' μm：接近<b>峰值</b>（z_p ≈ ' + (m.zp*1e6).toFixed(0) +
+        ' μm）。前坡里有一段准线性工作段（' + (m.win ? (m.win.z1*1e6).toFixed(0) + '~' + (m.win.z2*1e6).toFixed(0) : '') +
+        ' μm，端基非线性 ≈ ' + (m.win ? m.win.nl.toFixed(1) : '—') + '%），工程上就取这一段做位移测量，量程只有几十 μm。');
+    if (!await sleep(4200, tok)) return;
+    if (!await tween(52, 100, 2800, setX, tok)) return;
+    if (!await sleep(1800, tok)) return;
+    say('③ 过了峰值进入<b>后坡</b>：光斑继续变大、接收纤的立体角按 1/z² 衰减，光强下降（到 ' + (CFG.zFS*1e6).toFixed(0) +
+        ' μm 时只剩 ' + (reflNorm(m, CFG.zFS)*100).toFixed(1) + '%）。死区 → 前坡 → 峰值 → 后坡，这条曲线就是反射式的全部特性。');
+    if (!await sleep(4400, tok)) return;
+    say('【小结】反射式属传光型（非功能型）：用普通通信光纤即可，非接触、分辨力高、量程小（&lt; 100 μm）；' +
+        '教材图9-23 的定性描述“中间段近似线性、两端饱和”与这条曲线一致。把 n₂ 调大（NA 变小）光锥张得慢，死区与峰值都会右移 —— 量程变大但灵敏度下降。');
+    if (!await sleep(4600, tok)) return;
+    setX(30);
+    endDemo();
+  }
+
+  async function demoMzi(){
+    var tok = beginDemo('mzi');
+    setType('mzi'); setX(0);
+    say('【<b>相位调制（马赫-曾德干涉仪）</b>】探测器只能感知光强、不能感知相位 —— 所以把光分成两臂（传感臂 + 参考臂），' +
+        '再合束干涉，相位差 Δφ 就变成了光强变化。φ = 2πnL/λ，温度（或应变）使 nL 变化。');
+    if (!await sleep(4600, tok)) return;
+    if (!await tween(0, 40, 3400, setX, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    var kT = mziKT(), ph = xPhys();
+    say('① ΔT = ' + ph.dT.toFixed(2) + ' ℃ → Δφ = (2πnL/λ)(α_T+ξ)ΔT = <b>' + mziDphi(ph.dT).toFixed(2) +
+        ' rad</b>（' + (mziDphi(ph.dT)/(2*Math.PI)).toFixed(2) + ' 条条纹），输出光强 I/I₀ = ' +
+        (mziI(mziDphi(ph.dT))*100).toFixed(1) + '%。几十毫度温度变化就能推动一条条纹 —— 灵敏度极高。');
+    if (!await sleep(4400, tok)) return;
+    if (!await tween(40, 100, 3000, setX, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('② 到 ' + CFG.dTFS.toFixed(1) + ' ℃：Δφ = ' + mziDphi(CFG.dTFS).toFixed(1) + ' rad ≈ ' +
+        (mziDphi(CFG.dTFS)/(2*Math.PI)).toFixed(2) + ' 条条纹。第一级干涉（Δφ = 2π）只需 ΔT = ' + (2*Math.PI/kT).toFixed(3) +
+        ' ℃ —— 相位的“整周期”无法直接分辨，实际要靠条纹计数 / 相位载波（PGC）解调。');
+    if (!await sleep(4400, tok)) return;
+    say('③ 同类干涉仪：迈克尔逊 Δφ = 4πΔL/λ（反射往返、系数×2）、塞格纳克（光纤陀螺）Δφ = 8πANΩ/(λc)、法-泊 Δφ = 4πnLcosθ/λ；' +
+        '都要求单模高双折射光纤与稳频光源。');
+    if (!await sleep(4200, tok)) return;
+    say('【小结】相位调制是<b>灵敏度最高</b>的光纤传感技术（教材称为已知最灵敏的探测技术之一），代价是必须用干涉仪结构、解调复杂；' +
+        '与光强无关 → 稳定性好。频率调制（多普勒）与偏振调制（法拉第/普克尔/光弹）同属“与光强无关”的一类。');
+    if (!await sleep(4600, tok)) return;
+    setX(0);
+    endDemo();
+  }
+
+  async function demoPoints(){
+    var tok = beginDemo('pts');
+    say('【<b>本章要点</b>】共 ' + PTS_TEXT.length + ' 条，逐条看一遍；也可点编号按钮单独回看。');
+    if (!await sleep(2000, tok)) return;
+    for (var i = 0; i < PTS_TEXT.length; i++){
+      setPt(i);
+      if (!await sleep(PTS_TEXT[i].length > 90 ? 3400 : 2800, tok)) return;
+    }
+    setPt(-1);
+    endDemo();
+  }
+
+  /* ============ 11. 键盘 ============ */
+  document.addEventListener('keydown', function(e){
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input') return;
+    if (e.key === 'ArrowLeft'){ stopDemo(); setX(S.x - 2); e.preventDefault(); }
+    else if (e.key === 'ArrowRight'){ stopDemo(); setX(S.x + 2); e.preventDefault(); }
+    else if (e.key === '1'){ stopDemo(); setType('tir'); }
+    else if (e.key === '2'){ stopDemo(); setType('micro'); }
+    else if (e.key === '3'){ stopDemo(); setType('refl'); }
+    else if (e.key === '4'){ stopDemo(); setType('mzi'); }
+    else if (e.key === 'r' || e.key === 'R'){ $('reset').click(); }
+    else if (e.key === ' '){
+      e.preventDefault();
+      if (playingKey){ stopDemo(); say('演示已暂停。'); }
+      else {
+        var k = { tir:'tir', micro:'micro', refl:'refl', mzi:'mzi' }[S.type];
+        if (DEMOS[k] && DEMOS[k].fn) DEMOS[k].fn();
+      }
+    }
+  });
+
+
+  DEMOS.tir   = { btn:'playTir',   label:'▶ 光纤导光',   fn:demoTir };
+  DEMOS.micro = { btn:'playMicro', label:'▶ 微弯调制',   fn:demoMicro };
+  DEMOS.refl  = { btn:'playRefl',  label:'▶ 反射式位移', fn:demoRefl };
+  DEMOS.mzi   = { btn:'playMzi',   label:'▶ 相位调制',   fn:demoMzi };
+  DEMOS.pts   = { btn:'ptsPlay',   label:'▶ 巡览要点',   fn:demoPoints };
+  bindDemos();
+
+  /* ============ 启动 ============ */
+  var q = new URLSearchParams(location.search);
+  if (q.has('type') && TYPES[q.get('type')]) S.type = q.get('type');
+  if (q.has('x')) S.x = clamp(parseFloat(q.get('x')) || 0, 0, 100);
+  if (q.has('n')) S.n2 = clamp(Math.round((parseFloat(q.get('n')) || CFG.n2d)/0.0005)*0.0005, CFG.n2lo, CFG.n2hi);
+  if (q.has('opt') && ['step','grad','0.5','1.5','2.5'].indexOf(q.get('opt')) >= 0) S.opt[S.type] = q.get('opt');
+  if (q.has('speed')) SPEED = clamp(parseFloat(q.get('speed')) || 1, 0.4, 2.5);
+  $('x').value = S.x; $('n').value = S.n2;
+  $('speed').value = SPEED; $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  buildMicro(); buildFringe();
+  paint();
+  initRay();
+  runRay();
+  var AUTO = { '1':'tir', '2':'micro', '3':'refl', '4':'mzi', '5':'pts' };
+  if (AUTO[q.get('auto')] && DEMOS[AUTO[q.get('auto')]].fn) DEMOS[AUTO[q.get('auto')]].fn();
+
+})();
+</script>
+
+<script>
+/* ==================== 板块布局引擎：拖动 / 缩放 / 记忆 ====================
+   由 _build/build.js 注入；章节的面板清单 / 记忆键 / 默认布局在构建时替换。 */
+(function(){
+  "use strict";
+  var BOARD = document.getElementById('board');
+  var COLS  = ['colA','colB','colC'];
+  var IDS   = ["ctrlCard","ptsCard","stCard","readCard","fmlCard","curveCard"];
+  var MINZ = 0.7, MAXZ = 1.6, MINCOL = 260;
+  var KEY = 'jh-fiber-layout-v1';
+  var DEF = {"weight":{"colA":2.9,"colB":5.2,"colC":3.9},"col":{"colA":["ctrlCard","ptsCard"],"colB":["stCard","readCard"],"colC":["fmlCard","curveCard"]},"zoom":{}};
+  var L = null, focused = null;
+  function el(id){ return document.getElementById(id); }
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function load(){
+    var d;
+    try { d = JSON.parse(localStorage.getItem(KEY)); } catch (e) { d = null; }
+    if (!d || !d.col) return clone(DEF);
+    COLS.forEach(function(c){ if (!d.col[c]) d.col[c] = []; });
+    var seen = {};
+    COLS.forEach(function(c){
+      d.col[c] = d.col[c].filter(function(id){ if (IDS.indexOf(id) < 0 || seen[id]) return false; seen[id] = 1; return true; });
+    });
+    IDS.forEach(function(id){ if (!seen[id]){ d.col.colC.push(id); seen[id] = 1; } });
+    d.weight = d.weight || clone(DEF.weight);
+    d.zoom = d.zoom || {};
+    return d;
+  }
+  L = load();
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(L)); } catch (e) {} }
+  function render(){
+    COLS.forEach(function(cid){
+      var col = el(cid);
+      L.col[cid].forEach(function(pid){ var p = el(pid); if (p) col.appendChild(p); });
+      col.style.flexGrow = L.weight[cid] || 1;
+    });
+  }
+  function applyZoom(id){
+    var p = el(id); if (!p) return;
+    var b = p.querySelector('.pbody'); if (!b) return;
+    b.style.zoom = L.zoom[id] || 1;
+  }
+  function applyAll(){ render(); IDS.forEach(applyZoom); }
+
+  function startDrag(ev, p){
+    if (ev.button) return;
+    var x0 = ev.clientX, y0 = ev.clientY, moved = false, lastTarget = null;
+    function move(e){
+      if (!moved){
+        if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) < 6) return;
+        moved = true;
+        document.body.classList.add('layout-dragging');
+        p.classList.add('sorting');
+      }
+      var col = null, i, r;
+      for (i = 0; i < COLS.length; i++){
+        r = el(COLS[i]).getBoundingClientRect();
+        if (e.clientX >= r.left - 6 && e.clientX <= r.right + 6){ col = COLS[i]; break; }
+      }
+      if (!col) col = (e.clientX < BOARD.getBoundingClientRect().left + BOARD.clientWidth/2) ? COLS[0] : COLS[COLS.length - 1];
+      var list = L.col[col].filter(function(id){ return id !== p.id; });
+      var idx = list.length, j, q, qr;
+      for (j = 0; j < list.length; j++){
+        q = el(list[j]); if (!q) continue;
+        qr = q.getBoundingClientRect();
+        if (e.clientY < qr.top + qr.height/2){ idx = j; break; }
+      }
+      var key = col + ':' + idx;
+      if (key === lastTarget) return;
+      lastTarget = key;
+      COLS.forEach(function(c2){ L.col[c2] = L.col[c2].filter(function(id){ return id !== p.id; }); });
+      L.col[col].splice(idx, 0, p.id);
+      render();
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', up);
+      document.body.classList.remove('layout-dragging');
+      p.classList.remove('sorting');
+      if (moved) save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
+  }
+  function startSplit(ev, sp){
+    ev.preventDefault();
+    var left = el(sp.getAttribute('data-left')), right = el(sp.getAttribute('data-right'));
+    var total = left.offsetWidth + right.offsetWidth;
+    var wl = L.weight[left.id] || 1, wr = L.weight[right.id] || 1, sum = wl + wr;
+    var x0 = ev.clientX, pxPerWeight = total/sum;
+    document.body.classList.add('layout-dragging');
+    function move(e){
+      var d = (e.clientX - x0)/pxPerWeight;
+      var nl = Math.max(MINCOL/(total/sum), Math.min(sum - MINCOL/(total/sum), wl + d));
+      left.style.flexGrow = nl; right.style.flexGrow = sum - nl;
+      L.weight[left.id] = nl; L.weight[right.id] = sum - nl;
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.body.classList.remove('layout-dragging');
+      save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  }
+  function zoomPanel(id, d){
+    var z = Math.round(((L.zoom[id] || 1) + d)*100)/100;
+    L.zoom[id] = Math.max(MINZ, Math.min(MAXZ, z));
+    applyZoom(id); save();
+  }
+  function toggleFocus(id){
+    var p = el(id); if (!p) return;
+    if (focused === id){ p.classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    else {
+      if (focused) el(focused).classList.remove('focused');
+      p.classList.add('focused'); document.body.classList.add('has-focus'); focused = id;
+    }
+  }
+  function reset(){
+    L = clone(DEF);
+    if (focused){ el(focused).classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    applyAll(); save();
+  }
+  var back = document.createElement('div');
+  back.id = 'focusBack';
+  back.addEventListener('click', function(){ if (focused) toggleFocus(focused); });
+  document.body.appendChild(back);
+
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var head = p.querySelector('.phead');
+    if (head){
+      head.addEventListener('pointerdown', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        e.preventDefault(); startDrag(e, p);
+      });
+      head.addEventListener('dblclick', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        toggleFocus(id);
+      });
+    }
+    p.querySelectorAll('.ptool').forEach(function(b){
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        var a = b.getAttribute('data-act');
+        if (a === 'in') zoomPanel(id, 0.08);
+        else if (a === 'out') zoomPanel(id, -0.08);
+        else if (a === 'max') toggleFocus(id);
+      });
+    });
+  });
+  document.querySelectorAll('.vsplit').forEach(function(sp){
+    sp.addEventListener('pointerdown', function(e){ startSplit(e, sp); });
+  });
+  /* ---------- 折叠：滑过上方自动折叠，回到可视区自动展开；可手动锁定 ---------- */
+  function setFold(p, on){
+    p.classList.toggle('folded', on);
+    var btn = p.querySelector('.ptool[data-act="fold"]');
+    if (btn) btn.textContent = on ? '▸' : '▾';
+  }
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var tools = p.querySelector('.ptools');
+    if (!tools) return;
+    var fb = document.createElement('button');
+    fb.className = 'ptool';
+    fb.setAttribute('data-act', 'fold');
+    fb.title = '折叠 / 展开本板块（手动折叠后不会被自动展开）';
+    fb.textContent = '▾';
+    tools.insertBefore(fb, tools.firstChild);
+    fb.addEventListener('click', function(e){
+      e.stopPropagation();
+      var folded = p.classList.contains('folded');
+      setFold(p, !folded);
+      if (!folded) p.setAttribute('data-manual', '1'); else p.removeAttribute('data-manual');
+    });
+  });
+  var ticking = false;
+  function autoFold(){
+    ticking = false;
+    var vh = window.innerHeight || 900;
+    IDS.forEach(function(id){
+      var p = el(id); if (!p) return;
+      if (!p.parentNode || p.parentNode.id !== 'colB') return;    /* 只有中间列参与自动折叠（左右两列固定不动） */
+      var r = p.getBoundingClientRect();
+      if (r.bottom < 90){                                          /* 整块滑到上方之外 → 收起 */
+        if (!p.classList.contains('folded')) setFold(p, true);
+      } else if (r.top < vh - 30 && r.bottom > 60 && !p.hasAttribute('data-manual')){
+        if (p.classList.contains('folded')) setFold(p, false);      /* 回到可视区 → 展开 */
+      }
+    });
+  }
+  function onScrollOrWheel(){
+    if (!ticking){ ticking = true; requestAnimationFrame(autoFold); }
+  }
+  window.addEventListener('scroll', onScrollOrWheel, { passive:true });
+  window.addEventListener('wheel', onScrollOrWheel, { passive:true });
+  window.addEventListener('touchmove', onScrollOrWheel, { passive:true });
+  window.addEventListener('resize', function(){ if (window.__repack) window.__repack(); });
+  setTimeout(autoFold, 400);
+  window.__autoFold = autoFold;
+
+  var lr = document.getElementById('layReset');
+  if (lr) lr.addEventListener('click', reset);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && focused) toggleFocus(focused); });
+  window.addEventListener('resize', function(){ IDS.forEach(applyZoom); });
+  window.__repack = function(){};
+  applyAll();
+  window.addEventListener('load', applyAll);
+})();
+
+</script>
+</body>
+</html>

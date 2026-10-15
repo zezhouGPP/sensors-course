@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第5章 电容式传感器 · 动态演示｜传感器原理与技术</title>
+<style>
+/* =====================================================================
+   公共样式（各章通用）· 由 _build/build.js 注入到每个单文件 HTML 的样式表顶部
+   与第4章保持同一套类名与观感；章节特有的语义色 / 版式写在章节模块的 extraCss 里
+   ===================================================================== */
+:root{
+  --jhu:#0e4a8e; --jhu2:#0a2f5c; --ink:#12233a; --muted:#5b6b80;
+  --line:#d5dfec; --bg:#eef3f9; --card:#ffffff;
+  --flux:#0d8b7f;      /* 磁通 / 场线（第4章起沿用） */
+  --cu:#c2703a;        /* 线圈 / 铜 */
+  --iron:#4b6b8f;      /* 铁芯 / 铁磁体 */
+  --gapm:#e08a1e;      /* 气隙 / 有效量 */
+  --eddy:#7c3aed;      /* 涡流 / 强调（紫） */
+  --hot:#d94a3d; --ok:#0f9d58;
+  --grid:rgba(14,74,142,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Source Han Sans SC","Hiragino Sans GB",system-ui,sans-serif;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    var(--bg);
+  color:var(--ink); font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+header{
+  background:linear-gradient(120deg,var(--jhu) 0%,var(--jhu2) 100%);
+  color:#fff; padding:8px 24px; display:flex; align-items:center; gap:16px;
+  box-shadow:0 3px 14px rgba(10,47,92,.28);
+}
+header h1{font-size:22px; margin:0; letter-spacing:1px; font-weight:700}
+header .sub{font-size:13px; opacity:.9; border-left:1px solid rgba(255,255,255,.45); padding-left:13px}
+header .right{margin-left:auto; text-align:right; font-size:12.5px; opacity:.92; line-height:1.3}
+header .right b{font-size:15px; letter-spacing:2px}
+#laybar{display:flex; align-items:center; gap:10px; padding:3px 20px; font-size:12px; color:#41566f;
+        background:#e4edf8; border-bottom:1px solid #cfdcec}
+#laybar button{border:1px solid #a9c1dd; background:#fff; color:var(--jhu); border-radius:7px;
+               font-size:12px; font-weight:700; padding:2px 10px; cursor:pointer; font-family:inherit}
+#laybar button:hover{background:#f2f7fd}
+#laybar .hint{color:#6b7d92}
+#boardWrap{padding:6px 14px 2px}
+#board{display:flex; align-items:flex-start}
+.col{display:flex; flex-direction:column; gap:6px; min-width:0; flex-grow:1; flex-basis:0}
+.colhead{font-size:11.5px; font-weight:700; color:#8296ad; letter-spacing:.4px; padding:0 3px 2px; border-bottom:1px dashed #dbe5f0}
+.vsplit{flex:0 0 13px; align-self:stretch; cursor:col-resize; position:relative; touch-action:none}
+.vsplit::before{content:""; position:absolute; left:5.5px; top:8px; bottom:8px; width:2px; border-radius:2px; background:#cfdcec}
+.vsplit:hover::before{background:var(--jhu); width:3px; left:5px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:13px;
+      box-shadow:0 2px 10px rgba(18,35,58,.06); padding:5px 9px}
+.card h2{margin:0 0 4px; font-size:14.5px; color:var(--jhu); font-weight:700; display:flex; align-items:center; gap:7px}
+.card h2::before{content:""; width:4px; height:15px; border-radius:3px; background:var(--jhu)}
+.card h2 small{font-weight:400; color:var(--muted); font-size:12px}
+.panel{position:relative; box-sizing:border-box}
+.panel > .phead{display:flex; align-items:center; gap:6px; cursor:move; touch-action:none; user-select:none; margin:-1px 0 4px}
+.panel > .phead h2{margin:0; flex:1; min-width:0; cursor:move}
+.ptools{display:flex; gap:3px; flex:none}
+.ptool{width:21px; height:21px; padding:0; line-height:1; border:1px solid var(--line); background:#fff;
+       color:var(--jhu); border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit}
+.ptool:hover{background:#eef4fc; border-color:#9fbedd}
+.panel.sorting{opacity:.6; outline:2px dashed var(--jhu); outline-offset:2px; pointer-events:none}
+.panel.focused{position:fixed; left:14px; right:14px; top:80px; bottom:14px; z-index:300; overflow:auto;
+               box-shadow:0 18px 50px rgba(10,47,92,.38); border-color:var(--jhu)}
+#focusBack{position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(10,30,55,.34); z-index:290; display:none}
+body.has-focus #focusBack{display:block}
+body.layout-dragging{user-select:none}
+svg{display:block; width:100%; height:auto}
+.tiny{font-size:12px; fill:var(--muted); color:var(--muted)}
+/* ---- 控件 ---- */
+.ctrl{display:flex; flex-direction:column; gap:2px; margin-bottom:2px}
+.ctrl .row{display:flex; align-items:center; gap:7px}
+.ctrl .name{font-size:12.8px; color:var(--muted); width:118px; flex:none}
+.ctrl .name b{color:var(--ink); font-size:14px}
+.ctrl output{font-size:18px; font-weight:800; min-width:96px; text-align:right; font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none; appearance:none; height:8px; border-radius:5px; background:#dce6f2; outline:none; flex:1; min-width:70px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:21px; height:21px; border-radius:50%;
+      background:#fff; border:3px solid var(--jhu); cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.seg{display:flex; gap:6px; flex-wrap:wrap}
+.seg button{flex:1 1 0; min-width:96px; padding:5px 8px; border-radius:9px; border:1px solid var(--line);
+            background:#fff; cursor:pointer; font-size:13px; font-weight:700; color:#33506f; font-family:inherit; line-height:1.3}
+.seg button small{display:block; font-weight:400; font-size:11px; color:var(--muted)}
+.seg button:hover{border-color:#9fbedd}
+.seg button.on{background:var(--jhu); border-color:var(--jhu); color:#fff}
+.seg button.on small{color:rgba(255,255,255,.85)}
+/* 紧凑小按钮（章节里的型式/模式细分按钮） */
+.seg.tight button{min-width:66px; flex:1 1 66px; padding:3px 4px; font-size:11.5px; line-height:1.25}
+.seg.tight button small{font-size:10px}
+.step{border:1px solid var(--line); background:#fff; color:var(--jhu); width:28px; height:28px;
+      border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; line-height:1}
+.actions{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap}
+.actions button{flex:1 1 92px; padding:5px 4px; border-radius:9px; border:1px solid var(--jhu);
+                background:var(--jhu); color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;
+                font-family:inherit; white-space:nowrap}
+.actions button.ghost{background:#fff; color:var(--jhu)}
+.actions button.running{background:var(--hot); border-color:var(--hot); color:#fff}
+.actions button:hover{filter:brightness(1.07)}
+.narrate{margin-top:4px; border-left:5px solid var(--flux); background:#f2fbf9; border-radius:0 10px 10px 0;
+         padding:3px 10px; font-size:12.4px; line-height:1.34; min-height:26px; color:#0a5f57}
+/* ---- 读数 ---- */
+.big{display:flex; align-items:baseline; gap:9px; background:linear-gradient(90deg,#f2f7ff,#fff);
+     border:1px solid #d9e5f5; border-radius:12px; padding:3px 12px}
+.big .cap{font-size:13px; color:var(--muted); margin-right:auto}
+.big .num{font-size:23px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
+.big .unit{font-size:15px; font-weight:700; color:var(--muted)}
+.kv{display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:5px}
+.kv .box{border:1px dashed var(--line); border-radius:9px; padding:2px 6px; font-size:10.5px; color:var(--muted)}
+.kv .box b{display:block; font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:1px}
+.fine{font-size:10.4px; color:var(--muted); margin-top:5px; line-height:1.5; font-variant-numeric:tabular-nums}
+.fine b{color:var(--ink)}
+/* ---- 比例条 / 图例 ---- */
+.rmbar{display:flex; height:15px; border-radius:5px; overflow:hidden; border:1px solid var(--line); background:#f4f8fd; margin-top:3px}
+.rmbar i{display:block; height:100%}
+.legend{display:flex; gap:8px; flex-wrap:wrap; font-size:10.4px; color:var(--muted); margin-top:1px}
+.legend i{display:inline-block; width:14px; height:9px; border-radius:2px; margin-right:5px}
+/* ---- 公式 ---- */
+.fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:10.9px; line-height:1.22; color:#16283d}
+.fml .row{display:block; border-bottom:1px dashed #e7eef7; padding:0}
+.fml .row:last-child{border-bottom:none}
+.fml .tag{display:inline-block; font-family:"Microsoft YaHei",sans-serif; font-size:11px; color:#fff;
+          background:var(--jhu); border-radius:5px; padding:0 6px; margin-right:5px; vertical-align:1px}
+.fml .tag.g{background:var(--gapm)} .fml .tag.f{background:var(--flux)} .fml .tag.v{background:var(--eddy)}
+.fml b{color:var(--hot)}
+.fml .note{font-family:"Microsoft YaHei",sans-serif; font-size:10.8px; color:var(--muted); line-height:1.4; margin-top:2px}
+.frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.88em; line-height:1.02; margin:0 .14em}
+.frac i{font-style:normal; padding:0 .3em}
+.frac b{font-weight:400; color:inherit; border-top:1.4px solid currentColor; padding:0 .3em}
+/* ---- 要点 ---- */
+ol.points{margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:4px}
+ol.points li{border:1px solid var(--line); border-left:4px solid #c8d6e6; border-radius:0 9px 9px 0;
+             padding:0 7px; font-size:10.9px; line-height:1.28; color:#3c5068; background:#fbfdff; transition:.25s}
+ol.points li.on{border-left-color:var(--ok); background:#f2fbf5; color:var(--ink); box-shadow:0 0 0 2px rgba(15,157,88,.12)}
+ol.points li .hl{color:var(--ok); font-weight:700}
+.hint{font-size:12px; color:var(--muted); margin-top:5px}
+footer{padding:3px 18px 5px; font-size:11px; color:var(--muted); line-height:1.5}
+footer b{color:var(--jhu)}
+.actions button.ptsB{flex:0 0 26px; padding:2px 0; font-size:11px; border-radius:6px}   /* 要点编号按钮：特异性需高于 .actions button */
+/* 左右两列都吸附固定；只有中间列（结构+读数）随页面滚动 */
+#colA, #colC{position:sticky; top:4px; align-self:flex-start;
+             max-height:calc(100vh - 10px); overflow-y:auto; overscroll-behavior:contain}
+#colA::-webkit-scrollbar, #colC::-webkit-scrollbar{width:6px}
+#colA::-webkit-scrollbar-thumb, #colC::-webkit-scrollbar-thumb{background:#c3d3e6; border-radius:3px}
+/* 中间列底部留白：让最后一张卡片也能滚动到屏幕中间 */
+#colB{padding-bottom:52vh}
+.panel > .pbody{max-height:2600px; overflow:hidden; transition:max-height .22s ease, opacity .18s ease}
+.panel.folded > .pbody{max-height:0 !important; opacity:0}
+.panel.folded{border-color:#bcd0e5; background:#f8fbff}
+.panel.folded > .phead h2{color:#5b6b80}
+.ptool[data-act="fold"]{font-size:11px}
+.readlabel{font-size:12.5px; font-weight:700; color:#5b6b80; margin:7px 0 3px; padding-top:6px; border-top:1px dashed #dbe5f0}
+.readwrap svg{max-height:196px}
+.pbody > svg{max-height:300px}
+.pbody > svg + svg{max-height:196px}
+@media (max-width:1200px){ #boardWrap{min-width:1180px} }
+
+  /* ---- 第5章语义色 ---- */
+  :root{ --plate:#7d8fa6; --efield:#3f7ad6; --diel:#c9a227; }
+</style>
+</head>
+<body>
+<header>
+  <h1>第 5 章 电容式传感器</h1>
+  <div class="sub">变极距型 · 变面积型 · 变介电常数型 · 差动结构 · 测量电路 | 动态演示</div>
+  <div class="right"><b>江汉大学</b><br>传感器原理与技术</div>
+</header>
+<div id="laybar">
+  <span style="font-weight:700;color:#0e4a8e">板块布局</span>
+  <button id="layReset">↺ 恢复默认（一屏）</button>
+  <span class="hint"><b>左右两列固定不动</b>（左＝型式与输入量＋要点，右＝数据/曲线/公式），只有<b>中间列</b>随页面滚动；每块标题栏的 <b>▾</b> 可折叠该板块；<b>滚轮下滑时滑过上方的那几块会自动收起、滚回来自动展开</b>（手动折起的不会被自动展开）；拖动<b>标题栏</b>可换列换位、拖<b>竖条</b>调列宽、<b>＋ －</b> 缩放、<b>⛶</b> 全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
+</div>
+
+<div id="boardWrap">
+<main id="board">
+
+  <!-- ================= 左列 ================= -->
+  <div class="col" id="colA">
+    <div class="colhead">① 型式与输入量</div>
+
+
+    <section class="card panel" id="ctrlCard">
+      <div class="phead">
+        <h2>型式与输入量</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="ctrl">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px" id="typeName"><b>电容型式</b></span>
+          <div class="seg" id="segType" style="flex:1">
+            <button data-type="gap" class="on">变极距型<small>改变 δ（d）</small></button>
+            <button data-type="area">变面积型<small>改变 S（覆盖）</small></button>
+            <button data-type="eps">变介电常数型<small>改变 εᵣ</small></button>
+          </div>
+        </div>
+        <div class="hint" id="typeHint">变极距型：灵敏度最高（k = εS/δ₀²），但非线性最严重 —— 量程须限制在 Δd &lt; δ₀/5。</div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b>位移 x</b><br><span class="tiny" id="xTxt">极距 δ = 1.000 mm</span></span>
+          <button class="step" id="xM" title="减小">−</button>
+          <input type="range" id="x" min="0" max="100" step="1" value="0">
+          <button class="step" id="xP" title="增大">＋</button>
+          <output id="xOut">0 %</output>
+        </div>
+      </div>
+      <div class="ctrl">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>结构</b><br><span class="tiny">单端 / 差动</span></span>
+          <div class="seg" id="segDiff" style="flex:1">
+            <button data-diff="single" class="on">单端（一个电容）<small>结构简单</small></button>
+            <button data-diff="differ">差动（两个电容）<small>灵敏度×2、非线性↓</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b>介质 εᵣ</b><br><span class="tiny" id="erTxt">仅变介电常数型使用</span></span>
+          <input type="range" id="er" min="1" max="10" step="0.1" value="2.7">
+          <output id="erOut">2.7</output>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="playCap" class="ghost">▶ 电容原理</button>
+        <button id="playTypes" class="ghost">▶ 三种型式</button>
+        <button id="playDiff" class="ghost">▶ 差动改善</button>
+        <button id="playCirc" class="ghost">▶ 测量电路</button>
+        <button id="reset" class="ghost" style="flex:0 0 58px">↺ 复位</button>
+      </div>
+      <div class="ctrl" style="margin-top:5px">
+        <div class="row">
+          <span class="name"><b>演示速度</b><br><span class="tiny">0.4× 慢 ～ 2.5× 快</span></span>
+          <input type="range" id="speed" min="0.4" max="2.5" step="0.1" value="1">
+          <output id="speedOut">1.0×</output>
+        </div>
+      </div>
+      <div class="narrate" id="narration">初始状态：变极距型、单端结构，极距 δ = 1.000 mm，位移 x = 0。四个演示按钮分别讲：电容原理 / 三种型式 / 差动改善 / 测量电路。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="ptsCard">
+      <div class="phead">
+        <h2>本章要点</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="actions" style="margin-top:0">
+        <button id="ptsPlay" class="ghost" style="flex:0 0 98px">▶ 巡览要点</button>
+        <button id="ptsB0" class="ghost ptsB">1</button><button id="ptsB1" class="ghost ptsB">2</button>
+        <button id="ptsB2" class="ghost ptsB">3</button><button id="ptsB3" class="ghost ptsB">4</button>
+        <button id="ptsB4" class="ghost ptsB">5</button><button id="ptsB5" class="ghost ptsB">6</button>
+        <button id="ptsB6" class="ghost ptsB">7</button><button id="ptsB7" class="ghost ptsB">8</button>
+        <button id="ptsB8" class="ghost ptsB">9</button>
+      </div>
+      <ol class="points" id="points"></ol>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colA" data-right="colB" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 中列 ================= -->
+  <div class="col" id="colB">
+    <div class="colhead">② 结构动态 ＋ 输出读数（成对显示）</div>
+
+
+    <section class="card panel" id="capCard">
+      <div class="phead">
+        <h2>结构动态 <small id="capSub">C = εᵣε₀S/δ，改变 δ、S、εᵣ 得到三大型式</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="cap" viewBox="0 0 700 300" role="img" aria-label="电容式传感器结构动态">
+        <!-- ============ 单端 (a) 变极距型：上下极板，δ 变化 ============ -->
+        <g id="sGap">
+          <rect x="200" y="64" width="200" height="13" fill="var(--plate)" stroke="#5b6b80" stroke-width="1.4"/>
+          <text id="chgG1" x="300" y="56" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--hot)">+ + + +</text>
+          <rect id="plGap" x="200" y="120" width="200" height="13" fill="var(--plate)" stroke="#5b6b80" stroke-width="1.4"/>
+          <text id="chgG2" x="300" y="152" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2b6cb0">− − − −</text>
+          <text x="404" y="74" font-size="12.5" font-weight="700" fill="#33506f">定极板 1</text>
+          <text id="plGapTxt" x="404" y="132" font-size="12.5" font-weight="700" fill="#33506f">动极板 2</text>
+          <line x1="200" y1="70" x2="126" y2="70" stroke="#233b57" stroke-width="1.6"/>
+          <line id="plGapLead" x1="200" y1="126" x2="126" y2="126" stroke="#233b57" stroke-width="1.6"/>
+          <circle cx="124" cy="70" r="3.4" fill="#233b57"/>
+          <circle id="plGapDot" cx="124" cy="126" r="3.4" fill="#233b57"/>
+          <text x="96" y="102" font-size="12.5" font-weight="700" fill="#233b57">C₁</text>
+          <line id="gapDim" x1="432" y1="77" x2="432" y2="120" stroke="var(--gapm)" stroke-width="2.4"/>
+          <line x1="425" y1="77" x2="439" y2="77" stroke="var(--gapm)" stroke-width="2.4"/>
+          <line id="gapDimB" x1="425" y1="120" x2="439" y2="120" stroke="var(--gapm)" stroke-width="2.4"/>
+          <text id="gapTxt" x="442" y="102" font-size="12.5" font-weight="700" fill="var(--gapm)">δ = 1.000 mm</text>
+          <line id="dMoveG" x1="180" y1="152" x2="180" y2="118" stroke="#d94a3d" stroke-width="2.4"/>
+          <polygon id="dMoveGH" points="180,112 175,122 185,122" fill="#d94a3d"/>
+          <text id="dMoveGTxt" x="156" y="140" font-size="12" font-weight="700" fill="#d94a3d">Δd</text>
+          <text x="180" y="286" font-size="11.5" fill="#94a3b8">示意：δ 的变化（Δd ≤ 0.2 mm）已放大显示；蓝点＝电场线，密度与流速 ∝ C</text>
+        </g>
+        <!-- ============ 单端 (b) 变面积型：上下极板错动，覆盖面积变化 ============ -->
+        <g id="sArea" style="display:none">
+          <rect x="170" y="70" width="180" height="13" fill="var(--plate)" stroke="#5b6b80" stroke-width="1.4"/>
+          <text id="chgA1" x="260" y="62" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--hot)">+ + +</text>
+          <rect id="plA" x="170" y="160" width="180" height="13" fill="var(--plate)" stroke="#5b6b80" stroke-width="1.4"/>
+          <rect id="ovlA" x="170" y="83" width="180" height="77" fill="var(--gapm)" opacity=".14"/>
+          <text x="360" y="66" font-size="12.5" font-weight="700" fill="#33506f">定极板 1</text>
+          <text id="plATxt" x="182" y="152" font-size="12.5" font-weight="700" fill="#33506f">动极板 2</text>
+          <text id="ovlTxt" x="170" y="42" font-size="12.5" font-weight="700" fill="var(--gapm)">有效覆盖 a = 20.00 mm（a₀ = 20 mm）</text>
+          <line id="amDim" x1="170" y1="205" x2="170" y2="205" stroke="#d94a3d" stroke-width="2.4"/>
+          <line id="amTick1" x1="170" y1="198" x2="170" y2="212" stroke="#d94a3d" stroke-width="2.4"/>
+          <line id="amTick2" x1="170" y1="198" x2="170" y2="212" stroke="#d94a3d" stroke-width="2.4"/>
+          <polygon id="amH" points="170,205 170,205 170,205" fill="#d94a3d"/>
+          <text id="amTxt" x="240" y="224" font-size="12" font-weight="700" fill="#d94a3d">Δa</text>
+          <text x="170" y="262" font-size="11.5" fill="#94a3b8">C = ε₀b(a₀−Δa)/δ₀ 与覆盖长度成正比 → 严格线性；量程可做到毫米级</text>
+        </g>
+        <!-- ============ 单端 (c) 变介电常数型：极板间介质厚度变化（测厚） ============ -->
+        <g id="sEps" style="display:none">
+          <rect x="180" y="60" width="200" height="13" fill="var(--plate)" stroke="#5b6b80" stroke-width="1.4"/>
+          <text id="chgE1" x="280" y="52" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--hot)">+ + + +</text>
+          <rect x="180" y="226" width="200" height="13" fill="var(--plate)" stroke="#5b6b80" stroke-width="1.4"/>
+          <text id="chgE2" x="280" y="252" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2b6cb0">− − − −</text>
+          <text x="384" y="70" font-size="12.5" font-weight="700" fill="#33506f">定极板（固定）</text>
+          <rect id="filmEps" x="180" y="142" width="200" height="0" fill="var(--diel)" opacity=".55" stroke="#a07c14" stroke-width="1.6"/>
+          <line id="filmDim" x1="404" y1="142" x2="404" y2="142" stroke="var(--diel)" stroke-width="2.4"/>
+          <text id="filmTxt" x="416" y="150" font-size="12.5" font-weight="700" fill="#a07c14">d = 0.00 mm</text>
+          <text id="epsTxt" x="180" y="42" font-size="12.5" font-weight="700" fill="#a07c14">被测介质（εᵣ = 2.7）</text>
+          <text x="180" y="280" font-size="11.5" fill="#94a3b8">空气段与介质段串联：C = bl /［(δ₀−d)/ε₀ + d/ε］ → 厚度 d 改变等效介电常数</text>
+        </g>
+        <!-- ============ 差动 (a) 变极距型：定—动—定，δ₁↓ δ₂↑ ============ -->
+        <g id="dGap" style="display:none">
+          <rect x="200" y="36" width="200" height="13" fill="var(--plate)" stroke="#5b6b80" stroke-width="1.4"/>
+          <text id="chgDG1" x="300" y="28" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--hot)">+ + + +</text>
+          <rect id="dPlGap" x="200" y="145" width="200" height="13" fill="var(--plate)" stroke="#5b6b80" stroke-width="1.4"/>
+          <rect x="200" y="250" width="200" height="13" fill="var(--plate)" stroke="#5b6b80" stroke-width="1.4"/>
+          <text x="404" y="46" font-size="12.5" font-weight="700" fill="#33506f">定极板 1</text>
+          <text id="dPlGapTxt" x="404" y="157" font-size="12.5" font-weight="700" fill="#33506f">动极板 2</text>
+          <text x="404" y="260" font-size="12.5" font-weight="700" fill="#33506f">定极板 3</text>
+          <line x1="200" y1="42" x2="120" y2="42" stroke="#233b57" stroke-width="1.6"/>
+          <line id="dPlGapLead" x1="200" y1="151" x2="120" y2="151" stroke="#233b57" stroke-width="1.6"/>
+          <circle cx="118" cy="42" r="3.4" fill="#233b57"/>
+          <circle id="dPlGapDot" cx="118" cy="151" r="3.4" fill="#233b57"/>
+          <circle cx="118" cy="256" r="3.4" fill="#233b57"/>
+          <line x1="200" y1="256" x2="120" y2="256" stroke="#233b57" stroke-width="1.6"/>
+          <text x="90" y="84" font-size="12.5" font-weight="700" fill="#233b57">C₁</text>
+          <text id="dGapC2Txt" x="90" y="220" font-size="12.5" font-weight="700" fill="#233b57">C₂</text>
+          <text x="90" y="140" font-size="10.5" fill="#94a3b8">C₁−C₂</text>
+          <line id="d1Dim" x1="432" y1="49" x2="432" y2="145" stroke="var(--gapm)" stroke-width="2.4"/>
+          <line x1="425" y1="49" x2="439" y2="49" stroke="var(--gapm)" stroke-width="2.4"/>
+          <line id="d1DimB" x1="425" y1="145" x2="439" y2="145" stroke="var(--gapm)" stroke-width="2.4"/>
+          <text id="d1Txt" x="442" y="99" font-size="12" font-weight="700" fill="var(--gapm)">δ₁ = 1.000 mm</text>
+          <line id="d2Dim" x1="432" y1="158" x2="432" y2="250" stroke="var(--gapm)" stroke-width="2.4"/>
+          <line id="d2DimT" x1="425" y1="250" x2="439" y2="250" stroke="var(--gapm)" stroke-width="2.4"/>
+          <text id="d2Txt" x="442" y="207" font-size="12" font-weight="700" fill="var(--gapm)">δ₂ = 1.000 mm</text>
+          <line id="ddMoveG" x1="180" y1="192" x2="180" y2="143" stroke="#d94a3d" stroke-width="2.4"/>
+          <polygon id="ddMoveGH" points="180,137 175,147 185,147" fill="#d94a3d"/>
+          <text id="ddMoveGTxt" x="156" y="170" font-size="12" font-weight="700" fill="#d94a3d">Δd</text>
+          <text id="dGapOut" x="20" y="292" font-size="12.5" font-weight="700" fill="#0e4a8e">C₁ = 3.54 pF　C₂ = 3.54 pF　ΔC = C₁ − C₂ = 0.00 pF</text>
+        </g>
+        <!-- ============ 差动 (b) 变面积型：动板在两组定板下平移 ============ -->
+        <g id="dArea" style="display:none">
+          <rect x="110" y="70" width="150" height="13" fill="var(--plate)" stroke="#5b6b80" stroke-width="1.4"/>
+          <rect x="310" y="70" width="150" height="13" fill="var(--plate)" stroke="#5b6b80" stroke-width="1.4"/>
+          <text x="185" y="60" text-anchor="middle" font-size="12.5" font-weight="700" fill="#33506f">定极板 1</text>
+          <text x="385" y="60" text-anchor="middle" font-size="12.5" font-weight="700" fill="#33506f">定极板 2</text>
+          <rect id="ovlL" x="210" y="83" width="50" height="87" fill="var(--gapm)" opacity=".15"/>
+          <rect id="ovlR" x="310" y="83" width="50" height="87" fill="var(--gapm)" opacity=".15"/>
+          <text x="200" y="172" font-size="12.5" font-weight="700" fill="#233b57">C₁</text>
+          <text x="360" y="172" font-size="12.5" font-weight="700" fill="#233b57">C₂</text>
+          <rect id="dPlArea" x="210" y="170" width="150" height="13" fill="var(--plate)" stroke="#5b6b80" stroke-width="1.4"/>
+          <text id="dPlAreaTxt" x="216" y="200" font-size="12.5" font-weight="700" fill="#33506f">动极板 3</text>
+          <line id="daDim" x1="210" y1="225" x2="210" y2="225" stroke="#d94a3d" stroke-width="2.4"/>
+          <line x1="210" y1="218" x2="210" y2="232" stroke="#d94a3d" stroke-width="2.4"/>
+          <line id="daTick2" x1="210" y1="218" x2="210" y2="232" stroke="#d94a3d" stroke-width="2.4"/>
+          <polygon id="daH" points="210,225 210,225 210,225" fill="#d94a3d"/>
+          <text id="daTxt" x="240" y="244" font-size="12" font-weight="700" fill="#d94a3d">Δa</text>
+          <text id="dAreaOut" x="20" y="292" font-size="12.5" font-weight="700" fill="#0e4a8e">C₁ = 3.54 pF　C₂ = 3.54 pF　ΔC = 0.00 pF</text>
+          <text x="110" y="278" font-size="11.5" fill="#94a3b8">动板右移 → 左电容覆盖减小、右电容覆盖增大 → 差动线性输出</text>
+        </g>
+        <!-- 电场线粒子 -->
+        <g id="efDots"></g>
+      </svg>
+      <div class="readlabel">输出读数：几何量与电容量</div>
+      <div class="readwrap"><svg viewBox="0 0 620 240" role="img" aria-label="输出读数 电容几何量与电容量">
+        <g transform="translate(150,16)">
+          <text id="geo1" x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">极距 δ = 1.000 mm（δ₀ = 1.000 mm）</text>
+          <text id="geo2" x="0" y="22" font-size="12" fill="#5b6b80">有效覆盖 a = 20.00 mm（a₀ = 20 mm）</text>
+          <text id="geo3" x="0" y="44" font-size="12" fill="#5b6b80">介质厚度 d = 0.00 mm，εᵣ = 2.7</text>
+          <text id="capBig" x="0" y="74" font-size="15" font-weight="800" fill="#d94a3d">C = 3.54 pF</text>
+          <rect x="0" y="88" width="300" height="16" rx="5" fill="#f4f8fd" stroke="#d5dfec"/>
+          <rect id="capBar" x="0" y="88" width="0" height="16" rx="5" fill="var(--efield)"/>
+          <text id="capBarTxt" x="0" y="122" font-size="12.5" font-weight="700" fill="var(--efield)">C/C₀ = 1.00</text>
+          <text id="dPairTxt" x="0" y="150" font-size="12.5" font-weight="700" fill="#0e4a8e">C₁ = 3.54 pF　C₂ = 3.54 pF</text>
+          <text id="dPairNote" x="0" y="172" font-size="11" fill="#94a3b8">差动时输出取两电容之差 ΔC = C₁ − C₂</text>
+          <text x="0" y="198" font-size="11" fill="#94a3b8">电场线（蓝点）从 + 极板流向 − 极板；越密越快 = 电场越强 = C 越大</text>
+        </g>
+      </svg></div>
+      <div class="hint" id="capHint">变极距型：δ 越小 C 越大，但 C 与 δ 成反比 —— 这就是"灵敏"与"非线性"同源的根源。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="circCard">
+      <div class="phead">
+        <h2>测量电路 <small>交流电桥 · 运算放大器式 · 差动脉冲调宽 · 调频</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="seg tight" id="segCirc" style="margin-bottom:4px">
+        <button data-m="bridge" class="on">交流电桥<small>u₀=u(C₁−C₂)/(C₁+C₂)</small></button>
+        <button data-m="opamp">运放式<small>u₀ ∝ δ 线性</small></button>
+        <button data-m="pwm">脉冲调宽<small>直流输出</small></button>
+        <button data-m="fm">调频<small>f=1/(2π√(LC))</small></button>
+      </div>
+      <svg id="cir" viewBox="0 0 700 252" role="img" aria-label="电容式传感器测量电路（四种）">
+        <!-- 左：电桥 / 调宽 共用（差动电容作相邻两臂） -->
+        <g id="cirBridgeLeft">
+          <circle cx="46" cy="104" r="22" fill="none" stroke="#233b57" stroke-width="2"/>
+          <path d="M46 82 a12 12 0 0 1 0 22 a12 12 0 0 1 0 22" fill="none" stroke="#233b57" stroke-width="1.6"/>
+          <text x="46" y="152" text-anchor="middle" font-size="12" font-weight="700" fill="#233b57">u</text>
+          <line x1="68" y1="92" x2="124" y2="64" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="68" y1="116" x2="124" y2="144" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="124" y1="64" x2="138" y2="64" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="146" y1="64" x2="234" y2="64" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="138" y1="50" x2="138" y2="78" stroke="#233b57" stroke-width="2.4"/>
+          <line x1="146" y1="50" x2="146" y2="78" stroke="#233b57" stroke-width="2.4"/>
+          <text x="142" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#0e4a8e">C₁</text>
+          <line x1="124" y1="144" x2="138" y2="144" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="146" y1="144" x2="234" y2="144" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="138" y1="130" x2="138" y2="158" stroke="#233b57" stroke-width="2.4"/>
+          <line x1="146" y1="130" x2="146" y2="158" stroke="#233b57" stroke-width="2.4"/>
+          <text x="142" y="176" text-anchor="middle" font-size="12" font-weight="700" fill="#0e4a8e">C₂</text>
+          <line x1="234" y1="64" x2="234" y2="144" stroke="#233b57" stroke-width="1.8"/>
+          <circle cx="234" cy="104" r="3.5" fill="#233b57"/>
+          <text id="u0cir" x="254" y="109" font-size="14" font-weight="800" fill="#d94a3d">u₀ = 0.0 mV</text>
+          <text x="14" y="200" font-size="11.5" fill="#5b6b80">变压器电桥：差动电容作相邻两臂，u̇₀ = u̇(C₁−C₂)/(C₁+C₂)</text>
+          <text x="14" y="220" font-size="11.5" fill="#5b6b80">电桥必须先平衡（C₁=C₂ 时 u₀=0）；判方向需要相敏检波</text>
+        </g>
+        <!-- 左：运算放大器式 -->
+        <g id="cirOpLeft" style="display:none">
+          <polygon points="120,64 120,152 208,108" fill="#fff" stroke="#233b57" stroke-width="2"/>
+          <text x="132" y="86" font-size="13" font-weight="700" fill="#233b57">−</text>
+          <text x="132" y="140" font-size="13" font-weight="700" fill="#233b57">+</text>
+          <line x1="70" y1="88" x2="120" y2="88" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="86" y1="76" x2="86" y2="100" stroke="#233b57" stroke-width="2.2"/>
+          <line x1="94" y1="76" x2="94" y2="100" stroke="#233b57" stroke-width="2.2"/>
+          <text x="60" y="70" font-size="11.5" font-weight="700" fill="#0e4a8e">C（固定）</text>
+          <line x1="120" y1="132" x2="88" y2="132" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="88" y1="132" x2="88" y2="174" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="76" y1="174" x2="100" y2="174" stroke="#233b57" stroke-width="2"/>
+          <line x1="80" y1="180" x2="96" y2="180" stroke="#233b57" stroke-width="1.6"/>
+          <line x1="84" y1="186" x2="92" y2="186" stroke="#233b57" stroke-width="1.4"/>
+          <line x1="208" y1="108" x2="208" y2="46" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="208" y1="46" x2="96" y2="46" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="96" y1="46" x2="96" y2="88" stroke="#233b57" stroke-width="1.8"/>
+          <line x1="140" y1="32" x2="140" y2="60" stroke="#233b57" stroke-width="2.2"/>
+          <line x1="148" y1="32" x2="148" y2="60" stroke="#233b57" stroke-width="2.2"/>
+          <text x="118" y="24" font-size="11.5" font-weight="700" fill="#0e4a8e">Cx（传感器电容）</text>
+          <line x1="208" y1="108" x2="258" y2="108" stroke="#233b57" stroke-width="1.8"/>
+          <circle cx="258" cy="108" r="3.5" fill="#233b57"/>
+          <text id="u0op" x="270" y="113" font-size="14" font-weight="800" fill="#d94a3d">u₀ = 0.00 V</text>
+          <text x="14" y="214" font-size="11.5" fill="#5b6b80">u₀ = −(C/Cx)·Uᵢ；代入 Cx = εS/δ → u₀ = −(UᵢC/εS)·δ</text>
+          <text x="14" y="234" font-size="11.5" fill="#5b6b80">输出与 δ 成线性，原理上解决变极距型非线性；要求 C 与 Uᵢ 稳定</text>
+        </g>
+        <!-- 左：调频（LC 振荡回路） -->
+        <g id="cirFmLeft" style="display:none">
+          <g transform="translate(70,150)">
+            <path d="M0 0 V-60 M0 -60 q15 -26 30 0 q15 -26 30 0 q15 -26 30 0 q15 -26 30 0" fill="none" stroke="#233b57" stroke-width="2"/>
+            <text x="60" y="-72" text-anchor="middle" font-size="12" font-weight="700" fill="#2b6cb0">L（固定）</text>
+            <line x1="120" y1="-60" x2="120" y2="0" stroke="#233b57" stroke-width="2"/>
+            <line x1="0" y1="0" x2="60" y2="0" stroke="#233b57" stroke-width="2"/>
+            <line x1="60" y1="0" x2="120" y2="0" stroke="#233b57" stroke-width="2"/>
+            <line x1="60" y1="-8" x2="60" y2="8" stroke="#233b57" stroke-width="2.4"/>
+            <line x1="52" y1="-8" x2="52" y2="8" stroke="#233b57" stroke-width="2.4"/>
+            <text x="56" y="34" text-anchor="middle" font-size="12" font-weight="700" fill="#0e4a8e">Cx（传感器）</text>
+            <line x1="120" y1="0" x2="120" y2="26" stroke="#233b57" stroke-width="2"/>
+            <path d="M120 26 h30" stroke="#233b57" stroke-width="2"/>
+            <path d="M150 26 a11 11 0 0 1 0 22 a11 11 0 0 1 0 22" fill="none" stroke="#233b57" stroke-width="1.6"/>
+            <path d="M150 70 h30" stroke="#233b57" stroke-width="2"/>
+            <text x="165" y="46" text-anchor="middle" font-size="11" fill="#233b57">频率计</text>
+          </g>
+          <text x="14" y="220" font-size="11.5" fill="#5b6b80">f = 1/(2π√(LCx))：Cx 随被测变化 → 频率变化，用频率（差）表示位移</text>
+          <text x="14" y="240" font-size="11.5" fill="#5b6b80">抗干扰、适合远距离传输；需加鉴频器把频率变回电压</text>
+        </g>
+        <!-- 右：各模式波形与读数 -->
+        <g id="rBridgeMode" style="display:none">
+          <text x="360" y="34" font-size="12.5" font-weight="700" fill="#0e4a8e">桥路输出 u₀（示意波形）</text>
+          <line x1="360" y1="120" x2="688" y2="120" stroke="#e2e8f0" stroke-width="1.4"/>
+          <line x1="360" y1="120" x2="360" y2="24" stroke="#e2e8f0" stroke-width="1.4"/>
+          <path id="wfBridge" fill="none" stroke="#d94a3d" stroke-width="2.6"/>
+          <text id="u0big" x="360" y="204" font-size="14" font-weight="800" fill="#d94a3d">u₀ = 0.0 mV</text>
+          <text x="360" y="226" font-size="11" fill="#94a3b8">幅度 ∝ |(C₁−C₂)/(C₁+C₂)|；只能测大小，方向需相敏检波</text>
+        </g>
+        <g id="rOpMode" style="display:none">
+          <text x="360" y="34" font-size="12.5" font-weight="700" fill="#0e4a8e">运放输出 u₀ ∝ δ（线性）</text>
+          <line x1="360" y1="120" x2="688" y2="120" stroke="#e2e8f0" stroke-width="1.4"/>
+          <path id="wfOp" fill="none" stroke="#0f9d58" stroke-width="2.6"/>
+          <text id="u0opBig" x="360" y="204" font-size="14" font-weight="800" fill="#0f9d58">u₀ = 4.00 V</text>
+          <text id="u0opNote" x="360" y="226" font-size="11" fill="#94a3b8">u₀ = −(UᵢC/εS)·δ：δ 减小 → u₀ 线性减小，全程无弯曲</text>
+        </g>
+        <g id="rPwmMode" style="display:none">
+          <text x="360" y="34" font-size="12.5" font-weight="700" fill="#0e4a8e">脉冲调宽：T₁ ∝ C₁、T₂ ∝ C₂</text>
+          <line x1="360" y1="120" x2="688" y2="120" stroke="#e2e8f0" stroke-width="1.4"/>
+          <path id="wfPwm" fill="none" stroke="#2b6cb0" stroke-width="2.4"/>
+          <text id="pwmTxt" x="360" y="204" font-size="13" font-weight="800" fill="#2b6cb0">U₀ = 0.0 mV（直流）</text>
+          <text id="pwmDuty" x="360" y="226" font-size="11" fill="#94a3b8">T₁/T₂ = C₁/C₂</text>
+        </g>
+        <g id="rFmMode" style="display:none">
+          <text x="360" y="34" font-size="12.5" font-weight="700" fill="#0e4a8e">振荡频率 f₀（波形疏密示意）</text>
+          <line x1="360" y1="120" x2="688" y2="120" stroke="#e2e8f0" stroke-width="1.4"/>
+          <path id="wfFm" fill="none" stroke="#2b6cb0" stroke-width="2.4"/>
+          <text id="f0out" x="360" y="204" font-size="15" font-weight="800" fill="#2b6cb0">f₀ = — kHz</text>
+          <text id="f0fml" x="360" y="226" font-size="11" fill="#5b6b80">f₀ = 1/(2π√(LCx))</text>
+        </g>
+      </svg>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colB" data-right="colC" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 右列 ================= -->
+  <div class="col" id="colC">
+    <div class="colhead">③ 公式推导 · 特性曲线 · 本章要点</div>
+
+
+    <section class="card panel" id="readCard">
+      <div class="phead">
+        <h2>输出读数</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="big">
+        <span class="cap" id="bigCap">传感器电容量 C</span>
+        <span class="num" id="bigNum">3.542</span><span class="unit" id="bigUnit">pF</span>
+      </div>
+      <div class="kv">
+        <div class="box">相对变化 ΔC/C₀<b id="dCout">0.00 %</b></div>
+        <div class="box">灵敏度 k<b id="sensOut">0.000 pF/mm</b></div>
+        <div class="box">非线性误差<b id="nlOut">0.00 %</b></div>
+        <div class="box" id="u0box">电路输出 u₀<b id="u0out">0.0 mV</b></div>
+      </div>
+      <div class="fine" id="readFine">C = εᵣε₀S/δ = 8.854×10⁻¹²×4×10⁻⁴/1.000×10⁻³ = 3.542 pF。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="fmlCard">
+      <div class="phead">
+        <h2>公式推导 <small id="fmlTitle">变极距型 · 单端</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody"><div class="fml" id="fmlBody"></div></div>
+    </section>
+
+    <section class="card panel" id="curveCard">
+      <div class="phead">
+        <h2>特性曲线 <small>三种型式的 C/C₀–x 与差动输出</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="curve" viewBox="0 0 700 300" role="img" aria-label="电容式传感器特性曲线">
+        <g id="cGrid"></g>
+        <line x1="60" y1="240" x2="672" y2="240" stroke="#9fb2c8" stroke-width="1.5"/>
+        <line x1="60" y1="30" x2="60" y2="240" stroke="#9fb2c8" stroke-width="1.5"/>
+        <path id="pGap"  fill="none" stroke="#d94a3d" stroke-width="3"/>
+        <path id="pArea" fill="none" stroke="#0d8b7f" stroke-width="3"/>
+        <path id="pEps"  fill="none" stroke="#c9a227" stroke-width="3"/>
+        <path id="pDiff" fill="none" stroke="#7c3aed" stroke-width="3.5" stroke-dasharray="7 5"/>
+        <line id="mkX" x1="0" y1="30" x2="0" y2="240" stroke="#0e4a8e" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <circle id="mkDot" r="5.5" fill="#0e4a8e" stroke="#fff" stroke-width="2"/>
+        <text x="672" y="262" text-anchor="end" font-size="12.5" fill="#5b6b80">位移 x / %（满量程）</text>
+        <text x="14" y="26" font-size="12.5" fill="#5b6b80">C / C₀</text>
+      </svg>
+      <div class="legend">
+        <span><i style="background:#d94a3d"></i>变极距型（非线性）</span>
+        <span><i style="background:#0d8b7f"></i>变面积型（线性）</span>
+        <span><i style="background:#c9a227"></i>变介电常数型</span>
+        <span><i style="background:#7c3aed"></i>差动输出 ΔC</span>
+        <span style="margin-left:auto" id="curveNote"></span>
+      </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+</div><!-- /#boardWrap -->
+
+<footer>
+<b>参数：</b>ε₀ = 8.854×10⁻¹² F/m，极板 20 mm×20 mm（S = 4 cm²），δ₀ = 1 mm；变极距型量程 0.2 mm（Δd = δ₀/5），变面积型横移 12 mm，测厚型气隙 4 mm、介质 εᵣ = 2.7、厚度 0~3 mm；调频电感 L = 5 mH，激励 u = 4 V。<b>关系式：</b>C = εᵣε₀S/δ，k = εS/δ₀²，e单 ≈ Δd/δ₀，ΔC差动 = 2C₀(x+x³)，u₀ = u(C₁−C₂)/(C₁+C₂)，u₀(运放) = −(UᵢC/εS)·δ，f = 1/(2π√(LC))。<b>课堂提问：</b>① 为什么变极距型灵敏度高却要限量程？② 差动把非线性从 20% 降到 4% 的机理？③ 变介电常数型为什么算“串联”？
+</footer>
+
+<script>
+(function(){
+  "use strict";
+/* =====================================================================
+   公共运行时（各章通用）· 由 _build/build.js 注入到主脚本的最前面
+   章节代码直接使用：$ / sfmt / frac / clamp / say / sleep / tween /
+   beginDemo / stopDemo / endDemo / bindDemos
+   约定：章节必须定义 var S = { ..., demoToken:0 }；
+        演示函数写成 async，每个 await 判断返回值，结尾 endDemo()；
+        章节 jsB 里用 DEMOS.<key> = {btn:'...', label:'...', fn:demoXxx} 注册，
+        随后调用 bindDemos() 绑定按钮点击。
+   注意：不内置任何语音朗读；演示按钮只由 bindDemos() 绑定一次。
+   ===================================================================== */
+var $ = function(id){ return document.getElementById(id); };
+function sfmt(a, d){ return (a >= 0 ? '+' : '−') + Math.abs(a).toFixed(d); }
+function frac(a, b){ return '<span class="frac"><i>' + a + '</i><b>' + b + '</b></span>'; }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+var DEMOS = {}, SPEED = 1, playingKey = null;
+function say(t){ $('narration').innerHTML = t; }
+function sleep(ms, tok){
+  return new Promise(function(res){ setTimeout(function(){ res(S.demoToken === tok); }, Math.max(60, ms/SPEED)); });
+}
+function tween(from, to, dur, set, tok){
+  dur = Math.max(160, dur/SPEED);
+  return new Promise(function(res){
+    var t0 = performance.now();
+    (function step(now){
+      if (S.demoToken !== tok) return res(false);
+      var p = (now - t0)/dur;
+      if (!isFinite(p)) p = 1;
+      p = clamp(p, 0, 1);
+      var e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
+      var v = from + (to - from)*e;
+      v = (from <= to) ? Math.min(to, Math.max(from, v)) : Math.max(to, Math.min(from, v));
+      set(v);
+      if (p < 1) requestAnimationFrame(step); else res(true);
+    })(performance.now());
+  });
+}
+function resetDemoButtons(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b){ b.textContent = DEMOS[k].label; b.classList.remove('running'); }
+  });
+}
+function stopDemo(){ S.demoToken++; playingKey = null; resetDemoButtons(); }
+function beginDemo(key){
+  stopDemo(); playingKey = key;
+  var d = DEMOS[key], b = d && $(d.btn);
+  if (b){ b.textContent = '⏸ 暂停演示'; b.classList.add('running'); }
+  return ++S.demoToken;
+}
+function endDemo(){ playingKey = null; resetDemoButtons(); }
+function bindDemos(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b) b.addEventListener('click', function(){
+      if (playingKey === k){ stopDemo(); say('演示已暂停。可继续拖动滑块手动观察，或点其它演示按钮。'); }
+      else if (DEMOS[k].fn){ DEMOS[k].fn(); }
+    });
+  });
+}
+(function(){
+  var spd = $('speed');
+  if (spd) spd.addEventListener('input', function(){
+    SPEED = parseFloat(this.value) || 1;
+    $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  });
+})();
+
+
+  /* ============ 1. 物理参数与状态 ============ */
+  var CFG = {
+    eps0: 8.854e-12,      /* F/m */
+    A: 4e-4,              /* 极板有效面积 20 mm × 20 mm = 4 cm² */
+    b: 0.02,              /* 极板宽度（变面积型的横向尺寸）20 mm */
+    d0: 1e-3,             /* 初始极距 δ₀ = 1 mm */
+    dStroke: 0.2e-3,      /* 变极距型满量程 Δd = 0.2 mm（δ₀/5） */
+    a0: 0.02,             /* 变面积型初始覆盖 20 mm */
+    aStroke: 0.012,       /* 变面积型满量程横移 12 mm（覆盖 60%） */
+    epsGap: 4e-3,         /* 测厚型极板间距 4 mm */
+    epsStroke: 3e-3,      /* 测厚型满量程厚度 0~3 mm */
+    L: 5e-3,              /* 调频电路固定电感 5 mH */
+    u: 4.0                /* 桥路 / 运放激励电压 V */
+  };
+  var TYPES = {
+    gap:  { name:'变极距型', stroke:0.2, unit:'mm',
+            hint:'变极距型：灵敏度最高（k = εS/δ₀²），但非线性最严重 —— 量程须限制在 Δd < δ₀/5。' },
+    area: { name:'变面积型', stroke:12, unit:'mm',
+            hint:'变面积型：C 与覆盖面积成正比 → 严格线性；灵敏度 k = εb/δ₀ 恒定，量程可达毫米级。' },
+    eps:  { name:'变介电常数型', stroke:3, unit:'mm',
+            hint:'变介电常数型：极距与面积都不变，靠介质（厚度/液位/湿度）改变等效 εᵣ → 测厚、液位、水分。' }
+  };
+  var S = { type:'gap', x:0, diff:'single', er:2.7, circ:'bridge', demoToken:0 };
+
+  /* ============ 2. 模型（纯函数） ============ */
+  function C0base(){ return CFG.eps0*CFG.A/CFG.d0; }                       /* 3.542 pF */
+  /* 三种型式的 C(x)：x∈[0,1] 为满量程百分比 */
+  function Cof(type, x, er){
+    if (type === 'gap'){
+      var d = CFG.d0 - CFG.dStroke*x;                                     /* δ = δ₀(1−0.2x) */
+      return { C: CFG.eps0*CFG.A/d, C0: C0base(), d: d };
+    }
+    if (type === 'area'){
+      var a = CFG.a0 - CFG.aStroke*x;                                     /* 覆盖 20→8 mm */
+      return { C: CFG.eps0*CFG.b*a/CFG.d0, C0: C0base(), a: a };
+    }
+    var dm = CFG.epsStroke*x;                                             /* 介质厚 0→3 mm，与 4 mm 气隙串联 */
+    var den = (CFG.epsGap - dm) + dm/er;
+    return { C: CFG.eps0*CFG.A/den, C0: CFG.eps0*CFG.A/CFG.epsGap, d: dm };
+  }
+  /* 差动对（变介电常数型按单端使用） */
+  function pairOf(type, x, er){
+    if (type === 'gap'){
+      var dd = CFG.dStroke*x;
+      return { up:{ C: CFG.eps0*CFG.A/(CFG.d0 - dd) }, down:{ C: CFG.eps0*CFG.A/(CFG.d0 + dd) } };
+    }
+    if (type === 'area'){
+      var c0 = C0base(), r = CFG.aStroke/CFG.a0;                          /* 覆盖比例 ±0.6 */
+      return { up:{ C: c0*(1 - r*x) }, down:{ C: c0*(1 + r*x) } };
+    }
+    var c1 = Cof('eps', x, er).C;
+    return { up:{ C: c1 }, down:{ C: c1 } };
+  }
+  /* 非线性误差：相对端基直线的最大偏差（% 满量程） */
+  function nonlinearity(type, er){
+    var c0 = Cof(type, 0, er).C, c1 = Cof(type, 1, er).C, span = Math.abs(c1 - c0) || 1, dev = 0, i;
+    for (i = 0; i <= 100; i++){
+      var u = i/100, c = Cof(type, u, er).C, lin = c0 + (c1 - c0)*u;
+      dev = Math.max(dev, Math.abs(c - lin));
+    }
+    return dev/span*100;
+  }
+  function nonlinearityDiff(type, er){
+    if (type === 'area') return 0;
+    var f = function(u){ var p = pairOf(type, u, er); return p.up.C - p.down.C; };
+    var d0 = f(0), d1 = f(1), span = Math.abs(d1 - d0) || 1, dev = 0, i;
+    for (i = 0; i <= 100; i++){
+      var u = i/100, v = f(u), lin = d0 + (d1 - d0)*u;
+      dev = Math.max(dev, Math.abs(v - lin));
+    }
+    return dev/span*100;
+  }
+  /* 灵敏度 pF/mm（瞬时） */
+  function sensitivity(type, x, er){
+    if (type === 'area') return CFG.eps0*CFG.b/CFG.d0*1e9;                /* pF/mm，恒定 */
+    if (type === 'gap'){
+      var d = CFG.d0 - CFG.dStroke*x;
+      return CFG.eps0*CFG.A/(d*d)*1e9;
+    }
+    var k = 1 - 1/er, den = (CFG.epsGap - CFG.epsStroke*x*k);
+    return CFG.eps0*CFG.A*k/(den*den)*1e9;
+  }
+  /* 教材口径的非线性误差（满量程）：式5-8 e = Δd/δ₀；式5-13 差动 e = (Δd/δ₀)²；变面积型严格线性；
+     变介电常数型教材未给简化式，按端基线定义计算并在页面上注明 */
+  function nonlinFS(type, er, isDiff){
+    if (type === 'eps') return nonlinearity(type, er);
+    if (type === 'area') return 0;
+    var x = CFG.dStroke/CFG.d0;
+    return (isDiff ? x*x : x)*100;
+  }
+
+  /* ============ 3. 电场线动画 ============ */
+  var FIELD = { segs:[], els:null, phase:0 };
+  function segLen(s){ var dx = s.x2 - s.x1, dy = s.y2 - s.y1; return Math.sqrt(dx*dx + dy*dy) || 1; }
+  function initField(){
+    var g = $('efDots'), html = '', i;
+    for (i = 0; i < 18; i++) html += '<circle cx="300" cy="150" r="3.6" fill="var(--efield)" stroke="#fff" stroke-width="1" opacity=".95"/>';
+    g.innerHTML = html;
+    FIELD.els = g.querySelectorAll('circle');
+  }
+  function runField(){
+    var last = performance.now();
+    (function loop(now){
+      var dt = Math.min(60, now - last); last = now;
+      FIELD.phase = (FIELD.phase + dt/1700) % 1;
+      var segs = FIELD.segs || [], n = FIELD.els ? FIELD.els.length : 0, total = 0, i, pi;
+      for (i = 0; i < segs.length; i++) total += segLen(segs[i]);
+      pi = 0;
+      for (i = 0; i < segs.length; i++){
+        var s = segs[i], L = segLen(s);
+        var cnt = Math.max(1, Math.round(n*L/(total || 1)));
+        var f = clamp(s.f || 1, 0.15, 2.2), k;
+        for (k = 0; k < cnt && pi < n; k++, pi++){
+          var t = ((FIELD.phase*(0.45 + 0.55*f) + k/cnt) % 1 + 1) % 1;
+          FIELD.els[pi].setAttribute('cx', (s.x1 + (s.x2 - s.x1)*t).toFixed(1));
+          FIELD.els[pi].setAttribute('cy', (s.y1 + (s.y2 - s.y1)*t).toFixed(1));
+          FIELD.els[pi].setAttribute('opacity', (0.30 + 0.6*Math.min(1, f/1.3)).toFixed(2));
+        }
+      }
+      for (; pi < n; pi++) FIELD.els[pi].setAttribute('opacity', '0');
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+  function chargeStr(n){ var s = '', i; for (i = 0; i < n; i++) s += '+ '; return s; }
+
+  /* ============ 4. 主刷新 ============ */
+  function paint(){
+    var t = S.type, isD = (S.diff === 'differ'), er = S.er;
+    if (t === 'eps'){ isD = false; /* 变介电常数型按单端使用 */ }
+    var r = Cof(t, S.x/100, er), r0 = Cof(t, 0, er), pair = pairOf(t, S.x/100, er);
+    var dC = r.C/r0.C - 1;
+    var segs = [];
+
+    /* --- 按钮状态 --- */
+    document.querySelectorAll('#segType button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-type') === S.type);
+    });
+    document.querySelectorAll('#segDiff button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-diff') === S.diff);
+    });
+    $('typeHint').textContent = TYPES[t].hint;
+    $('xOut').textContent = S.x + ' %';
+    $('erOut').textContent = er.toFixed(1);
+    $('erTxt').textContent = (t === 'eps') ? '介质相对介电常数（空气=1，云母≈7，水≈80）' : '仅变介电常数型使用';
+    $('xTxt').textContent = t === 'gap' ? ('极距 δ = ' + (r.d*1000).toFixed(3) + ' mm')
+                        : (t === 'area' ? ('覆盖 a = ' + (r.a*1000).toFixed(2) + ' mm')
+                                        : ('介质厚度 d = ' + (r.d*1000).toFixed(2) + ' mm'));
+    $('capSub').textContent = t === 'gap' ? 'C = εᵣε₀S/δ，改变极距 δ（变极距型）'
+                            : (t === 'area' ? 'C = εᵣε₀S/δ，改变覆盖面积 S（变面积型）'
+                                            : 'C = bl/[(δ₀−d)/ε₀+d/ε]，改变等效介电常数（变介电常数型）');
+
+    /* --- 结构切换 --- */
+    $('sGap').style.display  = (t === 'gap'  && !isD) ? '' : 'none';
+    $('sArea').style.display = (t === 'area' && !isD) ? '' : 'none';
+    $('sEps').style.display  = (t === 'eps') ? '' : 'none';
+    $('dGap').style.display  = (t === 'gap'  && isD) ? '' : 'none';
+    $('dArea').style.display = (t === 'area' && isD) ? '' : 'none';
+
+    /* --- 几何动画 --- */
+    if (t === 'gap' && !isD){
+      var rel = (r.d - (CFG.d0 - CFG.dStroke))/CFG.dStroke;                 /* δ 0.8→1.0 映射 0→1 */
+      var gapPx = 20 + 36*(1 - rel);
+      var yP = 77 + gapPx;
+      $('plGap').setAttribute('y', yP.toFixed(1));
+      $('plGapTxt').setAttribute('y', (yP + 15).toFixed(1));
+      $('plGapLead').setAttribute('y1', (yP + 6).toFixed(1)); $('plGapLead').setAttribute('y2', (yP + 6).toFixed(1));
+      $('plGapDot').setAttribute('cy', (yP + 6).toFixed(1));
+      $('chgG2').setAttribute('y', (yP + 30).toFixed(1));
+      $('gapDim').setAttribute('y2', yP.toFixed(1));
+      $('gapDimB').setAttribute('y1', yP.toFixed(1)); $('gapDimB').setAttribute('y2', yP.toFixed(1));
+      $('gapTxt').setAttribute('y', (77 + gapPx/2 + 4).toFixed(1));
+      $('gapTxt').textContent = 'δ = ' + (r.d*1000).toFixed(3) + ' mm';
+      $('dMoveG').setAttribute('y1', (yP + 34).toFixed(1)); $('dMoveG').setAttribute('y2', (yP - 2).toFixed(1));
+      $('dMoveGH').setAttribute('points', '180,' + (yP - 8).toFixed(1) + ' 175,' + (yP + 2).toFixed(1) + ' 185,' + (yP + 2).toFixed(1));
+      $('dMoveGTxt').setAttribute('y', (yP + 26).toFixed(1));
+      $('dMoveGTxt').textContent = 'Δd = ' + (S.x*2).toFixed(0) + ' μm';
+      $('chgG1').textContent = chargeStr(clamp(Math.round(r.C/r0.C*4), 2, 9));
+      $('chgG2').textContent = chargeStr(clamp(Math.round(r.C/r0.C*4), 2, 9)).replace(/\+/g, '−');
+      var f = r.C/r0.C, k2;
+      for (k2 = 0; k2 < 6; k2++){
+        segs.push({ x1:225 + k2*30, y1:78, x2:225 + k2*30, y2:yP - 1, f:f });
+      }
+    } else if (t === 'area' && !isD){
+      var sh = 108*S.x/100, ov = 180 - sh;
+      $('plA').setAttribute('x', (170 + sh).toFixed(1));
+      $('plATxt').setAttribute('x', (182 + sh).toFixed(1));
+      $('ovlA').setAttribute('x', (170 + sh).toFixed(1));
+      $('ovlA').setAttribute('width', Math.max(0, ov).toFixed(1));
+      $('ovlTxt').textContent = '有效覆盖 a = ' + (r.a*1000).toFixed(2) + ' mm（' + (r.a/CFG.a0*100).toFixed(0) + '% a₀）';
+      $('amDim').setAttribute('x1', '170'); $('amDim').setAttribute('x2', (170 + sh).toFixed(1));
+      $('amDim').setAttribute('opacity', S.x > 1 ? 1 : 0);
+      $('amTick2').setAttribute('x1', (170 + sh).toFixed(1)); $('amTick2').setAttribute('x2', (170 + sh).toFixed(1));
+      $('amTick2').setAttribute('opacity', S.x > 1 ? 1 : 0);
+      $('amH').setAttribute('points', (170 + sh).toFixed(1) + ',205 ' + (170 + sh - 10).toFixed(1) + ',200 ' + (170 + sh - 10).toFixed(1) + ',210');
+      $('amH').setAttribute('opacity', S.x > 1 ? 1 : 0);
+      $('amTxt').setAttribute('x', (170 + sh/2 + 6).toFixed(1));
+      $('amTxt').textContent = 'Δa = ' + (S.x*0.12).toFixed(2) + ' mm';
+      $('chgA1').textContent = chargeStr(clamp(Math.round(r.C/r0.C*4), 2, 6));
+      var xa = 170 + sh + 8, xb = 350 - 8, span = Math.max(0, xb - xa), n2, k3;
+      n2 = Math.max(2, Math.round(span/26));
+      for (k3 = 0; k3 < n2; k3++){
+        var xx = xa + (span ? span*(k3 + 0.5)/n2 : 0);
+        segs.push({ x1:xx, y1:84, x2:xx, y2:159, f:r.C/r0.C });
+      }
+    } else if (t === 'eps'){
+      var hpx = 153*(r.d/CFG.epsGap);
+      var yTop = 73 + (153 - hpx)/2;
+      $('filmEps').setAttribute('y', yTop.toFixed(1));
+      $('filmEps').setAttribute('height', hpx.toFixed(1));
+      $('filmEps').setAttribute('opacity', Math.min(0.75, 0.25 + r.d/CFG.epsGap).toFixed(2));
+      $('filmDim').setAttribute('y1', yTop.toFixed(1)); $('filmDim').setAttribute('y2', (yTop + hpx).toFixed(1));
+      $('filmTxt').setAttribute('y', (yTop + hpx/2 + 4).toFixed(1));
+      $('filmTxt').textContent = 'd = ' + (r.d*1000).toFixed(2) + ' mm';
+      $('epsTxt').textContent = '被测介质（εᵣ = ' + er.toFixed(1) + '，厚度 d）';
+      $('chgE1').textContent = chargeStr(clamp(Math.round(r.C/r0.C*3), 2, 6));
+      var k4;
+      for (k4 = 0; k4 < 5; k4++){
+        segs.push({ x1:210 + k4*35, y1:74, x2:210 + k4*35, y2:225, f:r.C/r0.C });
+      }
+    } else if (t === 'gap' && isD){
+      var dd2 = CFG.dStroke*S.x/100;
+      var d1 = CFG.d0 - dd2, d2 = CFG.d0 + dd2;
+      var yM = 49 + (28 + (d1 - 0.8e-3)/0.4e-3*144);
+      $('dPlGap').setAttribute('y', yM.toFixed(1));
+      $('dPlGapTxt').setAttribute('y', (yM + 15).toFixed(1));
+      $('dPlGapLead').setAttribute('y1', (yM + 6).toFixed(1)); $('dPlGapLead').setAttribute('y2', (yM + 6).toFixed(1));
+      $('dPlGapDot').setAttribute('cy', (yM + 6).toFixed(1));
+      $('dGapC2Txt').setAttribute('y', (yM + 76).toFixed(1));
+      $('d1Dim').setAttribute('y2', yM.toFixed(1));
+      $('d1DimB').setAttribute('y1', yM.toFixed(1)); $('d1DimB').setAttribute('y2', yM.toFixed(1));
+      $('d1Txt').setAttribute('y', (49 + (yM - 49)/2 + 4).toFixed(1));
+      $('d1Txt').textContent = 'δ₁ = ' + (d1*1000).toFixed(3) + ' mm';
+      $('d2Dim').setAttribute('y1', (yM + 13).toFixed(1));
+      $('d2Txt').setAttribute('y', (yM + 13 + (250 - yM - 13)/2 + 4).toFixed(1));
+      $('d2Txt').textContent = 'δ₂ = ' + (d2*1000).toFixed(3) + ' mm';
+      $('ddMoveG').setAttribute('y1', (yM + 40).toFixed(1)); $('ddMoveG').setAttribute('y2', (yM - 2).toFixed(1));
+      $('ddMoveGH').setAttribute('points', '180,' + (yM - 8).toFixed(1) + ' 175,' + (yM + 2).toFixed(1) + ' 185,' + (yM + 2).toFixed(1));
+      $('ddMoveGTxt').setAttribute('y', (yM + 32).toFixed(1));
+      $('ddMoveGTxt').textContent = 'Δd = ' + (S.x*2).toFixed(0) + ' μm';
+      $('chgDG1').textContent = chargeStr(clamp(Math.round(pair.up.C/r0.C*3), 2, 7));
+      $('dGapOut').textContent = 'C₁ = ' + (pair.up.C*1e12).toFixed(3) + ' pF　C₂ = ' + (pair.down.C*1e12).toFixed(3) +
+        ' pF　ΔC = C₁ − C₂ = ' + ((pair.up.C - pair.down.C)*1e12).toFixed(3) + ' pF';
+      var k5;
+      for (k5 = 0; k5 < 5; k5++){
+        segs.push({ x1:220 + k5*33, y1:51, x2:220 + k5*33, y2:yM - 1, f:pair.up.C/r0.C });
+        segs.push({ x1:220 + k5*33, y1:yM + 14, x2:220 + k5*33, y2:249, f:pair.down.C/r0.C });
+      }
+    } else if (t === 'area' && isD){
+      var s2 = 30*S.x/100, x0 = 210 + s2;
+      var oL = 50 - s2, oR = 50 + s2;
+      $('dPlArea').setAttribute('x', x0.toFixed(1));
+      $('dPlAreaTxt').setAttribute('x', (x0 + 6).toFixed(1));
+      $('ovlL').setAttribute('x', x0.toFixed(1)); $('ovlL').setAttribute('width', Math.max(0, oL).toFixed(1));
+      $('ovlR').setAttribute('width', oR.toFixed(1));
+      $('daDim').setAttribute('x1', '210'); $('daDim').setAttribute('x2', x0.toFixed(1));
+      $('daDim').setAttribute('opacity', S.x > 1 ? 1 : 0);
+      $('daTick2').setAttribute('x1', x0.toFixed(1)); $('daTick2').setAttribute('x2', x0.toFixed(1));
+      $('daTick2').setAttribute('opacity', S.x > 1 ? 1 : 0);
+      $('daH').setAttribute('points', x0.toFixed(1) + ',225 ' + (x0 - 10).toFixed(1) + ',220 ' + (x0 - 10).toFixed(1) + ',230');
+      $('daH').setAttribute('opacity', S.x > 1 ? 1 : 0);
+      $('daTxt').setAttribute('x', (210 + s2/2 + 6).toFixed(1));
+      $('daTxt').textContent = 'Δa = ' + (S.x*0.12).toFixed(2) + ' mm';
+      $('dAreaOut').textContent = 'C₁ = ' + (pair.up.C*1e12).toFixed(3) + ' pF　C₂ = ' + (pair.down.C*1e12).toFixed(3) +
+        ' pF　ΔC = ' + ((pair.up.C - pair.down.C)*1e12).toFixed(3) + ' pF';
+      var nL = Math.max(1, Math.round(oL/18)), nR = Math.max(1, Math.round(oR/18)), k6, xx2;
+      for (k6 = 0; k6 < nL; k6++){
+        xx2 = x0 + 6 + (oL - 12)*(k6 + 0.5)/nL;
+        segs.push({ x1:xx2, y1:84, x2:xx2, y2:169, f:pair.up.C/r0.C });
+      }
+      for (k6 = 0; k6 < nR; k6++){
+        xx2 = 316 + (oR - 12)*(k6 + 0.5)/nR;
+        segs.push({ x1:xx2, y1:84, x2:xx2, y2:169, f:pair.down.C/r0.C });
+      }
+    }
+    FIELD.segs = segs;
+
+    /* --- 内嵌读数 --- */
+    var isEps = (t === 'eps');
+    $('geo1').textContent = t === 'gap' ? ('极距 δ = ' + (r.d*1000).toFixed(3) + ' mm（δ₀ = 1.000 mm）')
+                          : (t === 'area' ? ('覆盖长度 a = ' + (r.a*1000).toFixed(2) + ' mm（a₀ = 20 mm）')
+                                          : ('介质厚度 d = ' + (r.d*1000).toFixed(2) + ' mm（气隙 δ₀ = 4 mm）'));
+    $('geo2').textContent = t === 'area' ? ('面积 S = b·a = 20×' + (r.a*1000).toFixed(1) + ' mm²')
+                                         : '极板面积 S = 20 mm × 20 mm = 4 cm²，极距 δ₀ 与面积保持不变（本型式）';
+    $('geo3').textContent = t === 'eps' ? ('介质 εᵣ = ' + er.toFixed(1) + '（空气段与介质段串联）')
+                                        : ('介质 εᵣ = 1（空气）；' + TYPES[t].name + '改变的是几何量');
+    $('capBig').textContent = 'C = ' + (r.C*1e12).toFixed(3) + ' pF';
+    $('capBar').setAttribute('width', clamp(r.C/r0.C/3*300, 4, 300).toFixed(1));
+    $('capBarTxt').textContent = 'C/C₀ = ' + (r.C/r0.C).toFixed(3);
+    $('dPairTxt').textContent = 'C₁ = ' + (pair.up.C*1e12).toFixed(3) + ' pF　C₂ = ' + (pair.down.C*1e12).toFixed(3) + ' pF';
+    $('dPairNote').textContent = isEps ? '变介电常数型按单端使用（测厚/液位），差动主要用于变极距型与变面积型'
+      : (isD ? '差动：ΔC = C₁ − C₂ = ' + ((pair.up.C - pair.down.C)*1e12).toFixed(3) + ' pF —— 偶次项相消、灵敏度×2'
+             : '单端：输出直接由 ΔC/C₀ 决定；切到差动可看改善效果');
+    $('capHint').textContent = t === 'gap'
+      ? '变极距型：δ 越小 C 越大，但 C 与 δ 成反比 —— 这就是“灵敏”与“非线性”同源的根源。'
+      : (t === 'area' ? '变面积型：C 与覆盖长度成正比 —— 严格线性；缺点是极板边缘效应与安装对准要求高。'
+                      : '变介电常数型：极距、面积都不动，靠介质“进出”改变等效 εᵣ —— 测厚、液位、水分都靠它。');
+
+    /* --- 读数 --- */
+    var cShow = (isD && !isEps) ? (pair.up.C - pair.down.C) : r.C;
+    $('bigCap').textContent = (isD && !isEps) ? '差动输出 ΔC = C₁ − C₂' : '传感器电容量 C';
+    $('bigNum').textContent = (cShow*1e12).toFixed(3);
+    $('bigUnit').textContent = 'pF';
+    $('dCout').textContent = isD && !isEps
+      ? ('+ ' + ((pair.up.C - pair.down.C)/r0.C*100).toFixed(2) + ' %')
+      : sfmt(dC*100, 2) + ' %';
+    $('sensOut').textContent = sensitivity(t, S.x/100, er).toFixed(3) + ' pF/mm';
+    $('nlOut').textContent = nonlinFS(t, er, isD && !isEps).toFixed(2) + ' %';
+    $('readFine').innerHTML = '满量程 ' + TYPES[t].stroke + ' mm（' + TYPES[t].name + '，' + (isD && !isEps ? '差动' : '单端') +
+      '）；C₀ = ε₀S/δ₀ = ' + (r0.C*1e12).toFixed(3) + ' pF，当前 ΔC/C₀ = <b>' + (dC*100).toFixed(2) + '%</b>。' +
+      (t === 'eps' ? '测厚型：C = ε₀S/(δ₀−d+d/εᵣ) —— 介质越厚、εᵣ 越大，C 越大；非线性按端基线定义。' : '');
+
+    /* --- 曲线 / 电路 / 公式 / 要点 --- */
+    drawCurves(r, pair, r0);
+    paintCircuit(r, r0, pair, isD && !isEps);
+    paintFormulas(r, r0, pair, isD && !isEps);
+    paintPoints();
+    if (window.__repack) window.__repack();
+  }
+
+  /* ============ 5. 特性曲线 ============ */
+  var CH = { x0:60, x1:672, y0:240, y1:30, ymax:3.0, ymin:0 };
+  function cpx(x){ return CH.x0 + x*(CH.x1 - CH.x0); }
+  function cpy(v){ return CH.y0 - (clamp(v, CH.ymin, CH.ymax) - CH.ymin)/(CH.ymax - CH.ymin)*(CH.y0 - CH.y1); }
+  var cureGap = null, cureArea = null, cureEps = null;
+  function drawCurves(r, pair, r0){
+    if (!cureGap){
+      cureGap = Cof('gap', 1, 2.7).C/Cof('gap', 0, 2.7).C;
+      cureArea = Cof('area', 1, 2.7).C/Cof('area', 0, 2.7).C;
+      cureEps = Cof('eps', 1, 2.7).C/Cof('eps', 0, 2.7).C;
+    }
+    if (!CH.grid){
+      var t2 = '', i, v;
+      for (v = 0; v <= CH.ymax + 1e-9; v += 0.5){
+        t2 += '<line x1="' + CH.x0 + '" y1="' + cpy(v).toFixed(1) + '" x2="' + CH.x1 + '" y2="' + cpy(v).toFixed(1) + '" stroke="#e6edf6"/>';
+        t2 += '<text x="52" y="' + (cpy(v)+4).toFixed(1) + '" text-anchor="end" font-size="12" fill="#5b6b80">' + v.toFixed(1) + '</text>';
+      }
+      for (i = 0; i <= 100; i += 20){
+        t2 += '<line x1="' + cpx(i/100).toFixed(1) + '" y1="' + CH.y1 + '" x2="' + cpx(i/100).toFixed(1) + '" y2="' + CH.y0 + '" stroke="#e6edf6"/>';
+        t2 += '<text x="' + cpx(i/100).toFixed(1) + '" y="' + (CH.y0+16) + '" text-anchor="middle" font-size="12" fill="#5b6b80">' + i + '</text>';
+      }
+      $('cGrid').innerHTML = t2; CH.grid = true;
+    }
+    function pathOf(fn){
+      var d = '', first = true, i;
+      for (i = 0; i <= 100; i += 2){
+        var u = i/100;
+        d += (first ? 'M' : 'L') + cpx(u).toFixed(1) + ' ' + cpy(fn(u)).toFixed(1) + ' ';
+        first = false;
+      }
+      return d;
+    }
+    var eR = S.er;
+    $('pGap').setAttribute('d', pathOf(function(u){ return Cof('gap', u, eR).C/Cof('gap', 0, eR).C; }));
+    $('pArea').setAttribute('d', pathOf(function(u){ return Cof('area', u, eR).C/Cof('area', 0, eR).C; }));
+    $('pEps').setAttribute('d', pathOf(function(u){ return Cof('eps', u, eR).C/Cof('eps', 0, eR).C; }));
+    var dMax = pairOf(S.type, 1, eR).up.C - pairOf(S.type, 1, eR).down.C;
+    $('pDiff').setAttribute('d', pathOf(function(u){
+      var p = pairOf(S.type, u, eR);
+      return 1 + (dMax ? (p.up.C - p.down.C)/Math.abs(dMax) : 0);
+    }));
+    $('pGap').setAttribute('opacity', S.type === 'gap' ? 1 : 0.28);
+    $('pArea').setAttribute('opacity', S.type === 'area' ? 1 : 0.28);
+    $('pEps').setAttribute('opacity', S.type === 'eps' ? 1 : 0.28);
+    $('pGap').setAttribute('stroke-width', S.type === 'gap' ? 4 : 2.4);
+    $('pArea').setAttribute('stroke-width', S.type === 'area' ? 4 : 2.4);
+    $('pEps').setAttribute('stroke-width', S.type === 'eps' ? 4 : 2.4);
+    $('pDiff').setAttribute('opacity', (S.diff === 'differ' && S.type !== 'eps') ? 1 : 0.22);
+    var uu = S.x/100;
+    $('mkX').setAttribute('x1', cpx(uu).toFixed(1)); $('mkX').setAttribute('x2', cpx(uu).toFixed(1));
+    $('mkDot').setAttribute('cx', cpx(uu).toFixed(1)); $('mkDot').setAttribute('cy', cpy(r.C/r0.C).toFixed(1));
+    $('curveNote').textContent = TYPES[S.type].name + '：C/C₀ = ' + (r.C/r0.C).toFixed(3) +
+      '，非线性误差 ' + nonlinFS(S.type, eR, S.diff === 'differ').toFixed(2) + '%';
+  }
+
+  /* ============ 6. 测量电路：四模式 ============ */
+  var CIRC = { mode:'bridge', u0:0, u0v:0, f0:0, duty:0.5, t:0 };
+  var CIRC_INFO = {
+    bridge: '交流电桥：差动电容作相邻两臂，u₀ = u(C₁−C₂)/(C₁+C₂)。C₁=C₂ 时电桥平衡输出为零；只能测大小，方向需相敏检波。',
+    opamp:  '运算放大器式：u₀ = −(C/Cx)·Uᵢ；代入 Cx = εS/δ 得 u₀ = −(UᵢC/εS)·δ —— 输出与极距 δ 成线性，原理上解决变极距型的非线性（要求 C、Uᵢ 稳定）。',
+    pwm:    '差动脉冲调宽：矩形波宽度 T₁ ∝ C₁、T₂ ∝ C₂，U₀ = U(T₁−T₂)/(T₁+T₂) = U(C₁−C₂)/(C₁+C₂)。直流输出、理论线性、免相敏检波，最适合差动电容。',
+    fm:     '调频：Cx 与固定电感 L 组成谐振回路，f = 1/(2π√(LCx))；被测 → Cx → 频率，用频率（差）表示位移，抗干扰、适合远传（需鉴频器）。'
+  };
+  function setCircMode(m){
+    if (CIRC_INFO[m]){ CIRC.mode = m; stopDemo(); paint(); say('<b>' + CIRC_INFO[m].split('：')[0] + '</b>：' + CIRC_INFO[m]); }
+  }
+  function paintCircuit(r, r0, pair, isDiff){
+    var isB = CIRC.mode === 'bridge', isO = CIRC.mode === 'opamp', isP = CIRC.mode === 'pwm', isF = CIRC.mode === 'fm';
+    $('cirBridgeLeft').style.display = (isB || isP) ? '' : 'none';
+    $('cirOpLeft').style.display = isO ? '' : 'none';
+    $('cirFmLeft').style.display = isF ? '' : 'none';
+    $('rBridgeMode').style.display = isB ? '' : 'none';
+    $('rOpMode').style.display = isO ? '' : 'none';
+    $('rPwmMode').style.display = isP ? '' : 'none';
+    $('rFmMode').style.display = isF ? '' : 'none';
+    var btns = document.querySelectorAll('#segCirc button');
+    for (var b = 0; b < btns.length; b++){
+      btns[b].classList.toggle('on', btns[b].getAttribute('data-m') === CIRC.mode);
+    }
+    /* 单端时以 C₀ 作参考臂 */
+    var c1 = isDiff ? pair.up.C : r.C, c2 = isDiff ? pair.down.C : r0.C;
+    var dPair = (c1 - c2)/(c1 + c2);
+    CIRC.u0 = CFG.u*dPair;                                          /* 电桥/调宽：U(C₁−C₂)/(C₁+C₂) */
+    CIRC.u0v = CFG.u*r0.C/r.C;                                      /* 运放：U·C₀/Cx */
+    CIRC.f0 = 1/(2*Math.PI*Math.sqrt(CFG.L*r.C));
+    CIRC.duty = c1/(c1 + c2);
+    $('u0cir').textContent = 'u₀ = ' + (Math.abs(CIRC.u0)*1000).toFixed(1) + ' mV';
+    $('u0big').textContent = 'u₀ = ' + (Math.abs(CIRC.u0)*1000).toFixed(1) + ' mV';
+    $('u0op').textContent = 'u₀ = ' + CIRC.u0v.toFixed(3) + ' V';
+    $('u0opBig').textContent = 'u₀ = ' + CIRC.u0v.toFixed(3) + ' V';
+    $('u0opNote').textContent = 'u₀ = −(Uᵢ·C₀/εS)·δ = −(' + CFG.u.toFixed(1) + '×' + (r0.C*1e12).toFixed(2) +
+      ' pF)/(ε₀S)·δ → 与 δ 成正比（线性）';
+    $('pwmTxt').textContent = 'U₀ = ' + (Math.abs(CIRC.u0)*1000).toFixed(1) + ' mV（直流）';
+    $('pwmDuty').textContent = 'T₁/T₂ = C₁/C₂ = ' + (c1/c2).toFixed(3) + '，U₀ = U(C₁−C₂)/(C₁+C₂) —— 理论线性、免相敏检波';
+    $('f0out').textContent = 'f₀ = ' + (CIRC.f0/1000).toFixed(1) + ' kHz';
+    $('f0fml').textContent = 'f₀ = 1/(2π√(LCx))，L = ' + (CFG.L*1000).toFixed(0) + ' mH，Cx = ' + r.C.toFixed(3) +
+      ' pF → f₀ = ' + (CIRC.f0/1000).toFixed(1) + ' kHz';
+  }
+  /* 正弦波形（滚动） */
+  function wf(id, y0, amp, cycles, phase){
+    var d = '', x0 = 360, x1 = 688, n = 90, i;
+    for (i = 0; i <= n; i++){
+      var x = x0 + (x1 - x0)*i/n;
+      var y = y0 - amp*Math.sin(2*Math.PI*(cycles*(i/n) + CIRC.t*cycles) + phase);
+      d += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
+    }
+    $(id).setAttribute('d', d);
+  }
+  /* 矩形波（滚动，占空比 = T₁/(T₁+T₂)） */
+  function wfPwm(id, y0, amp, duty){
+    var d = '', x0 = 360, x1 = 688, n = 160, i, hi = false;
+    var cycles = 3;
+    for (i = 0; i <= n; i++){
+      var t = i/n, pos = ((t*cycles*3 + CIRC.t*2) % 1 + 1) % 1;
+      hi = pos < duty;
+      var y = y0 - (hi ? amp : -amp);
+      d += (i ? 'L' : 'M') + (x0 + (x1 - x0)*t).toFixed(1) + ' ' + y.toFixed(1) + ' ';
+    }
+    $(id).setAttribute('d', d);
+  }
+  function runCircuit(){
+    (function loop(now){
+      CIRC.t = now/1000;
+      var amp = clamp(Math.abs(CIRC.u0)*70, 3, 40);
+      wf('wfBridge', 120, amp, 4, CIRC.u0 < 0 ? Math.PI : 0);
+      wf('wfOp', 120, clamp(Math.abs(CIRC.u0v)/CFG.u*70, 6, 60), 4, 0);
+      wfPwm('wfPwm', 120, 26, clamp(CIRC.duty, 0.15, 0.85));
+      wf('wfFm', 120, 22, clamp(CIRC.f0/30000, 4, 10), 0);
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+  var cbtns = document.querySelectorAll('#segCirc button');
+  for (var cb = 0; cb < cbtns.length; cb++){
+    (function(btn){ btn.addEventListener('click', function(){ setCircMode(btn.getAttribute('data-m')); }); })(cbtns[cb]);
+  }
+
+  /* ============ 7. 公式 ============ */
+  function paintFormulas(r, r0, pair, isDiff){
+    var t = S.type, er = S.er, N, html = '';
+    var kInst = sensitivity(t, S.x/100, er);
+    html += '<div class="row"><span class="tag">式 5-1</span><span>C = ' + frac('εS', 'δ') + ' = ' +
+            frac('εᵣε₀S', 'δ') + ' = ' + (r.C*1e12).toFixed(3) + ' pF　（C₀ = ' + (r0.C*1e12).toFixed(3) + ' pF）</span></div>';
+    if (t === 'gap'){
+      html += '<div class="row"><span class="tag">式 5-3</span><span>变极距：C = ' + frac('C₀', '1−Δd/δ₀') +
+              ' = ' + frac((r0.C*1e12).toFixed(3), '1−' + (S.x*0.002).toFixed(3)) + ' = <b>' + (r.C*1e12).toFixed(3) + ' pF</b></span></div>';
+      html += '<div class="row"><span class="tag">式 5-6</span><span>灵敏度 k = ' + frac('εS', 'δ₀²') +
+              ' = εS/δ² 瞬时值 <b>' + kInst.toFixed(3) + ' pF/mm</b>（dC/dδ 与 δ² 成反比）</span></div>';
+      html += '<div class="row"><span class="tag">式 5-8</span><span>单组式相对非线性 e = ' + frac('Δd', 'δ₀') +
+              '×100% = <b>' + nonlinFS('gap', er, false).toFixed(2) + '%</b>（满量程 Δd/δ₀ = 0.2）</span></div>';
+    } else if (t === 'area'){
+      html += '<div class="row"><span class="tag">式 5-14</span><span>变面积：C = ' + frac('εb(a₀−Δa)', 'δ₀') +
+              ' = ' + (r.C*1e12).toFixed(3) + ' pF　（与 Δa 成线性）</span></div>';
+      html += '<div class="row"><span class="tag">式 5-15</span><span>灵敏度 k = ' + frac('εb', 'δ₀') +
+              ' = <b>' + kInst.toFixed(3) + ' pF/mm</b>（与位移无关 → 严格线性）</span></div>';
+      html += '<div class="row"><span class="tag">式 5-16</span><span>圆柱形（对照）：C = ' + frac('2πεl', 'ln(r₂/r₁)') +
+              '，ΔC = C₀Δl/l —— 灵敏度只取决于半径比</span></div>';
+    } else {
+      var kSer = 1 - 1/er;
+      html += '<div class="row"><span class="tag">式 5-19</span><span>变介电（测厚）：C = ' + frac('bl', '(δ₀−d)/ε₀+d/ε') +
+              ' = ' + (r.C*1e12).toFixed(3) + ' pF　（空气段与介质段串联）</span></div>';
+      html += '<div class="row"><span class="tag">式 5-20</span><span>等效：δ = δ₀−d+d/εᵣ = ' + ((r0.C/r.C*CFG.epsGap)*1000).toFixed(3) +
+              ' mm（1−1/εᵣ = ' + kSer.toFixed(3) + '）→ d ↑ 则等效 δ ↓、C ↑</span></div>';
+      html += '<div class="row"><span class="tag">式 5-21</span><span>液位（对照）：ΔC = ' + frac('2π(ε−ε₀)h', 'ln(r₂/r₁)') +
+              ' ∝ h —— 圆筒式液位计（飞机油量表）；敏感度 ' + kInst.toFixed(3) + ' pF/mm</span></div>';
+    }
+    if (t !== 'eps'){
+      html += isDiff
+        ? '<div class="row"><span class="tag g">式 5-10</span><span>差动：ΔC = C₁−C₂ = 2C₀[x+x³+…] = <b>' +
+          ((pair.up.C - pair.down.C)*1e12).toFixed(3) + ' pF</b>；灵敏度 k′ = 2C₀/δ₀（提高一倍）</span></div>' +
+          '<div class="row"><span class="tag g">式 5-13</span><span>差动非线性 ≈ (Δd/δ₀)²×100% = <b>' +
+          nonlinFS(t, er, true).toFixed(2) + '%</b>（单端为 ' + nonlinFS(t, er, false).toFixed(2) + '%）</span></div>'
+        : '<div class="row"><span class="tag g">式 5-11</span><span>差动（对照）ΔC ≈ 2C₀Δd/δ₀，非线性降到 (Δd/δ₀)² —— 切到“差动”看改善</span></div>';
+    }
+    html += '<div class="note">' + CIRC_INFO[CIRC.mode] + '</div>';
+    $('fmlTitle').textContent = TYPES[t].name + ' · ' + (isDiff ? '差动' : '单端') + ' ｜ 当前电路：' +
+      ({ bridge:'交流电桥', opamp:'运放式', pwm:'脉冲调宽', fm:'调频' })[CIRC.mode];
+    $('fmlBody').innerHTML = html;
+  }
+
+  /* ============ 8. 要点 ============ */
+  var PTS_TEXT = [
+    '电容式传感器把被测量转换为<b>电容量 C 的变化</b>：C = εᵣε₀S/δ —— 改变 δ、S、εᵣ 就是三大型式。',
+    '<b>变极距型</b>：k = εS/δ₀² 灵敏度最高，但 C = C₀/(1−Δd/δ₀) <b>非线性</b>，相对非线性 e ≈ Δd/δ₀ → 量程限制在 Δd &lt; δ₀/5。',
+    '<b>差动变极距型</b>：ΔC = C₁−C₂ = 2C₀(x+x³+…) → 偶次项相消：灵敏度×2（k′=2C₀/δ₀）、非线性降为 (Δd/δ₀)²，共模温度/电源波动自动抵消。',
+    '<b>变面积型</b>：C 与覆盖面积成正比 → <b>严格线性</b>，k = εb/δ₀（圆柱式 k = 2πε/ln(r₂/r₁)）→ 适合角位移与毫米级线位移。',
+    '<b>变介电常数型</b>：测厚 C = bl/[(δ₀−d)/ε₀+d/ε]（串联）；液位 ΔC = 2π(ε−ε₀)h/ln(r₂/r₁)（并联、C₀ 作差消去）→ 测厚、液位、水分。',
+    '电容式优点：<b>分辨力极高（可达 0.001 μm）、非接触、可在高温辐射环境</b>；缺点：输出阻抗高、易受寄生电容与干扰 → 需屏蔽、驱动电缆或集成化。',
+    '主要误差：<b>边缘效应</b>（等位保护环最有效）与<b>绝缘电阻</b>；温度带来尺寸误差与介质 ε 误差（设计补偿 lα_l = h₁α_h1 + h₂α_h2）。',
+    '测量电路：<b>交流电桥</b>（u₀ = u(C₁−C₂)/(C₁+C₂)）、<b>差动脉冲调宽</b>（直流、免相敏检波）、<b>运放式</b>（u₀ ∝ δ 线性化）、<b>调频</b>（f = 1/(2π√(LC))，远传）。',
+    '典型应用：电容式压力/微压差传感器（凹面镀金极板、球面防过载）、位移振动探头、加速度计、飞机油量表、电容测厚仪、称重与水分计。'
+  ];
+  var PTS = { active:-1 };
+  function paintPoints(){
+    if (!$('points').children.length){
+      var html = '';
+      PTS_TEXT.forEach(function(t2, k){ html += '<li data-pi="' + k + '">' + t2 + '</li>'; });
+      $('points').innerHTML = html;
+    }
+  }
+  function setPt(i){
+    PTS.active = i;
+    var lis = $('points').children, k;
+    for (k = 0; k < lis.length; k++) lis[k].classList.toggle('on', k === i);
+    for (k = 0; k < PTS_TEXT.length; k++){
+      var bb = $('ptsB' + k);
+      if (bb) bb.classList.toggle('on', k === i);
+    }
+    if (i >= 0) say('<b>要点 ' + (i+1) + '/' + PTS_TEXT.length + '</b>：' + PTS_TEXT[i]);
+  }
+  for (var pb = 0; pb < PTS_TEXT.length; pb++){
+    (function(k){ $('ptsB' + k).addEventListener('click', function(){ stopDemo(); setPt(k); }); })(pb);
+  }
+  /* 注意：ptsPlay 的点击由 jsB 的 bindDemos()（DEMOS.pts）统一绑定，这里不要再手动绑定 */
+
+  /* ============ 9. 交互 ============ */
+  function setType(t){ S.type = t; if (t === 'eps') S.diff = 'single'; paint(); }
+  function setX(v){ S.x = clamp(Math.round(v), 0, 100); $('x').value = S.x; paint(); }
+  function setDiff(d){
+    if (d === 'differ' && S.type === 'eps'){
+      stopDemo();
+      say('<b>变介电常数型</b>一般按<b>单端</b>使用（测厚、液位）；差动主要用于变极距型与变面积型 —— 请先切换到这两种型式。');
+      return;
+    }
+    S.diff = d; paint();
+  }
+  function setEr(v){ S.er = Math.round(v*10)/10; $('er').value = S.er; paint(); }
+  $('x').addEventListener('input', function(){ stopDemo(); setX(+this.value); });
+  $('er').addEventListener('input', function(){ stopDemo(); setEr(+this.value); });
+  $('xM').addEventListener('click', function(){ stopDemo(); setX(S.x - 5); });
+  $('xP').addEventListener('click', function(){ stopDemo(); setX(S.x + 5); });
+  document.querySelectorAll('#segType button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setType(b.getAttribute('data-type')); say(TYPES[S.type].hint); });
+  });
+  document.querySelectorAll('#segDiff button').forEach(function(b){
+    b.addEventListener('click', function(){
+      stopDemo(); setDiff(b.getAttribute('data-diff'));
+      if (S.type !== 'eps') say(S.diff === 'differ'
+        ? '<b>差动结构</b>：动板夹在两定板（或两组定板）中间，两个电容反向变化，输出取差值 → 灵敏度×2、偶次非线性相消、共模干扰抵消。'
+        : '<b>单端结构</b>：输出直接由 ΔC/C₀ 决定；注意变极距型的非线性（对比曲线上的紫色虚线）。');
+    });
+  });
+  $('reset').addEventListener('click', function(){
+    stopDemo();
+    S.type = 'gap'; S.diff = 'single'; S.er = 2.7; setX(0); CIRC.mode = 'bridge';
+    $('er').value = 2.7; $('erOut').textContent = '2.7';
+    say('已复位：变极距型、单端、x = 0、εᵣ = 2.7、交流电桥。');
+  });
+
+  /* ============ 10. 演示 ============ */
+  async function demoCap(){
+    var tok = beginDemo('cap');
+    setType('gap'); setDiff('single'); setX(0);
+    say('【<b>变极距原理</b>】C = εᵣε₀S/δ。现在 δ₀ = 1.000 mm、S = 20×20 mm，C₀ = ε₀S/δ₀ = <b>' +
+        (C0base()*1e12).toFixed(3) + ' pF</b>。蓝色小点＝电场线，从正极板流向负极板。');
+    if (!await sleep(3400, tok)) return;
+    say('① <b>减小极距</b>：δ 从 1.000 mm 减小到 0.800 mm（Δd = 0.2 mm = δ₀/5），C 将增大 —— 注意 C 与 δ <b>成反比</b>，越到后面增长越快。');
+    if (!await tween(0, 100, 2800, setX, tok)) return;
+    if (!await sleep(2000, tok)) return;
+    var r = Cof('gap', 1, 2.7), r0 = Cof('gap', 0, 2.7);
+    say('② 结果：C = <b>' + (r.C*1e12).toFixed(3) + ' pF</b>（+' + ((r.C/r0.C - 1)*100).toFixed(1) +
+        '%）。灵敏度 k = εS/δ² —— 想让灵敏度更高就要减小 δ₀；但相对非线性 e ≈ Δd/δ₀ = <b>' +
+        nonlinFS('gap', 2.7, false).toFixed(0) + '%</b>，所以工程上把量程限制在 Δd &lt; δ₀/5。');
+    if (!await sleep(3600, tok)) return;
+    say('③ <b>换变面积型</b>试试：极距不变，动极板横向错开、覆盖面积减小 —— C 与覆盖长度成正比，曲线是直线（严格线性）。');
+    setType('area'); setX(0);
+    if (!await sleep(2200, tok)) return;
+    if (!await tween(0, 100, 2600, setX, tok)) return;
+    if (!await sleep(1800, tok)) return;
+    say('④ 变面积型的代价：灵敏度只有 <b>' + sensitivity('area', 0, 2.7).toFixed(3) +
+        ' pF/mm</b>（变极距型是 ' + sensitivity('gap', 0, 2.7).toFixed(3) + ' pF/mm），但换来了严格线性与毫米级量程。');
+    if (!await sleep(3200, tok)) return;
+    setType('gap'); setX(0);
+    say('【小结】同一句 C = εᵣε₀S/δ：变 δ 最灵敏但非线性、变 S 严格线性但灵敏度低、变 εᵣ 适合测厚/液位 —— 选型就是“灵敏度 ↔ 量程 ↔ 线性度”的取舍。');
+    endDemo();
+  }
+
+  async function demoTypes(){
+    var tok = beginDemo('types');
+    setType('gap'); setDiff('single'); setX(50);
+    say('【<b>三种型式对比</b>】固定 x = 50%，依次切换三种型式，重点比较<b>灵敏度、线性度、量程</b>。');
+    if (!await sleep(2600, tok)) return;
+    say('① <b>变极距型</b>：δ = ' + (Cof('gap', 0.5, 2.7).d*1000).toFixed(3) + ' mm，C = ' +
+        (Cof('gap', 0.5, 2.7).C*1e12).toFixed(3) + ' pF；曲线是双曲线，满量程非线性 <b>' +
+        nonlinFS('gap', 2.7, false).toFixed(0) + '%</b>，量程只有 0.2 mm。');
+    if (!await sleep(3200, tok)) return;
+    setType('area');
+    say('② <b>变面积型</b>：覆盖 a = ' + (Cof('area', 0.5, 2.7).a*1000).toFixed(2) + ' mm，C = ' +
+        (Cof('area', 0.5, 2.7).C*1e12).toFixed(3) + ' pF；<b>直线</b>（非线性 ' + nonlinFS('area', 2.7, false).toFixed(2) +
+        '%），灵敏度恒定 ' + sensitivity('area', 0, 2.7).toFixed(3) + ' pF/mm，量程 12 mm。');
+    if (!await sleep(3400, tok)) return;
+    setType('eps');
+    say('③ <b>变介电常数型</b>：介质厚 d = ' + (Cof('eps', 0.5, 2.7).d*1000).toFixed(2) + ' mm，C = ' +
+        (Cof('eps', 0.5, 2.7).C*1e12).toFixed(3) + ' pF；空气段与介质段<b>串联</b>，靠介质“进出”改变等效介电常数。测厚、液位、水分都靠它。');
+    if (!await sleep(3400, tok)) return;
+    say('④ 拖动右侧的 <b>εᵣ 滑块</b>看介电常数的影响：εᵣ 越大（水≈80！）同样厚度引起的电容变化越大 —— 这就是水分计的原理。');
+    if (!await sleep(3000, tok)) return;
+    setType('gap'); setX(0);
+    say('【小结】三种型式对应改变 C = εᵣε₀S/δ 里的<b>哪一个量</b>：δ、S 还是 εᵣ。');
+    endDemo();
+  }
+
+  async function demoDiff(){
+    var tok = beginDemo('diff');
+    setType('gap'); setDiff('single'); setX(0);
+    say('【<b>差动改善</b>】先看单端：C 与 δ 成反比，位移一大量程内曲线明显弯曲。');
+    if (!await sleep(2200, tok)) return;
+    if (!await tween(0, 100, 2400, setX, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('① 单端满量程：C 从 3.542 增到 <b>' + (Cof('gap', 1, 2.7).C*1e12).toFixed(3) +
+        ' pF</b>（+25%），相对非线性 e ≈ Δd/δ₀ = <b>' + nonlinFS('gap', 2.7, false).toFixed(1) + '%</b>。');
+    if (!await sleep(2800, tok)) return;
+    say('② <b>改成差动</b>：动板夹在两块定板中间，上、下各形成一个电容 —— 动板上移时 <b>δ₁ 减小、δ₂ 增大</b>，C₁ 增、C₂ 减，输出取两者之差。看上下两组电场线的强弱变化。');
+    setDiff('differ');
+    if (!await sleep(3200, tok)) return;
+    say('③ 差动的三重好处：ΔC = C₁−C₂ ≈ 2C₀Δd/δ₀ —— ①<b>灵敏度提高一倍</b>；②偶次项相消，非线性从 ' +
+        nonlinFS('gap', 2.7, false).toFixed(0) + '% 降到 <b>' + nonlinFS('gap', 2.7, true).toFixed(1) +
+        '%</b>；③温度、电源波动影响相同，取差值自动抵消。');
+    if (!await sleep(3600, tok)) return;
+    if (!await tween(0, 100, 2200, setX, tok)) return;
+    if (!await sleep(1800, tok)) return;
+    say('④ <b>变面积型的差动</b>：动板在两组定板下平移，一边覆盖增大、另一边减小 —— 两个电容反向变化，ΔC 也是线性的，灵敏度再翻一倍。');
+    setType('area');
+    if (!await sleep(3000, tok)) return;
+    setType('gap'); setX(0);
+    say('【小结】差动 = 两个电容<b>反向变化</b>、输出取差 —— 这是电容式（也是电感式）传感器提高性能的通用手段。');
+    if (!await sleep(2600, tok)) return;
+    endDemo();
+  }
+
+  async function demoCirc(){
+    var tok = beginDemo('circ');
+    setType('gap'); setDiff('differ'); setX(0); setCircMode('bridge');
+    say('【<b>测量电路</b>】电容的变化必须靠电路变成电压。先看<b>交流电桥</b>：差动电容作相邻两臂，u₀ = u(C₁−C₂)/(C₁+C₂)。');
+    if (!await sleep(3200, tok)) return;
+    say('① x = 0 时 C₁ = C₂，电桥<b>平衡</b>，输出为 0。让动板上移，看波形长出来。');
+    if (!await sleep(2200, tok)) return;
+    if (!await tween(0, 80, 2400, setX, tok)) return;
+    if (!await sleep(2000, tok)) return;
+    say('② 桥路输出 ≈ <b>' + (Math.abs(CIRC.u0)*1000).toFixed(0) +
+        ' mV</b>。注意：交流输出只能反映大小 —— 动板上移和下移波形一样，判方向需要<b>相敏检波</b>。');
+    if (!await sleep(3000, tok)) return;
+    say('③ 切到<b>运放式</b>：u₀ = −(C/Cx)·Uᵢ，把 Cx = εS/δ 代入得 u₀ = −(UᵢC/εS)·<b>δ</b> —— 输出与极距成<b>线性</b>，原理上解决了变极距型的非线性。');
+    setCircMode('opamp');
+    if (!await sleep(3800, tok)) return;
+    say('④ 切到<b>差动脉冲调宽</b>：矩形波的宽度 T₁ ∝ C₁、T₂ ∝ C₂，取平均值输出 U₀ = U(T₁−T₂)/(T₁+T₂) —— <b>直流输出、理论线性、免相敏检波</b>，是差动电容的首选电路。');
+    setCircMode('pwm');
+    if (!await sleep(3800, tok)) return;
+    say('⑤ 最后是<b>调频</b>：Cx 与固定电感 L 组成振荡回路，f = 1/(2π√(LCx))。动板移动 → Cx 变化 → 频率变化（看波形疏密），抗干扰、适合远距离传输。');
+    setCircMode('fm');
+    if (!await tween(80, 20, 2200, setX, tok)) return;
+    if (!await sleep(2400, tok)) return;
+    setCircMode('bridge'); setX(0);
+    say('【小结】电桥给“大小”、相敏检波给“方向”；要直流线性输出用<b>脉冲调宽</b>；要线性化单端变极距用<b>运放式</b>；要远传用<b>调频</b>。');
+    if (!await sleep(3200, tok)) return;
+    endDemo();
+  }
+
+  async function demoPoints(){
+    var tok = beginDemo('pts');
+    say('【<b>本章要点</b>】共 9 条，逐条看一遍，也可点编号按钮单独回看。');
+    if (!await sleep(2000, tok)) return;
+    for (var i = 0; i < PTS_TEXT.length; i++){
+      setPt(i);
+      if (!await sleep(PTS_TEXT[i].length > 60 ? 3000 : 2300, tok)) return;
+    }
+    setPt(-1);
+    endDemo();
+  }
+
+  /* ============ 11. 键盘 ============ */
+  document.addEventListener('keydown', function(e){
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input') return;
+    if (e.key === 'ArrowLeft'){ stopDemo(); setX(S.x - 2); e.preventDefault(); }
+    else if (e.key === 'ArrowRight'){ stopDemo(); setX(S.x + 2); e.preventDefault(); }
+    else if (e.key === '1'){ stopDemo(); setType('gap'); }
+    else if (e.key === '2'){ stopDemo(); setType('area'); }
+    else if (e.key === '3'){ stopDemo(); setType('eps'); }
+    else if (e.key === 'd'){ stopDemo(); setDiff(S.diff === 'differ' ? 'single' : 'differ'); }
+    else if (e.key === ' '){
+      e.preventDefault();
+      if (playingKey){ stopDemo(); say('演示已暂停。'); }
+      else { var k = { gap:'cap', area:'types', eps:'types' }[S.type]; if (DEMOS[k] && DEMOS[k].fn) DEMOS[k].fn(); }
+    }
+    else if (e.key === 'r' || e.key === 'R'){ $('reset').click(); }
+  });
+
+
+  DEMOS.cap    = { btn:'playCap',  label:'▶ 电容原理', fn:demoCap };
+  DEMOS.types  = { btn:'playTypes', label:'▶ 三种型式', fn:demoTypes };
+  DEMOS.diff   = { btn:'playDiff', label:'▶ 差动改善', fn:demoDiff };
+  DEMOS.circ   = { btn:'playCirc', label:'▶ 测量电路', fn:demoCirc };
+  DEMOS.pts    = { btn:'ptsPlay',  label:'▶ 巡览要点', fn:demoPoints };
+  bindDemos();
+
+  /* ============ 启动 ============ */
+  var q = new URLSearchParams(location.search);
+  if (q.has('type') && TYPES[q.get('type')]) S.type = q.get('type');
+  if (q.has('x')) S.x = clamp(parseFloat(q.get('x')) || 0, 0, 100);
+  if (q.has('diff') && ['single','differ'].indexOf(q.get('diff')) >= 0) S.diff = q.get('diff');
+  if (S.type === 'eps') S.diff = 'single';
+  if (q.has('er')) S.er = clamp(parseFloat(q.get('er')) || 2.7, 1, 10);
+  if (q.has('circ') && CIRC_INFO[q.get('circ')]) CIRC.mode = q.get('circ');
+  if (q.has('speed')){ SPEED = clamp(parseFloat(q.get('speed')) || 1, 0.4, 2.5); }
+  $('x').value = S.x; $('er').value = S.er;
+  $('erOut').textContent = S.er.toFixed(1);
+  $('speed').value = SPEED; $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  paint();
+  initField();
+  runField();
+  runCircuit();
+  var AUTO = { '1':'cap', '2':'types', '3':'diff', '4':'circ' };
+  if (AUTO[q.get('auto')] && DEMOS[AUTO[q.get('auto')]].fn) DEMOS[AUTO[q.get('auto')]].fn();
+
+})();
+</script>
+
+<script>
+/* ==================== 板块布局引擎：拖动 / 缩放 / 记忆 ====================
+   由 _build/build.js 注入；章节的面板清单 / 记忆键 / 默认布局在构建时替换。 */
+(function(){
+  "use strict";
+  var BOARD = document.getElementById('board');
+  var COLS  = ['colA','colB','colC'];
+  var IDS   = ["ctrlCard","ptsCard","capCard","circCard","readCard","fmlCard","curveCard"];
+  var MINZ = 0.7, MAXZ = 1.6, MINCOL = 260;
+  var KEY = 'jh-capacitive-layout-v1';
+  var DEF = {"weight":{"colA":2.9,"colB":5.2,"colC":3.9},"col":{"colA":["ctrlCard","ptsCard"],"colB":["capCard","circCard"],"colC":["readCard","fmlCard","curveCard"]},"zoom":{}};
+  var L = null, focused = null;
+  function el(id){ return document.getElementById(id); }
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function load(){
+    var d;
+    try { d = JSON.parse(localStorage.getItem(KEY)); } catch (e) { d = null; }
+    if (!d || !d.col) return clone(DEF);
+    COLS.forEach(function(c){ if (!d.col[c]) d.col[c] = []; });
+    var seen = {};
+    COLS.forEach(function(c){
+      d.col[c] = d.col[c].filter(function(id){ if (IDS.indexOf(id) < 0 || seen[id]) return false; seen[id] = 1; return true; });
+    });
+    IDS.forEach(function(id){ if (!seen[id]){ d.col.colC.push(id); seen[id] = 1; } });
+    d.weight = d.weight || clone(DEF.weight);
+    d.zoom = d.zoom || {};
+    return d;
+  }
+  L = load();
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(L)); } catch (e) {} }
+  function render(){
+    COLS.forEach(function(cid){
+      var col = el(cid);
+      L.col[cid].forEach(function(pid){ var p = el(pid); if (p) col.appendChild(p); });
+      col.style.flexGrow = L.weight[cid] || 1;
+    });
+  }
+  function applyZoom(id){
+    var p = el(id); if (!p) return;
+    var b = p.querySelector('.pbody'); if (!b) return;
+    b.style.zoom = L.zoom[id] || 1;
+  }
+  function applyAll(){ render(); IDS.forEach(applyZoom); }
+
+  function startDrag(ev, p){
+    if (ev.button) return;
+    var x0 = ev.clientX, y0 = ev.clientY, moved = false, lastTarget = null;
+    function move(e){
+      if (!moved){
+        if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) < 6) return;
+        moved = true;
+        document.body.classList.add('layout-dragging');
+        p.classList.add('sorting');
+      }
+      var col = null, i, r;
+      for (i = 0; i < COLS.length; i++){
+        r = el(COLS[i]).getBoundingClientRect();
+        if (e.clientX >= r.left - 6 && e.clientX <= r.right + 6){ col = COLS[i]; break; }
+      }
+      if (!col) col = (e.clientX < BOARD.getBoundingClientRect().left + BOARD.clientWidth/2) ? COLS[0] : COLS[COLS.length - 1];
+      var list = L.col[col].filter(function(id){ return id !== p.id; });
+      var idx = list.length, j, q, qr;
+      for (j = 0; j < list.length; j++){
+        q = el(list[j]); if (!q) continue;
+        qr = q.getBoundingClientRect();
+        if (e.clientY < qr.top + qr.height/2){ idx = j; break; }
+      }
+      var key = col + ':' + idx;
+      if (key === lastTarget) return;
+      lastTarget = key;
+      COLS.forEach(function(c2){ L.col[c2] = L.col[c2].filter(function(id){ return id !== p.id; }); });
+      L.col[col].splice(idx, 0, p.id);
+      render();
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', up);
+      document.body.classList.remove('layout-dragging');
+      p.classList.remove('sorting');
+      if (moved) save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
+  }
+  function startSplit(ev, sp){
+    ev.preventDefault();
+    var left = el(sp.getAttribute('data-left')), right = el(sp.getAttribute('data-right'));
+    var total = left.offsetWidth + right.offsetWidth;
+    var wl = L.weight[left.id] || 1, wr = L.weight[right.id] || 1, sum = wl + wr;
+    var x0 = ev.clientX, pxPerWeight = total/sum;
+    document.body.classList.add('layout-dragging');
+    function move(e){
+      var d = (e.clientX - x0)/pxPerWeight;
+      var nl = Math.max(MINCOL/(total/sum), Math.min(sum - MINCOL/(total/sum), wl + d));
+      left.style.flexGrow = nl; right.style.flexGrow = sum - nl;
+      L.weight[left.id] = nl; L.weight[right.id] = sum - nl;
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.body.classList.remove('layout-dragging');
+      save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  }
+  function zoomPanel(id, d){
+    var z = Math.round(((L.zoom[id] || 1) + d)*100)/100;
+    L.zoom[id] = Math.max(MINZ, Math.min(MAXZ, z));
+    applyZoom(id); save();
+  }
+  function toggleFocus(id){
+    var p = el(id); if (!p) return;
+    if (focused === id){ p.classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    else {
+      if (focused) el(focused).classList.remove('focused');
+      p.classList.add('focused'); document.body.classList.add('has-focus'); focused = id;
+    }
+  }
+  function reset(){
+    L = clone(DEF);
+    if (focused){ el(focused).classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    applyAll(); save();
+  }
+  var back = document.createElement('div');
+  back.id = 'focusBack';
+  back.addEventListener('click', function(){ if (focused) toggleFocus(focused); });
+  document.body.appendChild(back);
+
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var head = p.querySelector('.phead');
+    if (head){
+      head.addEventListener('pointerdown', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        e.preventDefault(); startDrag(e, p);
+      });
+      head.addEventListener('dblclick', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        toggleFocus(id);
+      });
+    }
+    p.querySelectorAll('.ptool').forEach(function(b){
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        var a = b.getAttribute('data-act');
+        if (a === 'in') zoomPanel(id, 0.08);
+        else if (a === 'out') zoomPanel(id, -0.08);
+        else if (a === 'max') toggleFocus(id);
+      });
+    });
+  });
+  document.querySelectorAll('.vsplit').forEach(function(sp){
+    sp.addEventListener('pointerdown', function(e){ startSplit(e, sp); });
+  });
+  /* ---------- 折叠：滑过上方自动折叠，回到可视区自动展开；可手动锁定 ---------- */
+  function setFold(p, on){
+    p.classList.toggle('folded', on);
+    var btn = p.querySelector('.ptool[data-act="fold"]');
+    if (btn) btn.textContent = on ? '▸' : '▾';
+  }
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var tools = p.querySelector('.ptools');
+    if (!tools) return;
+    var fb = document.createElement('button');
+    fb.className = 'ptool';
+    fb.setAttribute('data-act', 'fold');
+    fb.title = '折叠 / 展开本板块（手动折叠后不会被自动展开）';
+    fb.textContent = '▾';
+    tools.insertBefore(fb, tools.firstChild);
+    fb.addEventListener('click', function(e){
+      e.stopPropagation();
+      var folded = p.classList.contains('folded');
+      setFold(p, !folded);
+      if (!folded) p.setAttribute('data-manual', '1'); else p.removeAttribute('data-manual');
+    });
+  });
+  var ticking = false;
+  function autoFold(){
+    ticking = false;
+    var vh = window.innerHeight || 900;
+    IDS.forEach(function(id){
+      var p = el(id); if (!p) return;
+      if (!p.parentNode || p.parentNode.id !== 'colB') return;    /* 只有中间列参与自动折叠（左右两列固定不动） */
+      var r = p.getBoundingClientRect();
+      if (r.bottom < 90){                                          /* 整块滑到上方之外 → 收起 */
+        if (!p.classList.contains('folded')) setFold(p, true);
+      } else if (r.top < vh - 30 && r.bottom > 60 && !p.hasAttribute('data-manual')){
+        if (p.classList.contains('folded')) setFold(p, false);      /* 回到可视区 → 展开 */
+      }
+    });
+  }
+  function onScrollOrWheel(){
+    if (!ticking){ ticking = true; requestAnimationFrame(autoFold); }
+  }
+  window.addEventListener('scroll', onScrollOrWheel, { passive:true });
+  window.addEventListener('wheel', onScrollOrWheel, { passive:true });
+  window.addEventListener('touchmove', onScrollOrWheel, { passive:true });
+  window.addEventListener('resize', function(){ if (window.__repack) window.__repack(); });
+  setTimeout(autoFold, 400);
+  window.__autoFold = autoFold;
+
+  var lr = document.getElementById('layReset');
+  if (lr) lr.addEventListener('click', reset);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && focused) toggleFocus(focused); });
+  window.addEventListener('resize', function(){ IDS.forEach(applyZoom); });
+  window.__repack = function(){};
+  applyAll();
+  window.addEventListener('load', applyAll);
+})();
+
+</script>
+</body>
+</html>

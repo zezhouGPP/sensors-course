@@ -3,505 +3,680 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>电桥补偿法与三种接法 · 动态演示｜传感器原理与技术</title>
+<title>第3章 电桥补偿法与三种接法 · 动态演示｜传感器原理与技术</title>
 <style>
-  :root{
-    --jhu:#0e4a8e; --jhu2:#0a2f5c; --ink:#12233a; --muted:#5b6b80;
-    --line:#d5dfec; --bg:#eef3f9; --card:#ffffff;
-    --pos:#0d8b7f;      /* 受拉工作片 */
-    --neg:#2b6cb0;      /* 受压工作片 */
-    --comp:#e08a1e;     /* 补偿片 */
-    --fix:#94a3b8;      /* 固定电阻 */
-    --hot:#d94a3d; --ok:#0f9d58;
-    --grid:rgba(14,74,142,.10);
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
-  body{
-    font-family:"Microsoft YaHei","PingFang SC","Source Han Sans SC","Hiragino Sans GB",system-ui,sans-serif;
-    background:
-      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/26px 26px,
-      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/26px 26px,
-      var(--bg);
-    color:var(--ink); font-size:16px; line-height:1.45;
-    -webkit-font-smoothing:antialiased;
-  }
-  header{
-    background:linear-gradient(120deg,var(--jhu) 0%,var(--jhu2) 100%);
-    color:#fff; padding:8px 24px; display:flex; align-items:center; gap:16px;
-    box-shadow:0 3px 14px rgba(10,47,92,.28);
-  }
-  header h1{font-size:22px; margin:0; letter-spacing:1px; font-weight:700}
-  header .sub{font-size:13px; opacity:.9; border-left:1px solid rgba(255,255,255,.45); padding-left:13px}
-  header .right{margin-left:auto; text-align:right; font-size:12.5px; opacity:.92; line-height:1.3}
-  header .right b{font-size:15px; letter-spacing:2px}
-  #laybar{
-    display:flex; align-items:center; gap:10px; padding:3px 20px; font-size:12px; color:#41566f;
-    background:#e4edf8; border-bottom:1px solid #cfdcec;
-  }
-  #laybar button{border:1px solid #a9c1dd; background:#fff; color:var(--jhu); border-radius:7px; font-size:12px; font-weight:700; padding:2px 10px; cursor:pointer; font-family:inherit}
-  #laybar button:hover{background:#f2f7fd}
-  #laybar .hint{color:#6b7d92}
-  #boardWrap{padding:8px 14px 4px}
-  #board{display:flex; align-items:flex-start}
-  .col{display:flex; flex-direction:column; gap:8px; min-width:0; flex-grow:1; flex-basis:0}
-  .colhead{font-size:11.5px; font-weight:700; color:#8296ad; letter-spacing:.4px; padding:0 3px 2px; border-bottom:1px dashed #dbe5f0}
-  .vsplit{flex:0 0 13px; align-self:stretch; cursor:col-resize; position:relative; touch-action:none}
-  .vsplit::before{content:""; position:absolute; left:5.5px; top:8px; bottom:8px; width:2px; border-radius:2px; background:#cfdcec}
-  .vsplit:hover::before{background:var(--jhu); width:3px; left:5px}
-  .panel{position:relative; box-sizing:border-box}
-  .panel > .phead{display:flex; align-items:center; gap:6px; cursor:move; touch-action:none; user-select:none; margin:-1px 0 4px}
-  .panel > .phead h2{margin:0; flex:1; min-width:0; cursor:move}
-  .ptools{display:flex; gap:3px; flex:none}
-  .ptool{
-    width:21px; height:21px; padding:0; line-height:1; border:1px solid var(--line); background:#fff;
-    color:var(--jhu); border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit;
-  }
-  .ptool:hover{background:#eef4fc; border-color:#9fbedd}
-  .panel.sorting{opacity:.6; outline:2px dashed var(--jhu); outline-offset:2px; pointer-events:none}
-  .panel.focused{
-    position:fixed; left:14px; right:14px; top:80px; bottom:14px; z-index:300; overflow:auto;
-    box-shadow:0 18px 50px rgba(10,47,92,.38); border-color:var(--jhu);
-  }
-  #focusBack{position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(10,30,55,.34); z-index:290; display:none}
-  body.has-focus #focusBack{display:block}
-  body.layout-dragging{user-select:none}
-  @media (max-width:1200px){ #boardWrap{min-width:1180px} }
-  .card{background:var(--card); border:1px solid var(--line); border-radius:13px; box-shadow:0 2px 10px rgba(18,35,58,.06); padding:8px 11px}
-  .card h2{margin:0 0 4px; font-size:14.5px; color:var(--jhu); font-weight:700; display:flex; align-items:center; gap:7px}
-  .card h2::before{content:""; width:4px; height:15px; border-radius:3px; background:var(--jhu)}
-  .card h2 small{font-weight:400; color:var(--muted); font-size:12px}
-  #circuit, #specimen, #ctrlCard, #chartCard, #readCard, #fmlCard, #ptsCard{}
-  svg{display:block; width:100%; height:auto}
-  /* ---------- 电路图 ---------- */
-  .wire{fill:none; stroke:#233b57; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round}
+/* =====================================================================
+   公共样式（各章通用）· 由 _build/build.js 注入到每个单文件 HTML 的样式表顶部
+   与第4章保持同一套类名与观感；章节特有的语义色 / 版式写在章节模块的 extraCss 里
+   ===================================================================== */
+:root{
+  --jhu:#0e4a8e; --jhu2:#0a2f5c; --ink:#12233a; --muted:#5b6b80;
+  --line:#d5dfec; --bg:#eef3f9; --card:#ffffff;
+  --flux:#0d8b7f;      /* 磁通 / 场线（第4章起沿用） */
+  --cu:#c2703a;        /* 线圈 / 铜 */
+  --iron:#4b6b8f;      /* 铁芯 / 铁磁体 */
+  --gapm:#e08a1e;      /* 气隙 / 有效量 */
+  --eddy:#7c3aed;      /* 涡流 / 强调（紫） */
+  --hot:#d94a3d; --ok:#0f9d58;
+  --grid:rgba(14,74,142,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Source Han Sans SC","Hiragino Sans GB",system-ui,sans-serif;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    var(--bg);
+  color:var(--ink); font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+header{
+  background:linear-gradient(120deg,var(--jhu) 0%,var(--jhu2) 100%);
+  color:#fff; padding:8px 24px; display:flex; align-items:center; gap:16px;
+  box-shadow:0 3px 14px rgba(10,47,92,.28);
+}
+header h1{font-size:22px; margin:0; letter-spacing:1px; font-weight:700}
+header .sub{font-size:13px; opacity:.9; border-left:1px solid rgba(255,255,255,.45); padding-left:13px}
+header .right{margin-left:auto; text-align:right; font-size:12.5px; opacity:.92; line-height:1.3}
+header .right b{font-size:15px; letter-spacing:2px}
+#laybar{display:flex; align-items:center; gap:10px; padding:3px 20px; font-size:12px; color:#41566f;
+        background:#e4edf8; border-bottom:1px solid #cfdcec}
+#laybar button{border:1px solid #a9c1dd; background:#fff; color:var(--jhu); border-radius:7px;
+               font-size:12px; font-weight:700; padding:2px 10px; cursor:pointer; font-family:inherit}
+#laybar button:hover{background:#f2f7fd}
+#laybar .hint{color:#6b7d92}
+#boardWrap{padding:6px 14px 2px}
+#board{display:flex; align-items:flex-start}
+.col{display:flex; flex-direction:column; gap:6px; min-width:0; flex-grow:1; flex-basis:0}
+.colhead{font-size:11.5px; font-weight:700; color:#8296ad; letter-spacing:.4px; padding:0 3px 2px; border-bottom:1px dashed #dbe5f0}
+.vsplit{flex:0 0 13px; align-self:stretch; cursor:col-resize; position:relative; touch-action:none}
+.vsplit::before{content:""; position:absolute; left:5.5px; top:8px; bottom:8px; width:2px; border-radius:2px; background:#cfdcec}
+.vsplit:hover::before{background:var(--jhu); width:3px; left:5px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:13px;
+      box-shadow:0 2px 10px rgba(18,35,58,.06); padding:5px 9px}
+.card h2{margin:0 0 4px; font-size:14.5px; color:var(--jhu); font-weight:700; display:flex; align-items:center; gap:7px}
+.card h2::before{content:""; width:4px; height:15px; border-radius:3px; background:var(--jhu)}
+.card h2 small{font-weight:400; color:var(--muted); font-size:12px}
+.panel{position:relative; box-sizing:border-box}
+.panel > .phead{display:flex; align-items:center; gap:6px; cursor:move; touch-action:none; user-select:none; margin:-1px 0 4px}
+.panel > .phead h2{margin:0; flex:1; min-width:0; cursor:move}
+.ptools{display:flex; gap:3px; flex:none}
+.ptool{width:21px; height:21px; padding:0; line-height:1; border:1px solid var(--line); background:#fff;
+       color:var(--jhu); border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit}
+.ptool:hover{background:#eef4fc; border-color:#9fbedd}
+.panel.sorting{opacity:.6; outline:2px dashed var(--jhu); outline-offset:2px; pointer-events:none}
+.panel.focused{position:fixed; left:14px; right:14px; top:80px; bottom:14px; z-index:300; overflow:auto;
+               box-shadow:0 18px 50px rgba(10,47,92,.38); border-color:var(--jhu)}
+#focusBack{position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(10,30,55,.34); z-index:290; display:none}
+body.has-focus #focusBack{display:block}
+body.layout-dragging{user-select:none}
+svg{display:block; width:100%; height:auto}
+.tiny{font-size:12px; fill:var(--muted); color:var(--muted)}
+/* ---- 控件 ---- */
+.ctrl{display:flex; flex-direction:column; gap:2px; margin-bottom:2px}
+.ctrl .row{display:flex; align-items:center; gap:7px}
+.ctrl .name{font-size:12.8px; color:var(--muted); width:118px; flex:none}
+.ctrl .name b{color:var(--ink); font-size:14px}
+.ctrl output{font-size:18px; font-weight:800; min-width:96px; text-align:right; font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none; appearance:none; height:8px; border-radius:5px; background:#dce6f2; outline:none; flex:1; min-width:70px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:21px; height:21px; border-radius:50%;
+      background:#fff; border:3px solid var(--jhu); cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.seg{display:flex; gap:6px; flex-wrap:wrap}
+.seg button{flex:1 1 0; min-width:96px; padding:5px 8px; border-radius:9px; border:1px solid var(--line);
+            background:#fff; cursor:pointer; font-size:13px; font-weight:700; color:#33506f; font-family:inherit; line-height:1.3}
+.seg button small{display:block; font-weight:400; font-size:11px; color:var(--muted)}
+.seg button:hover{border-color:#9fbedd}
+.seg button.on{background:var(--jhu); border-color:var(--jhu); color:#fff}
+.seg button.on small{color:rgba(255,255,255,.85)}
+/* 紧凑小按钮（章节里的型式/模式细分按钮） */
+.seg.tight button{min-width:66px; flex:1 1 66px; padding:3px 4px; font-size:11.5px; line-height:1.25}
+.seg.tight button small{font-size:10px}
+.step{border:1px solid var(--line); background:#fff; color:var(--jhu); width:28px; height:28px;
+      border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; line-height:1}
+.actions{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap}
+.actions button{flex:1 1 92px; padding:5px 4px; border-radius:9px; border:1px solid var(--jhu);
+                background:var(--jhu); color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;
+                font-family:inherit; white-space:nowrap}
+.actions button.ghost{background:#fff; color:var(--jhu)}
+.actions button.running{background:var(--hot); border-color:var(--hot); color:#fff}
+.actions button:hover{filter:brightness(1.07)}
+.narrate{margin-top:4px; border-left:5px solid var(--flux); background:#f2fbf9; border-radius:0 10px 10px 0;
+         padding:3px 10px; font-size:12.4px; line-height:1.34; min-height:26px; color:#0a5f57}
+/* ---- 读数 ---- */
+.big{display:flex; align-items:baseline; gap:9px; background:linear-gradient(90deg,#f2f7ff,#fff);
+     border:1px solid #d9e5f5; border-radius:12px; padding:3px 12px}
+.big .cap{font-size:13px; color:var(--muted); margin-right:auto}
+.big .num{font-size:23px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
+.big .unit{font-size:15px; font-weight:700; color:var(--muted)}
+.kv{display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:5px}
+.kv .box{border:1px dashed var(--line); border-radius:9px; padding:2px 6px; font-size:10.5px; color:var(--muted)}
+.kv .box b{display:block; font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:1px}
+.fine{font-size:10.4px; color:var(--muted); margin-top:5px; line-height:1.5; font-variant-numeric:tabular-nums}
+.fine b{color:var(--ink)}
+/* ---- 比例条 / 图例 ---- */
+.rmbar{display:flex; height:15px; border-radius:5px; overflow:hidden; border:1px solid var(--line); background:#f4f8fd; margin-top:3px}
+.rmbar i{display:block; height:100%}
+.legend{display:flex; gap:8px; flex-wrap:wrap; font-size:10.4px; color:var(--muted); margin-top:1px}
+.legend i{display:inline-block; width:14px; height:9px; border-radius:2px; margin-right:5px}
+/* ---- 公式 ---- */
+.fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:10.9px; line-height:1.22; color:#16283d}
+.fml .row{display:block; border-bottom:1px dashed #e7eef7; padding:0}
+.fml .row:last-child{border-bottom:none}
+.fml .tag{display:inline-block; font-family:"Microsoft YaHei",sans-serif; font-size:11px; color:#fff;
+          background:var(--jhu); border-radius:5px; padding:0 6px; margin-right:5px; vertical-align:1px}
+.fml .tag.g{background:var(--gapm)} .fml .tag.f{background:var(--flux)} .fml .tag.v{background:var(--eddy)}
+.fml b{color:var(--hot)}
+.fml .note{font-family:"Microsoft YaHei",sans-serif; font-size:10.8px; color:var(--muted); line-height:1.4; margin-top:2px}
+.frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.88em; line-height:1.02; margin:0 .14em}
+.frac i{font-style:normal; padding:0 .3em}
+.frac b{font-weight:400; color:inherit; border-top:1.4px solid currentColor; padding:0 .3em}
+/* ---- 要点 ---- */
+ol.points{margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:4px}
+ol.points li{border:1px solid var(--line); border-left:4px solid #c8d6e6; border-radius:0 9px 9px 0;
+             padding:0 7px; font-size:10.9px; line-height:1.28; color:#3c5068; background:#fbfdff; transition:.25s}
+ol.points li.on{border-left-color:var(--ok); background:#f2fbf5; color:var(--ink); box-shadow:0 0 0 2px rgba(15,157,88,.12)}
+ol.points li .hl{color:var(--ok); font-weight:700}
+.hint{font-size:12px; color:var(--muted); margin-top:5px}
+footer{padding:3px 18px 5px; font-size:11px; color:var(--muted); line-height:1.5}
+footer b{color:var(--jhu)}
+.actions button.ptsB{flex:0 0 26px; padding:2px 0; font-size:11px; border-radius:6px}   /* 要点编号按钮：特异性需高于 .actions button */
+/* 左右两列都吸附固定；只有中间列（结构+读数）随页面滚动 */
+#colA, #colC{position:sticky; top:4px; align-self:flex-start;
+             max-height:calc(100vh - 10px); overflow-y:auto; overscroll-behavior:contain}
+#colA::-webkit-scrollbar, #colC::-webkit-scrollbar{width:6px}
+#colA::-webkit-scrollbar-thumb, #colC::-webkit-scrollbar-thumb{background:#c3d3e6; border-radius:3px}
+/* 中间列底部留白：让最后一张卡片也能滚动到屏幕中间 */
+#colB{padding-bottom:52vh}
+.panel > .pbody{max-height:2600px; overflow:hidden; transition:max-height .22s ease, opacity .18s ease}
+.panel.folded > .pbody{max-height:0 !important; opacity:0}
+.panel.folded{border-color:#bcd0e5; background:#f8fbff}
+.panel.folded > .phead h2{color:#5b6b80}
+.ptool[data-act="fold"]{font-size:11px}
+.readlabel{font-size:12.5px; font-weight:700; color:#5b6b80; margin:7px 0 3px; padding-top:6px; border-top:1px dashed #dbe5f0}
+.readwrap svg{max-height:196px}
+.pbody > svg{max-height:300px}
+.pbody > svg + svg{max-height:196px}
+@media (max-width:1200px){ #boardWrap{min-width:1180px} }
+
+  /* ---- 第3章（电桥）语义色与专用类 ---- */
+  :root{ --pos:#0d8b7f; --neg:#2b6cb0; --comp:#e08a1e; --fix:#94a3b8; }
+  #sp{max-height:560px}   /* 悬臂梁图放大显示（覆盖公共样式的 300px 上限） */
+  .wire{fill:none;stroke:#233b57;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
   .dot{fill:#233b57}
   .gauge-body{stroke-width:2}
   .gauge-glow{opacity:0}
-  .arm-label{font-size:17px; font-weight:700; fill:#12233a}
-  .arm-value{font-size:14.5px; fill:#33506f; font-variant-numeric:tabular-nums}
-  .arm-role{font-size:13px; font-weight:700}
-  .u0-arrow{stroke:var(--jhu); stroke-width:2.4; fill:none}
-  .u0-arrowhead{fill:var(--jhu)}
-  .u0-label{font-size:18px; font-weight:700; fill:var(--jhu)}
-  .u0-value{font-size:19px; font-weight:700; font-variant-numeric:tabular-nums}
-  .battery-label{font-size:16px; font-weight:700; fill:#233b57}
-  .tiny{font-size:12.5px; fill:var(--muted)}
-  .legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--muted); margin-top:4px}
-  .legend i{display:inline-block; width:15px; height:11px; border-radius:3px; margin-right:5px; vertical-align:-1px}
-  .hint{font-size:12px; color:var(--muted); margin-top:5px}
-  /* ---------- 通用 ---------- */
-  .seg{display:flex; gap:6px; flex-wrap:wrap}
-  .seg button{
-    flex:1 1 0; min-width:104px; padding:6px 8px; border-radius:10px; border:1px solid var(--line);
-    background:#fff; cursor:pointer; font-size:13.5px; font-weight:700; color:#33506f; font-family:inherit; line-height:1.3;
-  }
-  .seg button small{display:block; font-weight:400; font-size:11.5px; color:var(--muted)}
-  .seg button:hover{border-color:#9fbedd}
-  .seg button.on{background:var(--jhu); border-color:var(--jhu); color:#fff}
-  .seg button.on small{color:rgba(255,255,255,.85)}
-  .seg button.bad.on{background:var(--hot); border-color:var(--hot)}
-  .seg.disabled{opacity:.45; pointer-events:none}
-  .actions{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap}
-  .actions button{flex:1 1 108px; padding:7px 4px; border-radius:9px; border:1px solid var(--jhu); background:var(--jhu); color:#fff; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap}
-  .actions button.ghost{background:#fff; color:var(--jhu)}
-  .actions button:hover{filter:brightness(1.07)}
-  .actions button.running{background:var(--hot); border-color:var(--hot); color:#fff}
-  .narrate{margin-top:7px; border-left:5px solid var(--comp); background:#fffaf0; border-radius:0 10px 10px 0; padding:6px 11px; font-size:13.5px; line-height:1.5; min-height:40px; color:#7a4a05}
-  #voiceToggle{border:1px solid var(--jhu); background:#fff; color:var(--jhu); border-radius:9px;
-               font-size:13px; font-weight:700; padding:5px 11px; cursor:pointer; font-family:inherit; white-space:nowrap}
-  #voiceToggle.on{background:var(--jhu); color:#fff}
-  #voiceToggle:hover{filter:brightness(1.06)}
-  #voiceSel{border:1px solid var(--line); background:#fff; color:#33506f; border-radius:8px;
-            padding:4px 6px; font-size:12.5px; font-family:inherit; max-width:190px}
-  .ctrl{display:flex; flex-direction:column; gap:3px; margin-bottom:5px}
-  .ctrl .row{display:flex; align-items:center; gap:9px}
-  .ctrl .name{font-size:13.5px; color:var(--muted); width:112px; flex:none}
-  .ctrl .name b{color:var(--ink); font-size:14px}
-  .ctrl output{font-size:18px; font-weight:800; min-width:92px; text-align:right; font-variant-numeric:tabular-nums}
-  input[type=range]{-webkit-appearance:none; appearance:none; height:8px; border-radius:5px; background:#dce6f2; outline:none; flex:1; min-width:70px}
-  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:21px; height:21px; border-radius:50%; background:#fff; border:3px solid var(--jhu); cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.25)}
-  input[type=range].temp::-webkit-slider-thumb{border-color:var(--hot)}
-  .step{border:1px solid var(--line); background:#fff; color:var(--jhu); width:28px; height:28px; border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; line-height:1}
-  .step:hover{background:#eef4fc}
-  /* ---------- 读数 ---------- */
-  .u0-big{display:flex; align-items:baseline; gap:10px; background:linear-gradient(90deg,#f2f7ff,#fff); border:1px solid #d9e5f5; border-radius:12px; padding:4px 12px}
-  .u0-big .cap{font-size:13px; color:var(--muted); margin-right:auto}
-  .u0-big .num{font-size:35px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
-  .u0-big .unit{font-size:16px; font-weight:700; color:var(--muted)}
-  .u0-big .sign{font-size:13.5px; font-weight:700; padding:1px 8px; border-radius:20px; border:1px solid currentColor}
-  .meter{height:12px; border-radius:9px; background:linear-gradient(90deg,#e8eef7,#f6f9fd,#e8eef7); border:1px solid var(--line); position:relative; margin:5px 0 2px; overflow:hidden}
-  .meter .mid{position:absolute; left:50%; top:0; bottom:0; width:1px; background:#9fb2c8}
-  .meter .bar{position:absolute; top:2px; bottom:2px; left:50%; width:0; border-radius:6px}
-  .meter-scale{display:flex; justify-content:space-between; font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums}
-  .split{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:5px}
-  .split .box{border:1px dashed var(--line); border-radius:9px; padding:4px 8px; font-size:11.5px; color:var(--muted)}
-  .split .box b{display:block; font-size:15px; font-variant-numeric:tabular-nums; color:var(--ink); margin-top:1px}
-  .fine{font-size:11.5px; color:var(--muted); margin-top:5px; line-height:1.45; font-variant-numeric:tabular-nums}
-  .fine b{color:var(--ink)}
-  /* ---------- 公式 ---------- */
-  .fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:14.5px; line-height:1.62; color:#16283d}
-  .fml .row{display:block; border-bottom:1px dashed #e7eef7; padding:1px 0}
-  .fml .row:last-child{border-bottom:none}
-  .fml .tag{display:inline-block; font-family:"Microsoft YaHei",sans-serif; font-size:11px; color:#fff; background:var(--jhu); border-radius:5px; padding:0 6px; margin-right:5px; vertical-align:1px}
-  .fml .tag.gray{background:#8fa4bd}
-  .fml b{color:var(--hot)}
-  .fml .note{font-family:"Microsoft YaHei",sans-serif; font-size:11.5px; color:var(--muted); line-height:1.45; margin-top:3px}
-  .fml .note.warn{color:#a8402f}
-  .frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.9em; line-height:1.14; margin:0 .16em}
-  .frac i{font-style:normal; padding:0 .3em}
-  .frac b{font-weight:400; color:inherit; border-top:1.4px solid currentColor; padding:0 .3em}
-  table.tb{width:100%; border-collapse:collapse; font-size:12px; margin-top:4px}
-  table.tb th,table.tb td{border-bottom:1px solid var(--line); padding:3px 5px; text-align:left; font-variant-numeric:tabular-nums}
-  table.tb th{color:var(--muted); font-weight:600; font-size:12px}
+  .arm-label{font-size:17px;font-weight:700;fill:#12233a}
+  .arm-value{font-size:14px;fill:#33506f;font-variant-numeric:tabular-nums}
+  .arm-role{font-size:13px;font-weight:700}
+  .u0-arrow{stroke:#0e4a8e;stroke-width:2.4;fill:none}
+  .u0-arrowhead{fill:#0e4a8e}
+  .u0-label{font-size:18px;font-weight:700;fill:#0e4a8e}
+  .u0-value{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+  .battery-label{font-size:16px;font-weight:700;fill:#233b57}
+  .cur-dot{fill:#d94a3d;stroke:#fff;stroke-width:.8}
+  .slot-t{pointer-events:none}
+  .sign{font-size:13.5px;font-weight:700;padding:1px 8px;border-radius:20px;border:1px solid currentColor}
+  .meter{height:12px;border-radius:9px;background:linear-gradient(90deg,#e8eef7,#f6f9fd,#e8eef7);border:1px solid var(--line);position:relative;margin:5px 0 2px;overflow:hidden}
+  .meter .mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#9fb2c8}
+  .meter .bar{position:absolute;top:2px;bottom:2px;left:50%;width:0;border-radius:6px}
+  .meter-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .tabs{display:flex;gap:6px;margin-bottom:4px}
+  .tabs button{padding:4px 12px;border-radius:8px 8px 0 0;border:1px solid var(--line);border-bottom:none;background:#f7fafd;cursor:pointer;font-size:12.5px;font-weight:700;color:#5b6b80;font-family:inherit}
+  .tabs button.on{background:var(--jhu);color:#fff;border-color:var(--jhu)}
+  .seg button.bad.on{background:var(--hot);border-color:var(--hot)}
+  .seg.disabled{opacity:.45;pointer-events:none}
+  table.tb{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:3px}
+  table.tb th,table.tb td{border-bottom:1px solid var(--line);padding:2px 4px;text-align:left;font-variant-numeric:tabular-nums}
+  table.tb th{color:var(--muted);font-weight:600}
   table.tb tr[data-cfg]{cursor:pointer}
   table.tb tr[data-cfg]:hover{background:#f4f8fd}
-  table.tb tr.on{background:#eef6ff; box-shadow:inset 3px 0 0 var(--jhu)}
-  /* ---------- 要点 ---------- */
-  ol.points{margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:4px}
-  ol.points li{border:1px solid var(--line); border-left:4px solid #c8d6e6; border-radius:0 9px 9px 0; padding:3px 9px; font-size:12.8px; line-height:1.45; color:#3c5068; background:#fbfdff; transition:.25s}
-  ol.points li.on{border-left-color:var(--ok); background:#f2fbf5; color:var(--ink); box-shadow:0 0 0 2px rgba(15,157,88,.12)}
-  ol.points li .hl{color:var(--ok); font-weight:700}
-  /* ---------- 图表 ---------- */
-  .tabs{display:flex; gap:6px; margin-bottom:4px}
-  .tabs button{padding:4px 12px; border-radius:8px 8px 0 0; border:1px solid var(--line); border-bottom:none; background:#f7fafd; cursor:pointer; font-size:13px; font-weight:700; color:#5b6b80; font-family:inherit}
-  .tabs button.on{background:var(--jhu); color:#fff; border-color:var(--jhu)}
-  footer{padding:5px 18px 8px; font-size:11.5px; color:var(--muted); line-height:1.55}
-  footer b{color:var(--jhu)}
+  table.tb tr.on{background:#eef6ff;box-shadow:inset 3px 0 0 var(--jhu)}
+  .fml .note.warn{color:#a8402f}
+  ol.points li.cur{outline:2px solid var(--jhu);outline-offset:1px;background:#eef6ff;border-left-color:var(--jhu);color:var(--ink)}
+  .ptsB{flex:0 0 23px;padding:2px 0;font-size:10.5px;border-radius:6px}
+  .actions button.ptsB{flex:0 0 26px;padding:2px 0;font-size:10.5px;border-radius:6px}
+  .readwrap svg{max-height:186px}
 </style>
 </head>
 <body>
 <header>
-  <h1>电桥补偿法与三种接法</h1>
-  <div class="sub">电阻式传感器 · 单臂 / 双臂 / 全桥 &nbsp;+&nbsp; 应变片温度误差的线路补偿 &nbsp;|&nbsp; 动态演示</div>
+  <h1>第 3 章 电桥补偿法与三种接法</h1>
+  <div class="sub">电阻式传感器 → 单臂 / 双臂 / 全桥 ＋ 应变片温度误差的线路补偿（电桥补偿法）｜动态演示</div>
   <div class="right"><b>江汉大学</b><br>传感器原理与技术</div>
 </header>
 <div id="laybar">
   <span style="font-weight:700;color:#0e4a8e">板块布局</span>
   <button id="layReset">↺ 恢复默认（一屏）</button>
-  <span class="hint">拖动板块<b>标题栏</b>可移到任意列、任意位置；拖动列间<b>竖条</b>可调整列宽；标题栏 <b>＋ －</b> 缩放该板块内容；<b>⛶</b> 或双击标题栏全屏放大（<b>Esc</b> 退出）。布局自动记住。<b>语音讲解</b>在「接法与输入量」面板里开启，语速跟随演示速度。</span>
+  <span class="hint"><b>左右两列固定不动</b>（左＝接法与输入量＋要点，右＝读数/公式/曲线），只有<b>中间列</b>随页面滚动；每块标题栏的 <b>▾</b> 可折叠，<b>滚轮滑过上方的那几块会自动收起、滚回来自动展开</b>；拖动<b>标题栏</b>可换列换位、拖<b>竖条</b>调列宽、<b>＋ －</b> 缩放、<b>⛶</b> 全屏放大（<b>Esc</b> 退出）；布局自动记住。<b>键盘</b>：← → 调温度、↑ ↓ 调应变、<b>空格</b> 演示当前接法、<b>R</b> 复位。</span>
 </div>
 
 <div id="boardWrap">
 <main id="board">
+
+  <!-- ================= 左列 ================= -->
   <div class="col" id="colA">
-    <div class="colhead">① 原理图 + 输入</div>
-<section class="card panel" id="circuit">
-      <div class="phead">
-      <h2>等臂电桥 <small id="cirSub">E 接左、右节点，输出 U₀ 取上、下节点；四臂初始均为 R₀ = 350 Ω</small></h2>
-      <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
-      </div>
-      <div class="pbody">
-      <svg id="cir" viewBox="0 0 1000 520" role="img" aria-label="直流电桥电路图">
-      <line class="wire" x1="360" y1="60" x2="110" y2="220"/>
-      <line class="wire" x1="360" y1="60" x2="610" y2="220"/>
-      <line class="wire" x1="610" y1="220" x2="360" y2="380"/>
-      <line class="wire" x1="360" y1="380" x2="110" y2="220"/>
-      <!-- 输出回路（跨线处画跳线） -->
-      <path class="wire" d="M360 60 H880"/>
-      <path class="wire" d="M360 380 H681 M719 380 H880 M681 380 A 19 19 0 0 1 719 380"/>
-      <line class="u0-arrow" x1="880" y1="68" x2="880" y2="372"/>
-      <polygon class="u0-arrowhead" points="880,60 874,74 886,74"/>
-      <polygon class="u0-arrowhead" points="880,380 874,366 886,366"/>
-      <!-- 电源回路 -->
-      <path class="wire" d="M110 220 H60 V470 H700 V220 H610"/>
-      <g id="battery">
-      <line class="wire" x1="330" y1="470" x2="343" y2="470"/>
-      <line x1="343" y1="454" x2="343" y2="486" stroke="#233b57" stroke-width="3"/>
-      <line x1="352" y1="462" x2="352" y2="478" stroke="#233b57" stroke-width="6"/>
-      <line x1="361" y1="454" x2="361" y2="486" stroke="#233b57" stroke-width="3"/>
-      <line class="wire" x1="361" y1="470" x2="374" y2="470"/>
-      </g>
-      <text class="battery-label" x="392" y="476">E = 5.0 V</text>
-      <!-- 桥臂元件 -->
-      <g id="arm-R1"><g transform="translate(235,140) rotate(147.4)">
-      <rect class="gauge-glow" x="-37" y="-20" width="74" height="40" rx="12" fill="var(--pos)"/>
-      <rect class="gauge-body" x="-31" y="-13" width="62" height="26" rx="5" fill="var(--pos)" stroke="#0a5f57"/>
-      </g></g>
-      <g id="arm-R2"><g transform="translate(485,140) rotate(32.6)">
-      <rect class="gauge-glow" x="-37" y="-20" width="74" height="40" rx="12" fill="var(--pos)"/>
-      <rect class="gauge-body" x="-31" y="-13" width="62" height="26" rx="5" fill="var(--pos)" stroke="#0a5f57"/>
-      </g></g>
-      <g id="arm-R3"><g transform="translate(485,300) rotate(147.4)">
-      <rect class="gauge-glow" x="-37" y="-20" width="74" height="40" rx="12" fill="var(--pos)"/>
-      <rect class="gauge-body" x="-31" y="-13" width="62" height="26" rx="5" fill="var(--pos)" stroke="#0a5f57"/>
-      </g></g>
-      <g id="arm-R4"><g transform="translate(235,300) rotate(32.6)">
-      <rect class="gauge-glow" x="-37" y="-20" width="74" height="40" rx="12" fill="var(--fix)"/>
-      <rect class="gauge-body" x="-31" y="-13" width="62" height="26" rx="5" fill="var(--fix)" stroke="#64748b"/>
-      </g></g>
-      <circle class="dot" cx="360" cy="60" r="5.5"/><circle class="dot" cx="110" cy="220" r="5.5"/>
-      <circle class="dot" cx="610" cy="220" r="5.5"/><circle class="dot" cx="360" cy="380" r="5.5"/>
-      <g>
-      <text class="arm-label" x="140" y="96" text-anchor="end">R₁</text>
-      <text class="arm-value" x="140" y="118" text-anchor="end" id="v-R1">350.00 Ω</text>
-      <text class="arm-role" x="140" y="140" text-anchor="end" id="role-R1">工作片（受力）</text>
-      </g>
-      <g>
-      <text class="arm-label" x="600" y="96">R₂</text>
-      <text class="arm-value" x="600" y="118" id="v-R2">350.00 Ω</text>
-      <text class="arm-role" x="600" y="140" id="role-R2">固定电阻</text>
-      </g>
-      <g>
-      <text class="arm-label" x="545" y="322">R₃</text>
-      <text class="arm-value" x="545" y="344" id="v-R3">350.00 Ω</text>
-      <text class="arm-role" x="545" y="366" id="role-R3">固定电阻</text>
-      </g>
-      <g>
-      <text class="arm-label" x="250" y="322" text-anchor="end">R₄</text>
-      <text class="arm-value" x="250" y="344" text-anchor="end" id="v-R4">350.00 Ω</text>
-      <text class="arm-role" x="250" y="366" text-anchor="end" id="role-R4">固定电阻</text>
-      </g>
-      <text class="u0-label" x="818" y="198" text-anchor="middle">U₀</text>
-      <text class="u0-value" x="818" y="228" text-anchor="middle" id="u0svg">0.000 mV</text>
-      <text class="tiny" x="818" y="250" text-anchor="middle" id="u0note">电桥平衡</text>
-      <text class="arm-role" x="360" y="26" text-anchor="middle" id="tempTag" fill="#5b6b80">同一温度场 θ = 20.0 ℃</text>
-      </svg>
-      <div class="legend">
-      <span><i style="background:#0d8b7f"></i>受拉工作片（＋ΔR）</span>
-      <span><i style="background:#2b6cb0"></i>受压工作片（−ΔR）</span>
-      <span><i style="background:#e08a1e"></i>补偿片（只随温度）</span>
-      <span><i style="background:#94a3b8"></i>固定电阻</span>
-      </div>
-      <div class="hint">键盘：<b>← →</b> 调温度，<b>↑ ↓</b> 调应变，<b>空格</b> 播放/暂停，<b>R</b> 复位。</div>
-      </div>
-      </section>
+    <div class="colhead">① 接法与输入量 ＋ 本章要点</div>
 
-<section class="card panel" id="ctrlCard">
+
+    <section class="card panel" id="ctrlCard">
       <div class="phead">
-      <h2>接法与输入量</h2>
-      <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+        <h2>接法与输入量</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
       </div>
       <div class="pbody">
       <div class="ctrl">
-      <div class="row" style="align-items:flex-start">
-      <span class="name" style="padding-top:5px"><b>桥臂接法</b></span>
-      <div class="seg" id="segCfg" style="flex:1">
-      <button data-cfg="single" class="on">单臂<small>1 片工作</small></button>
-      <button data-cfg="half">双臂（半桥差动）<small>2 片，一拉一压</small></button>
-      <button data-cfg="full">全桥差动<small>4 片全用</small></button>
-      </div>
-      </div>
-      </div>
-      <div class="ctrl">
-      <div class="row">
-      <span class="name"><b>温度变化 ΔT</b><br><span class="tiny" id="thetaTxt">θ = 20.0 ℃</span></span>
-      <button class="step" id="dTM" title="降低 5 ℃">−</button>
-      <input type="range" class="temp" id="dT" min="-40" max="80" step="1" value="0">
-      <button class="step" id="dTP" title="升高 5 ℃">＋</button>
-      <output id="dTOut">0 ℃</output>
-      </div>
-      </div>
-      <div class="ctrl">
-      <div class="row">
-      <span class="name"><b>应变 ε</b><br><span class="tiny">作用在工作片上</span></span>
-      <button class="step" id="epsM" title="减小 50 με">−</button>
-      <input type="range" id="eps" min="0" max="1000" step="10" value="0">
-      <button class="step" id="epsP" title="增大 50 με">＋</button>
-      <output id="epsOut">0 με</output>
-      </div>
-      </div>
-      <div class="ctrl">
-      <div class="row" style="align-items:flex-start">
-      <span class="name" style="padding-top:5px"><b>补偿片位置</b><br><span class="tiny" id="compHint">仅单臂需要</span></span>
-      <div class="seg" id="segComp" style="flex:1">
-      <button data-comp="adjacent" class="on">相邻桥臂 ✓<small>补偿片 = R₂</small></button>
-      <button data-comp="opposite" class="bad">相对桥臂 ✗<small>补偿片 = R₃</small></button>
-      <button data-comp="none" class="bad">不接补偿片 ✗<small>温度误差全部进入输出</small></button>
-      </div>
-      </div>
-      </div>
-      <div class="actions">
-      <button id="playSingle" class="ghost">▶ 单臂演示</button>
-      <button id="playHalf" class="ghost">▶ 双臂演示</button>
-      <button id="playFull" class="ghost">▶ 全桥演示</button>
-      <button id="playCmp" class="ghost">▶ 三接法对比</button>
-      <button id="reset" class="ghost" style="flex:0 0 62px">↺ 复位</button>
-      </div>
-      <div class="ctrl" style="margin-top:7px">
-      <div class="row">
-      <span class="name"><b>演示速度</b><br><span class="tiny">0.4× 慢 ～ 2.5× 快</span></span>
-      <input type="range" id="speed" min="0.4" max="2.5" step="0.1" value="1">
-      <output id="speedOut">1.0×</output>
-      </div>
-      </div>
-
-      <div class="ctrl">
-        <div class="row">
-          <span class="name"><b>语音讲解</b><br><span class="tiny" id="voiceHint">演示时自动朗读旁白</span></span>
-          <button id="voiceToggle">🔊 开启朗读</button>
-          <select id="voiceSel" title="选择朗读音色"></select>
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>桥臂接法</b></span>
+          <div class="seg" id="segCfg" style="flex:1">
+            <button data-cfg="single" class="on">单臂<small>1 片工作·S = E/4</small></button>
+            <button data-cfg="half">双臂（半桥差动）<small>2 片一拉一压·S = E/2</small></button>
+            <button data-cfg="full">全桥差动<small>4 片全用·S = E</small></button>
+          </div>
         </div>
       </div>
-      <div class="narrate" id="narration" title="点一下可重听这一条">初始状态：单臂接法、ΔT = 0、ε = 0，四臂等值 R₀ = 350 Ω，电桥平衡，U₀ = 0。点上面四个按钮可分别演示单臂 / 双臂 / 全桥 / 三接法对比，右侧滑块控制演示快慢。</div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b>温度变化 ΔT</b><br><span class="tiny" id="thetaTxt">θ = 20.0 ℃</span></span>
+          <button class="step" id="dTM" title="降低 5 ℃">−</button>
+          <input type="range" class="temp" id="dT" min="-40" max="80" step="1" value="0">
+          <button class="step" id="dTP" title="升高 5 ℃">＋</button>
+          <output id="dTOut">0 ℃</output>
+        </div>
       </div>
-      </section>
-  </div>
-  <div class="vsplit" data-left="colA" data-right="colB" title="拖动可调整两列宽度"></div>
-  <div class="col" id="colB">
-    <div class="colhead">② 贴片位置 + 特性曲线</div>
-<section class="card panel" id="specimen">
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b>应变 ε</b><br><span class="tiny">作用在工作片上</span></span>
+          <button class="step" id="epsM" title="减小 50 με">−</button>
+          <input type="range" id="eps" min="0" max="1000" step="10" value="0">
+          <button class="step" id="epsP" title="增大 50 με">＋</button>
+          <output id="epsOut">0 με</output>
+        </div>
+      </div>
+      <div class="ctrl">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>补偿片位置</b><br><span class="tiny" id="compHint">仅单臂需要</span></span>
+          <div class="seg" id="segComp" style="flex:1">
+            <button data-comp="adjacent" class="on">相邻桥臂 ✓<small>补偿片 = R₂</small></button>
+            <button data-comp="opposite" class="bad">相对桥臂 ✗<small>补偿片 = R₃</small></button>
+            <button data-comp="none" class="bad">不接补偿片 ✗<small>温度误差全部进入输出</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="playSingle" class="ghost">▶ 单臂演示</button>
+        <button id="playHalf" class="ghost">▶ 双臂演示</button>
+        <button id="playFull" class="ghost">▶ 全桥演示</button>
+        <button id="playCmp" class="ghost">▶ 三接法对比</button>
+        <button id="reset" class="ghost" style="flex:0 0 62px">↺ 复位</button>
+      </div>
+      <div class="ctrl" style="margin-top:6px">
+        <div class="row">
+          <span class="name"><b>演示速度</b><br><span class="tiny">0.4× 慢 ～ 2.5× 快</span></span>
+          <input type="range" id="speed" min="0.4" max="2.5" step="0.1" value="1">
+          <output id="speedOut">1.0×</output>
+        </div>
+      </div>
+      <div class="narrate" id="narration">初始状态：单臂接法、补偿片接相邻桥臂（R₂）、ΔT = 0、ε = 0，四臂等值 R₀ = 350 Ω，电桥平衡，U₀ = 0。上方四个按钮分别演示单臂 / 双臂 / 全桥 / 三接法对比，右侧滑块控制演示快慢；键盘 ← → 调温度、↑ ↓ 调应变、空格 演示当前接法、R 复位。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="ptsCard">
       <div class="phead">
-      <h2>应变片的粘贴位置 <small id="spSub">单臂：一片贴在试件上受力，一片贴在补偿块上测温</small></h2>
-      <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+        <h2>本章要点 <small>随接法与状态自动点亮</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
       </div>
       <div class="pbody">
-      <svg id="sp" viewBox="0 0 780 430" role="img" aria-label="悬臂梁与应变片布置">
-      <rect id="field" x="14" y="28" width="752" height="376" rx="16" fill="rgba(217,74,61,0)" stroke="rgba(217,74,61,.35)" stroke-width="2" stroke-dasharray="8 6"/>
-      <text id="fieldTxt" x="390" y="54" text-anchor="middle" font-size="14.5" font-weight="700" fill="#7a4a05">同一温度场 θ = 20.0 ℃（ΔT = 0.0 ℃）</text>
-      <!-- 悬臂梁 -->
-      <g id="wall">
-      <rect x="56" y="150" width="16" height="100" fill="#94a3b8" stroke="#64748b" stroke-width="1.5"/>
-      <line x1="56" y1="160" x2="72" y2="150" stroke="#64748b" stroke-width="1.4"/>
-      <line x1="56" y1="180" x2="72" y2="170" stroke="#64748b" stroke-width="1.4"/>
-      <line x1="56" y1="200" x2="72" y2="190" stroke="#64748b" stroke-width="1.4"/>
-      <line x1="56" y1="220" x2="72" y2="210" stroke="#64748b" stroke-width="1.4"/>
-      <line x1="56" y1="240" x2="72" y2="230" stroke="#64748b" stroke-width="1.4"/>
-      <text x="64" y="272" text-anchor="middle" font-size="12.5" fill="#5b6b80">固定端</text>
-      </g>
-      <rect x="72" y="180" width="528" height="32" rx="4" fill="#cfdae8" stroke="#64748b" stroke-width="2"/>
-      <text x="250" y="168" text-anchor="middle" font-size="13" font-weight="700" fill="#0d8b7f">上表面：受拉 ＋ΔR</text>
-      <text x="250" y="240" text-anchor="middle" font-size="13" font-weight="700" fill="#2b6cb0">下表面：受压 −ΔR</text>
-      <g id="force" stroke="#d94a3d" stroke-width="3" fill="none">
-      <line id="fL" x1="624" y1="196" x2="624" y2="238"/>
-      <polygon id="fLa" points="624,246 618,234 630,234" fill="#d94a3d" stroke="none"/>
-      </g>
-      <text x="640" y="242" font-size="15" font-weight="700" fill="#d94a3d">F</text>
-      <!-- 应变片槽位 -->
-      <rect class="slot" id="slot-t1" x="170" y="182" width="64" height="14" rx="3" fill="#0d8b7f" stroke="#0a5f57"/>
-      <rect class="slot" id="slot-t2" x="280" y="182" width="64" height="14" rx="3" fill="#0d8b7f" stroke="#0a5f57"/>
-      <rect class="slot" id="slot-b1" x="170" y="196" width="64" height="14" rx="3" fill="#2b6cb0" stroke="#1d4f85"/>
-      <rect class="slot" id="slot-b2" x="280" y="196" width="64" height="14" rx="3" fill="#2b6cb0" stroke="#1d4f85"/>
-      <text class="slot-t" id="lab-t1" x="202" y="193" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">R₁＋</text>
-      <text class="slot-t" id="lab-t2" x="312" y="193" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">R₃＋</text>
-      <text class="slot-t" id="lab-b1" x="202" y="207" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">R₂−</text>
-      <text class="slot-t" id="lab-b2" x="312" y="207" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">R₄−</text>
-      <!-- 补偿块 -->
-      <g id="compBlock">
-      <rect x="410" y="290" width="320" height="42" rx="5" fill="#cfdae8" stroke="#64748b" stroke-width="2"/>
-      <rect id="slot-c" x="538" y="303" width="64" height="15" rx="3" fill="#e08a1e" stroke="#a4660a"/>
-      <text id="lab-c" x="570" y="315" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">R₂补</text>
-      <text x="570" y="356" text-anchor="middle" font-size="13" font-weight="700" fill="#b8720b">补偿块（不受力）</text>
-      </g>
-      <text x="60" y="372" font-size="12.5" fill="#5b6b80">梁受端部力 F → 上表面拉伸、下表面压缩</text>
+      <div class="actions" style="margin-top:0">
+        <button id="ptsPlay" class="ghost" style="flex:0 0 92px">▶ 巡览要点</button>
+        <button id="ptsB0" class="ghost ptsB">1</button><button id="ptsB1" class="ghost ptsB">2</button>
+        <button id="ptsB2" class="ghost ptsB">3</button><button id="ptsB3" class="ghost ptsB">4</button>
+        <button id="ptsB4" class="ghost ptsB">5</button><button id="ptsB5" class="ghost ptsB">6</button>
+        <button id="ptsB6" class="ghost ptsB">7</button><button id="ptsB7" class="ghost ptsB">8</button>
+        <button id="ptsB8" class="ghost ptsB">9</button><button id="ptsB9" class="ghost ptsB">10</button>
+      </div>
+      <ol class="points" id="points"></ol>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colA" data-right="colB" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 中列 ================= -->
+  <div class="col" id="colB">
+    <div class="colhead">② 电桥电路 ＋ 应变片位置（含内嵌读数）</div>
+
+
+    <section class="card panel" id="circuit">
+      <div class="phead">
+        <h2>等臂电桥 <small id="cirSub">E 接左、右节点，输出 U₀ 取上、下节点；四臂初始均为 R₀ = 350 Ω</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="cir" viewBox="0 0 1000 520" role="img" aria-label="等臂直流电桥电路图">
+        <!-- ============ 桥臂与节点 ============ -->
+        <line class="wire" x1="360" y1="60" x2="110" y2="220"/>
+        <line class="wire" x1="360" y1="60" x2="610" y2="220"/>
+        <line class="wire" x1="610" y1="220" x2="360" y2="380"/>
+        <line class="wire" x1="360" y1="380" x2="110" y2="220"/>
+        <!-- 输出回路（跨线处画跳线） -->
+        <path class="wire" d="M360 60 H880"/>
+        <path class="wire" d="M360 380 H681 M719 380 H880 M681 380 A 19 19 0 0 1 719 380"/>
+        <line class="u0-arrow" x1="880" y1="68" x2="880" y2="372"/>
+        <polygon class="u0-arrowhead" points="880,60 874,74 886,74"/>
+        <polygon class="u0-arrowhead" points="880,380 874,366 886,366"/>
+        <!-- 电源回路 -->
+        <path class="wire" d="M110 220 H60 V470 H700 V220 H610"/>
+        <g id="battery">
+          <line class="wire" x1="330" y1="470" x2="343" y2="470"/>
+          <line x1="343" y1="454" x2="343" y2="486" stroke="#233b57" stroke-width="3"/>
+          <line x1="352" y1="462" x2="352" y2="478" stroke="#233b57" stroke-width="6"/>
+          <line x1="361" y1="454" x2="361" y2="486" stroke="#233b57" stroke-width="3"/>
+          <line class="wire" x1="361" y1="470" x2="374" y2="470"/>
+        </g>
+        <text class="battery-label" x="392" y="476">E = 5.0 V</text>
+        <!-- ============ 四桥臂（应变片/电阻） ============ -->
+        <g transform="translate(235,140) rotate(147.4)">
+          <rect id="gl-R1" class="gauge-glow" x="-37" y="-20" width="74" height="40" rx="12" fill="#0d8b7f"/>
+          <rect id="g-R1" class="gauge-body" x="-31" y="-13" width="62" height="26" rx="5" fill="#0d8b7f" stroke="#0a5f57"/>
+        </g>
+        <g transform="translate(485,140) rotate(32.6)">
+          <rect id="gl-R2" class="gauge-glow" x="-37" y="-20" width="74" height="40" rx="12" fill="#0d8b7f"/>
+          <rect id="g-R2" class="gauge-body" x="-31" y="-13" width="62" height="26" rx="5" fill="#0d8b7f" stroke="#0a5f57"/>
+        </g>
+        <g transform="translate(485,300) rotate(147.4)">
+          <rect id="gl-R3" class="gauge-glow" x="-37" y="-20" width="74" height="40" rx="12" fill="#0d8b7f"/>
+          <rect id="g-R3" class="gauge-body" x="-31" y="-13" width="62" height="26" rx="5" fill="#0d8b7f" stroke="#0a5f57"/>
+        </g>
+        <g transform="translate(235,300) rotate(32.6)">
+          <rect id="gl-R4" class="gauge-glow" x="-37" y="-20" width="74" height="40" rx="12" fill="#94a3b8"/>
+          <rect id="g-R4" class="gauge-body" x="-31" y="-13" width="62" height="26" rx="5" fill="#94a3b8" stroke="#64748b"/>
+        </g>
+        <circle class="dot" cx="360" cy="60" r="5.5"/><circle class="dot" cx="110" cy="220" r="5.5"/>
+        <circle class="dot" cx="610" cy="220" r="5.5"/><circle class="dot" cx="360" cy="380" r="5.5"/>
+        <!-- ============ 桥臂标注 ============ -->
+        <g>
+          <text class="arm-label" x="140" y="96" text-anchor="end">R₁</text>
+          <text class="arm-value" x="140" y="118" text-anchor="end" id="v-R1">350.00 Ω</text>
+          <text class="arm-role" x="140" y="140" text-anchor="end" id="role-R1">工作片 受拉 ＋</text>
+        </g>
+        <g>
+          <text class="arm-label" x="600" y="96">R₂</text>
+          <text class="arm-value" x="600" y="118" id="v-R2">350.00 Ω</text>
+          <text class="arm-role" x="600" y="140" id="role-R2">固定电阻</text>
+        </g>
+        <g>
+          <text class="arm-label" x="545" y="322">R₃</text>
+          <text class="arm-value" x="545" y="344" id="v-R3">350.00 Ω</text>
+          <text class="arm-role" x="545" y="366" id="role-R3">固定电阻</text>
+        </g>
+        <g>
+          <text class="arm-label" x="250" y="322" text-anchor="end">R₄</text>
+          <text class="arm-value" x="250" y="344" text-anchor="end" id="v-R4">350.00 Ω</text>
+          <text class="arm-role" x="250" y="366" text-anchor="end" id="role-R4">固定电阻</text>
+        </g>
+        <text class="u0-label" x="818" y="198" text-anchor="middle">U₀</text>
+        <text class="u0-value" x="818" y="228" text-anchor="middle" id="u0svg">+0.000 mV</text>
+        <text class="tiny" x="818" y="250" text-anchor="middle" id="u0note">电桥平衡</text>
+        <text class="arm-role" x="360" y="26" text-anchor="middle" id="tempTag" fill="#5b6b80">同一温度场 θ = 20.0 ℃</text>
+        <!-- ============ 电流小点（动画） ============ -->
+        <g id="curDots"></g>
       </svg>
+      <div class="legend">
+        <span><i style="background:#0d8b7f"></i>受拉工作片（＋ΔR）</span>
+        <span><i style="background:#2b6cb0"></i>受压工作片（−ΔR）</span>
+        <span><i style="background:#e08a1e"></i>补偿片（只随温度）</span>
+        <span><i style="background:#94a3b8"></i>固定电阻</span>
+        <span><i style="background:#d94a3d"></i>电流小点</span>
+      </div>
+      <div class="readlabel">内嵌读数：桥臂电阻与桥路状态</div>
+      <div class="readwrap"><svg viewBox="0 0 640 172" role="img" aria-label="桥臂电阻与桥路状态读数">
+        <g transform="translate(10,18)">
+          <text id="rd1" x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">R₁ = 350.00 Ω　ΔR/R = +0.000‰　工作片 受拉 ＋</text>
+          <text id="rd2" x="0" y="22" font-size="12.5" fill="#5b6b80">R₂ = 350.00 Ω　ΔR/R = +0.000‰　固定电阻</text>
+          <text id="rd3" x="0" y="44" font-size="12.5" fill="#5b6b80">R₃ = 350.00 Ω　ΔR/R = +0.000‰　固定电阻</text>
+          <text id="rd4" x="0" y="66" font-size="12.5" fill="#5b6b80">R₄ = 350.00 Ω　ΔR/R = +0.000‰　固定电阻</text>
+          <text id="rdS" x="0" y="94" font-size="12.5" font-weight="700" fill="#0e4a8e">电压灵敏度 S = E/4 = 2.5 mV / 1000 με；当前 U₀ = +0.000 mV</text>
+          <text id="rdT" x="0" y="116" font-size="12" fill="#5b6b80">温度补偿：补偿片接相邻桥臂（R₂）→ 温度分量 +0.000 mV</text>
+          <text x="0" y="146" font-size="11" fill="#94a3b8">平衡条件 R₁R₃ = R₂R₄；等臂电桥四臂初始均为 R₀ = 350 Ω，E = 5.0 V 加在左、右节点之间，U₀ 取自上下节点。</text>
+        </g>
+      </svg></div>
+      <div class="hint">键盘：<b>← →</b> 调温度，<b>↑ ↓</b> 调应变，<b>空格</b> 演示当前接法，<b>R</b> 复位；电流小点在输出支路上的多少与流速∝ |U₀|。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="specimen">
+      <div class="phead">
+        <h2>应变片的粘贴位置 <small id="spSub">单臂：一片贴在试件上受力，一片贴在补偿块上测温</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="sp" viewBox="0 0 780 452" role="img" aria-label="悬臂梁与应变片粘贴位置（随应变弯曲变形）">
+        <rect id="field" x="10" y="14" width="760" height="416" rx="16" fill="rgba(217,74,61,0)" stroke="rgba(217,74,61,.35)" stroke-width="2" stroke-dasharray="8 6"/>
+        <text id="fieldTxt" x="390" y="42" text-anchor="middle" font-size="15" font-weight="700" fill="#7a4a05">同一温度场 θ = 20.0 ℃（ΔT = 0.0 ℃）</text>
+        <!-- ============ 固定端 ============ -->
+        <g id="wall">
+          <rect x="48" y="116" width="26" height="188" fill="#94a3b8" stroke="#64748b" stroke-width="1.6"/>
+          <line x1="48" y1="130" x2="74" y2="118" stroke="#64748b" stroke-width="1.5"/>
+          <line x1="48" y1="158" x2="74" y2="146" stroke="#64748b" stroke-width="1.5"/>
+          <line x1="48" y1="186" x2="74" y2="174" stroke="#64748b" stroke-width="1.5"/>
+          <line x1="48" y1="214" x2="74" y2="202" stroke="#64748b" stroke-width="1.5"/>
+          <line x1="48" y1="242" x2="74" y2="230" stroke="#64748b" stroke-width="1.5"/>
+          <line x1="48" y1="270" x2="74" y2="258" stroke="#64748b" stroke-width="1.5"/>
+          <line x1="48" y1="298" x2="74" y2="286" stroke="#64748b" stroke-width="1.5"/>
+          <text x="61" y="330" text-anchor="middle" font-size="13" fill="#5b6b80">固定端</text>
+        </g>
+        <!-- ============ 悬臂梁：未受力轮廓（虚线）+ 实际梁体（随应变弯曲） ============ -->
+        <rect id="beamOrig" x="74" y="184" width="616" height="52" rx="5" fill="none" stroke="#a8b6c8" stroke-width="1.6" stroke-dasharray="7 6"/>
+        <path id="beam" d="M74 184 L690 184 L690 236 L74 236 Z" fill="#cfdae8" stroke="#64748b" stroke-width="2"/>
+        <text x="150" y="148" font-size="14" font-weight="700" fill="#0d8b7f">上表面：受拉 ＋ΔR</text>
+        <text x="150" y="298" font-size="14" font-weight="700" fill="#2b6cb0">下表面：受压 −ΔR</text>
+        <!-- 拉/压微箭头（随应变显隐、跟随梁面） -->
+        <g id="tm1" opacity="0" stroke="#d94a3d" stroke-width="2.2" fill="none">
+          <line x1="176" y1="166" x2="152" y2="166"/>
+          <polygon points="150,166 160,161 160,171" fill="#d94a3d" stroke="none"/>
+          <line x1="184" y1="166" x2="208" y2="166"/>
+          <polygon points="210,166 200,161 200,171" fill="#d94a3d" stroke="none"/>
+        </g>
+        <g id="tm2" opacity="0" stroke="#d94a3d" stroke-width="2.2" fill="none">
+          <line x1="326" y1="166" x2="302" y2="166"/>
+          <polygon points="300,166 310,161 310,171" fill="#d94a3d" stroke="none"/>
+          <line x1="334" y1="166" x2="358" y2="166"/>
+          <polygon points="360,166 350,161 350,171" fill="#d94a3d" stroke="none"/>
+        </g>
+        <g id="cp1" opacity="0" stroke="#2b6cb0" stroke-width="2.2" fill="none">
+          <line x1="150" y1="254" x2="172" y2="254"/>
+          <polygon points="174,254 164,249 164,259" fill="#2b6cb0" stroke="none"/>
+          <line x1="210" y1="254" x2="188" y2="254"/>
+          <polygon points="186,254 196,249 196,259" fill="#2b6cb0" stroke="none"/>
+        </g>
+        <g id="cp2" opacity="0" stroke="#2b6cb0" stroke-width="2.2" fill="none">
+          <line x1="300" y1="254" x2="322" y2="254"/>
+          <polygon points="324,254 314,249 314,259" fill="#2b6cb0" stroke="none"/>
+          <line x1="360" y1="254" x2="338" y2="254"/>
+          <polygon points="336,254 346,249 346,259" fill="#2b6cb0" stroke="none"/>
+        </g>
+        <!-- ============ 端部力 F（随挠度下移、长度随应变） ============ -->
+        <g id="force" stroke="#d94a3d" stroke-width="3" fill="none">
+          <line id="fL" x1="690" y1="262" x2="690" y2="300"/>
+          <polygon id="fLa" points="690,310 684,298 696,298" fill="#d94a3d" stroke="none"/>
+        </g>
+        <text id="fTxt" x="706" y="292" font-size="15" font-weight="700" fill="#d94a3d">F</text>
+        <!-- ============ 端部挠度标注 f（放大显示） ============ -->
+        <g id="fDim" opacity="0" stroke="#7c3aed" fill="none">
+          <line id="fDimL" x1="732" y1="210" x2="732" y2="294" stroke="#7c3aed" stroke-width="2.2"/>
+          <line x1="726" y1="210" x2="738" y2="210" stroke="#7c3aed" stroke-width="2.2"/>
+          <line id="fDimL2" x1="726" y1="294" x2="738" y2="294" stroke="#7c3aed" stroke-width="2.2"/>
+        </g>
+        <text id="fDimTxt" x="726" y="266" font-size="12.5" font-weight="700" fill="#7c3aed" opacity="0">f</text>
+        <!-- ============ 应变片（随梁面平移 + 转动） ============ -->
+        <g id="g-t1"><rect id="slot-t1" x="180" y="190" width="76" height="20" rx="3" fill="#0d8b7f" stroke="#0a5f57"/><text id="lab-t1" x="218" y="205" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">R₁＋</text></g>
+        <g id="g-t2"><rect id="slot-t2" x="330" y="190" width="76" height="20" rx="3" fill="#0d8b7f" stroke="#0a5f57"/><text id="lab-t2" x="368" y="205" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">R₃＋</text></g>
+        <g id="g-b1"><rect id="slot-b1" x="180" y="212" width="76" height="20" rx="3" fill="#2b6cb0" stroke="#1d4f85"/><text id="lab-b1" x="218" y="227" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">R₂−</text></g>
+        <g id="g-b2"><rect id="slot-b2" x="330" y="212" width="76" height="20" rx="3" fill="#2b6cb0" stroke="#1d4f85"/><text id="lab-b2" x="368" y="227" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">R₄−</text></g>
+        <!-- ============ 补偿块（不受力） ============ -->
+        <g id="compBlock">
+          <rect x="92" y="352" width="330" height="44" rx="5" fill="#cfdae8" stroke="#64748b" stroke-width="2"/>
+          <rect id="slot-c" x="214" y="364" width="76" height="20" rx="3" fill="#e08a1e" stroke="#a4660a"/>
+          <text id="lab-c" x="252" y="379" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">R₂补</text>
+          <text x="257" y="416" text-anchor="middle" font-size="13" font-weight="700" fill="#b8720b">补偿块（不受力 · 与工作片同温）</text>
+        </g>
+        <text x="24" y="444" font-size="12.5" fill="#5b6b80">梁受端部力 F → 上表面拉伸、下表面压缩；补偿片与工作片同温但不受力。形变已按视觉比例放大显示</text>
+      </svg>
+      <div class="readlabel">内嵌读数：贴片与温度 / 应变分量</div>
+      <div class="readwrap"><svg viewBox="0 0 640 136" role="img" aria-label="贴片与温度应变分量读数">
+        <g transform="translate(10,18)">
+          <text id="spRd1" x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">温度场 θ = 20.0 ℃（ΔT = +0.0 ℃）；温度分量 αΔT = +0.000‰</text>
+          <text id="spRd2" x="0" y="22" font-size="12.5" fill="#5b6b80">应变分量 kε = +0.000‰（工作片受拉 ＋ / 受压 −）</text>
+          <text id="spRd3" x="0" y="44" font-size="12.5" fill="#5b6b80">补偿关系：补偿片与工作片同温同变 → 相邻桥臂相减抵消</text>
+          <text id="spRd4" x="0" y="66" font-size="12.5" font-weight="700" fill="#0e4a8e">输出：温度分量 +0.000 mV ＋ 应变分量 +0.000 mV = U₀ +0.000 mV</text>
+          <text x="0" y="92" font-size="11" fill="#94a3b8">ΔR(温度) = R₀αΔT（两片同温则相等）；ΔR(应变) = R₀kε 只出现在受力片上 —— 这就是电桥补偿法的物理基础。</text>
+        </g>
+      </svg></div>
       <div class="hint" id="spNote">温度：两片同温同变 → ΔR₁(温度) = ΔR补(温度)；应变：只有工作片变化 → ΔR补(应变) = 0。</div>
       </div>
-      </section>
+    </section>
 
-<section class="card panel" id="chartCard">
-      <div class="phead">
-      <h2>输出特性曲线</h2>
-      <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
-      </div>
-      <div class="pbody">
-      <div class="tabs">
-      <button data-tab="temp" class="on">U₀ – 温度 ΔT</button>
-      <button data-tab="strain">U₀ – 应变 ε</button>
-      </div>
-      <svg id="ch" viewBox="0 0 760 240">
-      <g id="ghostGrid"></g>
-      <line x1="60" y1="200" x2="736" y2="200" stroke="#9fb2c8" stroke-width="1.5"/>
-      <line x1="60" y1="20" x2="60" y2="200" stroke="#9fb2c8" stroke-width="1.5"/>
-      <path id="c-ref" fill="none" stroke="#e08a1e" stroke-width="2.5" stroke-dasharray="7 5"/>
-      <path id="c-b" fill="none" stroke="#2b6cb0" stroke-width="2.5"/>
-      <path id="c-c" fill="none" stroke="#0f9d58" stroke-width="2.5"/>
-      <path id="c-a" fill="none" stroke="#0f9d58" stroke-width="3.5"/>
-      <line id="mkLine" x1="0" y1="20" x2="0" y2="200" stroke="#0e4a8e" stroke-width="1.5" stroke-dasharray="5 4"/>
-      <circle id="mkDot" r="5.5" fill="#0e4a8e" stroke="#fff" stroke-width="2"/>
-      <text id="axX" x="736" y="224" text-anchor="end" font-size="12.5" fill="#5b6b80">温度变化 ΔT / ℃</text>
-      <text x="16" y="16" font-size="12.5" fill="#5b6b80">U₀ / mV</text>
-      </svg>
-      <div class="legend" id="chartLegend"></div>
-      </div>
-      </section>
   </div>
+
   <div class="vsplit" data-left="colB" data-right="colC" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 右列 ================= -->
   <div class="col" id="colC">
-    <div class="colhead">③ 读数 + 原理 + 要点</div>
-<section class="card panel" id="readCard">
+    <div class="colhead">③ 输出读数 · 公式 · 特性曲线</div>
+
+
+    <section class="card panel" id="readCard">
       <div class="phead">
-      <h2>输出读数 <small>U₀ = E(R₁R₃ − R₂R₄) /[(R₁+R₂)(R₃+R₄)]</small></h2>
-      <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+        <h2>输出读数 <small>U₀ = E(R₁R₃ − R₂R₄) /[(R₁+R₂)(R₃+R₄)]</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
       </div>
       <div class="pbody">
-      <div class="u0-big">
-      <span class="cap">电桥输出 U₀</span>
-      <span class="sign" id="sign">0</span>
-      <span class="num" id="u0num">0.000</span>
-      <span class="unit">mV</span>
+      <div class="big">
+        <span class="cap" id="bigCap">电桥输出 U₀（单臂）</span>
+        <span class="sign" id="sign">0</span>
+        <span class="num" id="u0num">0.000</span><span class="unit">mV</span>
       </div>
       <div class="meter"><div class="mid"></div><div class="bar" id="u0bar"></div></div>
       <div class="meter-scale"><span>−10</span><span>−5</span><span>0</span><span>＋5</span><span>＋10 mV</span></div>
-      <div class="split">
-      <div class="box">其中：温度引起的附加输出<b id="tempPart">0.000 mV</b></div>
-      <div class="box">其中：应变 ε 引起的输出<b id="epsPart">0.000 mV</b></div>
+      <div class="kv">
+        <div class="box">温度分量 U₀(ΔT)<b id="tempPart">+0.000 mV</b></div>
+        <div class="box">应变分量 U₀(ε)<b id="epsPart">+0.000 mV</b></div>
+        <div class="box">非线性误差 δ<b id="nll">0.00 %</b></div>
+        <div class="box">折算虚假应变<b id="fake">0 με</b></div>
       </div>
       <div class="fine">
-      精确计算 <b id="exact">0.000 mV</b>；线性近似 (E/4)·(ΔR₁−ΔR₂+ΔR₃−ΔR₄)/R₀ = <b id="lin">0.000 mV</b>，非线性误差 <b id="nll">0.00%</b>。<br>
-      电压灵敏度 S = <b id="sens">E/4 = 2.5 mV / 1000 με</b>；当前温度误差折算虚假应变：<b id="fake">0 με</b>。
+        精确计算（式 3-16）：U₀ = <b id="exact">+0.000 mV</b>；线性近似 (E/4)·(ΔR₁−ΔR₂+ΔR₃−ΔR₄)/R₀ = <b id="lin">+0.000 mV</b>；
+        电压灵敏度 S = <b id="sens">E/4 = 2.5 mV / 1000 με</b>。非线性误差按教材口径 δ ≈ ΔR/(2R) = kε/2（仅单臂），差动与全桥为线性；
+        温度还会通过分母 1/(1+αΔT) 带来 <b id="drift">0.00%</b> 的<b>灵敏度漂移</b>（不是零点误差）。
       </div>
       </div>
-      </section>
+    </section>
 
-<section class="card panel" id="fmlCard">
+    <section class="card panel" id="fmlCard">
       <div class="phead">
-      <h2>原理讲解 · 三种接法的输出电压与灵敏度 <small id="fmlTitle">单臂电桥（一个工作片）</small></h2>
-      <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+        <h2>原理讲解 · 三种接法的输出电压与灵敏度 <small id="fmlTitle">单臂电桥</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
       </div>
       <div class="pbody">
       <div class="fml" id="fmlBody"></div>
       <table class="tb" id="senTable">
-      <thead><tr><th>接法</th><th>工作片</th><th>电压灵敏度 S</th><th>U₀（当前 ε）</th><th>相对</th><th>温度</th></tr></thead>
-      <tbody>
-      <tr data-cfg="single"><td><b>单臂</b></td><td>1 片</td><td>E/4</td><td id="s-single">—</td><td>1×</td><td id="tt-single">需补偿片</td></tr>
-      <tr data-cfg="half"><td><b>双臂</b>（半桥差动）</td><td>2 片</td><td>E/2</td><td id="s-half">—</td><td>2×</td><td id="tt-half">自动抵消</td></tr>
-      <tr data-cfg="full"><td><b>全桥</b>差动</td><td>4 片</td><td>E</td><td id="s-full">—</td><td>4×</td><td id="tt-full">自动抵消</td></tr>
-      </tbody>
+        <thead><tr><th>接法</th><th>工作片</th><th>电压灵敏度 S</th><th>U₀（当前 ΔT、ε）</th><th>相对</th><th>温度</th></tr></thead>
+        <tbody>
+        <tr data-cfg="single"><td><b>单臂</b></td><td>1 片</td><td>E/4</td><td id="s-single">—</td><td>1×</td><td id="tt-single">需补偿片</td></tr>
+        <tr data-cfg="half"><td><b>双臂</b>（半桥差动）</td><td>2 片</td><td>E/2</td><td id="s-half">—</td><td>2×</td><td>自动抵消 ✓</td></tr>
+        <tr data-cfg="full"><td><b>全桥</b>差动</td><td>4 片</td><td>E</td><td id="s-full">—</td><td>4×</td><td>自动抵消 ✓</td></tr>
+        </tbody>
       </table>
-      <div class="note tiny" style="font-size:12px;color:#5b6b80;margin-top:5px">点击表格任一行可切换接法。灵敏度一栏为理论值 E/4、E/2、E（ε 固定时 U₀ 之比 = 1 : 2 : 4）。</div>
+      <div class="hint">点击表格任一行可切换接法。灵敏度一栏为理论值 E/4、E/2、E（ε 相同时 U₀ 之比 = 1 : 2 : 4）。</div>
       </div>
-      </section>
+    </section>
 
-<section class="card panel" id="ptsCard">
+    <section class="card panel" id="chartCard">
       <div class="phead">
-      <h2>要点（随接法与状态自动点亮）</h2>
-      <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+        <h2>特性曲线 <small>U₀–ΔT（温度补偿）与 U₀–ε（灵敏度与线性度）</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
       </div>
       <div class="pbody">
-      <ol class="points" id="points"></ol>
+      <div class="tabs" id="tabBar">
+        <button data-tab="temp" class="on">U₀ – 温度 ΔT</button>
+        <button data-tab="strain">U₀ – 应变 ε</button>
       </div>
-      </section>
+      <svg id="ch" viewBox="0 0 760 240" role="img" aria-label="电桥输出特性曲线">
+        <g id="ghostGrid"></g>
+        <line x1="60" y1="200" x2="736" y2="200" stroke="#9fb2c8" stroke-width="1.5"/>
+        <line x1="60" y1="20" x2="60" y2="200" stroke="#9fb2c8" stroke-width="1.5"/>
+        <path id="c-ref" fill="none" stroke="#e08a1e" stroke-width="2.5" stroke-dasharray="7 5"/>
+        <path id="c-b" fill="none" stroke="#2b6cb0" stroke-width="2.5"/>
+        <path id="c-c" fill="none" stroke="#0f9d58" stroke-width="2.5"/>
+        <path id="c-a" fill="none" stroke="#0f9d58" stroke-width="3.5"/>
+        <line id="mkLine" x1="0" y1="20" x2="0" y2="200" stroke="#0e4a8e" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <circle id="mkDot" r="5.5" fill="#0e4a8e" stroke="#fff" stroke-width="2"/>
+        <text id="axX" x="736" y="224" text-anchor="end" font-size="12.5" fill="#5b6b80">温度变化 ΔT / ℃</text>
+        <text x="16" y="16" font-size="12.5" fill="#5b6b80">U₀ / mV</text>
+      </svg>
+      <div class="legend" id="chartLegend"></div>
+      </div>
+    </section>
+
   </div>
 </main>
 </div><!-- /#boardWrap -->
 
 <footer>
-  <b>模型与参数：</b>等臂电桥 R₀ = 350 Ω，灵敏系数 k = 2.0，总温度系数 α ≈ 4×10⁻⁵ /℃（相当于 20 με/℃ 的虚假应变），电源 E = 5.0 V；工作片 ΔR/R = αΔT ± kε（受拉取 ＋，受压取 −），补偿片 ΔR/R = αΔT。
-  &nbsp;<b>三个课堂提问：</b>① 为什么补偿片必须接在<b>相邻</b>桥臂？② 从单臂到双臂、全桥，灵敏度为什么正好翻 2 倍、4 倍？③ 为什么全桥的非线性误差最小？
-  &nbsp;<b>结论：</b>全桥差动灵敏度最高（S = E），双臂差动次之（S = E/2），单臂最低（S = E/4）；双臂与全桥因各片同温而自动补偿温度。
+<b>模型与参数：</b>等臂电桥 R₀ = 350 Ω，灵敏系数 k = 2.0，总温度系数 α ≈ 4×10⁻⁵ /℃（相当于 20 με/℃ 的虚假应变），电源 E = 5.0 V；工作片 ΔR/R = αΔT ± kε（受拉取 ＋，受压取 −），补偿片 ΔR/R = αΔT。<b>教材式：</b>式 3-16 直流电桥特性公式 U₀ = E(R₁R₃ − R₂R₄)/[(R₁+R₂)(R₃+R₄)]；式 3-17～3-19 单臂（U₀ ≈ EΔR/4R = (E/4)kε）；式 3-20 双臂半桥差动（(E/2)kε）；式 3-21 全桥差动（E·kε）。<b>三个课堂提问：</b>① 为什么补偿片必须接在<b>相邻</b>桥臂？② 从单臂到双臂、全桥，灵敏度为什么正好翻 2 倍、4 倍？③ 为什么全桥的非线性误差最小？<b>结论：</b>全桥差动灵敏度最高（S = E），双臂差动次之（S = E/2），单臂最低（S = E/4）；双臂与全桥因各片同温而自动补偿温度。压阻式传感器的转换电路多采用恒流源供电的全桥（U₀ 与 R 的绝对值无关，灵敏度漂移更小）。
 </footer>
 
 <script>
 (function(){
   "use strict";
-  /* ============ 1. 物理参数（可按课堂需要修改） ============ */
-  var CFG = { R0:350, k:2.0, alphaT:4e-5, E:5.0, FS:10 };
+/* =====================================================================
+   公共运行时（各章通用）· 由 _build/build.js 注入到主脚本的最前面
+   章节代码直接使用：$ / sfmt / frac / clamp / say / sleep / tween /
+   beginDemo / stopDemo / endDemo / bindDemos
+   约定：章节必须定义 var S = { ..., demoToken:0 }；
+        演示函数写成 async，每个 await 判断返回值，结尾 endDemo()；
+        章节 jsB 里用 DEMOS.<key> = {btn:'...', label:'...', fn:demoXxx} 注册，
+        随后调用 bindDemos() 绑定按钮点击。
+   注意：不内置任何语音朗读；演示按钮只由 bindDemos() 绑定一次。
+   ===================================================================== */
+var $ = function(id){ return document.getElementById(id); };
+function sfmt(a, d){ return (a >= 0 ? '+' : '−') + Math.abs(a).toFixed(d); }
+function frac(a, b){ return '<span class="frac"><i>' + a + '</i><b>' + b + '</b></span>'; }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
 
+var DEMOS = {}, SPEED = 1, playingKey = null;
+function say(t){ $('narration').innerHTML = t; }
+function sleep(ms, tok){
+  return new Promise(function(res){ setTimeout(function(){ res(S.demoToken === tok); }, Math.max(60, ms/SPEED)); });
+}
+function tween(from, to, dur, set, tok){
+  dur = Math.max(160, dur/SPEED);
+  return new Promise(function(res){
+    var t0 = performance.now();
+    (function step(now){
+      if (S.demoToken !== tok) return res(false);
+      var p = (now - t0)/dur;
+      if (!isFinite(p)) p = 1;
+      p = clamp(p, 0, 1);
+      var e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
+      var v = from + (to - from)*e;
+      v = (from <= to) ? Math.min(to, Math.max(from, v)) : Math.max(to, Math.min(from, v));
+      set(v);
+      if (p < 1) requestAnimationFrame(step); else res(true);
+    })(performance.now());
+  });
+}
+function resetDemoButtons(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b){ b.textContent = DEMOS[k].label; b.classList.remove('running'); }
+  });
+}
+function stopDemo(){ S.demoToken++; playingKey = null; resetDemoButtons(); }
+function beginDemo(key){
+  stopDemo(); playingKey = key;
+  var d = DEMOS[key], b = d && $(d.btn);
+  if (b){ b.textContent = '⏸ 暂停演示'; b.classList.add('running'); }
+  return ++S.demoToken;
+}
+function endDemo(){ playingKey = null; resetDemoButtons(); }
+function bindDemos(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b) b.addEventListener('click', function(){
+      if (playingKey === k){ stopDemo(); say('演示已暂停。可继续拖动滑块手动观察，或点其它演示按钮。'); }
+      else if (DEMOS[k].fn){ DEMOS[k].fn(); }
+    });
+  });
+}
+(function(){
+  var spd = $('speed');
+  if (spd) spd.addEventListener('input', function(){
+    SPEED = parseFloat(this.value) || 1;
+    $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  });
+})();
+
+
+  /* ============ 1. 物理参数与状态 ============ */
+  var CFG = { R0:350, k:2.0, alphaT:4e-5, E:5.0, FS:10 };   /* FS = 读数表量程 ±10 mV */
   var ARMS = ['R1','R2','R3','R4'];
-  /* 各接法中应变片的应变符号：＋ 受拉，− 受压（桥臂编号见图：R₁ 左上、R₂ 右上、R₃ 右下、R₄ 左下） */
+  /* 各接法中应变片的应变符号：＋ 受拉，− 受压（R₁ 左上、R₂ 右上、R₃ 右下、R₄ 左下） */
   var SIGNS = { single:{ R1:+1 }, half:{ R1:+1, R2:-1 }, full:{ R1:+1, R3:+1, R2:-1, R4:-1 } };
   var WORKN = { single:1, half:2, full:4 };
-  var SLOPE = { single:0.25, half:0.5, full:1.0 };       /* U₀ = SLOPE·E·kε */
+  var SLOPE = { single:0.25, half:0.5, full:1.0 };          /* U₀ = SLOPE·E·kε */
+  var SNAME = { single:'E/4', half:'E/2', full:'E' };
   var CNAME = { single:'单臂电桥', half:'双臂电桥（半桥差动）', full:'全桥差动电桥' };
+  var COMPNAME = { adjacent:'相邻桥臂', opposite:'相对桥臂', none:'不接补偿片' };
+  var RNAME = { R1:'R₁', R2:'R₂', R3:'R₃', R4:'R₄' };
   var COL = { pos:'#0d8b7f', neg:'#2b6cb0', comp:'#e08a1e', fix:'#94a3b8' };
   var STROKE = { pos:'#0a5f57', neg:'#1d4f85', comp:'#a4660a', fix:'#64748b' };
   var ROLETXT = { pos:'工作片 受拉 ＋', neg:'工作片 受压 −', comp:'补偿片（同温）', fix:'固定电阻' };
+  var SLOTMAP = { single:{ t1:'R1' }, half:{ t1:'R1', b1:'R2' }, full:{ t1:'R1', t2:'R3', b1:'R2', b2:'R4' } };
+  var S = { cfg:'single', comp:'adjacent', dT:0, eps:0, tab:'temp', demoToken:0 };
 
-  var S = { cfg:'single', comp:'adjacent', dT:0, eps:0, tab:'temp', demoToken:0, playing:0 };
-  var $ = function(id){ return document.getElementById(id); };
-
-  /* ============ 2. 电桥模型 ============ */
+  /* ============ 2. 电桥模型（纯函数） ============ */
   function model(dT, eps, cfg, comp){
     var R0 = CFG.R0, a = CFG.alphaT*dT, s = CFG.k*eps*1e-6;
     var roles = {}, r = {}, sg = SIGNS[cfg];
@@ -513,60 +688,63 @@
       var d = roles[id] === 'pos' ? (a + s) : (roles[id] === 'neg' ? (a - s) : (roles[id] === 'comp' ? a : 0));
       r[id] = R0*(1 + d);
     });
-    var exact = CFG.E*(r.R1*r.R3 - r.R2*r.R4)/((r.R1 + r.R2)*(r.R3 + r.R4));
+    var exact = CFG.E*(r.R1*r.R3 - r.R2*r.R4)/((r.R1 + r.R2)*(r.R3 + r.R4));   /* 式 3-16 */
     var lin = CFG.E/4*((r.R1 - R0) - (r.R2 - R0) + (r.R3 - R0) - (r.R4 - R0))/R0;
     return { r:r, roles:roles, compArm:compArm, exact:exact, lin:lin, a:a, s:s, workn:WORKN[cfg] };
   }
-  /* 理论灵敏度 S = SLOPE·E·k（V），界面上的表格用 model() 精确值，这里保留给公式栏备用 */
-
-  /* ============ 3. 工具 ============ */
-  function sfmt(x, d){ return (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(d); }
+  /* 温度分量（同一 ΔT 下令 ε = 0 的精确输出） */
+  function tempOf(dT, cfg, comp){ return model(dT, 0, cfg, comp).exact*1000; }
+  /* 教材口径的相对非线性误差：单臂 e ≈ ΔR/(2R) = kε/2；差动与全桥为线性 */
+  function nonlinFS(cfg, eps){
+    if (cfg === 'single') return CFG.k*eps*1e-6/2*100;
+    return 0;
+  }
+  /* 灵敏度漂移 = 1/(1+αΔT) − 1（不是零点误差） */
+  function driftPct(dT){ return (Math.abs(1/(1 + CFG.alphaT*dT) - 1)*100).toFixed(2) + '%'; }
+  function mVof(dT, eps, cfg, comp){ return sfmt(model(dT, eps, cfg, comp).exact*1000, 3) + ' mV'; }
+  function fakeOf(dT, cfg, comp){ return (Math.abs(tempOf(dT, cfg, comp))/(CFG.E/4*CFG.k)*1000).toFixed(0); }
   function permille(x){ return (x >= 0 ? '+' : '−') + (Math.abs(x)*1000).toFixed(2) + '‰'; }
-  function frac(a, b){ return '<span class="frac"><i>' + a + '</i><b>' + b + '</b></span>'; }
+
+  /* ============ 3. 电流动画（粒子沿桥路流动；输出支路流量 ∝ |U₀|） ============ */
+  var CUR = { segs:[], els:null, phase:0 };
+  function segLen(s){ var dx = s.x2 - s.x1, dy = s.y2 - s.y1; return Math.sqrt(dx*dx + dy*dy) || 1; }
+  function initCur(){
+    var g = $('curDots'), html = '', i;
+    for (i = 0; i < 26; i++) html += '<circle class="cur-dot" cx="-40" cy="-40" r="3.4" opacity="0"/>';
+    g.innerHTML = html;
+    CUR.els = g.querySelectorAll('circle');
+  }
+  function runCur(){
+    var last = performance.now();
+    (function loop(now){
+      var dt = Math.min(60, now - last); last = now;
+      CUR.phase = (CUR.phase + dt/2400) % 1;
+      var segs = CUR.segs || [], els = CUR.els || [], n = els.length, total = 0, i;
+      for (i = 0; i < segs.length; i++) total += segLen(segs[i])*clamp(segs[i].f, 0, 1.8);
+      var pi = 0;
+      for (i = 0; i < segs.length; i++){
+        var s = segs[i], L = segLen(s), f = clamp(s.f, 0, 1.8);
+        var cnt = Math.max(0, Math.round(n*L*f/(total || 1)));
+        for (var k = 0; k < cnt && pi < n; k++, pi++){
+          var t = ((CUR.phase*(0.5 + 0.6*f) + k/cnt) % 1 + 1) % 1;
+          els[pi].setAttribute('cx', (s.x1 + (s.x2 - s.x1)*t).toFixed(1));
+          els[pi].setAttribute('cy', (s.y1 + (s.y2 - s.y1)*t).toFixed(1));
+          els[pi].setAttribute('opacity', clamp(0.25 + 0.65*f, 0.15, 0.95).toFixed(2));
+        }
+      }
+      for (; pi < n; pi++) els[pi].setAttribute('opacity', '0');
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
 
   /* ============ 4. 主刷新 ============ */
   function paint(){
     var m = model(S.dT, S.eps, S.cfg, S.comp);
-    var u0 = m.exact*1000, temps = model(S.dT, 0, S.cfg, S.comp).exact*1000, epsU = u0 - temps;
-
-    /* --- 电路桥臂 --- */
-    ARMS.forEach(function(id){
-      var g = $('arm-' + id), body = g.querySelector('.gauge-body'), glow = g.querySelector('.gauge-glow');
-      var role = m.roles[id], c = COL[role];
-      body.setAttribute('fill', c);
-      body.setAttribute('stroke', STROKE[role]);
-      glow.setAttribute('fill', c);
-      var dRel = (m.r[id] - CFG.R0)/CFG.R0;
-      glow.style.opacity = Math.min(0.5, Math.abs(dRel)*140);
-      $('role-' + id).textContent = ROLETXT[role];
-      $('role-' + id).setAttribute('fill', c === COL.fix ? '#64748b' : c);
-      $('v-' + id).textContent = m.r[id].toFixed(2) + ' Ω   ' + permille(dRel);
-    });
-
-    /* --- 读数 --- */
-    $('u0num').textContent = Math.abs(u0).toFixed(3);
-    $('u0svg').textContent = sfmt(u0, 3) + ' mV';
-    $('u0svg').setAttribute('fill', Math.abs(u0) < 5e-4 ? '#0f9d58' : (u0 > 0 ? '#d94a3d' : '#2b6cb0'));
-    $('sign').textContent = u0 > 5e-4 ? '＋' : (u0 < -5e-4 ? '−' : '0');
-    $('sign').style.color = u0 > 5e-4 ? '#d94a3d' : (u0 < -5e-4 ? '#2b6cb0' : '#0f9d58');
-    $('u0num').style.color = u0 > 5e-4 ? '#d94a3d' : (u0 < -5e-4 ? '#2b6cb0' : '#12233a');
-    $('u0note').textContent = Math.abs(u0) < 5e-4 ? '电桥平衡' : (u0 > 0 ? '上节点电位高' : '下节点电位低');
-    var bar = $('u0bar'), w = Math.min(50, Math.abs(u0)/CFG.FS*50);
-    bar.style.width = w + '%';
-    bar.style.left = u0 >= 0 ? '50%' : (50 - w) + '%';
-    bar.style.background = u0 >= 0 ? '#d94a3d' : '#2b6cb0';
-    $('tempPart').textContent = sfmt(temps, 3) + ' mV';
-    $('epsPart').textContent = sfmt(epsU, 3) + ' mV';
-    $('exact').textContent = sfmt(u0, 3) + ' mV';
-    $('lin').textContent = sfmt(m.lin*1000, 3) + ' mV';
-    $('nll').textContent = (Math.abs(m.lin) > 1e-12 ? Math.abs((m.exact - m.lin)/m.lin)*100 : 0).toFixed(2) + '%';
-    var SNAME = { single:'E/4', half:'E/2', full:'E' };
-    $('sens').textContent = SNAME[S.cfg] + ' = ' + (SLOPE[S.cfg]*CFG.E*CFG.k).toFixed(1) + ' mV / 1000 με';
-    $('fake').textContent = (Math.abs(temps)/(CFG.E/4*CFG.k)*1000).toFixed(0) + ' με';
-
-    /* --- 接法按钮与补偿片按钮状态 --- */
-    document.querySelectorAll('#segCfg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-cfg') === S.cfg); });
+    var temps = tempOf(S.dT, S.cfg, S.comp), u0 = m.exact*1000, epsU = u0 - temps;
     var single = (S.cfg === 'single');
+
+    /* --- 按钮状态 --- */
+    document.querySelectorAll('#segCfg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-cfg') === S.cfg); });
     document.querySelectorAll('#segComp button').forEach(function(b){
       b.classList.toggle('on', single && b.getAttribute('data-comp') === S.comp);
       b.disabled = !single;
@@ -574,17 +752,48 @@
     $('segComp').classList.toggle('disabled', !single);
     $('compHint').textContent = single ? '仅单臂需要' : '差动接法自带温度补偿';
     document.querySelectorAll('#senTable tr[data-cfg]').forEach(function(tr){ tr.classList.toggle('on', tr.getAttribute('data-cfg') === S.cfg); });
+    document.querySelectorAll('#tabBar button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-tab') === S.tab); });
     $('fmlTitle').textContent = CNAME[S.cfg];
-    $('cirSub').textContent = S.cfg === 'single'
-      ? '单臂：只有 R₁ 是工作片（' + (m.compArm ? '另接补偿片 ' + (m.compArm === 'R2' ? 'R₂' : 'R₃') : '其余三臂为固定电阻') + '）'
+    $('bigCap').textContent = '电桥输出 U₀（' + { single:'单臂', half:'双臂差动', full:'全桥差动' }[S.cfg] + '）';
+    $('cirSub').textContent = single
+      ? '单臂：只有 R₁ 是工作片（' + (m.compArm ? '补偿片接' + COMPNAME[S.comp] + '：' + RNAME[m.compArm] : '未接补偿片') + '）'
       : CNAME[S.cfg] + '：' + (S.cfg === 'half' ? 'R₁ 受拉、R₂ 受压（相邻桥臂）' : 'R₁、R₃ 受拉，R₂、R₄ 受压（相对桥臂）');
 
-    /* --- 灵敏度对比表（U₀ 按当前 ΔT、ε 精确计算） --- */
-    ['single','half','full'].forEach(function(c){
-      $('s-' + c).textContent = sfmt(model(S.dT, S.eps, c, S.comp).exact*1000, 3) + ' mV';
+    /* --- 电路桥臂 --- */
+    ARMS.forEach(function(id){
+      var role = m.roles[id], c = COL[role], dRel = (m.r[id] - CFG.R0)/CFG.R0;
+      $('g-' + id).setAttribute('fill', c);
+      $('g-' + id).setAttribute('stroke', STROKE[role]);
+      $('gl-' + id).setAttribute('fill', c);
+      $('gl-' + id).style.opacity = Math.min(0.5, Math.abs(dRel)*140).toFixed(3);
+      $('role-' + id).textContent = ROLETXT[role];
+      $('role-' + id).setAttribute('fill', role === 'fix' ? '#64748b' : c);
+      $('v-' + id).textContent = m.r[id].toFixed(2) + ' Ω　' + permille(dRel);
     });
-    var tSingle = model(S.dT, 0, 'single', S.comp).exact*1000;
-    $('tt-single').textContent = Math.abs(tSingle) < 5e-4 ? '已补偿 ✓' : '误差 ' + sfmt(tSingle, 2) + ' mV ✗';
+    $('u0svg').textContent = sfmt(u0, 3) + ' mV';
+    $('u0svg').setAttribute('fill', Math.abs(u0) < 5e-4 ? '#0f9d58' : (u0 > 0 ? '#d94a3d' : '#2b6cb0'));
+    $('u0note').textContent = Math.abs(u0) < 5e-4 ? '电桥平衡' : (u0 > 0 ? '上节点电位高' : '下节点电位高');
+
+    /* --- 电流小点：4 条支路恒定 + 输出支路 ∝ |U₀| --- */
+    var segs = [
+      { x1:110, y1:220, x2:360, y2:60,  f:1 },      /* 左节点 → 上节点（R₁） */
+      { x1:360, y1:60,  x2:610, y2:220, f:1 },      /* 上节点 → 右节点（R₂） */
+      { x1:110, y1:220, x2:360, y2:380, f:1 },      /* 左节点 → 下节点（R₄） */
+      { x1:360, y1:380, x2:610, y2:220, f:1 }       /* 下节点 → 右节点（R₃） */
+    ];
+    if (Math.abs(u0) > 5e-4){
+      var fO = clamp(Math.abs(u0)/2.5, 0.18, 1.5);
+      var out = [
+        { x1:360, y1:60,  x2:880, y2:60  },
+        { x1:880, y1:60,  x2:880, y2:380 },
+        { x1:880, y1:380, x2:719, y2:380 },
+        { x1:681, y1:380, x2:360, y2:380 }
+      ];
+      var i;
+      if (u0 > 0){ for (i = 0; i < out.length; i++) segs.push({ x1:out[i].x1, y1:out[i].y1, x2:out[i].x2, y2:out[i].y2, f:fO }); }
+      else { for (i = out.length - 1; i >= 0; i--) segs.push({ x1:out[i].x2, y1:out[i].y2, x2:out[i].x1, y2:out[i].y1, f:fO }); }
+    }
+    CUR.segs = segs;
 
     /* --- 温度场 --- */
     var hot = Math.max(0, S.dT)/80, cold = Math.max(0, -S.dT)/40;
@@ -596,45 +805,139 @@
     $('tempTag').textContent = tTxt;
     $('tempTag').setAttribute('fill', al > 0.02 ? 'rgb(' + tint + ')' : '#5b6b80');
 
+    /* --- 贴片位置 --- */
     paintSpecimen(m);
-    paintFormulas(m);
-    paintPoints(m);
+
+    /* --- 内嵌读数：桥臂 --- */
+    var idx = 1;
+    ARMS.forEach(function(id){
+      $('rd' + idx).textContent = RNAME[id] + ' = ' + m.r[id].toFixed(2) + ' Ω　ΔR/R = ' + permille((m.r[id] - CFG.R0)/CFG.R0) + '　' + ROLETXT[m.roles[id]];
+      $('rd' + idx).setAttribute('fill', m.roles[id] === 'fix' ? '#5b6b80' : COL[m.roles[id]]);
+      idx++;
+    });
+    $('rdS').textContent = '电压灵敏度 S = ' + SNAME[S.cfg] + ' = ' + (SLOPE[S.cfg]*CFG.E*CFG.k).toFixed(1) +
+      ' mV / 1000 με；当前 U₀ = ' + sfmt(u0, 3) + ' mV';
+    $('rdT').textContent = '温度补偿：' + (single
+      ? (m.compArm ? ('补偿片接' + COMPNAME[S.comp] + '（' + RNAME[m.compArm] + '）→ 温度分量 ' + sfmt(temps, 3) + ' mV')
+                   : ('未接补偿片 → 温度分量 ' + sfmt(temps, 3) + ' mV 全部进入输出'))
+      : '差动接法各片同温，温度分量自动抵消');
+
+    /* --- 内嵌读数：贴片与分量 --- */
+    $('spRd1').textContent = '温度场 θ = ' + (20 + S.dT).toFixed(1) + ' ℃（ΔT = ' + sfmt(S.dT, 1) + ' ℃）；温度分量 αΔT = ' +
+      permille(m.a) + '（ΔR(温) = ' + (CFG.R0*m.a).toFixed(3) + ' Ω）';
+    $('spRd2').textContent = '应变分量 kε = ' + permille(m.s) + '（ΔR(应变) = ' + (CFG.R0*m.s).toFixed(3) +
+      ' Ω，只出现在' + (single ? '工作片 R₁' : '受拉 / 受压工作片上') + '）';
+    $('spRd3').textContent = '补偿关系：' + (single
+      ? (m.compArm
+          ? (S.comp === 'adjacent'
+             ? '补偿片 ' + RNAME[m.compArm] + ' 与 R₁ 同温 → ΔR(温) 相等，接相邻桥臂相减 → 温度项抵消'
+             : '补偿片 ' + RNAME[m.compArm] + ' 接相对桥臂 → ΔR(温) 在输出中同号相加 → 温度附加输出加倍')
+          : '没有补偿片 → ΔR₁(温) 的贡献全部叠加到输出上')
+      : '各片同处一个温度场 → 温度项在分子中成对相消（差动自动补偿，无需补偿片）');
+    $('spRd4').textContent = '输出：温度分量 ' + sfmt(temps, 3) + ' mV ＋ 应变分量 ' + sfmt(epsU, 3) + ' mV = U₀ ' + sfmt(u0, 3) + ' mV';
+
+    /* --- 输出读数卡 --- */
+    $('u0num').textContent = Math.abs(u0).toFixed(3);
+    $('sign').textContent = u0 > 5e-4 ? '＋' : (u0 < -5e-4 ? '−' : '0');
+    $('sign').style.color = u0 > 5e-4 ? '#d94a3d' : (u0 < -5e-4 ? '#2b6cb0' : '#0f9d58');
+    $('u0num').style.color = u0 > 5e-4 ? '#d94a3d' : (u0 < -5e-4 ? '#2b6cb0' : '#12233a');
+    var w = Math.min(50, Math.abs(u0)/CFG.FS*50);
+    $('u0bar').style.width = w.toFixed(2) + '%';
+    $('u0bar').style.left = u0 >= 0 ? '50%' : (50 - w).toFixed(2) + '%';
+    $('u0bar').style.background = u0 >= 0 ? '#d94a3d' : '#2b6cb0';
+    $('tempPart').textContent = sfmt(temps, 3) + ' mV';
+    $('epsPart').textContent = sfmt(epsU, 3) + ' mV';
+    $('nll').textContent = nonlinFS(S.cfg, S.eps).toFixed(2) + ' %';
+    $('fake').textContent = fakeOf(S.dT, S.cfg, S.comp) + ' με';
+    $('exact').textContent = sfmt(u0, 3) + ' mV';
+    $('lin').textContent = sfmt(m.lin*1000, 3) + ' mV';
+    $('sens').textContent = SNAME[S.cfg] + ' = ' + (SLOPE[S.cfg]*CFG.E*CFG.k).toFixed(1) + ' mV / 1000 με';
+    $('drift').textContent = S.dT === 0 ? '0.00%' : driftPct(S.dT);
+
+    /* --- 灵敏度对比表 --- */
+    ['single','half','full'].forEach(function(c){
+      $('s-' + c).textContent = sfmt(model(S.dT, S.eps, c, S.comp).exact*1000, 3) + ' mV';
+    });
+    $('tt-single').textContent = (function(){
+      var ttS = tempOf(S.dT, 'single', S.comp);
+      return Math.abs(ttS) < 5e-4 ? '已补偿 ✓' : ('误差 ' + sfmt(ttS, 2) + ' mV ✗');
+    })();
+
+    /* --- 曲线 / 公式 / 要点 --- */
     drawChart();
-    if (window.__repack) window.__repack();     /* 内容高度变化后让布局引擎重排 */
+    paintFormulas(m);
+    paintPoints();
+    if (window.__repack) window.__repack();
   }
 
-  /* ============ 5. 试件图 ============ */
-  var SLOTMAP = {
-    single: { t1:'R1' },
-    half:   { t1:'R1', b1:'R2' },
-    full:   { t1:'R1', t2:'R3', b1:'R2', b2:'R4' }
-  };
+  /* ============ 5. 贴片位置图（悬臂梁随应变弯曲） ============ */
   function paintSpecimen(m){
+    /* 几何常量：梁 x∈[74,690]、厚 52、未受力中面 y = 210 */
+    var X0 = 74, LEN = 616, Y0 = 210, TH = 52, TIPX = 690;
+    var delta = 84*(S.eps/1000);                 /* 端部挠度（视觉放大：1000 με → 84 px） */
+    function wdef(x){
+      var u = (x - X0)/LEN;
+      u = u < 0 ? 0 : (u > 1 ? 1 : u);
+      return delta*u*u*(3 - u)/2;                /* 等截面悬臂梁挠曲线形状 v/δ = u²(3−u)/2 */
+    }
+    function wslope(x){
+      var u = (x - X0)/LEN;
+      u = u < 0 ? 0 : (u > 1 ? 1 : u);
+      return delta*(6*u - 3*u*u)/(2*LEN);        /* 转角 = 挠曲线斜率 */
+    }
+    /* 梁体路径：上缘 → 右端 → 下缘 → 闭合 */
+    var xs = [], i, x2;
+    for (x2 = X0; x2 < X0 + LEN; x2 += 14) xs.push(x2);
+    xs.push(X0 + LEN);
+    var d = '';
+    for (i = 0; i < xs.length; i++) d += (i ? ' L ' : 'M') + xs[i].toFixed(1) + ' ' + (Y0 - TH/2 + wdef(xs[i])).toFixed(1);
+    for (i = xs.length - 1; i >= 0; i--) d += ' L ' + xs[i].toFixed(1) + ' ' + (Y0 + TH/2 + wdef(xs[i])).toFixed(1);
+    $('beam').setAttribute('d', d + ' Z');
+    /* 应变片：跟随梁面平移 + 转角 */
     var map = SLOTMAP[S.cfg];
-    ['t1','t2','b1','b2'].forEach(function(k){
-      var rect = $('slot-' + k), lab = $('lab-' + k), id = map[k];
+    [['t1', 180, 200], ['t2', 330, 200], ['b1', 180, 222], ['b2', 330, 222]].forEach(function(o){
+      var k2 = o[0], sx = o[1], cy = o[2], g = $('g-' + k2), rect = $('slot-' + k2), lab = $('lab-' + k2), id = map[k2];
+      var ang = Math.atan(wslope(sx))*180/Math.PI;
+      g.setAttribute('transform', 'translate(0,' + wdef(sx).toFixed(1) + ') rotate(' + ang.toFixed(2) + ' ' + (sx + 38) + ' ' + cy + ')');
       if (id){
-        rect.style.display = ''; lab.style.display = '';
+        g.style.display = '';
         var role = m.roles[id];
         rect.setAttribute('fill', COL[role]);
         rect.setAttribute('stroke', STROKE[role]);
-        lab.textContent = id.charAt(1) === '1' ? 'R₁' : (id === 'R2' ? 'R₂' : (id === 'R3' ? 'R₃' : 'R₄'));
-        lab.textContent += (role === 'pos' ? '＋' : '−');
-      } else { rect.style.display = 'none'; lab.style.display = 'none'; }
+        lab.textContent = RNAME[id] + (role === 'pos' ? '＋' : '−');
+      } else g.style.display = 'none';
     });
-    /* 补偿块：仅单臂且接了补偿片时显示 */
+    /* 拉/压微箭头：随梁面，透明度 ∝ ε */
+    var fE = Math.max(0, Math.min(1, S.eps/1000));
+    var mOp = fE < 0.02 ? 0 : (0.25 + 0.75*fE).toFixed(2);
+    [['tm1', 180], ['tm2', 330], ['cp1', 180], ['cp2', 330]].forEach(function(o){
+      var g = $(o[0]);
+      g.setAttribute('opacity', mOp);
+      g.setAttribute('transform', 'translate(0,' + wdef(o[1]).toFixed(1) + ')');
+    });
+    /* 端部力 F：随挠度下移，长度随 ε */
+    var tipY = Y0 + delta + TH/2;
+    var len = 14 + Math.min(40, S.eps/1000*40);
+    var fy1 = tipY + 8, fy2 = tipY + 8 + len;
+    $('fL').setAttribute('y1', fy1.toFixed(1)); $('fL').setAttribute('y2', fy2.toFixed(1));
+    $('fLa').setAttribute('points', TIPX + ',' + (fy2 + 10).toFixed(1) + ' ' + (TIPX - 6) + ',' + (fy2 - 2).toFixed(1) +
+                                   ' ' + (TIPX + 6) + ',' + (fy2 - 2).toFixed(1));
+    $('fTxt').setAttribute('y', (fy1 + len/2 + 4).toFixed(1));
+    /* 端部挠度标注 f（形变大到可见时才出现） */
+    var showF = delta > 4;
+    $('fDim').setAttribute('opacity', showF ? 1 : 0);
+    $('fDimTxt').setAttribute('opacity', showF ? 1 : 0);
+    $('fDimL').setAttribute('y2', (Y0 + delta).toFixed(1));
+    $('fDimL2').setAttribute('y1', (Y0 + delta).toFixed(1)); $('fDimL2').setAttribute('y2', (Y0 + delta).toFixed(1));
+    $('fDimTxt').setAttribute('y', (Y0 + delta/2 + 4).toFixed(1));
+    /* 补偿块（不受力） */
     var showC = (S.cfg === 'single' && m.compArm !== null);
     $('compBlock').style.display = showC ? '' : 'none';
     if (showC){
       $('slot-c').setAttribute('fill', COL.comp);
       $('slot-c').setAttribute('stroke', STROKE.comp);
-      $('lab-c').textContent = (m.compArm === 'R2' ? 'R₂' : 'R₃') + '补';
+      $('lab-c').textContent = RNAME[m.compArm] + '补';
     }
-    /* 力箭头随 ε 变化 */
-    var len = 12 + Math.min(34, S.eps/1000*34), y2 = 196 + len;
-    $('fL').setAttribute('y2', y2.toFixed(0));
-    $('fLa').setAttribute('points', '624,' + (y2 + 8).toFixed(0) + ' 618,' + (y2 - 4).toFixed(0) + ' 630,' + (y2 - 4).toFixed(0));
-    /* 说明文字 */
     var notes = {
       single: m.compArm
         ? '试件上的 R₁ 受力产生应变；补偿块上的补偿片与试件同温但不受力 → ΔR₁(温度) = ΔR补(温度)，ΔR补(应变) = 0。'
@@ -642,102 +945,23 @@
       half: '两片贴在梁的同一截面上下表面：上表面受拉 ＋ΔR，下表面受压 −ΔR，一拉一压构成差动；两片同温，温度分量自动抵消。',
       full: '四片分别贴在上下表面两个截面：上表面 R₁、R₃ 受拉（＋ΔR），下表面 R₂、R₄ 受压（−ΔR）；四片同温，温度自动抵消，输出线性度最好。'
     };
-    $('spNote').textContent = notes[S.cfg];
-    $('spSub').textContent = { single:'单臂：一片贴在试件上受力，一片贴在补偿块上测温', half:'双臂：同一截面上下各贴一片，一拉一压', full:'全桥：上下表面各两片，两拉两压' }[S.cfg];
+    $('spNote').textContent = notes[S.cfg] + (S.eps > 0 ? '（梁的弯曲形变已放大显示；端部挠度 ∝ ε）' : '');
+    $('spSub').textContent = {
+      single: m.compArm ? '单臂：一片贴在试件上受力，一片贴在补偿块上测温' : '单臂：只有一片工作片受力（对比用，无补偿片）',
+      half: '双臂：同一截面上下各贴一片，一拉一压',
+      full: '全桥：上下表面各两片，两拉两压'
+    }[S.cfg];
   }
 
-  /* ============ 6. 公式讲解 ============ */
-  function paintFormulas(m){
-    var R0 = CFG.R0, dRs = R0*m.s, E = CFG.E.toFixed(1);
-    var R1 = m.r.R1.toFixed(2), R2 = m.r.R2.toFixed(2), R3 = m.r.R3.toFixed(2), R4 = m.r.R4.toFixed(2);
-    var uExact = m.exact*1000, uTemp = model(S.dT, 0, S.cfg, S.comp).exact*1000;
-    var v18 = CFG.E*dRs/(2*(2*R0 + dRs))*1000;      /* 式(3-18) 精确（等臂、单臂） */
-    var v19 = CFG.E*dRs/(4*R0)*1000;                /* 式(3-19) 线性近似 */
-    var v20 = CFG.E*dRs/(2*R0)*1000;                /* 式(3-20) 双臂 */
-    var v21 = CFG.E*dRs/R0*1000;                    /* 式(3-21) 全桥 */
-    var html = '';
-    if (S.cfg === 'single'){
-      html += '<div class="row"><span class="tag">式 3-17</span><span>U₀ = ( ' + frac('R₁+ΔR', 'R₁+ΔR+R₂') + ' − ' + frac('R₄', 'R₃+R₄') + ' )·E = ( ' +
-              frac(R1, R1 + ' + ' + R2) + ' − ' + frac(R4, R3 + ' + ' + R4) + ' )×' + E + ' V</span></div>';
-      html += '<div class="row"><span class="tag">式 3-18</span><span>等臂电桥（R₁=R₂=R₃=R₄=R）：U₀ = ' + frac('ΔR', '2(2R+ΔR)') + '·E = ' +
-              frac(dRs.toFixed(3), '2(2×' + R0 + ' + ' + dRs.toFixed(3) + ')') + '×' + E + ' = <b>' + v18.toFixed(3) + ' mV</b></span></div>';
-      html += '<div class="row"><span class="tag">式 3-19</span><span>ΔR≪R（微电阻变化）时略去分母中的 ΔR：U₀ ≈ ' + frac('ΔR', '4R') + '·E = ' + frac('E', '4') + '·kε = <b>' + v19.toFixed(3) +
-              ' mV</b>　→　灵敏度 <b>S = E/4</b>，只有 1 片工作</span></div>';
-    } else if (S.cfg === 'half'){
-      html += '<div class="row"><span class="tag">式 3-20</span><span>两个<b>相邻</b>桥臂各接一个应变片（R₁ 受拉、R₂ 受压）：U₀ = ( ' +
-              frac('R₁+ΔR₁', 'R₁+ΔR₁+R₂+ΔR₂') + ' − ' + frac('R₄', 'R₃+R₄') + ' )·E，ΔR₁ = −ΔR₂ = ΔR</span></div>';
-      html += '<div class="row"><span class="tag gray">代入</span><span>= ( ' + frac('R+ΔR', '2R') + ' − ' + frac('R', '2R') + ' )·E = ' +
-              frac('ΔR', '2R') + '·E = ' + frac(dRs.toFixed(3), '2×' + R0) + '×' + E + ' = <b>' + v20.toFixed(3) + ' mV</b></span></div>';
-      html += '<div class="row"><span class="tag gray">结论</span><span>U₀ = ' + frac('E', '2') + '·kε　→　灵敏度 <b>S = E/2</b>，是单臂的 <b>2 倍</b>（半桥双臂工作电桥 / 差动电桥）</span></div>';
-    } else {
-      html += '<div class="row"><span class="tag">式 3-21</span><span>四个桥臂全接应变片：U₀ = ( ' +
-              frac('R₁+ΔR₁', 'R₁+ΔR₁+R₂+ΔR₂') + ' − ' + frac('R₄+ΔR₄', 'R₃+ΔR₃+R₄+ΔR₄') + ' )·E，ΔR₁ = ΔR₃ = −ΔR₂ = −ΔR₄ = ΔR</span></div>';
-      html += '<div class="row"><span class="tag gray">代入</span><span>= ( ' + frac('R+ΔR', '2R') + ' − ' + frac('R−ΔR', '2R') + ' )·E = ' +
-              frac('ΔR', 'R') + '·E = ' + frac(dRs.toFixed(3), R0.toFixed(0)) + '×' + E + ' = <b>' + v21.toFixed(3) + ' mV</b></span></div>';
-      html += '<div class="row"><span class="tag gray">结论</span><span>U₀ = E·kε　→　灵敏度 <b>S = E</b>，是单臂的 <b>4 倍</b>；分母中的 ΔR 相消，输入-输出特性<b>严格线性</b></span></div>';
-    }
-    var n = '';
-    if (S.cfg === 'single'){
-      if (m.compArm){
-        n = '式中 ΔR 只取<b>应变</b>引起的增量（ΔR = Rkε）；温度引起的 ΔR₁(温度) 与补偿片 ΔR补(温度) 在相邻桥臂中抵消，当前温度分量 = ' + sfmt(uTemp, 3) + ' mV。';
-      } else {
-        n = '当前<b>没有补偿片</b>：温度分量 ' + sfmt(uTemp, 3) + ' mV 直接叠加在输出上（相当于 ' + (Math.abs(uTemp)/(CFG.E/4*CFG.k)*1000).toFixed(0) + ' με 的虚假应变），这就是单臂必须做温度补偿的原因。';
-      }
-      n += '　读数区 U₀ = ' + sfmt(uExact, 3) + ' mV（温度 ' + sfmt(uTemp, 3) + ' mV ＋ 应变 ' + sfmt(uExact - uTemp, 3) + ' mV）。';
-    } else if (S.cfg === 'half'){
-      n = '两片同处一个温度场，ΔR₁(温度) = ΔR₂(温度)，而它们接在<b>相邻桥臂</b>（变化量相减）→ 温度分量恒为 0，不需要补偿片；应变时一拉一压符号相反，|ΔR₁ − ΔR₂| = 2ΔR，这正是灵敏度翻倍的原因。';
-      if (Math.abs(S.dT) >= 1) n += '　注意：严格计算时 U₀ = E·kε /[2(1+αΔT)]，温度还会带来约 ' + (Math.abs(1/(1 + m.a) - 1)*100).toFixed(2) + '% 的<b>灵敏度漂移</b>（不是零点误差）。';
-    } else {
-      n = '四片同温，温度分量四项相消 → 自动补偿；相对桥臂（R₁ 与 R₃、R₂ 与 R₄）变化量相加、相邻桥臂相减，四项同号叠加，所以灵敏度是单臂的 4 倍、非线性误差最小。';
-      if (Math.abs(S.dT) >= 1) n += '　注意：严格计算时 U₀ = E·kε /(1+αΔT)，温度还会带来约 ' + (Math.abs(1/(1 + m.a) - 1)*100).toFixed(2) + '% 的<b>灵敏度漂移</b>（不是零点误差），必要时可用恒流源供电或热敏电阻补偿。';
-    }
-    html += '<div class="note' + ((S.cfg === 'single' && !m.compArm && S.dT !== 0) ? ' warn' : '') + '">' + n + '</div>';
-    $('fmlBody').innerHTML = html;
-  }
-
-  /* ============ 7. 要点 ============ */
-  var BULLETS = {
-    single: [
-      { t:'在被测试件位置上安装一个补偿片，它<b class="hl">处于相同的温度场</b>，两片温度系数相同。', c:'compexists' },
-      { t:'等臂电桥输出 <b>U₀ = A(R₁R₃ − R₂R₄)</b>；当 <b>R₁R₃ = R₂R₄</b> 时电桥平衡，输出为零。', c:'' },
-      { t:'无应变而温度变化时 <b>ΔR₁ = ΔR<sub>补</sub></b>（接在<b class="hl">相邻桥臂</b>）→ 两片贡献互相抵消，电桥仍然平衡。', c:'comp' },
-      { t:'有应变时 ΔR₁ = R₁kε、ΔR<sub>补</sub> = 0，则 <b>U₀ = A·ΔR₁·R₃ = A R₁R₃kε</b>，与温度无关。', c:'strain' },
-      { t:'只有 1 片工作，电压灵敏度最低：<b>S = E/4 = ' + (SLOPE.single*CFG.E*CFG.k).toFixed(1) + ' mV / 1000 με</b>。', c:'strain' }
-    ],
-    half: [
-      { t:'两个<b>相邻桥臂</b>各接一个应变片：一个受拉 <b>＋ΔR</b>、一个受压 <b>−ΔR</b>（差动电桥）。', c:'' },
-      { t:'相邻桥臂的变化量在输出中相减：ΔR₁ − ΔR₂ = ΔR −(−ΔR) = <b>2ΔR</b>。', c:'strain' },
-      { t:'U₀ = (ΔR/2R)·E = <b>(E/2)·kε</b>　→　灵敏度 S = E/2 = ' + (SLOPE.half*CFG.E*CFG.k).toFixed(1) + ' mV / 1000 με，是单臂的 <b>2 倍</b>。', c:'strain' },
-      { t:'两片同温，ΔR₁(温度) = ΔR₂(温度) → 温度<b class="hl">自动抵消</b>，无需补偿片；差动还使非线性误差减小。', c:'temp' }
-    ],
-    full: [
-      { t:'四个桥臂全部接应变片：上表面两片受拉（R₁、R₃），下表面两片受压（R₂、R₄）。', c:'' },
-      { t:'相对桥臂变化量<b>相加</b>、相邻桥臂相减 → 四项同号叠加（ΔR₁ = ΔR₃ = −ΔR₂ = −ΔR₄ = ΔR）。', c:'strain' },
-      { t:'U₀ = (ΔR/R)·E = <b>E·kε</b>　→　灵敏度 S = E = ' + (SLOPE.full*CFG.E*CFG.k).toFixed(1) + ' mV / 1000 με，是单臂的 <b>4 倍</b>。', c:'strain' },
-      { t:'四片同温 → 温度<b class="hl">自动抵消</b>；且 U₀ 与 ΔR 严格成正比，<b>非线性误差最小</b>。', c:'temp' }
-    ]
-  };
-  function paintPoints(m){
-    var list = BULLETS[S.cfg], html = '';
-    list.forEach(function(b){
-      var on = (b.c === '') ||
-               (b.c === 'strain' && S.eps > 0) ||
-               (b.c === 'temp' && Math.abs(S.dT) >= 0.5) ||
-               (b.c === 'compexists' && m.compArm !== null) ||
-               (b.c === 'comp' && m.compArm !== null && Math.abs(S.dT) >= 0.5 && S.eps === 0);
-      html += '<li class="' + (on ? 'on' : '') + '">' + b.t + '</li>';
-    });
-    $('points').innerHTML = html;
-  }
-
-  /* ============ 8. 曲线 ============ */
-  var CH = { x0:60, x1:736, y0:200, y1:20, umin:-10, umax:10, xmin:-40, xmax:80, grid:'' };
+  /* ============ 6. 特性曲线 ============ */
+  var CH = { x0:60, x1:736, y0:200, y1:20, umin:-10, umax:10, xmin:-40, xmax:80, gridFor:null };
+  var CURE = { key:'', single:'', half:'', full:'' };
   function px(v){ return CH.x0 + (v - CH.xmin)/(CH.xmax - CH.xmin)*(CH.x1 - CH.x0); }
   function py(u){ return CH.y0 - (u - CH.umin)/(CH.umax - CH.umin)*(CH.y0 - CH.y1); }
   function curve(fn, xmin, xmax, step){
     var d = '', first = true;
     for (var x = xmin; x <= xmax + 1e-9; x += step){
-      var u = Math.max(CH.umin, Math.min(CH.umax, fn(x)));
+      var u = clamp(fn(x), CH.umin, CH.umax);
       d += (first ? 'M' : 'L') + px(x).toFixed(1) + ' ' + py(u).toFixed(1) + ' ';
       first = false;
     }
@@ -749,212 +973,208 @@
     p.style.display = show ? '' : 'none';
     if (width) p.setAttribute('stroke-width', width);
   }
+  function strainCurves(){
+    var key = 'S' + S.dT + '|' + S.comp;
+    if (CURE.key !== key){
+      CURE.key = key;
+      CURE.single = curve(function(e){ return model(S.dT, e, 'single', S.comp).exact*1000; }, 0, 1000, 10);
+      CURE.half   = curve(function(e){ return model(S.dT, e, 'half',   S.comp).exact*1000; }, 0, 1000, 10);
+      CURE.full   = curve(function(e){ return model(S.dT, e, 'full',   S.comp).exact*1000; }, 0, 1000, 10);
+    }
+    return CURE;
+  }
   function drawChart(){
     var strainTab = (S.tab === 'strain');
     CH.umin = strainTab ? 0 : -10; CH.umax = 10;
     CH.xmin = strainTab ? 0 : -40; CH.xmax = strainTab ? 1000 : 80;
+    var i, u, x, v;
     if (CH.gridFor !== S.tab){
-      var t = '', i, u, x;
+      var t = '', xs;
       for (u = CH.umin; u <= CH.umax + 1e-9; u += 2.5){
         t += '<line x1="' + CH.x0 + '" y1="' + py(u).toFixed(1) + '" x2="' + CH.x1 + '" y2="' + py(u).toFixed(1) + '" stroke="#e6edf6"/>';
         t += '<text x="54" y="' + (py(u) + 4).toFixed(1) + '" text-anchor="end" font-size="12" fill="#5b6b80">' + (u % 1 === 0 ? u : u.toFixed(1)) + '</text>';
       }
-      var xs = strainTab ? [0,200,400,600,800,1000] : [-40,-20,0,20,40,60,80];
-      xs.forEach(function(v){
-        t += '<line x1="' + px(v).toFixed(1) + '" y1="' + CH.y1 + '" x2="' + px(v).toFixed(1) + '" y2="' + CH.y0 + '" stroke="#e6edf6"/>';
-        t += '<text x="' + px(v).toFixed(1) + '" y="' + (CH.y0 + 18) + '" text-anchor="middle" font-size="12" fill="#5b6b80">' + v + '</text>';
+      xs = strainTab ? [0,200,400,600,800,1000] : [-40,-20,0,20,40,60,80];
+      xs.forEach(function(val){
+        t += '<line x1="' + px(val).toFixed(1) + '" y1="' + CH.y1 + '" x2="' + px(val).toFixed(1) + '" y2="' + CH.y0 + '" stroke="#e6edf6"/>';
+        t += '<text x="' + px(val).toFixed(1) + '" y="' + (CH.y0 + 18) + '" text-anchor="middle" font-size="12" fill="#5b6b80">' + val + '</text>';
       });
       $('ghostGrid').innerHTML = t;
       CH.gridFor = S.tab;
     }
     $('axX').textContent = strainTab ? '应变 ε / με' : '温度变化 ΔT / ℃';
-    var m = model(S.dT, S.eps, S.cfg, S.comp);
-
+    var m = model(S.dT, S.eps, S.cfg, S.comp), um, col;
     if (!strainTab){
-      /* 温度曲线：当前接法 + 单臂无补偿参考 */
+      col = Math.abs(tempOf(S.dT, S.cfg, S.comp)) < 5e-4 ? '#0f9d58' : '#d94a3d';
       setCurve('c-a', curve(function(dT){ return model(dT, S.eps, S.cfg, S.comp).exact*1000; }, -40, 80, 2), true, 3.5);
-      $('c-a').setAttribute('stroke', Math.abs(model(S.dT, 0, S.cfg, S.comp).exact*1000) < 5e-4 ? '#0f9d58' : '#d94a3d');
-      setCurve('c-b', '', false, 2);
-      setCurve('c-c', '', false, 2);
+      $('c-a').setAttribute('stroke', col);
+      setCurve('c-b', '', false, 2.5);
+      setCurve('c-c', '', false, 2.5);
       setCurve('c-ref', curve(function(dT){ return model(dT, S.eps, 'single', 'none').exact*1000; }, -40, 80, 2), true, 2.5);
+      $('c-ref').setAttribute('stroke', '#e08a1e');
       $('chartLegend').innerHTML =
-        '<span><i style="background:' + (Math.abs(model(S.dT,0,S.cfg,S.comp).exact*1000) < 5e-4 ? '#0f9d58' : '#d94a3d') + '"></i>' + CNAME[S.cfg] + '（当前）</span>' +
+        '<span><i style="background:' + col + '"></i>' + CNAME[S.cfg] + '（当前）</span>' +
         '<span><i style="background:#e08a1e"></i>单臂无补偿片（参考）</span>' +
-        '<span style="margin-left:auto">' + (Math.abs(model(S.dT,0,S.cfg,S.comp).exact*1000) < 5e-4 ? '当前接法的温度分量恒为 0：曲线水平 ✓' : '当前接法温度分量不为 0：曲线随温度上升 ✗') + '</span>';
-      var um = Math.max(CH.umin, Math.min(CH.umax, m.exact*1000));
+        '<span style="margin-left:auto">' + (Math.abs(tempOf(S.dT, S.cfg, S.comp)) < 5e-4
+          ? '当前接法的温度分量恒为 0：曲线水平 ✓'
+          : '当前接法温度分量不为 0：曲线随温度上升 ✗（相邻桥臂才能抵消）') + '</span>';
+      um = clamp(m.exact*1000, CH.umin, CH.umax);
       $('mkLine').setAttribute('x1', px(S.dT)); $('mkLine').setAttribute('x2', px(S.dT));
       $('mkDot').setAttribute('cx', px(S.dT)); $('mkDot').setAttribute('cy', py(um));
     } else {
-      /* 应变曲线：三种接法（当前接法用粗线） */
-      var slot = { single:'c-ref', half:'c-b', full:'c-c' };
-      var color = { single:'#e08a1e', half:'#2b6cb0', full:'#0f9d58' };
+      var CUREC = strainCurves(), slot = { single:'c-ref', half:'c-b', full:'c-c' }, color = { single:'#e08a1e', half:'#2b6cb0', full:'#0f9d58' };
       slot[S.cfg] = 'c-a';
       ['single','half','full'].forEach(function(c){
         var id = slot[c];
-        var d = curve(function(e){ return model(S.dT, e, c, S.comp).exact*1000; }, 0, 1000, 10);
-        setCurve(id, d, true, c === S.cfg ? 3.5 : 2.5);
+        setCurve(id, CUREC[c], true, c === S.cfg ? 3.5 : 2.5);
         $(id).setAttribute('stroke', color[c]);
       });
       $('chartLegend').innerHTML =
-        '<span><i style="background:#e08a1e"></i>单臂 S = E/4</span>' +
-        '<span><i style="background:#2b6cb0"></i>双臂 S = E/2</span>' +
-        '<span><i style="background:#0f9d58"></i>全桥 S = E</span>' +
-        '<span style="margin-left:auto">斜率之比恒为 1 : 2 : 4；全桥严格线性</span>';
-      var u2 = Math.max(CH.umin, Math.min(CH.umax, m.exact*1000));
+        '<span><i style="background:#e08a1e"></i>单臂 S = E/4（近似线性）</span>' +
+        '<span><i style="background:#2b6cb0"></i>双臂 S = E/2（线性）</span>' +
+        '<span><i style="background:#0f9d58"></i>全桥 S = E（线性）</span>' +
+        '<span style="margin-left:auto">斜率之比恒为 1 : 2 : 4；差动与全桥严格线性</span>';
+      um = clamp(m.exact*1000, CH.umin, CH.umax);
       $('mkLine').setAttribute('x1', px(S.eps)); $('mkLine').setAttribute('x2', px(S.eps));
-      $('mkDot').setAttribute('cx', px(S.eps)); $('mkDot').setAttribute('cy', py(u2));
+      $('mkDot').setAttribute('cx', px(S.eps)); $('mkDot').setAttribute('cy', py(um));
     }
   }
+
+  /* ============ 7. 公式讲解（式 3-16 ~ 3-21） ============ */
+  function paintFormulas(m){
+    var R0 = CFG.R0, dRs = R0*m.s, E = CFG.E.toFixed(1);
+    var R1 = m.r.R1.toFixed(2), R2 = m.r.R2.toFixed(2), R3 = m.r.R3.toFixed(2), R4 = m.r.R4.toFixed(2);
+    var uExact = m.exact*1000, uTemp = tempOf(S.dT, S.cfg, S.comp);
+    var v18 = CFG.E*dRs/(2*(2*R0 + dRs))*1000;      /* 式 3-18 精确（等臂、单臂） */
+    var v19 = CFG.E*dRs/(4*R0)*1000;                /* 式 3-19 线性近似 */
+    var v20 = CFG.E*dRs/(2*R0)*1000;                /* 式 3-20 双臂 */
+    var v21 = CFG.E*dRs/R0*1000;                    /* 式 3-21 全桥 */
+    var num = m.r.R1*m.r.R3 - m.r.R2*m.r.R4;
+    var den = (m.r.R1 + m.r.R2)*(m.r.R3 + m.r.R4);
+    var html = '';
+    html += '<div class="row"><span class="tag">式 3-16</span><span>直流电桥特性公式：U₀ = ' + frac('R₁R₃ − R₂R₄', '(R₁+R₂)(R₃+R₄)') + '·E = ' +
+            frac(num.toFixed(1), den.toFixed(0)) + '×' + E + ' V = <b>' + sfmt(uExact, 3) + ' mV</b>　（平衡条件 R₁R₃ = R₂R₄）</span></div>';
+    if (S.cfg === 'single'){
+      html += '<div class="row"><span class="tag">式 3-17</span><span>单臂（只有 R₁ 工作）：U₀ = ( ' + frac('R₁+ΔR', 'R₁+ΔR+R₂') + ' − ' + frac('R₄', 'R₃+R₄') +
+              ' )·E = ( ' + frac(R1, R1 + ' + ' + R2) + ' − ' + frac(R4, R3 + ' + ' + R4) + ' )×' + E + ' V</span></div>';
+      html += '<div class="row"><span class="tag">式 3-18</span><span>等臂电桥（R₁=R₂=R₃=R₄=R）：U₀ = ' + frac('ΔR', '2(2R+ΔR)') + '·E = ' +
+              frac(dRs.toFixed(3), '2(2×' + R0 + ' + ' + dRs.toFixed(3) + ')') + '×' + E + ' = <b>' + v18.toFixed(3) + ' mV</b></span></div>';
+      html += '<div class="row"><span class="tag">式 3-19</span><span>ΔR≪R 时略去分母中的 ΔR：U₀ ≈ ' + frac('ΔR', '4R') + '·E = ' + frac('E', '4') +
+              '·kε = <b>' + v19.toFixed(3) + ' mV</b>　→　灵敏度 <b>S = E/4</b>，只有 1 片工作</span></div>';
+    } else if (S.cfg === 'half'){
+      html += '<div class="row"><span class="tag">式 3-20</span><span>两个<b>相邻</b>桥臂各接一个应变片（R₁ 受拉、R₂ 受压）：U₀ = ( ' +
+              frac('R₁+ΔR₁', 'R₁+ΔR₁+R₂+ΔR₂') + ' − ' + frac('R₄', 'R₃+R₄') + ' )·E，ΔR₁ = −ΔR₂ = ΔR</span></div>';
+      html += '<div class="row"><span class="tag g">代入</span><span>= ( ' + frac('R+ΔR', '2R') + ' − ' + frac('R', '2R') + ' )·E = ' +
+              frac('ΔR', '2R') + '·E = ' + frac(dRs.toFixed(3), '2×' + R0) + '×' + E + ' = <b>' + v20.toFixed(3) + ' mV</b></span></div>';
+      html += '<div class="row"><span class="tag g">结论</span><span>U₀ = ' + frac('E', '2') +
+              '·kε　→　灵敏度 <b>S = E/2</b>，是单臂的 <b>2 倍</b>（半桥双臂工作电桥 / 差动电桥）；分母不含 ΔR → 线性</span></div>';
+    } else {
+      html += '<div class="row"><span class="tag">式 3-21</span><span>四个桥臂全接应变片：U₀ = ( ' +
+              frac('R₁+ΔR₁', 'R₁+ΔR₁+R₂+ΔR₂') + ' − ' + frac('R₄+ΔR₄', 'R₃+ΔR₃+R₄+ΔR₄') +
+              ' )·E，ΔR₁ = ΔR₃ = −ΔR₂ = −ΔR₄ = ΔR</span></div>';
+      html += '<div class="row"><span class="tag g">代入</span><span>= ( ' + frac('R+ΔR', '2R') + ' − ' + frac('R−ΔR', '2R') + ' )·E = ' +
+              frac('ΔR', 'R') + '·E = ' + frac(dRs.toFixed(3), R0.toFixed(0)) + '×' + E + ' = <b>' + v21.toFixed(3) + ' mV</b></span></div>';
+      html += '<div class="row"><span class="tag g">结论</span><span>U₀ = E·kε　→　灵敏度 <b>S = E</b>，是单臂的 <b>4 倍</b>；分母中的 ΔR 相消，输入-输出特性<b>严格线性</b></span></div>';
+    }
+    var n = '';
+    if (S.cfg === 'single'){
+      if (m.compArm){
+        n = '式中 ΔR 只取<b>应变</b>引起的增量（ΔR = R₀kε）；温度引起的 ΔR₁(温度) 与补偿片 ΔR补(温度) 在相邻桥臂中抵消，当前温度分量 = ' + sfmt(uTemp, 3) + ' mV。';
+      } else {
+        n = '当前<b>没有补偿片</b>：温度分量 ' + sfmt(uTemp, 3) + ' mV 直接叠加在输出上（相当于 ' + fakeOf(S.dT, S.cfg, S.comp) +
+            ' με 的虚假应变），这就是单臂必须做温度补偿的原因。';
+      }
+      n += '　读数区 U₀ = ' + sfmt(uExact, 3) + ' mV（温度 ' + sfmt(uTemp, 3) + ' mV ＋ 应变 ' + sfmt(uExact - uTemp, 3) +
+           ' mV）；单臂相对非线性 e ≈ ΔR/(2R) = ' + nonlinFS('single', S.eps).toFixed(2) + '%。';
+    } else if (S.cfg === 'half'){
+      n = '两片同处一个温度场，ΔR₁(温度) = ΔR₂(温度)，而它们接在<b>相邻桥臂</b>（变化量相减）→ 温度分量恒为 0，不需要补偿片；应变时一拉一压符号相反，|ΔR₁ − ΔR₂| = 2ΔR，这正是灵敏度翻倍的原因。';
+      if (Math.abs(S.dT) >= 1) n += '　注意：严格计算时 U₀ = E·kε /[2(1+αΔT)]，温度还会带来约 ' + driftPct(S.dT) + ' 的<b>灵敏度漂移</b>（不是零点误差）。';
+    } else {
+      n = '四片同温，温度分量四项相消 → 自动补偿；相对桥臂（R₁ 与 R₃、R₂ 与 R₄）变化量相加、相邻桥臂相减，四项同号叠加，所以灵敏度是单臂的 4 倍、非线性误差最小。';
+      if (Math.abs(S.dT) >= 1) n += '　注意：严格计算时 U₀ = E·kε /(1+αΔT)，温度还会带来约 ' + driftPct(S.dT) + ' 的<b>灵敏度漂移</b>（不是零点误差），必要时可用恒流源供电或热敏电阻补偿。';
+    }
+    html += '<div class="note' + ((S.cfg === 'single' && !m.compArm && S.dT !== 0) ? ' warn' : '') + '">' + n + '</div>';
+    $('fmlBody').innerHTML = html;
+  }
+
+  /* ============ 8. 要点（随接法与状态自动点亮） ============ */
+  var PTS_TEXT = [
+    { t:'电桥一般式 <b>U₀ = E(R₁R₃ − R₂R₄)/[(R₁+R₂)(R₃+R₄)]</b>；当 <b>R₁R₃ = R₂R₄</b> 时电桥平衡，输出为零 —— 等臂电桥四臂均为 R₀ 时自然满足。',
+      c:function(){ return true; } },
+    { t:'<b>单臂</b>：只有 R₁ 一片工作，电压灵敏度最低 <b>S = E/4 = 2.5 mV / 1000 με</b>，输出 U₀ ≈ (E/4)·kε（近似线性）。',
+      c:function(){ return S.cfg === 'single'; } },
+    { t:'补偿片必须与被测工作片<b>同处一个温度场</b>（贴在同一试件上、离得足够近），而且<b>不承受应变</b>（贴在补偿块上或与受力方向垂直）—— 这两个前提缺一不可。',
+      c:function(){ return S.cfg === 'single' && S.comp !== 'none'; } },
+    { t:'补偿片接<b>相邻桥臂</b>（R₂）：无应变而温度变化时 ΔR₁(温度) = ΔR₂(温度)，相邻桥臂的变化量在输出中<b>相减</b> → 温度项抵消，电桥仍然平衡。',
+      c:function(){ return S.cfg === 'single' && S.comp === 'adjacent' && Math.abs(S.dT) >= 0.5; } },
+    { t:'有应变时只有工作片变化：ΔR₁ = R₁kε、ΔR补 = 0，则 <b>U₀ = A·ΔR₁R₃ = A R₁R₃ kε</b>，此时电桥的输出电压与温度无关。',
+      c:function(){ return S.eps > 0 && (S.cfg !== 'single' || S.comp !== 'none'); } },
+    { t:'补偿片接<b>相对桥臂</b>（R₃）：相对桥臂的变化量在输出中<b>同号相加</b>，温度不但没有抵消，附加输出反而变成单臂的 <b>2 倍</b>。',
+      c:function(){ return S.cfg === 'single' && S.comp === 'opposite' && Math.abs(S.dT) >= 0.5; } },
+    { t:'<b>不接补偿片</b>：温度只改变工作片 R₁，温度误差直接混入测量结果（读数区给出折算的虚假应变）—— 对比一下它和应变引起的输出谁更大。',
+      c:function(){ return S.cfg === 'single' && S.comp === 'none' && Math.abs(S.dT) >= 0.5; } },
+    { t:'<b>双臂（半桥差动）</b>：两个相邻桥臂各接一片（R₁ 受拉 ＋ΔR、R₂ 受压 −ΔR），相邻桥臂相减 → |ΔR₁−ΔR₂| = 2ΔR，<b>S = E/2</b>（2 倍）；两片同温，温度自动抵消，非线性也减小。',
+      c:function(){ return S.cfg === 'half'; } },
+    { t:'<b>全桥差动</b>：四个桥臂全接应变片（R₁、R₃ 受拉，R₂、R₄ 受压），相对桥臂相加 → <b>S = E</b>（4 倍）；分母中的 ΔR 相消 → <b>严格线性</b>，四片同温 → 温度自补偿。',
+      c:function(){ return S.cfg === 'full'; } },
+    { t:'结论：灵敏度之比恒为 <b>1 : 2 : 4</b>（E/4 : E/2 : E）；工程上优先用<b>全桥</b> —— 灵敏度最高、温度自补偿、非线性最小（压阻式传感器多用恒流源全桥）。',
+      c:function(){ return true; } }
+  ];
+  var PTS = { active:-1 };
+  function paintPoints(){
+    var ol = $('points');
+    if (!ol.children.length){
+      var html = '';
+      PTS_TEXT.forEach(function(p, k){ html += '<li data-pi="' + k + '">' + p.t + '</li>'; });
+      ol.innerHTML = html;
+    }
+    var lis = ol.children, k;
+    for (k = 0; k < lis.length; k++) lis[k].classList.toggle('on', PTS_TEXT[k].c());
+  }
+  function setPt(i){
+    PTS.active = i;
+    var lis = $('points').children, k;
+    for (k = 0; k < lis.length; k++) lis[k].classList.toggle('cur', k === i);
+    for (k = 0; k < PTS_TEXT.length; k++){
+      var bb = $('ptsB' + k);
+      if (bb) bb.classList.toggle('on', k === i);
+    }
+    if (i >= 0) say('<b>要点 ' + (i + 1) + '/' + PTS_TEXT.length + '</b>：' + PTS_TEXT[i].t);
+  }
+  for (var pb = 0; pb < PTS_TEXT.length; pb++){
+    (function(k){ $('ptsB' + k).addEventListener('click', function(){ stopDemo(); setPt(k); }); })(pb);
+  }
+  /* 注意：ptsPlay 的点击由 jsB 的 bindDemos()（DEMOS.pts）统一绑定，这里不要再手动绑定 */
 
   /* ============ 9. 交互 ============ */
-  function setDT(v){ S.dT = Math.max(-40, Math.min(80, Math.round(v)));
+  function setDT(v){
+    S.dT = clamp(Math.round(v), -40, 80);
     $('dT').value = S.dT; $('dTOut').textContent = S.dT + ' ℃';
-    $('thetaTxt').textContent = 'θ = ' + (20 + S.dT).toFixed(1) + ' ℃'; paint(); }
-  function setEps(v){ S.eps = Math.max(0, Math.min(1000, Math.round(v/10)*10));
-    $('eps').value = S.eps; $('epsOut').textContent = S.eps + ' με'; paint(); }
+    $('thetaTxt').textContent = 'θ = ' + (20 + S.dT).toFixed(1) + ' ℃';
+    paint();
+  }
+  function setEps(v){
+    S.eps = clamp(Math.round(v/10)*10, 0, 1000);
+    $('eps').value = S.eps; $('epsOut').textContent = S.eps + ' με';
+    paint();
+  }
   function setCfg(c){ S.cfg = c; paint(); }
   function setComp(c){ S.comp = c; paint(); }
-  function setTab(t){ S.tab = t;
-    document.querySelectorAll('.tabs button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-tab') === t); });
-    paint(); }
-
-  /* ---------- 演示框架：速度控制 + 统一的开始/结束 ---------- */
-  var SPEED = 1, playingKey = null;
-  $('speed').addEventListener('input', function(){
-    SPEED = parseFloat(this.value) || 1;
-    $('speedOut').textContent = SPEED.toFixed(1) + '×';
-  });
-  var DEMOS = {
-    single: { btn:'playSingle', label:'▶ 单臂演示' },
-    half:   { btn:'playHalf',   label:'▶ 双臂演示' },
-    full:   { btn:'playFull',   label:'▶ 全桥演示' },
-    cmp:    { btn:'playCmp',    label:'▶ 三接法对比' }
+  function setTab(t){
+    S.tab = t;
+    document.querySelectorAll('#tabBar button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-tab') === t); });
+    paint();
+  }
+  var CFGHINT = {
+    single:'单臂：只有 R₁ 工作，灵敏度 S = E/4 最低，温度误差要靠补偿片解决。',
+    half:'双臂（半桥差动）：R₁ 受拉、R₂ 受压接在相邻桥臂，相邻桥臂变化量相减 → S = E/2，两片同温自动补偿。',
+    full:'全桥差动：四片全用，相对桥臂相加 → S = E，灵敏度最高、线性最好，温度自动抵消。'
   };
-  function resetDemoButtons(){
-    Object.keys(DEMOS).forEach(function(k){
-      var b = $(DEMOS[k].btn);
-      if (b){ b.textContent = DEMOS[k].label; b.classList.remove('running'); }
-    });
-  }
-  function stopDemo(){ S.demoToken++; playingKey = null; resetDemoButtons(); stopSpeak(); }
-  function beginDemo(key){
-    stopDemo();
-    playingKey = key;
-    var b = $(DEMOS[key].btn);
-    if (b){ b.textContent = '⏸ 暂停演示'; b.classList.add('running'); }
-    return ++S.demoToken;
-  }
-  function endDemo(){ playingKey = null; resetDemoButtons(); }
-
-  /* ---------- 语音讲解（浏览器内置 TTS，无需音频文件） ---------- */
-  var synth = window.speechSynthesis || null;
-  var VOICE = { on:false, name:'', ready:false };
-  function plain(html){
-    return String(html).replace(/<[^>]*>/g, ' ')
-                       .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
-                       .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ').trim();
-  }
-  function zhVoices(){
-    var all = (synth && synth.getVoices()) || [];
-    var zh = all.filter(function(v){ return /^zh/i.test(v.lang) || /Chinese|中文|普通话|Huihui|Yaoyao|Kangkang|Xiaoxiao|Yunxi/i.test(v.name); });
-    return zh.length ? zh : all;
-  }
-  function loadVoices(){
-    if (!synth){ $('voiceHint').textContent = '此浏览器不支持朗读'; $('voiceToggle').disabled = true; return; }
-    var list = zhVoices();
-    if (!list.length){ $('voiceHint').textContent = '未找到语音包'; return; }
-    var natural = '', common = '', i;
-    for (i = 0; i < list.length; i++){
-      if (!natural && /Natural|Online|Xiaoxiao|Yunxi|Xiaoyi/i.test(list[i].name)) natural = list[i].name;
-      if (!common && /Huihui|Yaoyao|Kangkang|慧慧|瑶瑶|康康/i.test(list[i].name)) common = list[i].name;
-    }
-    if (!VOICE.name || !list.some(function(v){ return v.name === VOICE.name; }))
-      VOICE.name = natural || common || list[0].name;
-    var sel = $('voiceSel');
-    sel.innerHTML = list.map(function(v){
-      return '<option value="' + v.name + '"' + (v.name === VOICE.name ? ' selected' : '') + '>' + v.name + '</option>';
-    }).join('');
-    VOICE.ready = true;
-    if (!VOICE.on) $('voiceHint').textContent = list.length + ' 个音色可选';
-  }
-  function makeUtterance(text){
-    var u = new SpeechSynthesisUtterance(plain(text));
-    var list = zhVoices(), v = null, i;
-    for (i = 0; i < list.length; i++){ if (list[i].name === VOICE.name){ v = list[i]; break; } }
-    if (v){ u.voice = v; u.lang = v.lang; } else { u.lang = 'zh-CN'; }
-    u.rate = Math.max(0.6, Math.min(1.9, 0.95*SPEED));
-    u.pitch = 1;
-    u.volume = 1;
-    return u;
-  }
-  function speak(text){
-    if (!synth || !VOICE.on || !plain(text)) return;
-    try { synth.cancel(); synth.speak(makeUtterance(text)); } catch (e) {}
-  }
-  function stopSpeak(){ if (synth){ try { synth.cancel(); } catch (e) {} } }
-  function speaking(){ return !!(synth && VOICE.on && (synth.speaking || synth.pending)); }
-
-  $('voiceToggle').addEventListener('click', function(){
-    VOICE.on = !VOICE.on;
-    this.textContent = VOICE.on ? '🔊 朗读已开启' : '🔊 开启朗读';
-    this.classList.toggle('on', VOICE.on);
-    if (VOICE.on){
-      stopSpeak();
-      $('voiceHint').textContent = '语速跟随演示速度';
-      speak($('narration').innerHTML);
-    } else {
-      stopSpeak();
-      $('voiceHint').textContent = '演示时自动朗读旁白';
-    }
-  });
-  $('voiceSel').addEventListener('change', function(){
-    VOICE.name = this.value; stopSpeak(); if (VOICE.on) speak($('narration').innerHTML);
-  });
-  $('narration').addEventListener('click', function(){
-    if (!VOICE.on){ $('voiceHint').textContent = '先点「开启朗读」'; return; }
-    stopSpeak(); speak(this.innerHTML);
-  });
-  if (synth){
-    loadVoices();
-    if (typeof synth.addEventListener === 'function') synth.addEventListener('voiceschanged', loadVoices);
-    else synth.onvoiceschanged = loadVoices;
-    setTimeout(loadVoices, 600);
-  } else {
-    $('voiceHint').textContent = '此浏览器不支持朗读';
-  }
-
-  function say(t){ $('narration').innerHTML = t; speak(t); }
-  /* 等待：开启朗读时，等旁白读完再继续；未开启时与原逻辑完全一致 */
-  function sleep(ms, tok){
-    var base = Math.max(50, ms/SPEED);
-    if (!VOICE.on || !synth){
-      return new Promise(function(res){ setTimeout(function(){ res(S.demoToken === tok); }, base); });
-    }
-    return new Promise(function(res){
-      var t0 = performance.now();
-      (function poll(){
-        if (S.demoToken !== tok){ stopSpeak(); return res(false); }
-        var waited = performance.now() - t0;
-        if (waited >= base && !speaking()) return res(true);
-        if (waited >= base + 45000) return res(true);       /* 兜底，避免卡死 */
-        setTimeout(poll, 100);
-      })();
-    });
-  }
-  function tween(from, to, dur, set, tok){
-    dur = Math.max(150, dur/SPEED);
-    return new Promise(function(res){
-      var t0 = performance.now();
-      (function step(now){
-        if (S.demoToken !== tok) return res(false);
-        var p = Math.min(1, (now - t0)/dur), e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
-        set(from + (to - from)*e);
-        if (p < 1) requestAnimationFrame(step); else res(true);
-      })(performance.now());
-    });
-  }
-  function mVof(dT, eps, cfg, comp){ return sfmt(model(dT, eps, cfg, comp).exact*1000, 3); }
-
+  var COMPHINT = {
+    adjacent:'补偿片接在<b>相邻桥臂</b>（R₂，与 R₁ 共上节点）：ΔR₁(温度) = ΔR₂(温度)，两者对输出的贡献符号相反，互相抵消 —— 这就是“能补偿温度”的原因。',
+    opposite:'补偿片接在<b>相对桥臂</b>（R₃）：相对桥臂的变化量在输出中<b>同号相加</b>，温度不但没抵消，附加输出反而变成单臂的两倍。',
+    none:'不接补偿片：温度只改变 R₁，温度误差直接混入测量结果 —— 对比一下它和应变引起的输出谁更大。'
+  };
   $('dT').addEventListener('input', function(){ stopDemo(); setDT(+this.value); });
   $('eps').addEventListener('input', function(){ stopDemo(); setEps(+this.value); });
   $('dTM').addEventListener('click', function(){ stopDemo(); setDT(S.dT - 5); });
@@ -962,44 +1182,142 @@
   $('epsM').addEventListener('click', function(){ stopDemo(); setEps(S.eps - 50); });
   $('epsP').addEventListener('click', function(){ stopDemo(); setEps(S.eps + 50); });
   document.querySelectorAll('#segCfg button').forEach(function(b){
-    b.addEventListener('click', function(){
-      stopDemo(); setCfg(b.getAttribute('data-cfg'));
-      var h = { single:'单臂：只有 R₁ 工作，灵敏度 S = E/4 最低，温度误差要靠补偿片解决。',
-                half:'双臂（半桥差动）：R₁ 受拉、R₂ 受压接在相邻桥臂，相邻桥臂变化量相减 → S = E/2，两片同温自动补偿。',
-                full:'全桥差动：四片全用，相对桥臂相加 → S = E，灵敏度最高、线性最好，温度自动抵消。' };
-      say(h[S.cfg]);
-    });
+    b.addEventListener('click', function(){ stopDemo(); setCfg(b.getAttribute('data-cfg')); say(CFGHINT[S.cfg]); });
   });
   document.querySelectorAll('#segComp button').forEach(function(b){
     b.addEventListener('click', function(){
       if (S.cfg !== 'single') return;
-      stopDemo(); setComp(b.getAttribute('data-comp'));
-      say({ adjacent:'补偿片接在<b>相邻桥臂</b>（R₂，与 R₁ 共上节点）：ΔR₁ = ΔR₂，两者对输出的贡献符号相反，互相抵消 —— 这就是“能补偿温度”的原因。',
-            opposite:'补偿片接在<b>相对桥臂</b>（R₃）：相对桥臂的变化量在输出中<b>同号相加</b>，温度不但没抵消，附加输出反而变成单臂的两倍。',
-            none:'不接补偿片：温度只改变 R₁，温度误差直接混入测量结果 —— 对比一下它和应变引起的输出谁更大。' }[S.comp]);
+      stopDemo(); setComp(b.getAttribute('data-comp')); say(COMPHINT[S.comp]);
     });
   });
   document.querySelectorAll('#senTable tr[data-cfg]').forEach(function(tr){
-    tr.addEventListener('click', function(){ stopDemo(); setCfg(tr.getAttribute('data-cfg')); });
+    tr.addEventListener('click', function(){ stopDemo(); setCfg(tr.getAttribute('data-cfg')); say(CFGHINT[S.cfg]); });
   });
-  document.querySelectorAll('.tabs button').forEach(function(b){
+  document.querySelectorAll('#tabBar button').forEach(function(b){
     b.addEventListener('click', function(){ stopDemo(); setTab(b.getAttribute('data-tab')); });
   });
-  Object.keys(DEMOS).forEach(function(k){
-    var b = $(DEMOS[k].btn);
-    if (b) b.addEventListener('click', function(){
-      if (playingKey === k){ stopDemo(); say('演示已暂停。可继续拖动滑块手动观察，或点其它演示按钮。'); }
-      else if (DEMOS[k].fn) { DEMOS[k].fn(); }
-    });
-  });
   $('reset').addEventListener('click', function(){
-    stopDemo(); S.cfg = 'single'; S.comp = 'adjacent'; setTab('temp'); S.dT = 0; S.eps = 0;
+    stopDemo();
+    S.cfg = 'single'; S.comp = 'adjacent'; S.tab = 'temp'; S.dT = 0; S.eps = 0;
     $('dT').value = 0; $('dTOut').textContent = '0 ℃'; $('thetaTxt').textContent = 'θ = 20.0 ℃';
-    $('eps').value = 0; $('epsOut').textContent = '0 με'; paint();
-    say('初始状态：单臂接法、ΔT = 0、ε = 0，四臂等值 R₀ = 350 Ω，电桥平衡，U₀ = 0。');
+    $('eps').value = 0; $('epsOut').textContent = '0 με';
+    document.querySelectorAll('#tabBar button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-tab') === 'temp'); });
+    paint();
+    say('已复位：单臂接法、补偿片接相邻桥臂（R₂）、ΔT = 0、ε = 0，四臂等值 R₀ = 350 Ω，电桥平衡，U₀ = 0。');
   });
+
+  /* ============ 10. 演示：单臂（应变 → 升温 → 省掉补偿片 → 改接相对桥臂） ============ */
+  async function demoSingle(){
+    var tok = beginDemo('single');
+    setCfg('single'); setComp('adjacent'); setTab('temp'); setDT(0); setEps(0);
+    say('【<b>单臂电桥</b>】只有 R₁ 一片工作，电压灵敏度最低 <b>S = E/4 = 2.5 mV / 1000 με</b>。下面按“加应变 → 升温 → 省掉补偿片 → 改接相对桥臂”四步看它的全部表现。');
+    if (!await sleep(3000, tok)) return;
+    say('① <b>试件受力，ε → 500 με</b>：R₁ 增大，ΔR₁ = R₁kε，电桥输出 U₀ = (E/4)·kε ≈ <b>' + mVof(0, 500, 'single', 'adjacent') + '</b>（线性值 1.250 mV，非线性误差 ≈ 0.05%）。');
+    if (!await tween(0, 500, 2100, setEps, tok)) return;
+    if (!await sleep(2100, tok)) return;
+    say('② <b>只升温、不加力</b>（ΔT → +50 ℃，即 70 ℃）：补偿片与被测件处于<b>同一温度场</b>，ΔR₁(温度) = ΔR补(温度)，两片接在<b>相邻桥臂</b>、对输出的贡献符号相反 → U₀ 基本不变，仍是 <b>' + mVof(50, 500, 'single', 'adjacent') + '</b>，温度被抵消了。');
+    if (!await tween(0, 50, 2300, setDT, tok)) return;
+    if (!await sleep(2300, tok)) return;
+    say('③ <b>如果省掉补偿片</b>（切到“不接补偿片”）：同样的 70 ℃ 立刻贡献 <b>' + sfmt(Math.abs(tempOf(50, 'single', 'none')), 3) + ' mV</b> 的附加输出，比应变信号（1.25 mV）还大一倍 —— U₀ 变成 <b>' + mVof(50, 500, 'single', 'none') + '</b>，测量结果被温度污染（相当于 ' + fakeOf(50, 'single', 'none') + ' με 的虚假应变）。');
+    setComp('none');
+    if (!await sleep(3000, tok)) return;
+    say('④ <b>更糟的是接在相对桥臂</b>：相对桥臂的电阻变化在输出中<b>同号相加</b>，温度附加输出翻倍到 <b>' + sfmt(Math.abs(tempOf(50, 'single', 'opposite')), 3) + ' mV</b>，U₀ 达到 ' + mVof(50, 500, 'single', 'opposite') + '。');
+    setComp('opposite');
+    if (!await sleep(2900, tok)) return;
+    say('⑤ <b>回到相邻桥臂</b>：U₀ 立刻回到 <b>' + mVof(50, 500, 'single', 'adjacent') + '</b> —— 这就是“电桥补偿法”：<b>同一温度场 ＋ 相邻桥臂</b>。注意灵敏度仍是 S = E/4，补偿片只解决温度，不提高灵敏度。');
+    setComp('adjacent');
+    if (!await sleep(3200, tok)) return;
+    say('【单臂演示结束】要点：灵敏度最低（E/4）、必须用补偿片、非线性误差 δ ≈ ΔR/(2R)。接着点“双臂演示”看差动接法怎么把灵敏度翻倍。');
+    endDemo();
+  }
+
+  /* ============ 11. 演示：双臂（灵敏度 ×2、同温自动抵消、与单臂对照） ============ */
+  async function demoHalf(){
+    var tok = beginDemo('half');
+    setCfg('half'); setTab('strain'); setDT(0); setEps(0);
+    say('【<b>双臂电桥（半桥差动）</b>】R₁ 受拉、R₂ 受压，分别贴在悬臂梁<b>同一截面的上下表面</b>，接在<b>相邻桥臂</b>：一个 ＋ΔR、一个 −ΔR。');
+    if (!await sleep(3000, tok)) return;
+    say('① <b>加载 ε → 500 με</b>：相邻桥臂的变化量相减，|ΔR₁ − ΔR₂| = 2ΔR，于是 U₀ = (E/2)·kε = <b>' + mVof(0, 500, 'half', 'none') + '</b>，正好是单臂的 <b>2 倍</b>（看应变曲线的斜率也陡了一倍）。');
+    if (!await tween(0, 500, 2100, setEps, tok)) return;
+    if (!await sleep(2200, tok)) return;
+    say('② <b>升温到 70 ℃</b>（ΔT → +50 ℃）：两片同处一个温度场，ΔR₁(温度) = ΔR₂(温度)，在相邻桥臂中相减为 0 → U₀ 几乎不变，为 <b>' + mVof(50, 500, 'half', 'none') + '</b>。<b>差动接法自动补偿温度，不需要补偿片</b>（只剩约 ' + driftPct(50) + ' 的灵敏度漂移，没有零点误差）。');
+    if (!await tween(0, 50, 2300, setDT, tok)) return;
+    if (!await sleep(2400, tok)) return;
+    say('③ <b>对照单臂且不接补偿片</b>：同样 500 με、同样 70 ℃，U₀ = <b>' + mVof(50, 500, 'single', 'none') + '</b>，其中 <b>' + sfmt(Math.abs(tempOf(50, 'single', 'none')), 3) + ' mV</b> 完全是温度误差 —— 这就是差动接法的价值。');
+    setCfg('single'); setComp('none');
+    if (!await sleep(3100, tok)) return;
+    say('④ <b>回到双臂</b>：U₀ = <b>' + mVof(50, 500, 'half', 'none') + '</b>，只有应变、没有温度项。灵敏度 ×2 ＋ 自动温度补偿，这就是半桥差动电桥的完整面貌。');
+    setCfg('half');
+    if (!await sleep(3000, tok)) return;
+    say('【双臂演示结束】要点：S = E/2（单臂的 2 倍）、两片同温自动抵消温度、非线性误差也变小。接着点“全桥演示”看再翻一倍的接法。');
+    endDemo();
+  }
+
+  /* ============ 12. 演示：全桥（灵敏度 ×4、严格线性、升温不变、加载到 1000 με） ============ */
+  async function demoFull(){
+    var tok = beginDemo('full');
+    setCfg('full'); setTab('strain'); setDT(0); setEps(0);
+    say('【<b>全桥差动电桥</b>】四个桥臂全部接应变片：上表面两片受拉（R₁、R₃），下表面两片受压（R₂、R₄）。相对桥臂变化量<b>相加</b>、相邻桥臂相减，四项同号叠加。');
+    if (!await sleep(3100, tok)) return;
+    say('① <b>加载 ε → 500 με</b>：U₀ = E·kε = <b>' + mVof(0, 500, 'full', 'none') + '</b>，是单臂的 <b>4 倍</b>；而且分母里的 ΔR 相消，非线性误差 <b>0.00%</b>。');
+    if (!await tween(0, 500, 2100, setEps, tok)) return;
+    if (!await sleep(2100, tok)) return;
+    say('② <b>升温到 80 ℃</b>（ΔT → +60 ℃）：四片同温，温度分量四项相消 → U₀ 仍是 <b>' + mVof(60, 500, 'full', 'none') + '</b>。剩下的约 ' + driftPct(60) + ' 是 1/(1+αΔT) 的<b>灵敏度漂移</b>，不是零点误差。');
+    if (!await tween(0, 60, 2300, setDT, tok)) return;
+    if (!await sleep(2300, tok)) return;
+    say('③ <b>继续加载到 1000 με</b>：U₀ 严格线性地加倍到 <b>' + mVof(60, 1000, 'full', 'none') + '</b> —— 输入-输出特性严格线性，这是全桥最大的优点（对照单臂在同一 ε 下只有 ' + mVof(60, 1000, 'single', 'none') + '，而且略微弯曲）。');
+    if (!await tween(500, 1000, 2100, setEps, tok)) return;
+    if (!await sleep(2400, tok)) return;
+    say('④ <b>对照同 ε 下的单臂</b>：U₀ = <b>' + mVof(60, 1000, 'single', 'none') + '</b>，只有全桥的 1/4。所以电子秤、压力传感器几乎都用全桥。');
+    setCfg('single'); setComp('none');
+    if (!await sleep(2800, tok)) return;
+    say('【全桥演示结束】要点：S = E（最高）、温度自动抵消、严格线性。点“三接法对比”可把三种接法放在一起再看一遍。');
+    setCfg('full');
+    endDemo();
+  }
+
+  /* ============ 13. 演示：三接法对比（依次切换并升温比较） ============ */
+  async function demoCmp(){
+    var tok = beginDemo('cmp');
+    setCfg('single'); setComp('none'); setTab('strain'); setDT(0); setEps(0);
+    say('先把应变加到 500 με，再依次切换三种接法，比较同一应变下的输出与灵敏度。');
+    if (!await tween(0, 500, 1600, setEps, tok)) return;
+    if (!await sleep(1000, tok)) return;
+    say('① <b>单臂</b>：只有 R₁ 工作，U₀ = (E/4)·kε = <b>' + mVof(0, 500, 'single', 'none') + '</b>，灵敏度最低，温度误差还要靠补偿片解决。');
+    if (!await sleep(2500, tok)) return;
+    say('② <b>双臂（半桥差动）</b>：R₁ 受拉 ＋ΔR、R₂ 受压 −ΔR，接在<b>相邻桥臂</b>，变化量相减 → U₀ = (E/2)·kε = <b>' + mVof(0, 500, 'half', 'none') + '</b>，是单臂的 2 倍。');
+    setCfg('half');
+    if (!await sleep(2800, tok)) return;
+    say('③ <b>全桥差动</b>：四片全用，上表面两片受拉、下表面两片受压，相对桥臂相加 → U₀ = E·kε = <b>' + mVof(0, 500, 'full', 'none') + '</b>，是单臂的 4 倍，而且严格线性。');
+    setCfg('full');
+    if (!await sleep(2800, tok)) return;
+    say('④ <b>升高温度到 70 ℃</b>：注意三种接法的差别 —— 双臂、全桥的各片同温，温度分量恒为 0，U₀ 不变；单臂则会多出温度误差。');
+    if (!await tween(0, 50, 2300, setDT, tok)) return;
+    if (!await sleep(2400, tok)) return;
+    say('⑤ 切回<b>单臂且不接补偿片</b>：同样的温度变化立刻变成 <b>' + mVof(50, 500, 'single', 'none') + '</b> 的附加输出（其中温度分量 ' + sfmt(Math.abs(tempOf(50, 'single', 'none')), 3) + ' mV），这就是差动接法的价值。');
+    setCfg('single'); setComp('none');
+    if (!await sleep(3000, tok)) return;
+    say('【对比结束】灵敏度：单臂 E/4 ＜ 双臂 E/2 ＜ 全桥 E；温度：单臂需补偿片，双臂与全桥自动抵消。');
+    endDemo();
+  }
+
+  /* ============ 14. 演示：巡览要点 ============ */
+  async function demoPoints(){
+    var tok = beginDemo('pts');
+    say('【<b>本章要点</b>】共 ' + PTS_TEXT.length + ' 条，逐条看一遍；绿色高亮的是与当前接法/状态相关的要点，也可点编号按钮单独回看。');
+    if (!await sleep(2000, tok)) return;
+    for (var i = 0; i < PTS_TEXT.length; i++){
+      setPt(i);
+      if (!await sleep(PTS_TEXT[i].t.length > 60 ? 3000 : 2300, tok)) return;
+    }
+    setPt(-1);
+    endDemo();
+  }
+
+  /* ============ 15. 键盘：← → 温度、↑ ↓ 应变、空格 演示当前接法、R 复位 ============ */
   document.addEventListener('keydown', function(e){
     var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input') return;
     if (e.key === 'ArrowLeft'){ stopDemo(); setDT(S.dT - 1); e.preventDefault(); }
     else if (e.key === 'ArrowRight'){ stopDemo(); setDT(S.dT + 1); e.preventDefault(); }
     else if (e.key === 'ArrowUp'){ stopDemo(); setEps(S.eps + 10); e.preventDefault(); }
@@ -1008,154 +1326,59 @@
     else if (e.key === '2'){ stopDemo(); setCfg('half'); }
     else if (e.key === '3'){ stopDemo(); setCfg('full'); }
     else if (e.key === ' '){
-      if (tag !== 'button' && tag !== 'input'){
-        e.preventDefault();
-        if (playingKey){ stopDemo(); say('演示已暂停。'); }
-        else {
-          var key = (S.cfg === 'half') ? 'half' : (S.cfg === 'full' ? 'full' : 'single');
-          if (DEMOS[key].fn) DEMOS[key].fn();      /* 空格 = 演示当前接法 */
-        }
-      }
+      e.preventDefault();
+      if (playingKey){ stopDemo(); say('演示已暂停。'); }
+      else { var k = (S.cfg === 'half') ? 'half' : (S.cfg === 'full' ? 'full' : 'single'); if (DEMOS[k] && DEMOS[k].fn) DEMOS[k].fn(); }
     }
     else if (e.key === 'r' || e.key === 'R'){ $('reset').click(); }
   });
 
-  /* ============ 10. 单臂演示：应变 → 升温 → 去掉补偿片 → 改接相对桥臂 ============ */
-  async function demoSingle(){
-    var tok = beginDemo('single');
-    setCfg('single'); setComp('adjacent'); setTab('temp'); setDT(0); setEps(0);
-    say('【<b>单臂电桥</b>】只有 R₁ 一片工作，电压灵敏度最低 <b>S = E/4</b>。下面按“加应变 → 升温 → 省掉补偿片 → 改接相对桥臂”四步看它的全部表现。');
-    if (!await sleep(3000, tok)) return;
-    say('① <b>试件受力，ε → 500 με</b>：R₁ 增大，ΔR₁ = R₁kε，电桥输出 U₀ = (E/4)·kε = <b>' + mVof(0, 500, 'single', 'adjacent') + ' mV</b>（线性值 1.250 mV）。');
-    if (!await tween(0, 500, 2100, setEps, tok)) return;
-    if (!await sleep(2100, tok)) return;
-    say('② <b>只升温、不加力</b>（ΔT → +50 ℃，即 70 ℃）：补偿片与被测件处于<b>同一温度场</b>，ΔR₁(温度) = ΔR补(温度)，两者接在<b>相邻桥臂</b>、对输出的贡献符号相反 → U₀ 基本不变，仍是 <b>' + mVof(50, 500, 'single', 'adjacent') + ' mV</b>。温度被抵消了。');
-    if (!await tween(0, 50, 2300, setDT, tok)) return;
-    if (!await sleep(2300, tok)) return;
-    say('③ <b>如果省掉补偿片</b>（切到“不接补偿片”）：同样的 70 ℃ 立刻贡献 <b>' + sfmt(Math.abs(model(50, 0, 'single', 'none').exact*1000), 3) + ' mV</b> 的附加输出，比应变信号（1.25 mV）还大一倍 —— U₀ 变成 <b>' + mVof(50, 500, 'single', 'none') + ' mV</b>，测量结果被温度污染（相当于 ' + (Math.abs(model(50,0,'single','none').exact*1000)/(CFG.E/4*CFG.k)*1000).toFixed(0) + ' με 的虚假应变）。');
-    setComp('none');
-    if (!await sleep(3000, tok)) return;
-    say('④ <b>更糟的是接在相对桥臂</b>：相对桥臂的电阻变化在输出中<b>同号相加</b>，温度附加输出翻倍到 <b>' + sfmt(Math.abs(model(50, 0, 'single', 'opposite').exact*1000), 3) + ' mV</b>，U₀ 达到 ' + mVof(50, 500, 'single', 'opposite') + ' mV。');
-    setComp('opposite');
-    if (!await sleep(2900, tok)) return;
-    say('⑤ <b>回到相邻桥臂</b>：U₀ 立刻回到 <b>' + mVof(50, 500, 'single', 'adjacent') + ' mV</b> —— 这就是“电桥补偿法”：<b>同一温度场 + 相邻桥臂</b>。注意灵敏度仍是 S = E/4，补偿片只解决温度，不提高灵敏度。');
-    setComp('adjacent');
-    if (!await sleep(3200, tok)) return;
-    say('【单臂演示结束】要点：灵敏度最低（E/4）、必须用补偿片、非线性误差约 0.25%。接着可以点“双臂演示”看差动接法怎么把灵敏度翻倍。');
-    endDemo();
-  }
 
-  /* ============ 11. 双臂演示：差动使灵敏度 ×2，且温度自动抵消 ============ */
-  async function demoHalf(){
-    var tok = beginDemo('half');
-    setCfg('half'); setTab('strain'); setDT(0); setEps(0);
-    say('【<b>双臂电桥（半桥差动）</b>】R₁ 受拉、R₂ 受压，分别贴在悬臂梁<b>同一截面的上下表面</b>，接在<b>相邻桥臂</b>：一个 ＋ΔR、一个 −ΔR。');
-    if (!await sleep(3000, tok)) return;
-    say('① <b>加载 ε → 500 με</b>：相邻桥臂的变化量相减，|ΔR₁ − ΔR₂| = 2ΔR，于是 U₀ = (E/2)·kε = <b>' + mVof(0, 500, 'half', 'none') + ' mV</b>，正好是单臂的 <b>2 倍</b>（看应变曲线的斜率也陡了一倍）。');
-    if (!await tween(0, 500, 2100, setEps, tok)) return;
-    if (!await sleep(2200, tok)) return;
-    say('② <b>升温到 70 ℃</b>（ΔT → +50 ℃）：两片同处一个温度场，ΔR₁(温度) = ΔR₂(温度)，在相邻桥臂中相减为 0 → U₀ 几乎不变，为 <b>' + mVof(50, 500, 'half', 'none') + ' mV</b>。<b>差动接法自动补偿温度，不需要补偿片</b>（只剩约 0.2% 的灵敏度漂移，没有零点误差）。');
-    if (!await tween(0, 50, 2300, setDT, tok)) return;
-    if (!await sleep(2400, tok)) return;
-    say('③ <b>对照单臂且不接补偿片</b>：同样 500 με、同样 70 ℃，U₀ = <b>' + mVof(50, 500, 'single', 'none') + ' mV</b>，其中 <b>' + sfmt(Math.abs(model(50, 0, 'single', 'none').exact*1000), 3) + ' mV</b> 完全是温度误差 —— 这就是差动接法的价值。');
-    setCfg('single'); setComp('none');
-    if (!await sleep(3100, tok)) return;
-    say('④ <b>回到双臂</b>：U₀ = <b>' + mVof(50, 500, 'half', 'none') + ' mV</b>，只有应变、没有温度项。灵敏度 ×2 + 自动温度补偿，这就是半桥差动电桥的完整面貌。');
-    setCfg('half');
-    if (!await sleep(3000, tok)) return;
-    say('【双臂演示结束】要点：S = E/2（单臂的 2 倍）、两片同温自动抵消温度、非线性误差也变小。接着点“全桥演示”看再翻一倍的接法。');
-    endDemo();
-  }
+  DEMOS.single = { btn:'playSingle', label:'▶ 单臂演示', fn:demoSingle };
+  DEMOS.half   = { btn:'playHalf',   label:'▶ 双臂演示', fn:demoHalf };
+  DEMOS.full   = { btn:'playFull',   label:'▶ 全桥演示', fn:demoFull };
+  DEMOS.cmp    = { btn:'playCmp',    label:'▶ 三接法对比', fn:demoCmp };
+  DEMOS.pts    = { btn:'ptsPlay',    label:'▶ 巡览要点', fn:demoPoints };
+  bindDemos();
 
-  /* ============ 12. 全桥演示：灵敏度 ×4、严格线性、温度自动抵消 ============ */
-  async function demoFull(){
-    var tok = beginDemo('full');
-    setCfg('full'); setTab('strain'); setDT(0); setEps(0);
-    say('【<b>全桥差动电桥</b>】四个桥臂全部接应变片：上表面两片受拉（R₁、R₃），下表面两片受压（R₂、R₄）。相对桥臂变化量<b>相加</b>、相邻桥臂相减，四项同号叠加。');
-    if (!await sleep(3100, tok)) return;
-    say('① <b>加载 ε → 500 με</b>：U₀ = E·kε = <b>' + mVof(0, 500, 'full', 'none') + ' mV</b>，是单臂的 <b>4 倍</b>；而且分母里的 ΔR 相消，非线性误差 <b>0.00%</b>。');
-    if (!await tween(0, 500, 2100, setEps, tok)) return;
-    if (!await sleep(2100, tok)) return;
-    say('② <b>升温到 80 ℃</b>（ΔT → +60 ℃）：四片同温，温度分量四项相消 → U₀ 仍是 <b>' + mVof(60, 500, 'full', 'none') + ' mV</b>。剩下的约 0.2% 是 1/(1+αΔT) 的<b>灵敏度漂移</b>，不是零点误差。');
-    if (!await tween(0, 60, 2300, setDT, tok)) return;
-    if (!await sleep(2300, tok)) return;
-    say('③ <b>继续加载到 1000 με</b>：U₀ 严格线性地加倍到 <b>' + mVof(60, 1000, 'full', 'none') + ' mV</b> —— 输入-输出特性严格线性，这是全桥最大的优点（对照单臂在同一 ε 下只有 1.25 mV，而且略微弯曲）。');
-    if (!await tween(500, 1000, 2100, setEps, tok)) return;
-    if (!await sleep(2400, tok)) return;
-    say('④ <b>对照同 ε 下的单臂</b>：U₀ = <b>' + mVof(60, 1000, 'single', 'none') + ' mV</b>，只有全桥的 1/4。所以电子秤、压力传感器几乎都用全桥。');
-    setCfg('single'); setComp('none');
-    if (!await sleep(2800, tok)) return;
-    say('【全桥演示结束】要点：S = E（最高）、温度自动抵消、严格线性。点“三接法对比”可把三种接法放在一起再看一遍。');
-    setCfg('full');
-    endDemo();
-  }
-
-  /* ============ 13. 三接法对比 ============ */
-  async function demoCmp(){
-    var tok = beginDemo('cmp');
-    setCfg('single'); setComp('none'); setTab('strain'); setDT(0); setEps(0);
-    say('先把应变加到 500 με，再依次切换三种接法，比较同一应变下的输出与灵敏度。');
-    if (!await tween(0, 500, 1600, setEps, tok)) return;
-    if (!await sleep(1000, tok)) return;
-    say('① <b>单臂</b>：只有 R₁ 工作，U₀ = (E/4)·kε = <b>' + mVof(0, 500, 'single', 'none') + ' mV</b>，灵敏度最低，温度误差还要靠补偿片解决。');
-    if (!await sleep(2500, tok)) return;
-    say('② <b>双臂（半桥差动）</b>：R₁ 受拉 ＋ΔR、R₂ 受压 −ΔR，接在<b>相邻桥臂</b>，变化量相减 → U₀ = (E/2)·kε = <b>' + mVof(0, 500, 'half', 'none') + ' mV</b>，是单臂的 2 倍。');
-    setCfg('half');
-    if (!await sleep(2800, tok)) return;
-    say('③ <b>全桥差动</b>：四片全用，上表面两片受拉、下表面两片受压，相对桥臂相加 → U₀ = E·kε = <b>' + mVof(0, 500, 'full', 'none') + ' mV</b>，是单臂的 4 倍，而且严格线性。');
-    setCfg('full');
-    if (!await sleep(2800, tok)) return;
-    say('④ <b>升高温度到 70 ℃</b>：注意三种接法的差别 —— 双臂、全桥的四片同温，温度分量恒为 0，U₀ 不变；单臂则会多出温度误差。');
-    if (!await tween(0, 50, 2300, setDT, tok)) return;
-    if (!await sleep(2400, tok)) return;
-    say('⑤ 切回<b>单臂且不接补偿片</b>：同样的温度变化立刻变成 <b>' + mVof(50, 500, 'single', 'none') + ' mV</b> 的附加输出（其中温度分量 ' + sfmt(Math.abs(model(50, 0, 'single', 'none').exact*1000), 3) + ' mV），这就是差动接法的价值。');
-    setCfg('single'); setComp('none');
-    if (!await sleep(3000, tok)) return;
-    say('【对比结束】灵敏度：单臂 E/4 ＜ 双臂 E/2 ＜ 全桥 E；温度：单臂需补偿片，双臂与全桥自动抵消。');
-    endDemo();
-  }
-
-  DEMOS.single.fn = demoSingle; DEMOS.half.fn = demoHalf;
-  DEMOS.full.fn = demoFull; DEMOS.cmp.fn = demoCmp;
-
-  /* ============ 14. 启动（支持 ?cfg=&comp=&dT=&eps=&tab=&speed=&auto=1~4） ============ */
+  /* ============ 启动（?cfg=single|half|full & comp=adjacent|opposite|none & dT= & eps= & tab=temp|strain & speed= & auto=1~4） ============ */
   var q = new URLSearchParams(location.search);
-  if (q.has('cfg') && SIGNS[q.get('cfg')]) setCfg(q.get('cfg'));
-  if (q.has('comp') && ['adjacent','opposite','none'].indexOf(q.get('comp')) >= 0) setComp(q.get('comp'));
-  if (q.has('tab') && ['temp','strain'].indexOf(q.get('tab')) >= 0) setTab(q.get('tab'));
-  if (q.has('speed')){ SPEED = Math.max(0.4, Math.min(2.5, parseFloat(q.get('speed')) || 1));
-    $('speed').value = SPEED; $('speedOut').textContent = SPEED.toFixed(1) + '×'; }
-  if (q.has('dT')){ S.dT = Math.max(-40, Math.min(80, Math.round(parseFloat(q.get('dT')) || 0)));
-    $('dT').value = S.dT; $('dTOut').textContent = S.dT + ' ℃'; $('thetaTxt').textContent = 'θ = ' + (20 + S.dT).toFixed(1) + ' ℃'; }
-  if (q.has('eps')){ S.eps = Math.max(0, Math.min(1000, Math.round((parseFloat(q.get('eps')) || 0)/10)*10));
-    $('eps').value = S.eps; $('epsOut').textContent = S.eps + ' με'; }
+  if (q.has('cfg') && SIGNS[q.get('cfg')]) S.cfg = q.get('cfg');
+  if (q.has('comp') && ['adjacent','opposite','none'].indexOf(q.get('comp')) >= 0) S.comp = q.get('comp');
+  if (q.has('tab') && ['temp','strain'].indexOf(q.get('tab')) >= 0) S.tab = q.get('tab');
+  if (q.has('dT')) S.dT = clamp(Math.round(parseFloat(q.get('dT')) || 0), -40, 80);
+  if (q.has('eps')) S.eps = clamp(Math.round((parseFloat(q.get('eps')) || 0)/10)*10, 0, 1000);
+  if (q.has('speed')) SPEED = clamp(parseFloat(q.get('speed')) || 1, 0.4, 2.5);
+  $('dT').value = S.dT; $('dTOut').textContent = S.dT + ' ℃';
+  $('thetaTxt').textContent = 'θ = ' + (20 + S.dT).toFixed(1) + ' ℃';
+  $('eps').value = S.eps; $('epsOut').textContent = S.eps + ' με';
+  $('speed').value = SPEED; $('speedOut').textContent = SPEED.toFixed(1) + '×';
   paint();
+  initCur();
+  runCur();
   var AUTO = { '1':'single', '2':'half', '3':'full', '4':'cmp' };
-  if (AUTO[q.get('auto')]){ DEMOS[AUTO[q.get('auto')]].fn(); }
+  if (AUTO[q.get('auto')] && DEMOS[AUTO[q.get('auto')]].fn) DEMOS[AUTO[q.get('auto')]].fn();
   else if (q.has('cfg') || q.has('comp') || q.has('dT') || q.has('eps') || q.has('tab')){
     say('预设状态：' + CNAME[S.cfg] + (S.cfg === 'single' ? '，补偿片' + ({ adjacent:'接相邻桥臂（R₂）', opposite:'接相对桥臂（R₃）', none:'未接入' }[S.comp]) : '')
-        + '；ΔT = ' + sfmt(S.dT, 1) + ' ℃，ε = ' + S.eps + ' με。U₀ = ' + sfmt(model(S.dT, S.eps, S.cfg, S.comp).exact*1000, 3) + ' mV，其中温度分量 '
-        + sfmt(model(S.dT, 0, S.cfg, S.comp).exact*1000, 3) + ' mV。');
+        + '；ΔT = ' + sfmt(S.dT, 1) + ' ℃，ε = ' + S.eps + ' με。U₀ = ' + sfmt(model(S.dT, S.eps, S.cfg, S.comp).exact*1000, 3)
+        + ' mV，其中温度分量 ' + sfmt(tempOf(S.dT, S.cfg, S.comp), 3) + ' mV。');
   }
+
 })();
 </script>
 
 <script>
-/* ==================== 板块布局引擎：拖动 / 缩放 / 记忆 ==================== */
+/* ==================== 板块布局引擎：拖动 / 缩放 / 记忆 ====================
+   由 _build/build.js 注入；章节的面板清单 / 记忆键 / 默认布局在构建时替换。 */
 (function(){
   "use strict";
-  var BOARD   = document.getElementById('board');
-  var COLS    = ['colA','colB','colC'];
-  var IDS     = ['circuit','specimen','readCard','ctrlCard','chartCard','fmlCard','ptsCard'];
+  var BOARD = document.getElementById('board');
+  var COLS  = ['colA','colB','colC'];
+  var IDS   = ["ctrlCard","ptsCard","circuit","specimen","readCard","fmlCard","chartCard"];
   var MINZ = 0.7, MAXZ = 1.6, MINCOL = 260;
-  var KEY = 'jh-bridge-layout-v2';
-  var DEF = {
-    weight: { colA:4.6, colB:3.4, colC:4.0 },
-    col:    { colA:['circuit','ctrlCard'], colB:['specimen','chartCard'], colC:['readCard','fmlCard','ptsCard'] },
-    zoom:   {}
-  };
+  var KEY = 'jh-bridge-layout-v3';
+  var DEF = {"weight":{"colA":3,"colB":5,"colC":4},"col":{"colA":["ctrlCard","ptsCard"],"colB":["circuit","specimen"],"colC":["readCard","fmlCard","chartCard"]},"zoom":{}};
   var L = null, focused = null;
-
   function el(id){ return document.getElementById(id); }
   function clone(o){ return JSON.parse(JSON.stringify(o)); }
   function load(){
@@ -1163,27 +1386,21 @@
     try { d = JSON.parse(localStorage.getItem(KEY)); } catch (e) { d = null; }
     if (!d || !d.col) return clone(DEF);
     COLS.forEach(function(c){ if (!d.col[c]) d.col[c] = []; });
-    /* 清理：去重、补齐、丢弃陌生 id */
     var seen = {};
-    COLS.forEach(function(c){ d.col[c] = d.col[c].filter(function(id){ if (IDS.indexOf(id) < 0 || seen[id]) return false; seen[id] = 1; return true; }); });
+    COLS.forEach(function(c){
+      d.col[c] = d.col[c].filter(function(id){ if (IDS.indexOf(id) < 0 || seen[id]) return false; seen[id] = 1; return true; });
+    });
     IDS.forEach(function(id){ if (!seen[id]){ d.col.colC.push(id); seen[id] = 1; } });
     d.weight = d.weight || clone(DEF.weight);
     d.zoom = d.zoom || {};
     return d;
   }
   L = load();
-
   function save(){ try { localStorage.setItem(KEY, JSON.stringify(L)); } catch (e) {} }
-
-  /* ---------- 依据状态渲染：面板归属哪一列、顺序、列宽权重 ---------- */
   function render(){
     COLS.forEach(function(cid){
       var col = el(cid);
-      /* 按状态里的顺序逐一把面板放进对应列（appendChild 会移动已有节点） */
-      L.col[cid].forEach(function(pid){
-        var p = el(pid);
-        if (p) col.appendChild(p);
-      });
+      L.col[cid].forEach(function(pid){ var p = el(pid); if (p) col.appendChild(p); });
       col.style.flexGrow = L.weight[cid] || 1;
     });
   }
@@ -1194,7 +1411,6 @@
   }
   function applyAll(){ render(); IDS.forEach(applyZoom); }
 
-  /* ---------- 拖动面板：跟随指针在各列间换位 ---------- */
   function startDrag(ev, p){
     if (ev.button) return;
     var x0 = ev.clientX, y0 = ev.clientY, moved = false, lastTarget = null;
@@ -1205,14 +1421,12 @@
         document.body.classList.add('layout-dragging');
         p.classList.add('sorting');
       }
-      /* 指针落在哪一列 */
-      var col = null, i, c, r;
+      var col = null, i, r;
       for (i = 0; i < COLS.length; i++){
         r = el(COLS[i]).getBoundingClientRect();
         if (e.clientX >= r.left - 6 && e.clientX <= r.right + 6){ col = COLS[i]; break; }
       }
       if (!col) col = (e.clientX < BOARD.getBoundingClientRect().left + BOARD.clientWidth/2) ? COLS[0] : COLS[COLS.length - 1];
-      /* 在该列中的插入位置：按指针 y 与各面板中线比较 */
       var list = L.col[col].filter(function(id){ return id !== p.id; });
       var idx = list.length, j, q, qr;
       for (j = 0; j < list.length; j++){
@@ -1223,7 +1437,6 @@
       var key = col + ':' + idx;
       if (key === lastTarget) return;
       lastTarget = key;
-      /* 落实：把面板插入目标列的目标位置 */
       COLS.forEach(function(c2){ L.col[c2] = L.col[c2].filter(function(id){ return id !== p.id; }); });
       L.col[col].splice(idx, 0, p.id);
       render();
@@ -1240,8 +1453,6 @@
     document.addEventListener('pointerup', up);
     document.addEventListener('pointercancel', up);
   }
-
-  /* ---------- 拖动列间分隔条 → 改列宽 ---------- */
   function startSplit(ev, sp){
     ev.preventDefault();
     var left = el(sp.getAttribute('data-left')), right = el(sp.getAttribute('data-right'));
@@ -1252,8 +1463,7 @@
     function move(e){
       var d = (e.clientX - x0)/pxPerWeight;
       var nl = Math.max(MINCOL/(total/sum), Math.min(sum - MINCOL/(total/sum), wl + d));
-      left.style.flexGrow = nl;
-      right.style.flexGrow = sum - nl;
+      left.style.flexGrow = nl; right.style.flexGrow = sum - nl;
       L.weight[left.id] = nl; L.weight[right.id] = sum - nl;
     }
     function up(){
@@ -1265,8 +1475,6 @@
     document.addEventListener('pointermove', move);
     document.addEventListener('pointerup', up);
   }
-
-  /* ---------- 内容缩放 / 聚焦放大 ---------- */
   function zoomPanel(id, d){
     var z = Math.round(((L.zoom[id] || 1) + d)*100)/100;
     L.zoom[id] = Math.max(MINZ, Math.min(MAXZ, z));
@@ -1274,9 +1482,8 @@
   }
   function toggleFocus(id){
     var p = el(id); if (!p) return;
-    if (focused === id){
-      p.classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null;
-    } else {
+    if (focused === id){ p.classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    else {
       if (focused) el(focused).classList.remove('focused');
       p.classList.add('focused'); document.body.classList.add('has-focus'); focused = id;
     }
@@ -1286,8 +1493,6 @@
     if (focused){ el(focused).classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
     applyAll(); save();
   }
-
-  /* ---------- 绑定 ---------- */
   var back = document.createElement('div');
   back.id = 'focusBack';
   back.addEventListener('click', function(){ if (focused) toggleFocus(focused); });
@@ -1319,16 +1524,63 @@
   document.querySelectorAll('.vsplit').forEach(function(sp){
     sp.addEventListener('pointerdown', function(e){ startSplit(e, sp); });
   });
+  /* ---------- 折叠：滑过上方自动折叠，回到可视区自动展开；可手动锁定 ---------- */
+  function setFold(p, on){
+    p.classList.toggle('folded', on);
+    var btn = p.querySelector('.ptool[data-act="fold"]');
+    if (btn) btn.textContent = on ? '▸' : '▾';
+  }
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var tools = p.querySelector('.ptools');
+    if (!tools) return;
+    var fb = document.createElement('button');
+    fb.className = 'ptool';
+    fb.setAttribute('data-act', 'fold');
+    fb.title = '折叠 / 展开本板块（手动折叠后不会被自动展开）';
+    fb.textContent = '▾';
+    tools.insertBefore(fb, tools.firstChild);
+    fb.addEventListener('click', function(e){
+      e.stopPropagation();
+      var folded = p.classList.contains('folded');
+      setFold(p, !folded);
+      if (!folded) p.setAttribute('data-manual', '1'); else p.removeAttribute('data-manual');
+    });
+  });
+  var ticking = false;
+  function autoFold(){
+    ticking = false;
+    var vh = window.innerHeight || 900;
+    IDS.forEach(function(id){
+      var p = el(id); if (!p) return;
+      if (!p.parentNode || p.parentNode.id !== 'colB') return;    /* 只有中间列参与自动折叠（左右两列固定不动） */
+      var r = p.getBoundingClientRect();
+      if (r.bottom < 90){                                          /* 整块滑到上方之外 → 收起 */
+        if (!p.classList.contains('folded')) setFold(p, true);
+      } else if (r.top < vh - 30 && r.bottom > 60 && !p.hasAttribute('data-manual')){
+        if (p.classList.contains('folded')) setFold(p, false);      /* 回到可视区 → 展开 */
+      }
+    });
+  }
+  function onScrollOrWheel(){
+    if (!ticking){ ticking = true; requestAnimationFrame(autoFold); }
+  }
+  window.addEventListener('scroll', onScrollOrWheel, { passive:true });
+  window.addEventListener('wheel', onScrollOrWheel, { passive:true });
+  window.addEventListener('touchmove', onScrollOrWheel, { passive:true });
+  window.addEventListener('resize', function(){ if (window.__repack) window.__repack(); });
+  setTimeout(autoFold, 400);
+  window.__autoFold = autoFold;
+
   var lr = document.getElementById('layReset');
   if (lr) lr.addEventListener('click', reset);
-  document.addEventListener('keydown', function(e){
-    if (e.key === 'Escape' && focused) toggleFocus(focused);
-  });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && focused) toggleFocus(focused); });
   window.addEventListener('resize', function(){ IDS.forEach(applyZoom); });
-  window.__repack = function(){};        /* 列式布局自适应高度，无需重排 */
+  window.__repack = function(){};
   applyAll();
   window.addEventListener('load', applyAll);
 })();
+
 </script>
 </body>
 </html>

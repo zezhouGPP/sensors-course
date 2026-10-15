@@ -138,7 +138,7 @@
   #segCirc button small{font-size:9.5px}
   #segEddy button, #segPm button{min-width:70px; flex:1 1 70px; padding:2px 4px; font-size:11px; line-height:1.2}
   #segEddy button small, #segPm button small{font-size:9.5px}
-  .ptsB{flex:0 0 26px; padding:2px 0; font-size:11px; border-radius:6px}
+  .actions button.ptsB{flex:0 0 26px; padding:2px 0; font-size:11px; border-radius:6px}
   /* 左右两列都吸附固定；只有中间列（结构+读数）随页面滚动 */
   #colA, #colC{position:sticky; top:4px; align-self:flex-start;
                max-height:calc(100vh - 10px); overflow-y:auto; overscroll-behavior:contain}
@@ -1828,7 +1828,6 @@
       $('ptsB' + k).addEventListener('click', function(){ stopDemo(); setPt(k); });
     })(pb);
   }
-  $('ptsPlay').addEventListener('click', function(){ if (DEMOS.pts) DEMOS.pts.fn(); });
 
   /* ============ 10. 交互 ============ */
   function setType(t){ S.type = t; paint(); }

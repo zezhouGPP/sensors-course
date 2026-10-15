@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第6章 磁电式传感器 · 动态演示｜传感器原理与技术</title>
+<style>
+/* =====================================================================
+   公共样式（各章通用）· 由 _build/build.js 注入到每个单文件 HTML 的样式表顶部
+   与第4章保持同一套类名与观感；章节特有的语义色 / 版式写在章节模块的 extraCss 里
+   ===================================================================== */
+:root{
+  --jhu:#0e4a8e; --jhu2:#0a2f5c; --ink:#12233a; --muted:#5b6b80;
+  --line:#d5dfec; --bg:#eef3f9; --card:#ffffff;
+  --flux:#0d8b7f;      /* 磁通 / 场线（第4章起沿用） */
+  --cu:#c2703a;        /* 线圈 / 铜 */
+  --iron:#4b6b8f;      /* 铁芯 / 铁磁体 */
+  --gapm:#e08a1e;      /* 气隙 / 有效量 */
+  --eddy:#7c3aed;      /* 涡流 / 强调（紫） */
+  --hot:#d94a3d; --ok:#0f9d58;
+  --grid:rgba(14,74,142,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Source Han Sans SC","Hiragino Sans GB",system-ui,sans-serif;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    var(--bg);
+  color:var(--ink); font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+header{
+  background:linear-gradient(120deg,var(--jhu) 0%,var(--jhu2) 100%);
+  color:#fff; padding:8px 24px; display:flex; align-items:center; gap:16px;
+  box-shadow:0 3px 14px rgba(10,47,92,.28);
+}
+header h1{font-size:22px; margin:0; letter-spacing:1px; font-weight:700}
+header .sub{font-size:13px; opacity:.9; border-left:1px solid rgba(255,255,255,.45); padding-left:13px}
+header .right{margin-left:auto; text-align:right; font-size:12.5px; opacity:.92; line-height:1.3}
+header .right b{font-size:15px; letter-spacing:2px}
+#laybar{display:flex; align-items:center; gap:10px; padding:3px 20px; font-size:12px; color:#41566f;
+        background:#e4edf8; border-bottom:1px solid #cfdcec}
+#laybar button{border:1px solid #a9c1dd; background:#fff; color:var(--jhu); border-radius:7px;
+               font-size:12px; font-weight:700; padding:2px 10px; cursor:pointer; font-family:inherit}
+#laybar button:hover{background:#f2f7fd}
+#laybar .hint{color:#6b7d92}
+#boardWrap{padding:6px 14px 2px}
+#board{display:flex; align-items:flex-start}
+.col{display:flex; flex-direction:column; gap:6px; min-width:0; flex-grow:1; flex-basis:0}
+.colhead{font-size:11.5px; font-weight:700; color:#8296ad; letter-spacing:.4px; padding:0 3px 2px; border-bottom:1px dashed #dbe5f0}
+.vsplit{flex:0 0 13px; align-self:stretch; cursor:col-resize; position:relative; touch-action:none}
+.vsplit::before{content:""; position:absolute; left:5.5px; top:8px; bottom:8px; width:2px; border-radius:2px; background:#cfdcec}
+.vsplit:hover::before{background:var(--jhu); width:3px; left:5px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:13px;
+      box-shadow:0 2px 10px rgba(18,35,58,.06); padding:5px 9px}
+.card h2{margin:0 0 4px; font-size:14.5px; color:var(--jhu); font-weight:700; display:flex; align-items:center; gap:7px}
+.card h2::before{content:""; width:4px; height:15px; border-radius:3px; background:var(--jhu)}
+.card h2 small{font-weight:400; color:var(--muted); font-size:12px}
+.panel{position:relative; box-sizing:border-box}
+.panel > .phead{display:flex; align-items:center; gap:6px; cursor:move; touch-action:none; user-select:none; margin:-1px 0 4px}
+.panel > .phead h2{margin:0; flex:1; min-width:0; cursor:move}
+.ptools{display:flex; gap:3px; flex:none}
+.ptool{width:21px; height:21px; padding:0; line-height:1; border:1px solid var(--line); background:#fff;
+       color:var(--jhu); border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit}
+.ptool:hover{background:#eef4fc; border-color:#9fbedd}
+.panel.sorting{opacity:.6; outline:2px dashed var(--jhu); outline-offset:2px; pointer-events:none}
+.panel.focused{position:fixed; left:14px; right:14px; top:80px; bottom:14px; z-index:300; overflow:auto;
+               box-shadow:0 18px 50px rgba(10,47,92,.38); border-color:var(--jhu)}
+#focusBack{position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(10,30,55,.34); z-index:290; display:none}
+body.has-focus #focusBack{display:block}
+body.layout-dragging{user-select:none}
+svg{display:block; width:100%; height:auto}
+.tiny{font-size:12px; fill:var(--muted); color:var(--muted)}
+/* ---- 控件 ---- */
+.ctrl{display:flex; flex-direction:column; gap:2px; margin-bottom:2px}
+.ctrl .row{display:flex; align-items:center; gap:7px}
+.ctrl .name{font-size:12.8px; color:var(--muted); width:118px; flex:none}
+.ctrl .name b{color:var(--ink); font-size:14px}
+.ctrl output{font-size:18px; font-weight:800; min-width:96px; text-align:right; font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none; appearance:none; height:8px; border-radius:5px; background:#dce6f2; outline:none; flex:1; min-width:70px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:21px; height:21px; border-radius:50%;
+      background:#fff; border:3px solid var(--jhu); cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.seg{display:flex; gap:6px; flex-wrap:wrap}
+.seg button{flex:1 1 0; min-width:96px; padding:5px 8px; border-radius:9px; border:1px solid var(--line);
+            background:#fff; cursor:pointer; font-size:13px; font-weight:700; color:#33506f; font-family:inherit; line-height:1.3}
+.seg button small{display:block; font-weight:400; font-size:11px; color:var(--muted)}
+.seg button:hover{border-color:#9fbedd}
+.seg button.on{background:var(--jhu); border-color:var(--jhu); color:#fff}
+.seg button.on small{color:rgba(255,255,255,.85)}
+/* 紧凑小按钮（章节里的型式/模式细分按钮） */
+.seg.tight button{min-width:66px; flex:1 1 66px; padding:3px 4px; font-size:11.5px; line-height:1.25}
+.seg.tight button small{font-size:10px}
+.step{border:1px solid var(--line); background:#fff; color:var(--jhu); width:28px; height:28px;
+      border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; line-height:1}
+.actions{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap}
+.actions button{flex:1 1 92px; padding:5px 4px; border-radius:9px; border:1px solid var(--jhu);
+                background:var(--jhu); color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;
+                font-family:inherit; white-space:nowrap}
+.actions button.ghost{background:#fff; color:var(--jhu)}
+.actions button.running{background:var(--hot); border-color:var(--hot); color:#fff}
+.actions button:hover{filter:brightness(1.07)}
+.narrate{margin-top:4px; border-left:5px solid var(--flux); background:#f2fbf9; border-radius:0 10px 10px 0;
+         padding:3px 10px; font-size:12.4px; line-height:1.34; min-height:26px; color:#0a5f57}
+/* ---- 读数 ---- */
+.big{display:flex; align-items:baseline; gap:9px; background:linear-gradient(90deg,#f2f7ff,#fff);
+     border:1px solid #d9e5f5; border-radius:12px; padding:3px 12px}
+.big .cap{font-size:13px; color:var(--muted); margin-right:auto}
+.big .num{font-size:23px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
+.big .unit{font-size:15px; font-weight:700; color:var(--muted)}
+.kv{display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:5px}
+.kv .box{border:1px dashed var(--line); border-radius:9px; padding:2px 6px; font-size:10.5px; color:var(--muted)}
+.kv .box b{display:block; font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:1px}
+.fine{font-size:10.4px; color:var(--muted); margin-top:5px; line-height:1.5; font-variant-numeric:tabular-nums}
+.fine b{color:var(--ink)}
+/* ---- 比例条 / 图例 ---- */
+.rmbar{display:flex; height:15px; border-radius:5px; overflow:hidden; border:1px solid var(--line); background:#f4f8fd; margin-top:3px}
+.rmbar i{display:block; height:100%}
+.legend{display:flex; gap:8px; flex-wrap:wrap; font-size:10.4px; color:var(--muted); margin-top:1px}
+.legend i{display:inline-block; width:14px; height:9px; border-radius:2px; margin-right:5px}
+/* ---- 公式 ---- */
+.fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:10.9px; line-height:1.22; color:#16283d}
+.fml .row{display:block; border-bottom:1px dashed #e7eef7; padding:0}
+.fml .row:last-child{border-bottom:none}
+.fml .tag{display:inline-block; font-family:"Microsoft YaHei",sans-serif; font-size:11px; color:#fff;
+          background:var(--jhu); border-radius:5px; padding:0 6px; margin-right:5px; vertical-align:1px}
+.fml .tag.g{background:var(--gapm)} .fml .tag.f{background:var(--flux)} .fml .tag.v{background:var(--eddy)}
+.fml b{color:var(--hot)}
+.fml .note{font-family:"Microsoft YaHei",sans-serif; font-size:10.8px; color:var(--muted); line-height:1.4; margin-top:2px}
+.frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.88em; line-height:1.02; margin:0 .14em}
+.frac i{font-style:normal; padding:0 .3em}
+.frac b{font-weight:400; color:inherit; border-top:1.4px solid currentColor; padding:0 .3em}
+/* ---- 要点 ---- */
+ol.points{margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:4px}
+ol.points li{border:1px solid var(--line); border-left:4px solid #c8d6e6; border-radius:0 9px 9px 0;
+             padding:0 7px; font-size:10.9px; line-height:1.28; color:#3c5068; background:#fbfdff; transition:.25s}
+ol.points li.on{border-left-color:var(--ok); background:#f2fbf5; color:var(--ink); box-shadow:0 0 0 2px rgba(15,157,88,.12)}
+ol.points li .hl{color:var(--ok); font-weight:700}
+.hint{font-size:12px; color:var(--muted); margin-top:5px}
+footer{padding:3px 18px 5px; font-size:11px; color:var(--muted); line-height:1.5}
+footer b{color:var(--jhu)}
+.actions button.ptsB{flex:0 0 26px; padding:2px 0; font-size:11px; border-radius:6px}   /* 要点编号按钮：特异性需高于 .actions button */
+/* 左右两列都吸附固定；只有中间列（结构+读数）随页面滚动 */
+#colA, #colC{position:sticky; top:4px; align-self:flex-start;
+             max-height:calc(100vh - 10px); overflow-y:auto; overscroll-behavior:contain}
+#colA::-webkit-scrollbar, #colC::-webkit-scrollbar{width:6px}
+#colA::-webkit-scrollbar-thumb, #colC::-webkit-scrollbar-thumb{background:#c3d3e6; border-radius:3px}
+/* 中间列底部留白：让最后一张卡片也能滚动到屏幕中间 */
+#colB{padding-bottom:52vh}
+.panel > .pbody{max-height:2600px; overflow:hidden; transition:max-height .22s ease, opacity .18s ease}
+.panel.folded > .pbody{max-height:0 !important; opacity:0}
+.panel.folded{border-color:#bcd0e5; background:#f8fbff}
+.panel.folded > .phead h2{color:#5b6b80}
+.ptool[data-act="fold"]{font-size:11px}
+.readlabel{font-size:12.5px; font-weight:700; color:#5b6b80; margin:7px 0 3px; padding-top:6px; border-top:1px dashed #dbe5f0}
+.readwrap svg{max-height:196px}
+.pbody > svg{max-height:300px}
+.pbody > svg + svg{max-height:196px}
+@media (max-width:1200px){ #boardWrap{min-width:1180px} }
+
+  /* ---- 第6章语义色（磁 / 霍尔 / 磁铁） ---- */
+  :root{ --magf:#7c3aed; --halle:#1e40af; }
+</style>
+</head>
+<body>
+<header>
+  <h1>第 6 章 磁电式传感器</h1>
+  <div class="sub">磁电感应式（动圈 / 动铁 / 变磁通测速）· 霍尔式（霍尔效应 / 霍尔元件 / 集成霍尔）| 动态演示</div>
+  <div class="right"><b>江汉大学</b><br>传感器原理与技术</div>
+</header>
+<div id="laybar">
+  <span style="font-weight:700;color:#0e4a8e">板块布局</span>
+  <button id="layReset">↺ 恢复默认（一屏）</button>
+  <span class="hint"><b>左右两列固定不动</b>（左＝型式与输入量＋要点，右＝数据/曲线/公式），只有<b>中间列</b>随页面滚动；每块标题栏的 <b>▾</b> 可折叠该板块；<b>滚轮下滑时滑过上方的那几块会自动收起、滚回来自动展开</b>（手动折起的不会被自动展开）；拖动<b>标题栏</b>可换列换位、拖<b>竖条</b>调列宽、<b>＋ －</b> 缩放、<b>⛶</b> 全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
+</div>
+
+<div id="boardWrap">
+<main id="board">
+
+  <!-- ================= 左列 ================= -->
+  <div class="col" id="colA">
+    <div class="colhead">① 型式与输入量</div>
+
+
+    <section class="card panel" id="ctrlCard">
+      <div class="phead">
+        <h2>型式与输入量</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="ctrl">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>磁电型式</b></span>
+          <div class="seg tight" id="segType" style="flex:1">
+            <button data-type="vc" class="on">恒磁通·动圈<small>e = −NBlv</small></button>
+            <button data-type="vi">恒磁通·动铁<small>同原理、同输出</small></button>
+            <button data-type="gear">变磁通·测速<small>f = Zn/60</small></button>
+            <button data-type="hall">霍尔元件<small>U_H = K_H·I·B</small></button>
+            <button data-type="hallc">霍尔·电流<small>聚磁环测 I</small></button>
+          </div>
+        </div>
+        <div class="hint" id="typeHint">正在加载…</div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b id="xName">振动速度 v</b><br><span class="tiny" id="xTxt">满量程 1.00 m/s</span></span>
+          <button class="step" id="xM" title="减小">−</button>
+          <input type="range" id="x" min="0" max="100" step="1" value="60">
+          <button class="step" id="xP" title="增大">＋</button>
+          <output id="xOut">0.60 m/s</output>
+        </div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b id="hzName">振动频率 f</b><br><span class="tiny" id="hzTxt">仅动圈 / 动铁式使用</span></span>
+          <input type="range" id="hz" min="5" max="60" step="1" value="20">
+          <output id="hzOut">20 Hz</output>
+        </div>
+      </div>
+      <div class="ctrl">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px"><b>集成霍尔</b><br><span class="tiny" id="hmTxt">仅霍尔式使用</span></span>
+          <div class="seg tight" id="segHm" style="flex:1">
+            <button data-hm="lin" class="on">线性型<small>模拟电压 ∝ B</small></button>
+            <button data-hm="sw">开关型<small>方波、可零速检测</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="playVC" class="ghost">▶ 磁电原理</button>
+        <button id="playGear" class="ghost">▶ 变磁通测速</button>
+        <button id="playHall" class="ghost">▶ 霍尔效应</button>
+        <button id="playApp" class="ghost">▶ 器件与应用</button>
+        <button id="reset" class="ghost" style="flex:0 0 58px">↺ 复位</button>
+      </div>
+      <div class="ctrl" style="margin-top:5px">
+        <div class="row">
+          <span class="name"><b>演示速度</b><br><span class="tiny">0.4× 慢 ～ 2.5× 快</span></span>
+          <input type="range" id="speed" min="0.4" max="2.5" step="0.1" value="1">
+          <output id="speedOut">1.0×</output>
+        </div>
+      </div>
+      <div class="narrate" id="narration">初始状态：恒磁通式·动圈式，振动速度 v = 0.60 m/s、频率 f = 20 Hz。四个演示按钮分别讲：磁电原理 / 变磁通测速 / 霍尔效应 / 器件与应用。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="ptsCard">
+      <div class="phead">
+        <h2>本章要点</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="actions" style="margin-top:0">
+        <button id="ptsPlay" class="ghost" style="flex:0 0 98px">▶ 巡览要点</button>
+        <button id="ptsB0" class="ghost ptsB">1</button><button id="ptsB1" class="ghost ptsB">2</button>
+        <button id="ptsB2" class="ghost ptsB">3</button><button id="ptsB3" class="ghost ptsB">4</button>
+        <button id="ptsB4" class="ghost ptsB">5</button><button id="ptsB5" class="ghost ptsB">6</button>
+        <button id="ptsB6" class="ghost ptsB">7</button><button id="ptsB7" class="ghost ptsB">8</button>
+        <button id="ptsB8" class="ghost ptsB">9</button><button id="ptsB9" class="ghost ptsB">10</button>
+      </div>
+      <ol class="points" id="points"></ol>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colA" data-right="colB" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 中列 ================= -->
+  <div class="col" id="colB">
+    <div class="colhead">② 结构动态 ＋ 输出读数（成对显示）</div>
+
+
+    <section class="card panel" id="stCard">
+      <div class="phead">
+        <h2>结构动态 <small id="stSub">恒磁通式·动圈式：线圈在恒定气隙磁场中运动，切割磁力线</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="mag" viewBox="0 0 700 300" role="img" aria-label="磁电式传感器结构动态（动圈式/动铁式/变磁通测速/霍尔式/霍尔电流传感器）">
+        <!-- ============ ① 恒磁通式 · 动圈式（图6-1a） ============ -->
+        <g id="stVC">
+          <rect x="28" y="12" width="396" height="270" rx="12" fill="#f8fbfe" stroke="#cbd8e8" stroke-width="1.6" stroke-dasharray="7 5"/>
+          <text x="40" y="30" font-size="11.5" fill="#8296ad">壳体（固定不动）</text>
+          <rect x="138" y="70" width="24" height="188" fill="var(--iron)"/>
+          <rect x="294" y="70" width="24" height="188" fill="var(--iron)"/>
+          <rect x="138" y="258" width="180" height="14" fill="var(--iron)"/>
+          <text x="60" y="212" font-size="11.5" font-weight="700" fill="#33506f">磁轭（软铁）</text>
+          <line x1="126" y1="208" x2="146" y2="150" stroke="#8296ad" stroke-width="1"/>
+          <rect x="196" y="230" width="64" height="14" fill="#d94a3d" opacity=".72"/>
+          <rect x="196" y="244" width="64" height="14" fill="#2b6cb0" opacity=".72"/>
+          <text x="266" y="241" font-size="11.5" font-weight="700" fill="#d94a3d">N</text>
+          <text x="266" y="255" font-size="11.5" font-weight="700" fill="#2b6cb0">S</text>
+          <text x="60" y="248" font-size="11.5" font-weight="700" fill="#33506f">永久磁铁</text>
+          <line x1="126" y1="244" x2="194" y2="242" stroke="#8296ad" stroke-width="1"/>
+          <rect x="212" y="120" width="32" height="110" fill="var(--iron)"/>
+          <text x="60" y="136" font-size="11.5" font-weight="700" fill="#33506f">心柱（铁芯）</text>
+          <line x1="126" y1="132" x2="210" y2="150" stroke="#8296ad" stroke-width="1"/>
+          <g id="vcCoil">
+            <rect x="170" y="141" width="116" height="10" fill="var(--cu)" opacity=".5" stroke="var(--cu)" stroke-width="1.2"/>
+            <rect x="170" y="151" width="34" height="63" fill="var(--cu)" opacity=".3" stroke="var(--cu)" stroke-width="1.2"/>
+            <rect x="252" y="151" width="34" height="63" fill="var(--cu)" opacity=".3" stroke="var(--cu)" stroke-width="1.2"/>
+            <line x1="170" y1="162" x2="204" y2="162" stroke="var(--cu)" stroke-width="1.1"/>
+            <line x1="170" y1="174" x2="204" y2="174" stroke="var(--cu)" stroke-width="1.1"/>
+            <line x1="170" y1="186" x2="204" y2="186" stroke="var(--cu)" stroke-width="1.1"/>
+            <line x1="170" y1="198" x2="204" y2="198" stroke="var(--cu)" stroke-width="1.1"/>
+            <line x1="252" y1="162" x2="286" y2="162" stroke="var(--cu)" stroke-width="1.1"/>
+            <line x1="252" y1="174" x2="286" y2="174" stroke="var(--cu)" stroke-width="1.1"/>
+            <line x1="252" y1="186" x2="286" y2="186" stroke="var(--cu)" stroke-width="1.1"/>
+            <line x1="252" y1="198" x2="286" y2="198" stroke="var(--cu)" stroke-width="1.1"/>
+            <rect x="221" y="52" width="14" height="89" fill="#a9b6c6"/>
+          </g>
+          <path id="vcSpring" fill="none" stroke="#7a8ba0" stroke-width="2"/>
+          <rect x="190" y="12" width="76" height="8" fill="#b9c6d6"/>
+          <text x="246" y="34" font-size="11.5" fill="#8296ad">弹簧（支承动圈）</text>
+          <g stroke="var(--flux)" stroke-width="1.7" opacity=".92">
+            <line x1="246" y1="166" x2="284" y2="166"/><polygon points="290,166 279,161 279,171" fill="var(--flux)" stroke="none"/>
+            <line x1="246" y1="186" x2="284" y2="186"/><polygon points="290,186 279,181 279,191" fill="var(--flux)" stroke="none"/>
+            <line x1="246" y1="206" x2="284" y2="206"/><polygon points="290,206 279,201 279,211" fill="var(--flux)" stroke="none"/>
+            <line x1="200" y1="166" x2="162" y2="166"/><polygon points="156,166 167,161 167,171" fill="var(--flux)" stroke="none"/>
+            <line x1="200" y1="186" x2="162" y2="186"/><polygon points="156,186 167,181 167,191" fill="var(--flux)" stroke="none"/>
+            <line x1="200" y1="206" x2="162" y2="206"/><polygon points="156,206 167,201 167,211" fill="var(--flux)" stroke="none"/>
+          </g>
+          <text x="322" y="150" font-size="11.5" font-weight="700" fill="#0d8b7f">磁力线 B</text>
+          <text x="322" y="166" font-size="11" fill="#8296ad">（气隙中恒定）</text>
+          <line x1="244" y1="236" x2="292" y2="236" stroke="var(--gapm)" stroke-width="2"/>
+          <line x1="244" y1="230" x2="244" y2="242" stroke="var(--gapm)" stroke-width="2"/>
+          <line x1="292" y1="230" x2="292" y2="242" stroke="var(--gapm)" stroke-width="2"/>
+          <text id="vcGapTxt" x="322" y="226" font-size="11" font-weight="700" fill="var(--gapm)">气隙 δ（B 恒定）</text>
+          <line id="vcVArr" x1="356" y1="176" x2="356" y2="176" stroke="#d94a3d" stroke-width="2.6"/>
+          <polygon id="vcVH" points="356,176 356,176 356,176" fill="#d94a3d"/>
+          <text id="vcVTxt" x="330" y="250" font-size="12" font-weight="700" fill="#d94a3d">v = 0.00 m/s</text>
+          <text id="vcITxt" x="322" y="196" font-size="11.5" font-weight="700" fill="var(--cu)">感应电流 →</text>
+          <text id="vcCoilTxt" x="204" y="112" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8a5a20">线圈 N = 2000 匝</text>
+        </g>
+        <!-- ============ ② 恒磁通式 · 动铁式（图6-1b） ============ -->
+        <g id="stVI" style="display:none">
+          <rect x="28" y="12" width="396" height="270" rx="12" fill="#f8fbfe" stroke="#cbd8e8" stroke-width="1.6" stroke-dasharray="7 5"/>
+          <text x="40" y="30" font-size="11.5" fill="#8296ad">壳体（固定不动）</text>
+          <rect x="176" y="76" width="104" height="140" fill="var(--cu)" opacity=".14" stroke="var(--cu)" stroke-width="1.8"/>
+          <line x1="182" y1="90" x2="274" y2="90" stroke="var(--cu)" stroke-width="1.1"/>
+          <line x1="182" y1="106" x2="274" y2="106" stroke="var(--cu)" stroke-width="1.1"/>
+          <line x1="182" y1="122" x2="274" y2="122" stroke="var(--cu)" stroke-width="1.1"/>
+          <line x1="182" y1="138" x2="274" y2="138" stroke="var(--cu)" stroke-width="1.1"/>
+          <line x1="182" y1="154" x2="274" y2="154" stroke="var(--cu)" stroke-width="1.1"/>
+          <line x1="182" y1="170" x2="274" y2="170" stroke="var(--cu)" stroke-width="1.1"/>
+          <line x1="182" y1="186" x2="274" y2="186" stroke="var(--cu)" stroke-width="1.1"/>
+          <line x1="182" y1="202" x2="274" y2="202" stroke="var(--cu)" stroke-width="1.1"/>
+          <text x="40" y="96" font-size="11.5" font-weight="700" fill="#8a5a20">线圈（固定）</text>
+          <line x1="118" y1="92" x2="174" y2="96" stroke="#8296ad" stroke-width="1"/>
+          <text x="40" y="114" font-size="11" fill="#8296ad">N = 2000 匝 → 输出 e</text>
+          <path d="M164 62 H296 V232 H164 Z" fill="none" stroke="var(--flux)" stroke-width="1.5" stroke-dasharray="6 4" opacity=".8"/>
+          <polygon points="240,62 230,57 230,67" fill="var(--flux)" stroke="none"/>
+          <polygon points="296,150 291,140 301,140" fill="var(--flux)" stroke="none"/>
+          <polygon points="200,232 210,227 210,237" fill="var(--flux)" stroke="none"/>
+          <polygon points="164,150 169,140 159,140" fill="var(--flux)" stroke="none"/>
+          <text x="306" y="70" font-size="11.5" font-weight="700" fill="#0d8b7f">磁通回路</text>
+          <g id="viMag">
+            <rect x="204" y="100" width="48" height="45" fill="#d94a3d" opacity=".72"/>
+            <rect x="204" y="145" width="48" height="45" fill="#2b6cb0" opacity=".72"/>
+            <text x="212" y="128" font-size="11" font-weight="700" fill="#7a2118">N</text>
+            <text x="212" y="176" font-size="11" font-weight="700" fill="#123b63">S</text>
+            <rect x="219" y="62" width="18" height="38" fill="#a9b6c6"/>
+            <rect x="219" y="190" width="18" height="32" fill="#a9b6c6"/>
+          </g>
+          <path id="viSpringT" fill="none" stroke="#7a8ba0" stroke-width="2"/>
+          <path id="viSpringB" fill="none" stroke="#7a8ba0" stroke-width="2"/>
+          <rect x="196" y="14" width="64" height="8" fill="#b9c6d6"/>
+          <rect x="196" y="262" width="64" height="8" fill="#b9c6d6"/>
+          <text x="266" y="30" font-size="11.5" fill="#8296ad">上下弹簧（支承动铁）</text>
+          <text x="40" y="240" font-size="11.5" font-weight="700" fill="#33506f">阻尼器：金属骨架电磁阻尼</text>
+          <line id="viVArr" x1="356" y1="176" x2="356" y2="176" stroke="#d94a3d" stroke-width="2.6"/>
+          <polygon id="viVH" points="356,176 356,176 356,176" fill="#d94a3d"/>
+          <text id="viVTxt" x="330" y="250" font-size="12" font-weight="700" fill="#d94a3d">v = 0.00 m/s</text>
+          <text id="viETxt" x="40" y="150" font-size="12" font-weight="700" fill="var(--ok)">e ↑</text>
+        </g>
+        <!-- ============ ③ 变磁通式 · 齿盘测速（图6-2 开磁路） ============ -->
+        <g id="stGear" style="display:none">
+          <g id="gearRot">
+            <path id="gearPath" fill="#9aabbd" stroke="#5b6b80" stroke-width="1.2"/>
+            <circle cx="150" cy="200" r="16" fill="#c6d2e0" stroke="#5b6b80" stroke-width="1.2"/>
+            <line x1="134" y1="200" x2="166" y2="200" stroke="#5b6b80" stroke-width="2.4"/>
+            <line x1="150" y1="184" x2="150" y2="216" stroke="#5b6b80" stroke-width="2.4"/>
+          </g>
+          <text x="150" y="272" text-anchor="middle" font-size="11.5" font-weight="700" fill="#33506f">齿轮（导磁，Z = 20 齿）</text>
+          <path d="M152 52 V126 M152 140 V230 M152 230 L64 230 L44 122 L110 40 L152 40" fill="none" stroke="var(--flux)" stroke-width="1.6" stroke-dasharray="6 4" opacity=".85"/>
+          <polygon points="152,116 147,105 157,105" fill="var(--flux)" stroke="none"/>
+          <polygon points="152,196 147,185 157,185" fill="var(--flux)" stroke="none"/>
+          <polygon points="110,230 120,225 120,235" fill="var(--flux)" stroke="none"/>
+          <polygon points="44,190 49,201 39,201" fill="var(--flux)" stroke="none"/>
+          <polygon points="96,40 108,35 108,45" fill="var(--flux)" stroke="none"/>
+          <rect x="120" y="48" width="64" height="60" fill="var(--cu)" opacity=".2" stroke="var(--cu)" stroke-width="1.5"/>
+          <line x1="126" y1="60" x2="178" y2="60" stroke="var(--cu)" stroke-width="1.1"/>
+          <line x1="126" y1="72" x2="178" y2="72" stroke="var(--cu)" stroke-width="1.1"/>
+          <line x1="126" y1="96" x2="178" y2="96" stroke="var(--cu)" stroke-width="1.1"/>
+          <rect x="134" y="70" width="36" height="48" fill="var(--iron)"/>
+          <polygon points="138,118 166,118 160,130 144,130" fill="var(--iron)"/>
+          <rect x="136" y="26" width="32" height="44" fill="#b13a2e" opacity=".8"/>
+          <text x="142" y="44" font-size="11.5" font-weight="700" fill="#fff">S</text>
+          <text x="142" y="64" font-size="11.5" font-weight="700" fill="#fff">N</text>
+          <text x="42" y="38" font-size="11.5" font-weight="700" fill="#33506f">永久磁铁</text>
+          <line x1="104" y1="38" x2="134" y2="42" stroke="#8296ad" stroke-width="1"/>
+          <text x="186" y="62" font-size="11.5" font-weight="700" fill="#8a5a20">线圈</text>
+          <line x1="184" y1="58" x2="166" y2="66" stroke="#8296ad" stroke-width="1"/>
+          <line x1="152" y1="130" x2="152" y2="144" stroke="var(--gapm)" stroke-width="2.4"/>
+          <line x1="144" y1="130" x2="160" y2="130" stroke="var(--gapm)" stroke-width="2"/>
+          <line x1="144" y1="144" x2="160" y2="144" stroke="var(--gapm)" stroke-width="2"/>
+          <text id="gearGapTxt" x="176" y="116" font-size="11.5" font-weight="700" fill="var(--gapm)">齿对齿：气隙最小</text>
+          <path d="M86 262 A66 66 0 0 1 42 190" fill="none" stroke="#0e4a8e" stroke-width="2"/>
+          <polygon points="42,180 35,196 51,193" fill="#0e4a8e"/>
+          <text x="30" y="130" font-size="11.5" font-weight="700" fill="#0e4a8e">n r/min</text>
+          <text x="252" y="60" font-size="11.5" font-weight="700" fill="#0d8b7f">磁通周期变化</text>
+          <text x="252" y="78" font-size="11" fill="#8296ad">（磁阻随齿掠过而变）</text>
+          <text id="gearEMTxt" x="252" y="150" font-size="12.5" font-weight="800" fill="#d94a3d">e ≈ 0.00 V</text>
+          <text id="gearState" x="252" y="178" font-size="11.5" fill="#33506f">静止：磁通不变 → 无输出</text>
+        </g>
+        <!-- ============ ④ 霍尔效应与霍尔元件（图6-7/6-8/6-9） ============ -->
+        <g id="stHall" style="display:none">
+          <rect x="36" y="140" width="58" height="48" rx="6" fill="#eef4fc" stroke="#9fbedd" stroke-width="1.4"/>
+          <text x="36" y="132" font-size="11.5" font-weight="700" fill="#0e4a8e">恒流源 I_C</text>
+          <text id="hallITxt" x="40" y="170" font-size="12.5" font-weight="700" fill="#0e4a8e">2.0 mA</text>
+          <line x1="94" y1="164" x2="140" y2="164" stroke="#233b57" stroke-width="2"/>
+          <polygon points="146,164 132,158 132,170" fill="#d94a3d"/>
+          <rect x="140" y="108" width="240" height="120" rx="4" fill="#dbeafe" stroke="#2b6cb0" stroke-width="2"/>
+          <g id="hallBs"></g>
+          <text x="146" y="98" font-size="11" fill="#8296ad">① 半导体薄片（N 型硅：载流子为电子）</text>
+          <text id="hallChgTop" x="148" y="126" font-size="11" font-weight="700" fill="#1e40af">⊖ 电子积累（负）</text>
+          <text id="hallChgBot" x="148" y="220" font-size="11" font-weight="700" fill="#b45309">⊕ 相对正电荷</text>
+          <rect x="250" y="100" width="20" height="8" fill="#233b57"/>
+          <rect x="250" y="228" width="20" height="8" fill="#233b57"/>
+          <line x1="260" y1="100" x2="260" y2="74" stroke="#233b57" stroke-width="2"/>
+          <line x1="260" y1="236" x2="260" y2="262" stroke="#233b57" stroke-width="2"/>
+          <circle cx="260" cy="60" r="14" fill="#fff" stroke="#233b57" stroke-width="1.8"/>
+          <text x="260" y="65" text-anchor="middle" font-size="12" font-weight="700" fill="#233b57">V</text>
+          <text id="hallUHTxt" x="284" y="66" font-size="13.5" font-weight="800" fill="#d94a3d">U_H = 8.80 mV</text>
+          <text x="16" y="264" font-size="11" fill="#8296ad">② 霍尔电极在基片长度中间（图6-9）　③ 控制电流与磁场正交</text>
+          <line id="hallFArr" x1="330" y1="196" x2="330" y2="196" stroke="#d94a3d" stroke-width="2.4"/>
+          <polygon id="hallFH" points="330,196 330,196 330,196" fill="#d94a3d"/>
+          <text id="hallFTxt" x="338" y="200" font-size="11.5" font-weight="700" fill="#d94a3d">F = evB</text>
+          <g id="hallCarriers"></g>
+          <line x1="140" y1="276" x2="380" y2="276" stroke="#8296ad" stroke-width="1.4"/>
+          <line x1="140" y1="270" x2="140" y2="282" stroke="#8296ad" stroke-width="1.4"/>
+          <line x1="380" y1="270" x2="380" y2="282" stroke="#8296ad" stroke-width="1.4"/>
+          <text x="260" y="294" text-anchor="middle" font-size="11.5" font-weight="700" fill="#33506f">长 l = 10 mm（l/b = 2）</text>
+          <line x1="396" y1="108" x2="396" y2="228" stroke="#8296ad" stroke-width="1.4"/>
+          <line x1="390" y1="108" x2="402" y2="108" stroke="#8296ad" stroke-width="1.4"/>
+          <line x1="390" y1="228" x2="402" y2="228" stroke="#8296ad" stroke-width="1.4"/>
+          <text x="400" y="160" font-size="11.5" font-weight="700" fill="#33506f">宽 b = 5 mm</text>
+          <text x="400" y="176" font-size="11" fill="#8296ad">U_H 与 b 无关</text>
+          <text id="hallBTxt" x="400" y="60" font-size="12" font-weight="700" fill="#0d8b7f">B = 200 mT</text>
+          <text x="400" y="76" font-size="10.5" fill="#8296ad">⊗ 垂直纸面向里</text>
+        </g>
+        <!-- ============ ⑤ 霍尔式电流传感器（图6-15 聚磁环） ============ -->
+        <g id="stHallC" style="display:none">
+          <path d="M252.6 140.9 A74 74 0 0 0 107.4 140.9" fill="none" stroke="var(--iron)" stroke-width="30"/>
+          <path d="M107.4 169.1 A74 74 0 0 0 252.6 169.1" fill="none" stroke="var(--iron)" stroke-width="30"/>
+          <circle cx="180" cy="155" r="17" fill="#fff" stroke="#c2703a" stroke-width="3"/>
+          <circle cx="180" cy="155" r="5.5" fill="#c2703a"/>
+          <text x="86" y="264" font-size="11.5" font-weight="700" fill="#c2703a">⊙ 被测电流 I 穿出纸面（穿心 1 匝）</text>
+          <text x="106" y="44" font-size="11.5" font-weight="700" fill="#33506f">聚磁环（软磁铁芯，套住导线）</text>
+          <rect x="256" y="138" width="18" height="34" fill="#dbeafe" stroke="#2b6cb0" stroke-width="1.6"/>
+          <text x="280" y="132" font-size="11.5" font-weight="700" fill="#2b6cb0">气隙中的霍尔元件</text>
+          <line x1="272" y1="136" x2="276" y2="132" stroke="#8296ad" stroke-width="1"/>
+          <text x="280" y="200" font-size="11.5" font-weight="700" fill="#33506f">磁环把导线磁场集中到气隙</text>
+          <text id="hcBTxt" x="280" y="222" font-size="12.5" font-weight="800" fill="#0d8b7f">B = 0.000 T</text>
+          <text id="hcUHTxt" x="280" y="246" font-size="12.5" font-weight="800" fill="#d94a3d">U_H = 0.00 mV</text>
+          <text id="hcState" x="280" y="268" font-size="11" fill="#8296ad">I = 0：无磁场 → 无输出</text>
+        </g>
+        <!-- ============ 粒子层（各型式的磁通 / 感应电流） ============ -->
+        <g id="flDots"></g>
+        <!-- ============ 共用：输出指示 ============ -->
+        <g id="gaugeG">
+          <rect x="486" y="16" width="204" height="270" rx="10" fill="#f8fbff" stroke="#d5dfec" stroke-width="1.4"/>
+          <text x="498" y="36" font-size="13" font-weight="700" fill="var(--jhu)">输出指示</text>
+          <rect x="498" y="46" width="180" height="18" rx="5" fill="#eef3f9" stroke="#d5dfec"/>
+          <rect id="gaugeBar" x="498" y="46" width="0" height="18" rx="5" fill="var(--hot)"/>
+          <text id="gaugeTxt" x="498" y="92" font-size="16" font-weight="800" fill="var(--hot)">e = 3.770 V</text>
+          <text id="gaugeSub" x="498" y="112" font-size="11" fill="#8296ad">电动势峰值（线性估算）</text>
+          <line x1="498" y1="124" x2="678" y2="124" stroke="#e2e8f0" stroke-width="1.2"/>
+          <text id="gaugeSign" x="498" y="146" font-size="12.5" font-weight="700" fill="#0d8b7f">v ≠ 0 → 有输出</text>
+          <text id="gaugeInfo1" x="498" y="172" font-size="11.5" fill="#33506f">线圈切割磁力线</text>
+          <text id="gaugeInfo2" x="498" y="192" font-size="11.5" fill="#33506f">e = −NBlv</text>
+          <text id="gaugeInfo3" x="498" y="212" font-size="11.5" fill="#33506f">静态无相对运动 → 无输出</text>
+          <text id="gaugeInfo4" x="498" y="238" font-size="11" fill="#8296ad">v = 0.60 m/s，f = 20 Hz</text>
+          <text id="gaugeInfo5" x="498" y="256" font-size="11" fill="#8296ad">动画为慢放显示</text>
+        </g>
+        <text id="stFoot" x="16" y="294" font-size="11" fill="#94a3b8">示意：气隙与线圈尺寸未按比例</text>
+      </svg>
+      <div class="hint" id="stHint">恒磁通式·动圈式：气隙中磁感应强度 B 恒定，线圈相对磁场运动、切割磁力线 → e = −NBlv。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="readCard">
+      <div class="phead">
+        <h2>输出读数</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="big">
+        <span class="cap" id="bigCap">感应电动势峰值 E_m</span>
+        <span class="num" id="bigNum">3.770</span><span class="unit" id="bigUnit">V</span>
+      </div>
+      <div class="kv">
+        <div class="box"><span id="kv1L">有效值 E_rms</span><b id="kv1V">2.666 V</b></div>
+        <div class="box"><span id="kv2L">灵敏度 S = NBl</span><b id="kv2V">6.283 V·s/m</b></div>
+        <div class="box"><span id="kv3L">振幅 A = v/(2πf)</span><b id="kv3V">4.77 mm</b></div>
+        <div class="box"><span id="kv4L">相对满量程</span><b id="kv4V">60.0 %</b></div>
+      </div>
+      <div class="fine" id="readFine">正在加载…</div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colB" data-right="colC" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 右列 ================= -->
+  <div class="col" id="colC">
+    <div class="colhead">③ 公式推导 · 特性曲线 · 本章要点</div>
+
+
+    <section class="card panel" id="fmlCard">
+      <div class="phead">
+        <h2>公式推导 <small id="fmlTitle">动圈式</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody"><div class="fml" id="fmlBody"></div></div>
+    </section>
+
+    <section class="card panel" id="curveCard">
+      <div class="phead">
+        <h2>特性曲线与波形 <small id="curveSub">e–v 线性</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="curve" viewBox="0 0 700 300" role="img" aria-label="磁电式传感器特性曲线">
+        <g id="cGrid"></g>
+        <line x1="64" y1="246" x2="672" y2="246" stroke="#9fb2c8" stroke-width="1.5"/>
+        <line x1="64" y1="34" x2="64" y2="246" stroke="#9fb2c8" stroke-width="1.5"/>
+        <path id="pRef" fill="none" stroke="#94a3b8" stroke-width="2.4" stroke-dasharray="8 5"/>
+        <path id="pMain" fill="none" stroke="#d94a3d" stroke-width="3.2"/>
+        <line id="mkLine" x1="0" y1="34" x2="0" y2="246" stroke="#0e4a8e" stroke-width="1.4" stroke-dasharray="5 4"/>
+        <circle id="mkDot" cx="0" cy="0" r="6" fill="#0e4a8e" stroke="#fff" stroke-width="2"/>
+        <text id="cxT" x="668" y="272" text-anchor="end" font-size="12.5" fill="#5b6b80">v / (m·s⁻¹)</text>
+        <text id="cyT" x="16" y="26" font-size="12.5" fill="#5b6b80">e / V</text>
+        <text id="curveNote" x="16" y="294" font-size="11.5" fill="#94a3b8">斜线为灵敏度 S = NBl</text>
+      </svg>
+      <div class="legend">
+        <span><i style="background:#d94a3d"></i><span id="lgMain">实际 / 工作曲线</span></span>
+        <span><i style="background:#94a3b8"></i><span id="lgRef">对照曲线</span></span>
+      </div>
+      <svg id="wave" viewBox="0 0 700 172" role="img" aria-label="输出波形">
+        <text id="wfTitle" x="16" y="24" font-size="12.5" font-weight="700" fill="#0e4a8e">输出波形 e(t)</text>
+        <line x1="16" y1="100" x2="672" y2="100" stroke="#e2e8f0" stroke-width="1.4"/>
+        <line x1="16" y1="100" x2="16" y2="40" stroke="#e2e8f0" stroke-width="1.4"/>
+        <line id="wfThresh" x1="16" y1="0" x2="672" y2="0" stroke="var(--gapm)" stroke-width="1.4" stroke-dasharray="7 5" opacity="0"/>
+        <path id="wfPath" fill="none" stroke="#d94a3d" stroke-width="2.6"/>
+        <text id="wfNote" x="16" y="148" font-size="11.5" fill="#94a3b8">波幅 ∝ 输出幅值，波形随时间向左滚动</text>
+        <text id="wfNote2" x="16" y="164" font-size="11.5" fill="#94a3b8">输出为交流电动势，频率由被测转速/振动频率决定</text>
+      </svg>
+      </div>
+    </section>
+
+  </div>
+</main>
+</div><!-- /#boardWrap -->
+
+<footer>
+<b>参数：</b>恒磁通式 B = 0.1 T、N = 2000 匝、线圈平均直径 10 mm（每匝平均长度 l = πd = 31.42 mm）、振动速度 0~1.0 m/s、频率 5~60 Hz；变磁通式 Z = 20 齿、n = 0~3000 r/min、N = 500 匝、ΔΦ = 4×10⁻⁶ Wb；霍尔元件 K_H = 22 mV/(mA·T)、l×b×d = 10×5×0.1 mm、I_C = 0.2~5.0 mA、B = 0~0.5 T、梯度磁场 20 mT/mm；电流传感器聚磁环 r = 20 mm、μ_r = 2000、δ = 2 mm、I = 0~500 A。<b>关系式：</b>E = −N·dΦ/dt = −NBlv（恒磁通）；f = Zn/60（变磁通）；U_H = K_H·I·B = R_H·I·B/d；K_H = R_H/d；U_H = Kx（位移）；B ≈ μ₀I/(δ+l/μ_r)（聚磁环）。<b>课堂提问：</b>① 为什么磁电式测不了静态量、霍尔式却能零速检测？② 变磁通式为什么只取频率不用幅值？③ U_H 与宽 b 无关、与厚 d 成反比的推导要点？④ 不等位电动势与温度误差各怎么补偿？<b>网址参数：</b>?type=vc|vi|gear|hall|hallc　x=0~100（速度/转速/B/I 百分比）　hz=5~60（振动频率，动圈动铁式）/ 0.2~5（控制电流 mA，霍尔式）　ic=0.2~5　hm=lin|sw（线性/开关型集成霍尔）　auto=1~5（打开即播：磁电原理/变磁通测速/霍尔效应/器件与应用/巡览要点）　speed=0.4~2.5。
+</footer>
+
+<script>
+(function(){
+  "use strict";
+/* =====================================================================
+   公共运行时（各章通用）· 由 _build/build.js 注入到主脚本的最前面
+   章节代码直接使用：$ / sfmt / frac / clamp / say / sleep / tween /
+   beginDemo / stopDemo / endDemo / bindDemos
+   约定：章节必须定义 var S = { ..., demoToken:0 }；
+        演示函数写成 async，每个 await 判断返回值，结尾 endDemo()；
+        章节 jsB 里用 DEMOS.<key> = {btn:'...', label:'...', fn:demoXxx} 注册，
+        随后调用 bindDemos() 绑定按钮点击。
+   注意：不内置任何语音朗读；演示按钮只由 bindDemos() 绑定一次。
+   ===================================================================== */
+var $ = function(id){ return document.getElementById(id); };
+function sfmt(a, d){ return (a >= 0 ? '+' : '−') + Math.abs(a).toFixed(d); }
+function frac(a, b){ return '<span class="frac"><i>' + a + '</i><b>' + b + '</b></span>'; }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+var DEMOS = {}, SPEED = 1, playingKey = null;
+function say(t){ $('narration').innerHTML = t; }
+function sleep(ms, tok){
+  return new Promise(function(res){ setTimeout(function(){ res(S.demoToken === tok); }, Math.max(60, ms/SPEED)); });
+}
+function tween(from, to, dur, set, tok){
+  dur = Math.max(160, dur/SPEED);
+  return new Promise(function(res){
+    var t0 = performance.now();
+    (function step(now){
+      if (S.demoToken !== tok) return res(false);
+      var p = (now - t0)/dur;
+      if (!isFinite(p)) p = 1;
+      p = clamp(p, 0, 1);
+      var e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
+      var v = from + (to - from)*e;
+      v = (from <= to) ? Math.min(to, Math.max(from, v)) : Math.max(to, Math.min(from, v));
+      set(v);
+      if (p < 1) requestAnimationFrame(step); else res(true);
+    })(performance.now());
+  });
+}
+function resetDemoButtons(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b){ b.textContent = DEMOS[k].label; b.classList.remove('running'); }
+  });
+}
+function stopDemo(){ S.demoToken++; playingKey = null; resetDemoButtons(); }
+function beginDemo(key){
+  stopDemo(); playingKey = key;
+  var d = DEMOS[key], b = d && $(d.btn);
+  if (b){ b.textContent = '⏸ 暂停演示'; b.classList.add('running'); }
+  return ++S.demoToken;
+}
+function endDemo(){ playingKey = null; resetDemoButtons(); }
+function bindDemos(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b) b.addEventListener('click', function(){
+      if (playingKey === k){ stopDemo(); say('演示已暂停。可继续拖动滑块手动观察，或点其它演示按钮。'); }
+      else if (DEMOS[k].fn){ DEMOS[k].fn(); }
+    });
+  });
+}
+(function(){
+  var spd = $('speed');
+  if (spd) spd.addEventListener('input', function(){
+    SPEED = parseFloat(this.value) || 1;
+    $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  });
+})();
+
+
+  /* ============ 1. 物理参数与状态 ============ */
+  var CFG = {
+    B0: 0.1,            /* 恒磁通式气隙磁感应强度 0.1 T（题6-6） */
+    N1: 2000,           /* 动圈/动铁线圈匝数 2000 匝（题6-6） */
+    dCoil: 0.010,       /* 线圈平均直径 10 mm → 每匝平均长度 l = πd = 31.42 mm */
+    vMax: 1.0,          /* 振动速度幅值满量程 1.0 m/s（题6-6） */
+    fMin: 5, fMax: 60,  /* 振动频率范围 5~60 Hz */
+    N2: 500,            /* 变磁通测速线圈匝数 500 匝 */
+    Z: 20,              /* 齿盘齿数 Z = 20 */
+    nMax: 3000,         /* 转速满量程 3000 r/min */
+    Acore: 1e-4,        /* 铁芯截面积 1 cm²（10 mm × 10 mm） */
+    BgMax: 0.050,       /* 齿对齿时铁芯磁感应强度 0.05 T */
+    BgMin: 0.010,       /* 齿对槽时 0.01 T → ΔΦ = 4×10⁻⁶ Wb */
+    KH: 22,             /* 霍尔灵敏度 kH = 22 V/(A·T) = 22 mV/(mA·T)（题6-3） */
+    HallL: 0.010,       /* 霍尔片长 l = 10 mm */
+    HallB: 0.005,       /* 霍尔片宽 b = 5 mm（l/b = 2） */
+    HallD: 1e-4,        /* 霍尔片厚 d = 0.1 mm（薄片，几十~几百 μm） */
+    ICmax: 5.0,         /* 额定激励电流 I_H = 5.0 mA（式6-15 热平衡算得） */
+    Bmax: 0.5,          /* 霍尔元件处磁感应强度满量程 0.5 T */
+    kGrad: 0.02,        /* 均匀梯度磁场 20 mT/mm → 位移 x = B/k */
+    IMax: 500,          /* 电流传感器满量程 500 A */
+    ringR: 0.020,       /* 聚磁环平均半径 20 mm → 磁路长 l = 2πr = 0.126 m */
+    ringMur: 2000,      /* 铁芯相对磁导率 */
+    ringGap: 2e-3,      /* 气隙 2 mm */
+    Bsat: 0.5,          /* 铁芯软饱和参数（tanh 模型，仅用于示意非线性） */
+    U0off: 3.0,         /* 不等位电动势示意值 3 mV（零位误差） */
+    Bop: 0.020,         /* 开关型集成霍尔动作点 20 mT */
+    Brp: 0.015,         /* 释放点 15 mT → 回差 5 mT */
+    swHi: 4.7, swLo: 0.3 /* 开关型输出高 / 低电平 V */
+  };
+  var lCoil = Math.PI*CFG.dCoil;            /* 每匝平均长度 0.03142 m */
+  var Sv = CFG.N1*CFG.B0*lCoil;             /* 灵敏度 S = NBl = 6.283 V/(m/s) */
+  var phiSpan = CFG.Acore*(CFG.BgMax - CFG.BgMin);   /* ΔΦ = 4.0×10⁻⁶ Wb */
+  var ringLen = 2*Math.PI*CFG.ringR;        /* 磁路平均长度 0.12566 m */
+  var ringDen = ringLen/CFG.ringMur + CFG.ringGap;   /* l/μr + δ = 2.0628×10⁻³ m */
+  var TYPES = {
+    vc:   { name:'恒磁通式·动圈式',    hint:'恒磁通式·动圈式：气隙中 B 恒定，线圈相对磁场运动、切割磁力线 → e = −NBlv。输出只取决于相对速度 v —— 静态没有相对运动，输出为零。' },
+    vi:   { name:'恒磁通式·动铁式',    hint:'恒磁通式·动铁式：永久磁铁由弹簧支承、线圈与壳体固定 —— 相对运动与切割磁力线的关系完全不变，输出 e = −NBlv 与动圈式相同（阻尼都靠金属骨架的电磁阻尼）。' },
+    gear: { name:'变磁通式·齿盘测速',  hint:'变磁通式·齿盘测速：齿轮掠过软铁使气隙磁阻周期变化 → 磁通 B 变 → dΦ/dt ≠ 0 → 感生电动势，频率 f = Zn/60。工程上只用频率、不用幅值。' },
+    hall: { name:'霍尔式·霍尔元件',    hint:'霍尔式·霍尔元件：控制电流 I 与磁场 B 正交，载流子受洛伦兹力 F = evB 偏转、两侧积累电荷建立横向电场 → U_H = K_H·I·B（毫伏级）。必须外加控制电流，这是与磁电式最大的区别。' },
+    hallc:{ name:'霍尔式·电流传感器',  hint:'霍尔式·电流传感器：被测电流的磁场经软磁聚磁环集中到气隙中的霍尔元件上，U_H = K_H·I_C·B ∝ I —— 开环结构简单、非接触，可测直流与交流大电流（要求高精度时用闭环）。' }
+  };
+  var S = { type:'vc', x:60, hz:20, ic:2.0, hm:'lin', demoToken:0 };
+
+  /* ============ 2. 模型（纯函数，不碰 DOM） ============ */
+  function vOf(){ return S.x/100*CFG.vMax; }                    /* 振动速度幅值 m/s */
+  function Eof(v){ return Sv*v; }                                /* 电动势峰值 V：NBlv */
+  function EofRatio(){ return vOf()/CFG.vMax; }
+  function ampOf(){ return vOf()/(2*Math.PI*Math.max(1,S.hz)); } /* 真实振幅 A = v/(2πf) m */
+  function nOf(){ return S.x/100*CFG.nMax; }                     /* 转速 r/min */
+  function fOf(n){ return CFG.Z*n/60; }                          /* 式6-4：f = Zn/60 */
+  function EmGear(f){ return CFG.N2*Math.PI*f*phiSpan; }         /* 幅值线性估算 NπfΔΦ */
+  function Bof(){ return S.x/100*CFG.Bmax; }                     /* 霍尔元件处 B（T） */
+  function UHof(ic, B){ return CFG.KH*ic*B; }                    /* UH = KH·I·B（mV，ic 用 mA、B 用 T） */
+  function UHhall(){ return UHof(S.ic, Bof()); }
+  function BofI(I){                                              /* 聚磁环气隙磁感 B(T)：B = μ0I/(δ+l/μr) 含软饱和 */
+    var Bl = 4e-7*Math.PI*I/ringDen;
+    return CFG.Bsat*Math.tanh(Bl/CFG.Bsat);
+  }
+  function BofIlin(I){ return 4e-7*Math.PI*I/ringDen; }
+  function Iof(){ return S.x/100*CFG.IMax; }
+  function UHc(){ return UHof(CFG.ICmax, BofI(Iof())); }
+  function gearProx(){                                           /* 齿对齿程度 0(槽)~1(齿) */
+    if (S.type !== 'gear') return 1;
+    return 0.5*(1 + Math.cos(CFG.Z*MOT.gearAng));
+  }
+  function swState(){                                            /* 开关型状态（含回差） */
+    var B = Bof();
+    if (B >= CFG.Bop) return 'low';
+    if (B <= CFG.Brp) return 'high';
+    return 'hold';
+  }
+  function swOut(){ return swState() === 'low' ? CFG.swLo : CFG.swHi; }
+
+  /* ============ 3. 工具 ============ */
+  function springPath(x, y1, y2, n, w){                          /* 生成弹簧折线（运动件实时重画） */
+    var d = 'M' + x + ' ' + y1.toFixed(1), i, t, yy;
+    for (i = 1; i <= n*2; i++){
+      t = i/(n*2 + 1);
+      yy = y1 + (y2 - y1)*t;
+      d += ' L' + (x + (i % 2 ? w : -w)).toFixed(1) + ' ' + yy.toFixed(1);
+    }
+    return d + ' L' + x + ' ' + y2.toFixed(1);
+  }
+  function arrow(idArr, idHead, x, y0, y1){                       /* 速度箭头：箭尖在 y1，箭头随运动方向翻转 */
+    var dir = y1 >= y0 ? 1 : -1;
+    $(idArr).setAttribute('x1', x.toFixed(1)); $(idArr).setAttribute('x2', x.toFixed(1));
+    $(idArr).setAttribute('y1', y0.toFixed(1)); $(idArr).setAttribute('y2', (y1 - 8*dir).toFixed(1));
+    $(idHead).setAttribute('points', x.toFixed(1) + ',' + y1.toFixed(1) + ' ' +
+      (x - 5).toFixed(1) + ',' + (y1 - 8*dir).toFixed(1) + ' ' + (x + 5).toFixed(1) + ',' + (y1 - 8*dir).toFixed(1));
+  }
+
+  /* ============ 4. 粒子动画（磁通 / 感应电流） ============ */
+  var FLD = { segs:[], els:null, phase:0, sgn:1, mscale:1 };
+  function segLen(s){ var dx = s.x2 - s.x1, dy = s.y2 - s.y1; return Math.sqrt(dx*dx + dy*dy) || 1; }
+  function initFlux(){
+    var g = $('flDots'), html = '', i;
+    for (i = 0; i < 44; i++) html += '<circle cx="226" cy="180" r="3.3" fill="var(--flux)" stroke="#fff" stroke-width="1" opacity="0"/>';
+    g.innerHTML = html;
+    FLD.els = g.querySelectorAll('circle');
+  }
+  function runField(){
+    var last = performance.now();
+    (function loop(now){
+      var dt = Math.min(60, now - last); last = now;
+      FLD.phase = (FLD.phase + dt/1700*FLD.sgn*FLD.mscale) % 1;
+      var segs = FLD.segs || [], n = FLD.els ? FLD.els.length : 0, total = 0, i, pi = 0, k;
+      for (i = 0; i < segs.length; i++) total += segLen(segs[i]);
+      for (i = 0; i < segs.length; i++){
+        var s = segs[i], L = segLen(s);
+        var cnt = Math.max(1, Math.round(n*L/(total || 1)));
+        var f = clamp(s.f || 1, 0.15, 2.2);
+        for (k = 0; k < cnt && pi < n; k++, pi++){
+          var t = ((FLD.phase*(0.45 + 0.55*f) + k/cnt) % 1 + 1) % 1;
+          if (s.rev) t = 1 - t;
+          FLD.els[pi].setAttribute('cx', (s.x1 + (s.x2 - s.x1)*t).toFixed(1));
+          FLD.els[pi].setAttribute('cy', (s.y1 + (s.y2 - s.y1)*t).toFixed(1));
+          FLD.els[pi].setAttribute('opacity', (0.26 + 0.62*Math.min(1, f/1.3)*clamp(FLD.mscale + 0.35, 0, 1)).toFixed(2));
+        }
+      }
+      for (; pi < n; pi++) FLD.els[pi].setAttribute('opacity', '0');
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+
+  /* ============ 5. 运动件动画（动圈 / 动铁 / 齿轮 / 载流子） ============ */
+  var MOT = { ph:0, gearAng:0, cars:[] };
+  function initHall(){
+    var html = '', i, x, y;
+    for (x = 170; x <= 356; x += 62){                            /* 磁场 ⊗ 符号 */
+      for (y = 138; y <= 202; y += 32){
+        html += '<circle cx="' + x + '" cy="' + y + '" r="7" fill="none" stroke="var(--flux)" stroke-width="1.3" opacity=".75"/>';
+        html += '<line x1="' + (x-5) + '" y1="' + (y-5) + '" x2="' + (x+5) + '" y2="' + (y+5) + '" stroke="var(--flux)" stroke-width="1.3" opacity=".75"/>';
+        html += '<line x1="' + (x-5) + '" y1="' + (y+5) + '" x2="' + (x+5) + '" y2="' + (y-5) + '" stroke="var(--flux)" stroke-width="1.3" opacity=".75"/>';
+      }
+    }
+    $('hallBs').innerHTML = html;
+    var ch = '', j;
+    for (j = 0; j < 16; j++) ch += '<circle r="3.6" fill="#1e40af" stroke="#fff" stroke-width="1" opacity=".9"/>';
+    $('hallCarriers').innerHTML = ch;
+    MOT.cars = [];
+    var c = $('hallCarriers').children, k;
+    for (k = 0; k < 16; k++){
+      MOT.cars.push({ x: 380 - 240*Math.random(), y0: 118 + 100*Math.random(), el: c[k] ? c[k] : null });
+    }
+  }
+  function gearPathD(){                                          /* 生成齿轮齿形（方齿 + 直齿侧） */
+    var R = 56, r = 46, z = CFG.Z, d = '', i, first = true;
+    var half = Math.PI/z;                                        /* 半齿距 */
+    var tw = 0.40*half, rw = 0.80*half;                          /* 齿顶半宽 / 齿根起点 */
+    for (i = 0; i < z; i++){
+      var a = (i/z)*2*Math.PI;
+      var pts = [[a - tw, R], [a + tw, R], [a + rw, r], [a + 2*half - rw, r]];
+      for (var q = 0; q < pts.length; q++){
+        var x = 150 + pts[q][1]*Math.cos(pts[q][0]), y = 200 - pts[q][1]*Math.sin(pts[q][0]);
+        d += (first ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
+        first = false;
+      }
+    }
+    return d + 'Z';
+  }
+  function runMotion(){
+    var last = performance.now();
+    (function loop(now){
+      var dt = Math.min(60, now - last); last = now;
+      var t = S.type, v = vOf(), f = Math.max(1, S.hz), amp, dy, cph;
+      if (t === 'vc' || t === 'vi'){
+        /* 视觉频率 = 真实频率/8（慢放），行程振幅 ∝ 真实振幅 v/(2πf) → 屏上速度 ∝ v */
+        amp = clamp(v/(2*Math.PI*f)*1000*1.6, 2.5, 14);
+        MOT.ph += dt/1000*2*Math.PI*(f/8);
+        if (MOT.ph > 1e6) MOT.ph = 0;
+        dy = amp*Math.sin(MOT.ph);
+        cph = Math.cos(MOT.ph);
+        if (t === 'vc'){
+          $('vcCoil').setAttribute('transform', 'translate(0,' + dy.toFixed(2) + ')');
+          $('vcSpring').setAttribute('d', springPath(228, 20, (52 + dy), 6, 10));
+          FLD.sgn = cph >= 0 ? 1 : -1;
+          FLD.mscale = 1.75*Math.abs(cph)*(v/CFG.vMax);
+        } else {
+          $('viMag').setAttribute('transform', 'translate(0,' + dy.toFixed(2) + ')');
+          $('viSpringT').setAttribute('d', springPath(228, 22, (62 + dy), 5, 10));
+          $('viSpringB').setAttribute('d', springPath(228, 262, (222 + dy), 5, 10));
+          FLD.sgn = cph >= 0 ? 1 : -1;
+          FLD.mscale = 0.30 + 1.5*Math.abs(cph);
+        }
+        /* 速度箭头：长度 ∝ 瞬时速度，方向随运动方向翻转 */
+        var frac = (v/CFG.vMax)*Math.abs(cph);
+        var y0 = 176, y1 = y0 + (cph >= 0 ? 1 : -1)*Math.max(3, 46*frac);
+        arrow(t === 'vc' ? 'vcVArr' : 'viVArr', t === 'vc' ? 'vcVH' : 'viVH', 356, y0, y1);
+        $(t === 'vc' ? 'vcVArr' : 'viVArr').setAttribute('opacity', frac < 0.02 ? 0 : 1);
+        $(t === 'vc' ? 'vcVH' : 'viVH').setAttribute('opacity', frac < 0.02 ? 0 : 1);
+      } else if (t === 'gear'){
+        var n = nOf();
+        MOT.gearAng += dt/1000*2*Math.PI*(n/CFG.nMax)*0.40;      /* 视觉转速 = 0.4 r/s（满速），远慢于真实 */
+        if (MOT.gearAng > 1e6) MOT.gearAng = 0;
+        $('gearRot').setAttribute('transform', 'rotate(' + (-MOT.gearAng*180/Math.PI).toFixed(2) + ',150,200)');
+        var p = gearProx();                                      /* 齿对齿程度 → 磁通脉动 */
+        FLD.mscale = 0.22 + 1.7*p;
+      } else if (t === 'hall'){
+        var B = Bof(), ic = S.ic, defl = 46*(B/CFG.Bmax), m = MOT.cars, i;
+        for (i = 0; i < m.length; i++){
+          var car = m[i];
+          car.x -= dt*0.055*(ic/CFG.ICmax + 0.12)*(0.7 + 0.6*(i % 5)/5);
+          var s01 = clamp((380 - car.x)/240, 0, 1);
+          var yv = clamp(car.y0 - defl*s01*s01, 114.5, 221.5);
+          if (car.el){
+            car.el.setAttribute('cx', car.x.toFixed(1));
+            car.el.setAttribute('cy', yv.toFixed(1));
+            car.el.setAttribute('opacity', (yv <= 115.5) ? 1 : (yv >= 220.5 ? 0.45 : 0.85));
+          }
+          if (car.x < 140){ car.x = 380; car.y0 = 118 + 100*Math.random(); }
+        }
+        FLD.mscale = 0.6 + 1.2*(B/CFG.Bmax);
+      } else if (t === 'hallc'){
+        FLD.mscale = 0.25 + 1.6*(BofI(Iof())/0.30);
+      }
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+  /* ============ 6. 主刷新 ============ */
+  function paint(){
+    var t = S.type, T = TYPES[t], isH = (t === 'hall'), isSW = (isH && S.hm === 'sw');
+    var v = vOf(), E = Eof(v), n = nOf(), f = fOf(n), B = Bof(), uh = UHhall(), I = Iof(), Bc = BofI(I), uhc = UHc();
+
+    /* --- 按钮 / 标签状态 --- */
+    var tb = document.querySelectorAll('#segType button');
+    for (var i = 0; i < tb.length; i++) tb[i].classList.toggle('on', tb[i].getAttribute('data-type') === t);
+    var hb = document.querySelectorAll('#segHm button');
+    for (var j = 0; j < hb.length; j++){
+      hb[j].classList.toggle('on', hb[j].getAttribute('data-hm') === S.hm);
+      hb[j].style.opacity = isH ? 1 : 0.45;
+      hb[j].disabled = !isH;
+    }
+    $('typeHint').textContent = T.hint;
+    $('xName').textContent = t === 'vc' || t === 'vi' ? '振动速度 v' : (t === 'gear' ? '转速 n' : (t === 'hall' ? '磁感应强度 B' : '被测电流 I'));
+    $('xTxt').textContent = t === 'vc' || t === 'vi' ? '满量程 ' + CFG.vMax.toFixed(2) + ' m/s'
+      : (t === 'gear' ? '满量程 ' + CFG.nMax + ' r/min（Z = ' + CFG.Z + ' 齿）'
+      : (t === 'hall' ? '满量程 ' + (CFG.Bmax*1000).toFixed(0) + ' mT（B = kx 均匀梯度磁场）'
+      : '满量程 ' + CFG.IMax + ' A（穿心 1 匝）'));
+    $('xOut').textContent = t === 'vc' || t === 'vi' ? v.toFixed(2) + ' m/s'
+      : (t === 'gear' ? n.toFixed(0) + ' r/min' : (t === 'hall' ? (B*1000).toFixed(0) + ' mT' : I.toFixed(0) + ' A'));
+    var hzUse = (t === 'vc' || t === 'vi' || isH);
+    $('hz').disabled = !hzUse;
+    $('hz').setAttribute('min', isH ? 0.2 : CFG.fMin);
+    $('hz').setAttribute('max', isH ? CFG.ICmax : CFG.fMax);
+    $('hz').setAttribute('step', isH ? 0.1 : 1);
+    $('hz').value = isH ? S.ic : S.hz;
+    $('hz').style.opacity = hzUse ? 1 : 0.45;
+    $('hzName').textContent = isH ? '控制电流 I_C' : '振动频率 f';
+    $('hzOut').textContent = isH ? S.ic.toFixed(1) + ' mA' : S.hz.toFixed(0) + ' Hz';
+    $('hzTxt').textContent = isH ? '额定激励电流 I_H = ' + CFG.ICmax.toFixed(1) + ' mA'
+      : ((t === 'vc' || t === 'vi') ? '振动频率（决定振幅与波形疏密）' : '本型式不使用');
+    $('hmTxt').textContent = isH ? '线性型 / 开关型（集成霍尔）' : '仅霍尔元件使用';
+
+    /* --- 结构组切换 --- */
+    $('stVC').style.display = (t === 'vc') ? '' : 'none';
+    $('stVI').style.display = (t === 'vi') ? '' : 'none';
+    $('stGear').style.display = (t === 'gear') ? '' : 'none';
+    $('stHall').style.display = isH ? '' : 'none';
+    $('stHallC').style.display = (t === 'hallc') ? '' : 'none';
+
+    /* --- 结构几何与粒子段 --- */
+    var segs = [], gmax = 1, gval = 0, gTxt = '', gSub = '', gSign = '', gi = ['', '', '', '', ''];
+    if (t === 'vc' || t === 'vi'){
+      $('vcGapTxt').textContent = '气隙 δ（B 恒定，已放大）';
+      $('vcVTxt').textContent = 'v = ' + v.toFixed(2) + ' m/s';
+      $('viVTxt').textContent = 'v = ' + v.toFixed(2) + ' m/s';
+      $('viETxt').textContent = v <= 0 ? 'e = 0（静止）' : 'e ∝ v（交流）';
+      $('vcITxt').textContent = v <= 0 ? '静止：无感应电流' : '感应电流 ∝ v';
+      $('vcCoilTxt').textContent = '线圈 N = ' + CFG.N1 + ' 匝';
+      if (t === 'vc'){
+        segs.push({ x1:187, y1:170, x2:187, y2:196, f:1 });
+        segs.push({ x1:269, y1:170, x2:269, y2:196, f:1, rev:true });
+      } else {
+        segs.push({ x1:168, y1:64, x2:292, y2:64, f:1 });
+        segs.push({ x1:292, y1:64, x2:292, y2:228, f:1 });
+        segs.push({ x1:292, y1:228, x2:168, y2:228, f:1 });
+        segs.push({ x1:168, y1:228, x2:168, y2:64, f:1 });
+      }
+      gmax = Sv*CFG.vMax; gval = E;
+      gTxt = 'e = ' + E.toFixed(3) + ' V';
+      gSub = '感应电动势峰值 E_m = NBlv';
+      gSign = v <= 0 ? '静止：v = 0 → 输出为零' : '方向：随 v 反向而反向（交变电动势）';
+      gi = ['① 每匝平均长度 l = πd = ' + (lCoil*1000).toFixed(1) + ' mm',
+            '② 灵敏度 S = NBl = ' + Sv.toFixed(3) + ' V·s/m',
+            '③ ' + (t === 'vc' ? '动圈式：线圈动、磁场不动' : '动铁式：磁铁动、线圈不动'),
+            'v = ' + v.toFixed(2) + ' m/s，f = ' + S.hz.toFixed(0) + ' Hz',
+            '振幅 A = v/(2πf) = ' + (ampOf()*1000).toFixed(2) + ' mm'];
+    } else if (t === 'gear'){
+      var p = gearProx();
+      $('gearGapTxt').textContent = p > 0.5 ? '齿对齿：气隙最小' : '齿对槽：气隙最大';
+      $('gearEMTxt').textContent = 'e ≈ ' + EmGear(f).toFixed(2) + ' V';
+      $('gearState').textContent = n <= 0 ? '静止：磁通不变 → 无输出' : ('磁通以 f = ' + f.toFixed(0) + ' Hz 脉动');
+      /* 磁通回路：铁芯 → 气隙 → 齿轮 → 空气返回 */
+      segs.push({ x1:152, y1:54, x2:152, y2:126, f:1 });
+      segs.push({ x1:152, y1:140, x2:152, y2:228, f:1.2 });
+      segs.push({ x1:152, y1:230, x2:64, y2:230, f:1 });
+      segs.push({ x1:64, y1:230, x2:44, y2:122, f:1 });
+      segs.push({ x1:44, y1:122, x2:110, y2:40, f:1 });
+      segs.push({ x1:110, y1:40, x2:150, y2:40, f:1 });
+      gmax = fOf(CFG.nMax); gval = f;
+      gTxt = 'f = ' + f.toFixed(f >= 100 ? 0 : 1) + ' Hz';
+      gSub = '输出频率 f = Zn/60';
+      gSign = n <= 0 ? '静止：n = 0 → f = 0，无输出' : ('变速测量：用频率不用幅值（f ∝ n）');
+      gi = ['① 每转产生 Z = ' + CFG.Z + ' 个脉冲',
+            '② 周期 T = 1/f = ' + (f > 0 ? (1000/f).toFixed(2) : '∞') + ' ms',
+            '③ 幅值（线性估算）E_m ≈ ' + EmGear(f).toFixed(2) + ' V',
+            'n = ' + n.toFixed(0) + ' r/min → f = Zn/60 = ' + f.toFixed(1) + ' Hz',
+            '幅值受气隙/齿形/饱和影响，只作参考'];
+    } else if (isH){
+      $('hallITxt').textContent = S.ic.toFixed(1) + ' mA';
+      $('hallUHTxt').textContent = isSW ? ('U_o = ' + swOut().toFixed(1) + ' V')
+                                        : ('U_H = ' + uh.toFixed(2) + ' mV');
+      $('hallBTxt').textContent = 'B = ' + (B*1000).toFixed(0) + ' mT';
+      var nd = Math.round(uh/2.2), chT = '', chB = '', q;
+      for (q = 0; q < clamp(nd, 0, 5); q++){ chT += '⊖ '; chB += '⊕ '; }
+      $('hallChgTop').textContent = chT + (nd ? '电子积累（负）' : '（无积累）');
+      $('hallChgBot').textContent = chB + (nd ? '相对正电荷' : '（无积累）');
+      segs.push({ x1:180, y1:164, x2:340, y2:164, f:1 });        /* 控制电流（左→右） */
+      /* 洛伦兹力箭头：长度 ∝ B（载流子受 F = evB 向上偏转） */
+      var fLen = 10 + 34*(B/CFG.Bmax);
+      $('hallFArr').setAttribute('y1', '190'); $('hallFArr').setAttribute('y2', (190 - fLen + 8).toFixed(1));
+      $('hallFH').setAttribute('points', '330,' + (190 - fLen).toFixed(1) + ' 325,' + (190 - fLen + 9).toFixed(1) + ' 335,' + (190 - fLen + 9).toFixed(1));
+      $('hallFArr').setAttribute('opacity', B < 0.005 ? 0.15 : 1);
+      $('hallFH').setAttribute('opacity', B < 0.005 ? 0.15 : 1);
+      $('hallFTxt').textContent = 'F = evB' + (B > 0.005 ? '（∝ B）' : '（B = 0 → F = 0）');
+      gmax = isSW ? 5 : UHof(CFG.ICmax, CFG.Bmax); gval = isSW ? swOut() : uh;
+      gTxt = isSW ? ('U_o = ' + swOut().toFixed(1) + ' V') : ('U_H = ' + uh.toFixed(2) + ' mV');
+      gSub = isSW ? '开关型：只输出高 / 低电平' : '霍尔电动势（毫伏级）';
+      gSign = isSW ? (swState() === 'low' ? 'B ≥ B_OP → 输出低电平（导通）'
+                    : (swState() === 'high' ? 'B ≤ B_RP → 输出高电平（截止）' : '回差区：保持前一状态'))
+                   : ('极性：下正上负（N 型元件、电子为载流子）');
+      gi = isSW ? ['① 动作点 B_OP = ' + (CFG.Bop*1000).toFixed(0) + ' mT',
+                   '② 释放点 B_RP = ' + (CFG.Brp*1000).toFixed(0) + ' mT',
+                   '③ 回差 ' + ((CFG.Bop - CFG.Brp)*1000).toFixed(0) + ' mT（抗抖动）',
+                   '输出方波，幅值由电源定、与转速无关',
+                   '可零速检测（ABS 必需）']
+                : ['① 控制电流 I_C = ' + S.ic.toFixed(1) + ' mA（外加）',
+                   '② 灵敏度 K_H = R_H/d = ' + CFG.KH.toFixed(0) + ' mV/(mA·T)',
+                   '③ 磁场与法线夹角 α：U_H ∝ cosα',
+                   'B = ' + (B*1000).toFixed(0) + ' mT = k·x → x = ' + (B/CFG.kGrad).toFixed(1) + ' mm',
+                   '不等位电动势 U₀ ≈ ' + CFG.U0off.toFixed(0) + ' mV（零位误差，需补偿）'];
+    } else {
+      $('hcBTxt').textContent = 'B = ' + Bc.toFixed(3) + ' T';
+      $('hcUHTxt').textContent = 'U_H = ' + uhc.toFixed(2) + ' mV';
+      $('hcState').textContent = I <= 0 ? 'I = 0：无磁场 → 无输出'
+        : ((BofIlin(I) - Bc)/BofIlin(I) > 0.05 ? '大电流段：铁芯接近饱和、曲线弯曲' : '线性段：U_H ∝ I');
+      for (var q2 = 0; q2 < 14; q2++){                             /* 磁环一周的磁通粒子 */
+        var a0 = (11 + (349 - 11)*q2/14)*Math.PI/180, a1 = (11 + (349 - 11)*(q2 + 1)/14)*Math.PI/180;
+        segs.push({ x1:180 + 74*Math.cos(a0), y1:155 - 74*Math.sin(a0), x2:180 + 74*Math.cos(a1), y2:155 - 74*Math.sin(a1), f:1 });
+      }
+      gmax = UHof(CFG.ICmax, BofI(CFG.IMax)); gval = uhc;
+      gTxt = 'U_H = ' + uhc.toFixed(2) + ' mV';
+      gSub = '电流传感器输出（I_C = ' + CFG.ICmax.toFixed(1) + ' mA 恒定）';
+      gSign = I <= 0 ? 'I = 0 → B = 0 → 无输出' : ('U_H ∝ I（开环非接触测量）');
+      gi = ['① 被测电流 I = ' + I.toFixed(0) + ' A（穿心 1 匝）',
+            '② 气隙 B ≈ μ₀I/(δ+l/μr) = ' + Bc.toFixed(3) + ' T',
+            '③ K_H·I_C = ' + (CFG.KH*CFG.ICmax).toFixed(0) + ' mV/T',
+            '④ 聚磁倍率 B/I = ' + (I > 0 ? (Bc/I*1000).toFixed(3) : '—') + ' mT/A',
+            '开环：简单低功耗；闭环：精度与线性更好'];
+    }
+    FLD.segs = segs;
+    $('gaugeBar').setAttribute('width', clamp(Math.abs(gval)/gmax*180, 0, 180).toFixed(1));
+    $('gaugeTxt').textContent = gTxt;
+    $('gaugeSub').textContent = gSub;
+    $('gaugeSign').textContent = gSign;
+    $('gaugeInfo1').textContent = gi[0];
+    $('gaugeInfo2').textContent = gi[1];
+    $('gaugeInfo3').textContent = gi[2];
+    $('gaugeInfo4').textContent = gi[3];
+    $('gaugeInfo5').textContent = gi[4];
+    $('stSub').textContent = T.name + '：' + T.hint.split('：')[1].split('。')[0];
+    $('stHint').textContent = T.hint;
+    $('stFoot').textContent = t === 'vc' ? '示意：气隙尺寸未按比例；线圈平均直径 10 mm、每匝平均长度 l = 31.4 mm；振动已慢放（1/8 速率），运动快慢仍与 v 成正比'
+      : (t === 'vi' ? '示意：永久磁铁由上下弹簧支承、线圈固定；磁铁运动已慢放（1/8 速率），输出 e = −NBlv 与动圈式完全相同'
+      : (t === 'gear' ? '示意：齿轮转速与磁通脉动均已大幅慢放，气隙未按比例（实际 0.5~1.5 mm）；f = Zn/60 为真实值'
+      : (isH ? '示意：载流子（电子）受 F = evB 偏转并在上表面积累 → 下正上负；U_H 与宽 b 无关、与厚 d 成反比（式6-10）'
+      : '示意：磁环套住导线（穿心 1 匝），气隙中的霍尔元件测 B；磁环平均半径 20 mm、气隙 2 mm，图中尺寸未按比例')));
+
+    /* --- 输出读数卡 --- */
+    if (t === 'vc' || t === 'vi'){
+      $('bigCap').textContent = '感应电动势峰值 E_m';
+      $('bigNum').textContent = E.toFixed(3); $('bigUnit').textContent = 'V';
+      $('kv1L').textContent = '有效值 E_rms';
+      $('kv1V').textContent = (E/Math.SQRT2).toFixed(3) + ' V';
+      $('kv2L').textContent = '灵敏度 S = NBl';
+      $('kv2V').textContent = Sv.toFixed(3) + ' V·s/m';
+      $('kv3L').textContent = '振幅 A = v/(2πf)';
+      $('kv3V').textContent = (ampOf()*1000).toFixed(2) + ' mm';
+      $('kv4L').textContent = '相对满量程 E/E_max';
+      $('kv4V').textContent = (EofRatio()*100).toFixed(1) + ' %';
+      $('readFine').innerHTML = 'E = NBlv = ' + CFG.N1 + ' × ' + CFG.B0.toFixed(2) + ' T × ' + (lCoil*1000).toFixed(2) +
+        ' mm × v = <b>' + Sv.toFixed(3) + ' v V</b>；当前 v = ' + v.toFixed(2) + ' m/s（满量程 ' + CFG.vMax.toFixed(2) +
+        ' m/s）、f = ' + S.hz.toFixed(0) + ' Hz。转动时 v = ωr → E = −NBlωr；绕轴旋转线圈 E = NBAω·sinθ（习题6-5）。';
+    } else if (t === 'gear'){
+      $('bigCap').textContent = '输出电动势频率 f';
+      $('bigNum').textContent = f.toFixed(f >= 100 ? 0 : 1); $('bigUnit').textContent = 'Hz';
+      $('kv1L').textContent = '转速 n';
+      $('kv1V').textContent = n.toFixed(0) + ' r/min';
+      $('kv2L').textContent = '周期 T = 1/f';
+      $('kv2V').textContent = (f > 0 ? (1000/f).toFixed(2) + ' ms' : '—');
+      $('kv3L').textContent = '齿数 Z / 每转脉冲';
+      $('kv3V').textContent = CFG.Z + ' 个';
+      $('kv4L').textContent = '幅值（线性估算）';
+      $('kv4V').textContent = EmGear(f).toFixed(2) + ' V';
+      $('readFine').innerHTML = 'f = Zn/60 = ' + CFG.Z + ' × ' + n.toFixed(0) + '/60 = <b>' + f.toFixed(1) +
+        ' Hz</b>；幅值 E_m ≈ NπfΔΦ = ' + CFG.N2 + '×π×f×4×10⁻⁶ = ' + EmGear(f).toFixed(2) +
+        ' V（<b>线性估算，未计磁路饱和与漏磁</b>）。变磁通式只用频率：幅值受气隙、齿形、转速影响且含谐波，不能用来定量。';
+    } else if (isH){
+      if (isSW){
+        $('bigCap').textContent = '集成霍尔输出电平（开关型）';
+        $('bigNum').textContent = swOut().toFixed(1); $('bigUnit').textContent = 'V';
+        $('kv1L').textContent = '开关状态';
+        $('kv1V').textContent = swState() === 'low' ? '低电平（导通）' : (swState() === 'high' ? '高电平（截止）' : '回差区保持');
+        $('kv2L').textContent = '动作点 / 释放点';
+        $('kv2V').textContent = (CFG.Bop*1000).toFixed(0) + ' / ' + (CFG.Brp*1000).toFixed(0) + ' mT';
+        $('kv3L').textContent = '回差（抗抖动）';
+        $('kv3V').textContent = ((CFG.Bop - CFG.Brp)*1000).toFixed(0) + ' mT';
+        $('kv4L').textContent = '当前磁感应强度 B';
+        $('kv4V').textContent = (B*1000).toFixed(0) + ' mT';
+        $('readFine').innerHTML = '开关型集成霍尔把元件、整形与输出级做在一起：B ≥ B_OP = ' + (CFG.Bop*1000).toFixed(0) +
+          ' mT 输出低电平、B ≤ B_RP = ' + (CFG.Brp*1000).toFixed(0) + ' mT 输出高电平，回差 ' + ((CFG.Bop - CFG.Brp)*1000).toFixed(0) +
+          ' mT 防抖动。<b>输出方波，幅值由电源决定、与转速无关 → 齿盘静止也能判断状态，可零速检测（ABS 必需）</b>。';
+      } else {
+        $('bigCap').textContent = '霍尔电动势 U_H';
+        $('bigNum').textContent = uh.toFixed(2); $('bigUnit').textContent = 'mV';
+        $('kv1L').textContent = '控制电流 I_C';
+        $('kv1V').textContent = S.ic.toFixed(1) + ' mA';
+        $('kv2L').textContent = '磁感应强度 B';
+        $('kv2V').textContent = (B*1000).toFixed(0) + ' mT';
+        $('kv3L').textContent = '灵敏度 K_H = R_H/d';
+        $('kv3V').textContent = CFG.KH.toFixed(0) + ' mV/(mA·T)';
+        $('kv4L').textContent = '对应位移 x = B/k（k = 20 mT/mm）';
+        $('kv4V').textContent = (B/CFG.kGrad).toFixed(1) + ' mm';
+        $('readFine').innerHTML = 'U_H = K_H·I·B = ' + CFG.KH.toFixed(0) + ' × ' + S.ic.toFixed(1) + ' mA × ' + B.toFixed(3) +
+          ' T = <b>' + uh.toFixed(2) + ' mV</b>；额定激励电流 I_H = 5.0 mA（式6-15 热平衡）。' +
+          'B = 0 时输出不为零 —— 不等位电动势 U₀ ≈ ' + CFG.U0off.toFixed(0) +
+          ' mV 是零位误差（等效四臂电桥，桥臂并 RP 补偿）；温度误差用恒流源 + 并联 Rp = R₀(β−α)/α ≈ (β/α)R₀。';
+      }
+    } else {
+      $('bigCap').textContent = '霍尔输出 U_H';
+      $('bigNum').textContent = uhc.toFixed(2); $('bigUnit').textContent = 'mV';
+      $('kv1L').textContent = '被测电流 I';
+      $('kv1V').textContent = I.toFixed(0) + ' A';
+      $('kv2L').textContent = '气隙磁感应强度 B';
+      $('kv2V').textContent = Bc.toFixed(3) + ' T';
+      $('kv3L').textContent = '聚磁倍率 B/I';
+      $('kv3V').textContent = (I > 0 ? (Bc/I*1000).toFixed(3) : '—') + ' mT/A';
+      $('kv4L').textContent = '线性度（端基直线）';
+      $('kv4V').textContent = linErrC().toFixed(1) + ' %';
+      $('readFine').innerHTML = '安培环路：B ≈ μ₀I/(δ + l/μ_r) = 4π×10⁻⁷×' + I.toFixed(0) + '/(2 mm + 0.126 m/2000) = <b>' +
+        BofIlin(I).toFixed(3) + ' T</b>（线性值）；考虑铁芯软饱和后 B = ' + Bc.toFixed(3) + ' T，U_H = K_H·I_C·B = ' +
+        uhc.toFixed(2) + ' mV。满量程非线性 ≈ ' + linErrC().toFixed(1) + '% —— 要求高精度时用闭环（补偿绕组使铁芯零磁通）。';
+    }
+
+    drawCurve();
+    drawWave();
+    paintFormulas();
+    paintPoints();
+    if (window.__repack) window.__repack();
+  }
+  function linErrC(){                                            /* 电流传感器端基非线性（%） */
+    var i, mx = 0, y1 = UHof(CFG.ICmax, BofI(CFG.IMax));
+    for (i = 0; i <= 20; i++){
+      var u = i/20, yv = UHof(CFG.ICmax, BofI(u*CFG.IMax)), lin = y1*u;
+      mx = Math.max(mx, Math.abs(yv - lin));
+    }
+    return y1 > 0 ? mx/y1*100 : 0;
+  }
+
+  /* ============ 7. 特性曲线 ============ */
+  var CH = { x0:64, x1:672, y0:246, y1:34, gridKey:'' };
+  function cX(u){ return CH.x0 + u*(CH.x1 - CH.x0); }
+  function cY(v, ymax){ return CH.y0 - clamp(v, 0, ymax)/ymax*(CH.y0 - CH.y1); }
+  function buildGrid(xmax, ymax, xstep, ystep, xd, yd){
+    var key = [xmax, ymax, xstep, ystep].join('|');
+    if (CH.gridKey === key) return;
+    CH.gridKey = key;
+    var t = '', i, v, nx = Math.round(xmax/xstep), ny = Math.round(ymax/ystep);
+    for (i = 0; i <= ny; i++){
+      v = i*ystep;
+      t += '<line x1="' + CH.x0 + '" y1="' + cY(v,ymax).toFixed(1) + '" x2="' + CH.x1 + '" y2="' + cY(v,ymax).toFixed(1) + '" stroke="#e6edf6"/>';
+      t += '<text x="56" y="' + (cY(v,ymax)+4).toFixed(1) + '" text-anchor="end" font-size="11.5" fill="#5b6b80">' + v.toFixed(yd) + '</text>';
+    }
+    for (i = 0; i <= nx; i++){
+      v = i*xstep;
+      t += '<line x1="' + cX(v/xmax).toFixed(1) + '" y1="' + CH.y1 + '" x2="' + cX(v/xmax).toFixed(1) + '" y2="' + CH.y0 + '" stroke="#e6edf6"/>';
+      t += '<text x="' + cX(v/xmax).toFixed(1) + '" y="' + (CH.y0+16) + '" text-anchor="middle" font-size="11.5" fill="#5b6b80">' + (xmax <= 1.5 ? v.toFixed(xd) : v.toFixed(0)) + '</text>';
+    }
+    $('cGrid').innerHTML = t;
+  }
+  function pathOf(fn, xmax, ymax){
+    var d = '', i, u;
+    for (i = 0; i <= 120; i++){
+      u = i/120;
+      d += (i ? 'L' : 'M') + cX(u).toFixed(1) + ' ' + cY(fn(u*xmax), ymax).toFixed(1) + ' ';
+    }
+    return d;
+  }
+  function drawCurve(){
+    var t = S.type, isH = (t === 'hall'), isSW = (isH && S.hm === 'sw'), u = S.x/100;
+    var xm = 1, ym = 1, ux = 0, uy = 0, main = null, ref = null, xl = '', yl = '', sub = '', note = '', m = '', r = '';
+    if (t === 'vc' || t === 'vi'){
+      xm = CFG.vMax; ym = 8;
+      buildGrid(xm, ym, 0.2, 2, 1, 0);
+      main = function(v){ return Sv*v; };
+      ref = function(v){ return Sv*0.5*v; };
+      ux = vOf(); uy = Eof(vOf());
+      xl = '振动速度 v / (m·s⁻¹)'; yl = 'e / V';
+      sub = 'e–v 线性（斜率 = NBl）';
+      note = '① 直线过原点：e ∝ v（灵敏度 S = NBl = ' + Sv.toFixed(3) + ' V·s/m）　② 虚线 = 同样结构改成 N = 1000 匝，斜率减半 —— 别漏 N';
+      m = '实际：N = ' + CFG.N1 + ' 匝 → S = ' + Sv.toFixed(2) + ' V·s/m';
+      r = '对照：N = 1000 匝（灵敏度减半）';
+    } else if (t === 'gear'){
+      xm = CFG.nMax; ym = 1200;
+      buildGrid(xm, ym, 200, 300, 0, 0);
+      main = function(n2){ return fOf(n2); };
+      ref = function(n2){ return fOf(n2)/2; };
+      ux = nOf(); uy = fOf(nOf());
+      xl = '转速 n / (r·min⁻¹)'; yl = 'f / Hz';
+      sub = 'f–n 严格线性（f = Zn/60）';
+      note = '① 斜率 = Z/60 = ' + (CFG.Z/60).toFixed(3) + ' Hz/(r·min⁻¹)　② 虚线 = 齿数减半 Z = 10（同样转速频率减半）　③ 用频率不用幅值';
+      m = '实际：Z = ' + CFG.Z + ' 齿 → f = ' + CFG.Z + 'n/60';
+      r = '对照：Z = 10 齿（频率减半）';
+    } else if (isH && !isSW){
+      xm = CFG.Bmax*1000; ym = 24;
+      buildGrid(xm, ym, 100, 4, 0, 0);
+      main = function(bm){ return CFG.KH*S.ic*(bm/1000); };
+      ref = function(bm){ return CFG.KH*S.ic*(bm/1000)*Math.cos(15*Math.PI/180); };
+      ux = Bof()*1000; uy = uh0();
+      xl = '磁感应强度 B / mT（位移 x = B/k）'; yl = 'U_H / mV';
+      sub = 'U_H–B 线性（斜率 = K_H·I_C）';
+      note = '① 直线过原点：U_H ∝ B（I 恒定）→ U_H = Kx 测位移/角度（式6-24）　② 虚线 = 磁场与法线成 α = 15°，U_H 与 cosα 成正比、线性不变';
+      m = 'H = ' + CFG.KH.toFixed(0) + '×' + S.ic.toFixed(1) + ' mA = ' + (CFG.KH*S.ic).toFixed(1) + ' mV/T';
+      r = '对照：α = 15°（灵敏度 × cos15°）';
+    } else if (isSW){
+      xm = CFG.Bmax*1000; ym = 5;
+      buildGrid(xm, ym, 100, 1, 0, 0);
+      var bop = CFG.Bop*1000, brp = CFG.Brp*1000;
+      main = function(bm){ return bm >= bop ? CFG.swLo : CFG.swHi; };
+      ref = function(bm){ return bm <= brp ? CFG.swHi : CFG.swLo; };
+      ux = Bof()*1000; uy = swOut();
+      xl = '磁感应强度 B / mT'; yl = 'U_o / V';
+      sub = '开关型传输特性（含回差）';
+      note = '① 实线 = B 增大：B ≥ B_OP = 20 mT 时翻转为低电平　② 虚线 = B 减小：B ≤ B_RP = 15 mT 时翻转回高电平　③ 回差 5 mT 抗抖动';
+      m = 'B 增大时的翻转（B_OP = ' + bop.toFixed(0) + ' mT）';
+      r = 'B 减小时的翻转（B_RP = ' + brp.toFixed(0) + ' mT）';
+    } else {
+      xm = CFG.IMax; ym = 36;
+      buildGrid(xm, ym, 100, 9, 0, 0);
+      main = function(I){ return UHof(CFG.ICmax, BofI(I)); };
+      ref = function(I){ return UHof(CFG.ICmax, BofIlin(I)); };
+      ux = Iof(); uy = uhc0();
+      xl = '被测电流 I / A'; yl = 'U_H / mV';
+      sub = 'U_H–I 线性与铁芯饱和';
+      note = '① 虚线 = 只按安培环路算的理论直线　② 实线 = 计入铁芯软饱和后的实际曲线，大电流段弯曲：端基非线性 ≈ ' + linErrC().toFixed(1) + '% FS';
+      m = '实际（含铁芯饱和）';
+      r = '理论直线 B = μ₀I/(δ+l/μr)';
+    }
+    $('pMain').setAttribute('d', pathOf(main, xm, ym));
+    $('pRef').setAttribute('d', pathOf(ref, xm, ym));
+    $('mkLine').setAttribute('x1', cX(ux/xm).toFixed(1)); $('mkLine').setAttribute('x2', cX(ux/xm).toFixed(1));
+    $('mkDot').setAttribute('cx', cX(ux/xm).toFixed(1)); $('mkDot').setAttribute('cy', cY(uy, ym).toFixed(1));
+    $('cxT').textContent = xl; $('cyT').textContent = yl; $('curveSub').textContent = sub;
+    $('curveNote').textContent = note;
+    $('lgMain').textContent = m; $('lgRef').textContent = r;
+  }
+  function uh0(){ return UHof(S.ic, Bof()); }
+  function uhc0(){ return UHof(CFG.ICmax, BofI(Iof())); }
+
+  /* ============ 8. 输出波形 ============ */
+  var WAV = { ph:0 };
+  function waveSpec(){
+    var t = S.type, isH = (t === 'hall'), isSW = (isH && S.hm === 'sw'), o = { amp:0, thresh:-1, f:function(){ return 0; } };
+    if (t === 'vc' || t === 'vi'){
+      var E = Eof(vOf());
+      o.amp = clamp(E/8*60, 0, 60) || 0;
+      var cyc = clamp(S.hz/10, 2, 6);
+      o.f = function(x){ return Math.sin(2*Math.PI*(cyc*x - WAV.ph*(0.8 + cyc*0.15))); };
+      $('wfTitle').textContent = '输出波形 e(t)：正弦交流，幅值 E_m = ' + E.toFixed(3) + ' V';
+      $('wfNote').textContent = '波幅 ∝ E_m = NBlv（v = ' + vOf().toFixed(2) + ' m/s，f = ' + S.hz.toFixed(0) + ' Hz）；v = 0 时输出为零';
+      $('wfNote2').textContent = '振动传感器要求被测频率远高于固有频率 f₀（惯性式），积分得位移、微分得加速度';
+      o.thresh = -1;
+    } else if (t === 'gear'){
+      var f2 = fOf(nOf()), Em = EmGear(f2);
+      o.amp = clamp(Em/8*60, 0, 60);
+      var c2 = clamp(f2/125, 1.5, 8);
+      o.f = function(x){
+        var th = 2*Math.PI*(c2*x - WAV.ph*1.1);
+        return 0.78*Math.sin(th) + 0.18*Math.sin(3*th) + 0.06*Math.sin(5*th);
+      };
+      $('wfTitle').textContent = '输出波形 e(t)：近似正弦（含谐波），f = ' + f2.toFixed(f2 >= 100 ? 0 : 1) + ' Hz';
+      $('wfNote').textContent = '频率 f = Zn/60 严格正比转速；幅值随转速增长但受气隙、齿形与饱和影响（含谐波）';
+      $('wfNote2').textContent = '整形后成为等幅脉冲/方波，频率信号可直接送入数字电路计数';
+      o.thresh = -1;
+    } else if (isSW){
+      o.amp = 44;
+      o.f = function(x){ return (Math.sin(2*Math.PI*(3*x - WAV.ph*1.2)) >= (swState() === 'low' ? 0.35 : -0.35)) ? -1 : 1; };
+      $('wfTitle').textContent = '输出波形：方波（开关型集成霍尔）';
+      $('wfNote').textContent = '幅值由电源决定、与转速无关；阈值 B_OP / B_RP 带 5 mT 回差（橙色虚线为中值电平）→ 抗抖动';
+      $('wfNote2').textContent = '齿盘静止时仍输出确定电平 → 可零速检测（ABS、里程表必需）';
+      o.thresh = 100;
+    } else if (isH){
+      var uh2 = uh0();
+      o.amp = clamp(uh2/24*58, 0, 58);
+      o.f = function(x){ return Math.sin(2*Math.PI*(2.5*x - WAV.ph*0.9)); };
+      $('wfTitle').textContent = (uh2 > 0.02 ? '输出波形 U_H(t)：线性跟随（被测磁场按正弦变化）' : '输出波形 U_H(t)：B = 0 → 零输出');
+      $('wfNote').textContent = 'U_H = K_H·I_C·B：I_C、B 都恒定时输出为直流电平；B 按正弦变化时 U_H 无畸变跟随';
+      $('wfNote2').textContent = 'B = 0 时实测仍有 U₀ ≈ ' + CFG.U0off.toFixed(0) + ' mV 的不等位电动势（零位误差，需补偿）';
+      o.thresh = -1;
+    } else {
+      var ip = Iof(), uc = uhc0();
+      o.amp = 58;
+      o.f = function(x){
+        var Ii = ip*Math.sin(2*Math.PI*(2*x - WAV.ph*0.8));
+        var yv = UHof(CFG.ICmax, BofI(Math.abs(Ii)))*Math.sign(Ii || 1);
+        return yv/36*1.0;
+      };
+      if (ip <= 0){ o.amp = 0; }
+      $('wfTitle').textContent = '输出波形 U_H(t)：被测电流按正弦变化（峰值 ' + ip.toFixed(0) + ' A）';
+      $('wfNote').textContent = '小电流段线性跟随（虚线为理论直线）；峰值接近满量程时波形顶部被“削平” = 铁芯饱和引起的非线性';
+      $('wfNote2').textContent = '满量程端基非线性 ≈ ' + linErrC().toFixed(1) + '%；闭环（补偿绕组使铁芯零磁通）可显著改善';
+      o.thresh = -1;
+    }
+    return o;
+  }
+  function drawWave(){
+    var o = waveSpec(), d = '', i, n = 150, x01;
+    for (i = 0; i <= n; i++){
+      x01 = i/n;
+      d += (i ? 'L' : 'M') + (16 + x01*656).toFixed(1) + ' ' + (100 - o.amp*clamp(o.f(x01), -1.1, 1.1)).toFixed(1) + ' ';
+    }
+    $('wfPath').setAttribute('d', d);
+    $('wfPath').setAttribute('opacity', o.amp < 0.5 ? 0.25 : 1);
+    $('wfThresh').setAttribute('y1', 100); $('wfThresh').setAttribute('y2', 100);
+    $('wfThresh').setAttribute('opacity', o.thresh >= 0 ? 0.9 : 0);
+  }
+  function runWave(){
+    var last = performance.now();
+    (function loop(now){
+      var dt = Math.min(80, now - last); last = now;
+      WAV.ph += dt/1000;
+      if (WAV.ph > 1e5) WAV.ph = 0;
+      drawWave();
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+
+  /* ============ 9. 公式 ============ */
+  function paintFormulas(){
+    var t = S.type, isH = (t === 'hall'), isSW = (isH && S.hm === 'sw'), html = '';
+    var v = vOf(), E = Eof(v), n = nOf(), f = fOf(n), B = Bof(), uh = uh0(), I = Iof(), Bc = BofI(I), uhc = uhc0();
+    if (t === 'vc' || t === 'vi'){
+      html += '<div class="row"><span class="tag">式 6-1</span><span>E = −N·' + frac('dΦ', 'dt') + '　普适式：N 匝线圈所链磁通变化即产生感应电动势（V），负号（楞次定律）只定方向</span></div>';
+      html += '<div class="row"><span class="tag">式 6-2</span><span>' + frac('dΦ', 'dt') + ' = S·' + frac('dB', 'dt') + ' + B·' + frac('dS', 'dt') +
+              '　→ 恒磁通式：气隙 dB/dt = 0，靠 <b>B·dS/dt</b>（切割磁力线）产生电动势</span></div>';
+      html += '<div class="row"><span class="tag">式 6-3</span><span>E = −NBlv = −' + CFG.N1 + ' × ' + CFG.B0.toFixed(2) + ' × ' + (lCoil*1000).toFixed(2) +
+              ' mm × ' + v.toFixed(2) + ' = <b>−' + E.toFixed(3) + ' V</b>（峰值 ' + E.toFixed(3) + ' V，有效值 ' + (E/Math.SQRT2).toFixed(3) + ' V）</span></div>';
+      html += '<div class="row"><span class="tag g">补充</span><span>每匝平均长度 l = πd = π×10 mm = 31.42 mm；灵敏度 S = NBl = ' + Sv.toFixed(3) +
+              ' V·s/m；转动时 v = ωr → E = −NBlωr；绕轴旋转 E = NBAω·sinθ（习题6-5）</span></div>';
+      html += '<div class="row"><span class="tag f">' + (t === 'vc' ? '动圈式' : '动铁式') + '</span><span>' +
+              (t === 'vc' ? '线圈在气隙中运动、磁极与壳体固定；线圈骨架兼作阻尼器（金属骨架的电磁阻尼）'
+                          : '永久磁铁由弹簧支承、线圈与壳体固定；相对运动不变 → 输出与动圈式完全相同') + '</span></div>';
+      html += '<div class="note">振动传感器（图6-4）：要求被测频率 f ≫ 固有频率 f₀，输出正比于振动速度 —— 积分得位移、微分得加速度；图6-5 转速表、图6-6 扭矩仪（两端传感器输出相位差，式6-5）。</div>';
+    } else if (t === 'gear'){
+      html += '<div class="row"><span class="tag">式 6-1</span><span>E = −N·' + frac('dΦ', 'dt') + '　Φ = B·S：齿轮掠过使气隙磁阻周期变化 → B 变 → 感生电动势</span></div>';
+      html += '<div class="row"><span class="tag">式 6-2</span><span>' + frac('dΦ', 'dt') + ' = S·' + frac('dB', 'dt') + ' + B·' + frac('dS', 'dt') +
+              '　→ 变磁通式：S 不变、<b>dB/dt ≠ 0</b>（第一项主导），这与恒磁通式正好相反</span></div>';
+      html += '<div class="row"><span class="tag">式 6-4</span><span>f = ' + frac('Zn', '60') + ' → n = ' + frac('60f', 'Z') +
+              ' = ' + CFG.Z + ' × ' + n.toFixed(0) + ' / 60 = <b>' + f.toFixed(1) + ' Hz</b>（Z = ' + CFG.Z + ' 齿，n 单位 r/min）</span></div>';
+      html += '<div class="row"><span class="tag g">补充</span><span>近似 Φ(t) = Φ₀ + ' + frac('ΔΦ', '2') + '·cos(2πft) → 幅值 E_m ≈ NπfΔΦ = ' + CFG.N2 +
+              '×π×f×4×10⁻⁶ = <b>' + EmGear(f).toFixed(2) + ' V</b>（线性估算，未计饱和/漏磁）</span></div>';
+      html += '<div class="row"><span class="tag f">提示</span><span>幅值受气隙、齿形、转速影响且含谐波 → <b>只取频率不用幅值</b>：f ∝ n 严格线性；可在油、水雾、灰尘及 −150~90 ℃ 下工作（50 Hz~100 kHz）</span></div>';
+      html += '<div class="note">开磁路（图6-2，磁通经空气返回、灵敏度低但结构简单）与闭磁路（图6-3，内外齿轮相对转动、输出近似正弦）两类；轮速传感器 8 齿/转 → v = S/(8T)。</div>';
+    } else if (isH){
+      html += '<div class="row"><span class="tag">式 6-8</span><span>U_H = ' + frac('γIB', 'nqd') + ' = ' + frac('R_H·I·B', 'd') +
+              '　洛伦兹力 F = evB 使载流子偏转、两侧积累电荷建立横向电场（动态平衡时电力＝洛伦兹力）</span></div>';
+      html += '<div class="row"><span class="tag">式 6-9</span><span>U_H = K_H·I·B = ' + CFG.KH.toFixed(0) + ' × ' + S.ic.toFixed(1) + ' mA × ' + B.toFixed(3) +
+              ' T = <b>' + uh.toFixed(2) + ' mV</b>（毫伏级；I 为控制电流，必须外加）</span></div>';
+      html += '<div class="row"><span class="tag">式 6-10</span><span>K_H = ' + frac('R_H', 'd') + '　d ↓ → K_H ↑：做成<b>薄片</b>（几十~几百 μm，本元件 d = 0.1 mm）；U_H 与宽 b 无关</span></div>';
+      html += '<div class="row"><span class="tag">式 6-11</span><span>U_H = K_H·I·B·cosα　磁场与法线成 α 角时输出按 cosα 减小（安装偏斜会“丢灵敏度”，但不改变线性）</span></div>';
+      html += '<div class="row"><span class="tag">式 6-12</span><span>R_H = ρμ = ' + frac('γ', 'nq') + '　半导体 n 小、μ 大 → R_H 远大于金属与绝缘体，故霍尔元件用半导体（N 型硅可与后级同芯片）</span></div>';
+      html += '<div class="row"><span class="tag">式 6-15</span><span>I_H = b√(' + frac('2dΔT·A', 'ρ') + ') = 5.0 mA　额定激励电流（热平衡决定，与 l 无关、与 b 成正比）</span></div>';
+      html += '<div class="row"><span class="tag">式 6-24</span><span>U_H = Kx　I 恒定 + 均匀梯度磁场（k = 20 mT/mm）→ 位移线性输出，极性表示方向；B 恒定测 I、两者均变测乘积</span></div>';
+      html += '<div class="note">温度补偿（式6-16/6-17/6-22/6-23）：恒流源 + 输入回路并联 Rp = R₀' + frac('β−α', 'α') + ' ≈ ' + frac('β', 'α') + 'R₀（β ≫ α）；' +
+              '不等位电动势是 B = 0 时输出不为零的<b>零位误差</b>（等效四臂电桥、桥臂并 RP），与温度误差是两类不同的误差。</div>';
+      html += isSW ? '<div class="note"><b>集成霍尔·开关型</b>：阈值 B_OP = 20 mT / B_RP = 15 mT（回差 5 mT 抗抖动），输出方波 —— 幅值由电源决定、与转速无关，可零速检测（ABS 必需）。</div>'
+                   : '<div class="note"><b>集成霍尔·线性型</b>：元件 + 放大/温度补偿同芯片，输出模拟电压 ∝ B，用于位移、角度、电流等连续量测量。</div>';
+    } else {
+      html += '<div class="row"><span class="tag">式 6-9</span><span>U_H = K_H·I_C·B　I_C = ' + CFG.ICmax.toFixed(1) + ' mA 恒定 → U_H ∝ B（B 由被测电流产生）</span></div>';
+      html += '<div class="row"><span class="tag g">补充</span><span>安培环路：B ≈ ' + frac('μ₀I', 'δ + l/μ_r') + '　l = 2πr = 0.126 m、μ_r = 2000、δ = 2 mm → B ≈ 6.09×10⁻⁴I（T/A），比无限长直导线强几十倍</span></div>';
+      html += '<div class="row"><span class="tag">数值</span><span>I = ' + I.toFixed(0) + ' A → B = ' + BofIlin(I).toFixed(3) + ' T（线性值）→ B = <b>' + Bc.toFixed(3) +
+              ' T</b>（含软饱和）→ U_H = ' + CFG.KH.toFixed(0) + ' × ' + CFG.ICmax.toFixed(1) + ' × ' + Bc.toFixed(3) + ' = <b>' + uhc.toFixed(2) + ' mV</b></span></div>';
+      html += '<div class="row"><span class="tag">式 6-13</span><span>W_j = I²R = I²·' + frac('ρl', 'bd') + '　自热限制激励电流（式6-15），大电流下还需考虑铁芯饱和</span></div>';
+      html += '<div class="row"><span class="tag f">开环/闭环</span><span>开环：结构简单、非接触、可测直流与交流；闭环：加补偿绕组使铁芯零磁通 → 精度与线性显著提高</span></div>';
+      html += '<div class="note">应用（图6-15、图6-16）：电流传感器、霍尔式角度传感器（径向磁化永磁体 + 转轴，用于油门踏板/转向盘转角，非接触无磨损，取代电位器式）；霍尔式压力传感器（波登管自由端带动霍尔元件在梯度磁场中移动，输出 4~20 mA 标准信号）。</div>';
+    }
+    $('fmlTitle').textContent = TYPES[t].name + (isH ? (isSW ? ' · 开关型' : ' · 线性型') : '');
+    $('fmlBody').innerHTML = html;
+  }
+
+  /* ============ 10. 要点 ============ */
+  var PTS_TEXT = [
+    '磁电式是<b>机-电能量变换（发电）型</b>：被测量 → 相对运动 → 切割磁力线 / 磁通变化 → 感应电动势。<b>免供电、输出阻抗小、输出大</b>，但只能测动态量 —— 静态没有相对速度，输出为零。',
+    '普适式 式(6-1) E = −N·dΦ/dt；分解 式(6-2) dΦ/dt = S·dB/dt + B·dS/dt → <b>B 变 = 变磁通式（齿盘测速）</b>、<b>S 变 = 恒磁通式（动圈/动铁）</b>。',
+    '式(6-3) E = −NBlv <b>只在“B 恒定 + 切割磁力线”时成立</b>，不能用于齿轮式；l 是每匝平均长度、别漏 N；负号只定方向；转动时 v = ωr。',
+    '“恒磁通式”不等于磁通绝对不变：气隙中 B 恒定，但线圈所链磁通仍随位置变化。<b>动圈 / 动铁只是“谁动”</b>，原理与输出完全相同，阻尼都靠金属骨架的电磁阻尼。',
+    '振动传感器（图6-4）要求被测频率 <b>f ≫ 固有频率 f₀</b>（惯性式：质量块近似静止），输出 ∝ 振动速度；积分得位移、微分得加速度。',
+    '变磁通式转速传感器 式(6-4) <b>f = Zn/60 → n = 60f/Z</b>（n 用 r/min，漏 60 是常见错）；<b>只用频率不用幅值</b>（幅值非线性、含谐波、受气隙与齿形影响），可在油、水雾、灰尘与 −150~90 ℃ 下工作（50 Hz~100 kHz）。',
+    '霍尔效应：控制电流 I 与磁场 B 正交 → 载流子受洛伦兹力 F = evB 偏转、两侧积累电荷建立横向电场，动态平衡时 式(6-9) <b>U_H = K_H·I·B</b>。<b>必须外加控制电流</b>，这是与磁电式最大的区别。',
+    'U_H 与宽 b 无关、与厚 d 成反比（式6-10 K_H = R_H/d）→ 做成<b>薄片</b>；半导体 n 小、μ 大 → R_H = 1/(nq) 远大于金属，故用半导体（N 型硅可与后级电路同芯片）。',
+    '霍尔元件两类误差别混：<b>不等位电动势</b>（B = 0 时输出不为零的零位误差，等效四臂电桥、桥臂并 RP，对称补偿温度稳定性好）与<b>温度误差</b>（恒流源 + 并联 Rp = R₀(β−α)/α ≈ (β/α)R₀，或热敏电阻桥路）。',
+    '霍尔三种用法：I 恒定 → 测 B（位移/角度，U_H = Kx，前提是均匀梯度磁场）；B 恒定 → 测 I（聚磁环电流传感器，开环简单 / 闭环高精度）；两者均变 → 测乘积/功率。集成霍尔分线性型与开关型：开关型输出方波、<b>可零速检测（ABS 必需）</b>，用于轮速/里程表与油门踏板、转向盘转角（非接触无磨损）。'
+  ];
+  var PTS = { active:-1 };
+  function paintPoints(){
+    if (!$('points').children.length){
+      var html = '';
+      PTS_TEXT.forEach(function(t2, k){ html += '<li data-pi="' + k + '">' + t2 + '</li>'; });
+      $('points').innerHTML = html;
+    }
+  }
+  function setPt(i){
+    PTS.active = i;
+    var lis = $('points').children, k;
+    for (k = 0; k < lis.length; k++) lis[k].classList.toggle('on', k === i);
+    for (k = 0; k < PTS_TEXT.length; k++){
+      var bb = $('ptsB' + k);
+      if (bb) bb.classList.toggle('on', k === i);
+    }
+    if (i >= 0) say('<b>要点 ' + (i+1) + '/' + PTS_TEXT.length + '</b>：' + PTS_TEXT[i]);
+  }
+  for (var pb = 0; pb < PTS_TEXT.length; pb++){
+    (function(k){ $('ptsB' + k).addEventListener('click', function(){ stopDemo(); setPt(k); }); })(pb);
+  }
+
+  /* ============ 11. 交互 ============ */
+  function setType(t){
+    if (t === 'hallc' || t === 'gear') S.hz = clamp(S.hz, CFG.fMin, CFG.fMax);
+    S.type = t; paint();
+  }
+  function setX(x){ S.x = clamp(Math.round(x), 0, 100); $('x').value = S.x; paint(); }
+  function setHz(h){ S.hz = clamp(Math.round(h), CFG.fMin, CFG.fMax); paint(); }
+  function setIc(a){ S.ic = Math.round(clamp(a, 0.2, CFG.ICmax)*10)/10; paint(); }
+  function setHm(m){
+    if (m === 'sw' && S.type !== 'hall'){
+      stopDemo();
+      say('<b>集成霍尔（线性型 / 开关型）</b>只在<b>霍尔式</b>下使用 —— 请先切换到“霍尔元件”型式。');
+      return;
+    }
+    S.hm = m; paint();
+  }
+  $('x').addEventListener('input', function(){ stopDemo(); setX(+this.value); });
+  $('hz').addEventListener('input', function(){
+    stopDemo();
+    if (S.type === 'hall') setIc(+this.value); else setHz(+this.value);
+  });
+  $('xM').addEventListener('click', function(){ stopDemo(); setX(S.x - 5); });
+  $('xP').addEventListener('click', function(){ stopDemo(); setX(S.x + 5); });
+  document.querySelectorAll('#segType button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setType(b.getAttribute('data-type')); say(TYPES[S.type].hint); });
+  });
+  document.querySelectorAll('#segHm button').forEach(function(b){
+    b.addEventListener('click', function(){
+      stopDemo(); setHm(b.getAttribute('data-hm'));
+      if (S.type === 'hall') say(S.hm === 'sw'
+        ? '<b>开关型集成霍尔</b>：内部带施密特整形，输出方波（幅值由电源决定、与转速无关），有回差抗抖动 → 可零速检测，ABS 轮速传感器用它。'
+        : '<b>线性型集成霍尔</b>：输出模拟电压 ∝ B，可测连续量（位移/角度/电流）；元件内已做温度补偿与放大。');
+    });
+  });
+  $('reset').addEventListener('click', function(){
+    stopDemo();
+    S.type = 'vc'; S.x = 60; S.hz = 20; S.ic = 2.0; S.hm = 'lin';
+    $('x').value = 60; $('hz').value = 20;
+    say('已复位：恒磁通式·动圈式、v = 0.60 m/s、f = 20 Hz、线性型集成霍尔。');
+    paint();
+  });
+  document.addEventListener('keydown', function(e){
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input') return;
+    if (e.key === 'ArrowLeft'){ stopDemo(); setX(S.x - 2); e.preventDefault(); }
+    else if (e.key === 'ArrowRight'){ stopDemo(); setX(S.x + 2); e.preventDefault(); }
+    else if (e.key === '1'){ stopDemo(); setType('vc'); }
+    else if (e.key === '2'){ stopDemo(); setType('vi'); }
+    else if (e.key === '3'){ stopDemo(); setType('gear'); }
+    else if (e.key === '4'){ stopDemo(); setType('hall'); }
+    else if (e.key === '5'){ stopDemo(); setType('hallc'); }
+    else if (e.key === 'h'){ stopDemo(); setHm(S.hm === 'sw' ? 'lin' : 'sw'); }
+    else if (e.key === ' '){
+      e.preventDefault();
+      if (playingKey){ stopDemo(); say('演示已暂停。'); }
+      else { var k = S.type === 'hall' ? 'hall' : (S.type === 'hallc' ? 'app' : 'vc'); if (DEMOS[k] && DEMOS[k].fn) DEMOS[k].fn(); }
+    }
+    else if (e.key === 'r' || e.key === 'R'){ $('reset').click(); }
+  });
+
+  /* ============ 12. 演示脚本 ============ */
+  async function demoVC(){
+    var tok = beginDemo('vc');
+    setType('vc'); setHz(20); setX(0);
+    say('【<b>磁电感应原理</b>】E = −N·dΦ/dt —— 导体与磁场有相对运动、切割磁力线才有输出。现在线圈静止（v = 0）：右上输出指示为<b>零</b>，这就是磁电式“只能测动态量”的原因。');
+    if (!await sleep(4400, tok)) return;
+    say('① 让线圈以 v = 1.0 m/s 振动（动画为 1/8 慢放）：气隙中 B = 0.1 T 恒定，线圈切割磁力线 → 感生电动势。');
+    if (!await tween(0, 100, 3000, setX, tok)) return;
+    if (!await sleep(1500, tok)) return;
+    say('② 峰值 E = NBlv = ' + CFG.N1 + '×' + CFG.B0.toFixed(2) + '×' + (lCoil*1000).toFixed(2) + 'mm×1.00 = <b>' + Eof(1).toFixed(3) +
+        ' V</b>，有效值 ' + (Eof(1)/Math.SQRT2).toFixed(3) + ' V；灵敏度 S = NBl = <b>' + Sv.toFixed(3) + ' V·s/m</b>（l 是每匝平均长度，别漏 N）。');
+    if (!await sleep(4200, tok)) return;
+    say('③ 换成<b>动铁式</b>：永久磁铁由弹簧支承、线圈固定 —— 只是“谁动”不同，相对运动与切割关系不变，输出完全相同。');
+    setType('vi');
+    if (!await sleep(3400, tok)) return;
+    say('④ 振动频率从 20 Hz 提到 60 Hz：速度幅值不变时振幅 A = v/(2πf) 变小（看线圈行程变短），但输出仍由 v 决定 —— 所以振动传感器要求 f ≫ 固有频率 f₀。');
+    setHz(60);
+    if (!await sleep(3200, tok)) return;
+    setHz(20); setType('vc'); setX(60);
+    say('【小结】恒磁通式：e = −NBlv，输出 ∝ 振动速度；积分得位移、微分得加速度，免供电、输出大。');
+    if (!await sleep(2600, tok)) return;
+    endDemo();
+  }
+
+  async function demoGear(){
+    var tok = beginDemo('gear');
+    setType('gear'); setX(0);
+    say('【<b>变磁通式测速</b>】齿轮掠过软铁 → 气隙磁阻周期变化 → 磁通 B 变 → dΦ/dt ≠ 0 → 感生电动势。齿轮不转（n = 0）时磁通不变 → <b>无输出</b>。');
+    if (!await sleep(4200, tok)) return;
+    say('① 让齿盘转到 n = 1500 r/min（动画已大幅慢放）：每转产生 Z = 20 个脉冲。');
+    if (!await tween(0, 50, 2800, setX, tok)) return;
+    if (!await sleep(1500, tok)) return;
+    say('② f = Zn/60 = 20×1500/60 = <b>500 Hz</b>，周期 T = 2.00 ms；幅值线性估算 E_m ≈ NπfΔΦ = ' + EmGear(500).toFixed(2) + ' V。');
+    if (!await sleep(3600, tok)) return;
+    say('③ 转速升到 3000 r/min → f = <b>1000 Hz</b>、E_m ≈ ' + EmGear(1000).toFixed(2) + ' V（幅值也增大，但受气隙、齿形与饱和影响会失真）。');
+    if (!await tween(50, 100, 2200, setX, tok)) return;
+    if (!await sleep(2400, tok)) return;
+    say('④ 关键考点：<b>只用频率、不用幅值</b> —— f ∝ n 严格线性，而幅值非线性且含谐波。应用：车速表与曲轴转速；轮速齿盘 8 齿/转时 v = S/(8T)。');
+    if (!await sleep(4200, tok)) return;
+    setX(60);
+    say('【小结】变磁通式的“变”在磁通（B 变），恒磁通式的“变”在面积（S 变）—— 式(6-2) 的两项各管一类。');
+    if (!await sleep(2800, tok)) return;
+    endDemo();
+  }
+
+  async function demoHall(){
+    var tok = beginDemo('hall');
+    setType('hall'); setHm('lin'); setX(0); setIc(2.0);
+    say('【<b>霍尔效应</b>】控制电流 I 与磁场 B 正交 → 载流子受洛伦兹力 F = evB 偏转、两侧积累电荷建立横向电场，平衡时 U_H = K_H·I·B。现在 B = 0 → 输出为零（实际元件还有几毫伏的不等位电动势）。');
+    if (!await sleep(4600, tok)) return;
+    say('① 加上磁场：B 由 0 增到 200 mT（⊗ 表示磁场垂直纸面向里），看蓝点（电子）向上偏转并在上表面积累。');
+    if (!await tween(0, 40, 2800, setX, tok)) return;
+    if (!await sleep(1400, tok)) return;
+    say('② U_H = K_H·I·B = 22 × 2.0 mA × 0.200 T = <b>' + uh0().toFixed(2) +
+        ' mV</b>（毫伏级）。U_H 与宽 b 无关、与厚 d 成反比 → 元件做成薄片（d = 0.1 mm）。');
+    if (!await sleep(3800, tok)) return;
+    say('③ 把控制电流提到额定值 I_H = 5.0 mA（式6-15 由热平衡决定）：U_H 增大到 <b>' + UHof(5, Bof()).toFixed(2) + ' mV</b> —— 霍尔式必须外加控制电流。');
+    setIc(5.0);
+    if (!await sleep(3600, tok)) return;
+    say('④ 切到<b>开关型</b>集成霍尔：内部带整形与回差（B_OP = 20 mT / B_RP = 15 mT），输出方波 —— 幅值由电源决定、与转速无关，可零速检测。');
+    setHm('sw'); setX(2);
+    if (!await sleep(2000, tok)) return;
+    setX(30);
+    if (!await sleep(2600, tok)) return;
+    setHm('lin'); setX(40); setIc(2.0);
+    say('【小结】霍尔式：U_H = K_H·I·B，I 恒定测 B（位移/角度，U_H = Kx）、B 恒定测 I（电流传感器）；集成化后可用方波做转速/位置检测。');
+    if (!await sleep(3600, tok)) return;
+    endDemo();
+  }
+
+  async function demoApp(){
+    var tok = beginDemo('app');
+    setType('hallc'); setX(0);
+    say('【<b>霍尔测电流</b>】长直导线的磁场经软磁聚磁环集中到气隙里的霍尔元件上：B ≈ μ₀I/(δ + l/μ_r) ∝ I，U_H = K_H·I_C·B —— 非接触测大电流，可测直流也可测交流。');
+    if (!await sleep(4400, tok)) return;
+    say('① 电流从 0 增到 500 A（⊙ 表示电流穿出纸面）：看磁环里的磁通粒子流动、气隙磁感应强度与 U_H 一起增大。');
+    if (!await tween(0, 100, 3000, setX, tok)) return;
+    if (!await sleep(1500, tok)) return;
+    say('② I = 500 A：B = <b>' + BofI(500).toFixed(3) + ' T</b>（比无限长直导线的磁场强几十倍），U_H = <b>' + uhc0().toFixed(2) +
+        ' mV</b>。大电流段铁芯接近饱和，曲线开始弯曲：端基非线性 ≈ ' + linErrC().toFixed(1) + '% FS。');
+    if (!await sleep(4400, tok)) return;
+    say('③ 要求高精度时用<b>闭环</b>：加补偿绕组使铁芯零磁通，线性与温度稳定性都显著改善（开环胜在简单、低功耗）。');
+    if (!await sleep(3200, tok)) return;
+    setType('gear'); setX(40);
+    say('④ 应用速览：磁电式用于振动传感器（图6-4）、转速表（图6-5）、扭矩仪（图6-6）；霍尔式用于轮速/ABS（方波、零速检测，v = S/8T）、电流/角度传感器（图6-15、图6-16，非接触无磨损）。');
+    if (!await sleep(4800, tok)) return;
+    setType('vc'); setX(60);
+    say('【小结】测“动态量”用磁电式（免供电、输出大）；要直流、要零速、要非接触，用霍尔式（需供电、输出毫伏级但可集成）。');
+    if (!await sleep(3400, tok)) return;
+    endDemo();
+  }
+
+  async function demoPoints(){
+    var tok = beginDemo('pts');
+    say('【<b>本章要点</b>】共 10 条，逐条看一遍，也可点编号按钮单独回看。');
+    if (!await sleep(2000, tok)) return;
+    for (var i = 0; i < PTS_TEXT.length; i++){
+      setPt(i);
+      if (!await sleep(PTS_TEXT[i].length > 80 ? 3600 : 2700, tok)) return;
+    }
+    setPt(-1);
+    endDemo();
+  }
+
+
+  DEMOS.vc   = { btn:'playVC',   label:'▶ 磁电原理',      fn:demoVC };
+  DEMOS.gear = { btn:'playGear', label:'▶ 变磁通测速',    fn:demoGear };
+  DEMOS.hall = { btn:'playHall', label:'▶ 霍尔效应',      fn:demoHall };
+  DEMOS.app  = { btn:'playApp',  label:'▶ 器件与应用',    fn:demoApp };
+  DEMOS.pts  = { btn:'ptsPlay',  label:'▶ 巡览要点',      fn:demoPoints };
+  bindDemos();
+
+  /* ============ 启动：URL 参数必须在第一次 paint() 之前写入 S ============ */
+  var q = new URLSearchParams(location.search);
+  if (q.has('type') && TYPES[q.get('type')]) S.type = q.get('type');
+  if (q.has('x')) S.x = clamp(parseFloat(q.get('x')) || 0, 0, 100);
+  if (q.has('hz')) { var hzq = parseFloat(q.get('hz')); if (isFinite(hzq)) S.hz = clamp(hzq, CFG.fMin, CFG.fMax); }
+  if (q.has('ic')) { var icq = parseFloat(q.get('ic')); if (isFinite(icq)) S.ic = clamp(icq, 0.2, CFG.ICmax); }
+  if (q.has('hm') && (q.get('hm') === 'lin' || q.get('hm') === 'sw')) S.hm = q.get('hm');
+  if (q.has('speed')) SPEED = clamp(parseFloat(q.get('speed')) || 1, 0.4, 2.5);
+  $('x').value = S.x;
+  $('speed').value = SPEED; $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  paint();
+  initFlux();
+  initHall();
+  $('gearPath').setAttribute('d', gearPathD());
+  runField();
+  runMotion();
+  runWave();
+  var AUTO = { '1':'vc', '2':'gear', '3':'hall', '4':'app', '5':'pts' };
+  if (AUTO[q.get('auto')] && DEMOS[AUTO[q.get('auto')]].fn) DEMOS[AUTO[q.get('auto')]].fn();
+
+})();
+</script>
+
+<script>
+/* ==================== 板块布局引擎：拖动 / 缩放 / 记忆 ====================
+   由 _build/build.js 注入；章节的面板清单 / 记忆键 / 默认布局在构建时替换。 */
+(function(){
+  "use strict";
+  var BOARD = document.getElementById('board');
+  var COLS  = ['colA','colB','colC'];
+  var IDS   = ["ctrlCard","ptsCard","stCard","readCard","fmlCard","curveCard"];
+  var MINZ = 0.7, MAXZ = 1.6, MINCOL = 260;
+  var KEY = 'jh-magnetic-layout-v1';
+  var DEF = {"weight":{"colA":2.9,"colB":5.3,"colC":3.8},"col":{"colA":["ctrlCard","ptsCard"],"colB":["stCard","readCard"],"colC":["fmlCard","curveCard"]},"zoom":{}};
+  var L = null, focused = null;
+  function el(id){ return document.getElementById(id); }
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function load(){
+    var d;
+    try { d = JSON.parse(localStorage.getItem(KEY)); } catch (e) { d = null; }
+    if (!d || !d.col) return clone(DEF);
+    COLS.forEach(function(c){ if (!d.col[c]) d.col[c] = []; });
+    var seen = {};
+    COLS.forEach(function(c){
+      d.col[c] = d.col[c].filter(function(id){ if (IDS.indexOf(id) < 0 || seen[id]) return false; seen[id] = 1; return true; });
+    });
+    IDS.forEach(function(id){ if (!seen[id]){ d.col.colC.push(id); seen[id] = 1; } });
+    d.weight = d.weight || clone(DEF.weight);
+    d.zoom = d.zoom || {};
+    return d;
+  }
+  L = load();
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(L)); } catch (e) {} }
+  function render(){
+    COLS.forEach(function(cid){
+      var col = el(cid);
+      L.col[cid].forEach(function(pid){ var p = el(pid); if (p) col.appendChild(p); });
+      col.style.flexGrow = L.weight[cid] || 1;
+    });
+  }
+  function applyZoom(id){
+    var p = el(id); if (!p) return;
+    var b = p.querySelector('.pbody'); if (!b) return;
+    b.style.zoom = L.zoom[id] || 1;
+  }
+  function applyAll(){ render(); IDS.forEach(applyZoom); }
+
+  function startDrag(ev, p){
+    if (ev.button) return;
+    var x0 = ev.clientX, y0 = ev.clientY, moved = false, lastTarget = null;
+    function move(e){
+      if (!moved){
+        if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) < 6) return;
+        moved = true;
+        document.body.classList.add('layout-dragging');
+        p.classList.add('sorting');
+      }
+      var col = null, i, r;
+      for (i = 0; i < COLS.length; i++){
+        r = el(COLS[i]).getBoundingClientRect();
+        if (e.clientX >= r.left - 6 && e.clientX <= r.right + 6){ col = COLS[i]; break; }
+      }
+      if (!col) col = (e.clientX < BOARD.getBoundingClientRect().left + BOARD.clientWidth/2) ? COLS[0] : COLS[COLS.length - 1];
+      var list = L.col[col].filter(function(id){ return id !== p.id; });
+      var idx = list.length, j, q, qr;
+      for (j = 0; j < list.length; j++){
+        q = el(list[j]); if (!q) continue;
+        qr = q.getBoundingClientRect();
+        if (e.clientY < qr.top + qr.height/2){ idx = j; break; }
+      }
+      var key = col + ':' + idx;
+      if (key === lastTarget) return;
+      lastTarget = key;
+      COLS.forEach(function(c2){ L.col[c2] = L.col[c2].filter(function(id){ return id !== p.id; }); });
+      L.col[col].splice(idx, 0, p.id);
+      render();
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', up);
+      document.body.classList.remove('layout-dragging');
+      p.classList.remove('sorting');
+      if (moved) save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
+  }
+  function startSplit(ev, sp){
+    ev.preventDefault();
+    var left = el(sp.getAttribute('data-left')), right = el(sp.getAttribute('data-right'));
+    var total = left.offsetWidth + right.offsetWidth;
+    var wl = L.weight[left.id] || 1, wr = L.weight[right.id] || 1, sum = wl + wr;
+    var x0 = ev.clientX, pxPerWeight = total/sum;
+    document.body.classList.add('layout-dragging');
+    function move(e){
+      var d = (e.clientX - x0)/pxPerWeight;
+      var nl = Math.max(MINCOL/(total/sum), Math.min(sum - MINCOL/(total/sum), wl + d));
+      left.style.flexGrow = nl; right.style.flexGrow = sum - nl;
+      L.weight[left.id] = nl; L.weight[right.id] = sum - nl;
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.body.classList.remove('layout-dragging');
+      save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  }
+  function zoomPanel(id, d){
+    var z = Math.round(((L.zoom[id] || 1) + d)*100)/100;
+    L.zoom[id] = Math.max(MINZ, Math.min(MAXZ, z));
+    applyZoom(id); save();
+  }
+  function toggleFocus(id){
+    var p = el(id); if (!p) return;
+    if (focused === id){ p.classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    else {
+      if (focused) el(focused).classList.remove('focused');
+      p.classList.add('focused'); document.body.classList.add('has-focus'); focused = id;
+    }
+  }
+  function reset(){
+    L = clone(DEF);
+    if (focused){ el(focused).classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    applyAll(); save();
+  }
+  var back = document.createElement('div');
+  back.id = 'focusBack';
+  back.addEventListener('click', function(){ if (focused) toggleFocus(focused); });
+  document.body.appendChild(back);
+
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var head = p.querySelector('.phead');
+    if (head){
+      head.addEventListener('pointerdown', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        e.preventDefault(); startDrag(e, p);
+      });
+      head.addEventListener('dblclick', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        toggleFocus(id);
+      });
+    }
+    p.querySelectorAll('.ptool').forEach(function(b){
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        var a = b.getAttribute('data-act');
+        if (a === 'in') zoomPanel(id, 0.08);
+        else if (a === 'out') zoomPanel(id, -0.08);
+        else if (a === 'max') toggleFocus(id);
+      });
+    });
+  });
+  document.querySelectorAll('.vsplit').forEach(function(sp){
+    sp.addEventListener('pointerdown', function(e){ startSplit(e, sp); });
+  });
+  /* ---------- 折叠：滑过上方自动折叠，回到可视区自动展开；可手动锁定 ---------- */
+  function setFold(p, on){
+    p.classList.toggle('folded', on);
+    var btn = p.querySelector('.ptool[data-act="fold"]');
+    if (btn) btn.textContent = on ? '▸' : '▾';
+  }
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var tools = p.querySelector('.ptools');
+    if (!tools) return;
+    var fb = document.createElement('button');
+    fb.className = 'ptool';
+    fb.setAttribute('data-act', 'fold');
+    fb.title = '折叠 / 展开本板块（手动折叠后不会被自动展开）';
+    fb.textContent = '▾';
+    tools.insertBefore(fb, tools.firstChild);
+    fb.addEventListener('click', function(e){
+      e.stopPropagation();
+      var folded = p.classList.contains('folded');
+      setFold(p, !folded);
+      if (!folded) p.setAttribute('data-manual', '1'); else p.removeAttribute('data-manual');
+    });
+  });
+  var ticking = false;
+  function autoFold(){
+    ticking = false;
+    var vh = window.innerHeight || 900;
+    IDS.forEach(function(id){
+      var p = el(id); if (!p) return;
+      if (!p.parentNode || p.parentNode.id !== 'colB') return;    /* 只有中间列参与自动折叠（左右两列固定不动） */
+      var r = p.getBoundingClientRect();
+      if (r.bottom < 90){                                          /* 整块滑到上方之外 → 收起 */
+        if (!p.classList.contains('folded')) setFold(p, true);
+      } else if (r.top < vh - 30 && r.bottom > 60 && !p.hasAttribute('data-manual')){
+        if (p.classList.contains('folded')) setFold(p, false);      /* 回到可视区 → 展开 */
+      }
+    });
+  }
+  function onScrollOrWheel(){
+    if (!ticking){ ticking = true; requestAnimationFrame(autoFold); }
+  }
+  window.addEventListener('scroll', onScrollOrWheel, { passive:true });
+  window.addEventListener('wheel', onScrollOrWheel, { passive:true });
+  window.addEventListener('touchmove', onScrollOrWheel, { passive:true });
+  window.addEventListener('resize', function(){ if (window.__repack) window.__repack(); });
+  setTimeout(autoFold, 400);
+  window.__autoFold = autoFold;
+
+  var lr = document.getElementById('layReset');
+  if (lr) lr.addEventListener('click', reset);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && focused) toggleFocus(focused); });
+  window.addEventListener('resize', function(){ IDS.forEach(applyZoom); });
+  window.__repack = function(){};
+  applyAll();
+  window.addEventListener('load', applyAll);
+})();
+
+</script>
+</body>
+</html>

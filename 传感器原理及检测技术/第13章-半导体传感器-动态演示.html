@@ -1,0 +1,1881 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第13章 半导体传感器 · 动态演示｜传感器原理与技术</title>
+<style>
+/* =====================================================================
+   公共样式（各章通用）· 由 _build/build.js 注入到每个单文件 HTML 的样式表顶部
+   与第4章保持同一套类名与观感；章节特有的语义色 / 版式写在章节模块的 extraCss 里
+   ===================================================================== */
+:root{
+  --jhu:#0e4a8e; --jhu2:#0a2f5c; --ink:#12233a; --muted:#5b6b80;
+  --line:#d5dfec; --bg:#eef3f9; --card:#ffffff;
+  --flux:#0d8b7f;      /* 磁通 / 场线（第4章起沿用） */
+  --cu:#c2703a;        /* 线圈 / 铜 */
+  --iron:#4b6b8f;      /* 铁芯 / 铁磁体 */
+  --gapm:#e08a1e;      /* 气隙 / 有效量 */
+  --eddy:#7c3aed;      /* 涡流 / 强调（紫） */
+  --hot:#d94a3d; --ok:#0f9d58;
+  --grid:rgba(14,74,142,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Source Han Sans SC","Hiragino Sans GB",system-ui,sans-serif;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+    var(--bg);
+  color:var(--ink); font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+header{
+  background:linear-gradient(120deg,var(--jhu) 0%,var(--jhu2) 100%);
+  color:#fff; padding:8px 24px; display:flex; align-items:center; gap:16px;
+  box-shadow:0 3px 14px rgba(10,47,92,.28);
+}
+header h1{font-size:22px; margin:0; letter-spacing:1px; font-weight:700}
+header .sub{font-size:13px; opacity:.9; border-left:1px solid rgba(255,255,255,.45); padding-left:13px}
+header .right{margin-left:auto; text-align:right; font-size:12.5px; opacity:.92; line-height:1.3}
+header .right b{font-size:15px; letter-spacing:2px}
+#laybar{display:flex; align-items:center; gap:10px; padding:3px 20px; font-size:12px; color:#41566f;
+        background:#e4edf8; border-bottom:1px solid #cfdcec}
+#laybar button{border:1px solid #a9c1dd; background:#fff; color:var(--jhu); border-radius:7px;
+               font-size:12px; font-weight:700; padding:2px 10px; cursor:pointer; font-family:inherit}
+#laybar button:hover{background:#f2f7fd}
+#laybar .hint{color:#6b7d92}
+#boardWrap{padding:6px 14px 2px}
+#board{display:flex; align-items:flex-start}
+.col{display:flex; flex-direction:column; gap:6px; min-width:0; flex-grow:1; flex-basis:0}
+.colhead{font-size:11.5px; font-weight:700; color:#8296ad; letter-spacing:.4px; padding:0 3px 2px; border-bottom:1px dashed #dbe5f0}
+.vsplit{flex:0 0 13px; align-self:stretch; cursor:col-resize; position:relative; touch-action:none}
+.vsplit::before{content:""; position:absolute; left:5.5px; top:8px; bottom:8px; width:2px; border-radius:2px; background:#cfdcec}
+.vsplit:hover::before{background:var(--jhu); width:3px; left:5px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:13px;
+      box-shadow:0 2px 10px rgba(18,35,58,.06); padding:5px 9px}
+.card h2{margin:0 0 4px; font-size:14.5px; color:var(--jhu); font-weight:700; display:flex; align-items:center; gap:7px}
+.card h2::before{content:""; width:4px; height:15px; border-radius:3px; background:var(--jhu)}
+.card h2 small{font-weight:400; color:var(--muted); font-size:12px}
+.panel{position:relative; box-sizing:border-box}
+.panel > .phead{display:flex; align-items:center; gap:6px; cursor:move; touch-action:none; user-select:none; margin:-1px 0 4px}
+.panel > .phead h2{margin:0; flex:1; min-width:0; cursor:move}
+.ptools{display:flex; gap:3px; flex:none}
+.ptool{width:21px; height:21px; padding:0; line-height:1; border:1px solid var(--line); background:#fff;
+       color:var(--jhu); border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit}
+.ptool:hover{background:#eef4fc; border-color:#9fbedd}
+.panel.sorting{opacity:.6; outline:2px dashed var(--jhu); outline-offset:2px; pointer-events:none}
+.panel.focused{position:fixed; left:14px; right:14px; top:80px; bottom:14px; z-index:300; overflow:auto;
+               box-shadow:0 18px 50px rgba(10,47,92,.38); border-color:var(--jhu)}
+#focusBack{position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(10,30,55,.34); z-index:290; display:none}
+body.has-focus #focusBack{display:block}
+body.layout-dragging{user-select:none}
+svg{display:block; width:100%; height:auto}
+.tiny{font-size:12px; fill:var(--muted); color:var(--muted)}
+/* ---- 控件 ---- */
+.ctrl{display:flex; flex-direction:column; gap:2px; margin-bottom:2px}
+.ctrl .row{display:flex; align-items:center; gap:7px}
+.ctrl .name{font-size:12.8px; color:var(--muted); width:118px; flex:none}
+.ctrl .name b{color:var(--ink); font-size:14px}
+.ctrl output{font-size:18px; font-weight:800; min-width:96px; text-align:right; font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none; appearance:none; height:8px; border-radius:5px; background:#dce6f2; outline:none; flex:1; min-width:70px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:21px; height:21px; border-radius:50%;
+      background:#fff; border:3px solid var(--jhu); cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.seg{display:flex; gap:6px; flex-wrap:wrap}
+.seg button{flex:1 1 0; min-width:96px; padding:5px 8px; border-radius:9px; border:1px solid var(--line);
+            background:#fff; cursor:pointer; font-size:13px; font-weight:700; color:#33506f; font-family:inherit; line-height:1.3}
+.seg button small{display:block; font-weight:400; font-size:11px; color:var(--muted)}
+.seg button:hover{border-color:#9fbedd}
+.seg button.on{background:var(--jhu); border-color:var(--jhu); color:#fff}
+.seg button.on small{color:rgba(255,255,255,.85)}
+/* 紧凑小按钮（章节里的型式/模式细分按钮） */
+.seg.tight button{min-width:66px; flex:1 1 66px; padding:3px 4px; font-size:11.5px; line-height:1.25}
+.seg.tight button small{font-size:10px}
+.step{border:1px solid var(--line); background:#fff; color:var(--jhu); width:28px; height:28px;
+      border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; line-height:1}
+.actions{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap}
+.actions button{flex:1 1 92px; padding:5px 4px; border-radius:9px; border:1px solid var(--jhu);
+                background:var(--jhu); color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;
+                font-family:inherit; white-space:nowrap}
+.actions button.ghost{background:#fff; color:var(--jhu)}
+.actions button.running{background:var(--hot); border-color:var(--hot); color:#fff}
+.actions button:hover{filter:brightness(1.07)}
+.narrate{margin-top:4px; border-left:5px solid var(--flux); background:#f2fbf9; border-radius:0 10px 10px 0;
+         padding:3px 10px; font-size:12.4px; line-height:1.34; min-height:26px; color:#0a5f57}
+/* ---- 读数 ---- */
+.big{display:flex; align-items:baseline; gap:9px; background:linear-gradient(90deg,#f2f7ff,#fff);
+     border:1px solid #d9e5f5; border-radius:12px; padding:3px 12px}
+.big .cap{font-size:13px; color:var(--muted); margin-right:auto}
+.big .num{font-size:23px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.05}
+.big .unit{font-size:15px; font-weight:700; color:var(--muted)}
+.kv{display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:5px}
+.kv .box{border:1px dashed var(--line); border-radius:9px; padding:2px 6px; font-size:10.5px; color:var(--muted)}
+.kv .box b{display:block; font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:1px}
+.fine{font-size:10.4px; color:var(--muted); margin-top:5px; line-height:1.5; font-variant-numeric:tabular-nums}
+.fine b{color:var(--ink)}
+/* ---- 比例条 / 图例 ---- */
+.rmbar{display:flex; height:15px; border-radius:5px; overflow:hidden; border:1px solid var(--line); background:#f4f8fd; margin-top:3px}
+.rmbar i{display:block; height:100%}
+.legend{display:flex; gap:8px; flex-wrap:wrap; font-size:10.4px; color:var(--muted); margin-top:1px}
+.legend i{display:inline-block; width:14px; height:9px; border-radius:2px; margin-right:5px}
+/* ---- 公式 ---- */
+.fml{font-family:"Cambria Math","Times New Roman",Cambria,SimSun,serif; font-size:10.9px; line-height:1.22; color:#16283d}
+.fml .row{display:block; border-bottom:1px dashed #e7eef7; padding:0}
+.fml .row:last-child{border-bottom:none}
+.fml .tag{display:inline-block; font-family:"Microsoft YaHei",sans-serif; font-size:11px; color:#fff;
+          background:var(--jhu); border-radius:5px; padding:0 6px; margin-right:5px; vertical-align:1px}
+.fml .tag.g{background:var(--gapm)} .fml .tag.f{background:var(--flux)} .fml .tag.v{background:var(--eddy)}
+.fml b{color:var(--hot)}
+.fml .note{font-family:"Microsoft YaHei",sans-serif; font-size:10.8px; color:var(--muted); line-height:1.4; margin-top:2px}
+.frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.88em; line-height:1.02; margin:0 .14em}
+.frac i{font-style:normal; padding:0 .3em}
+.frac b{font-weight:400; color:inherit; border-top:1.4px solid currentColor; padding:0 .3em}
+/* ---- 要点 ---- */
+ol.points{margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:4px}
+ol.points li{border:1px solid var(--line); border-left:4px solid #c8d6e6; border-radius:0 9px 9px 0;
+             padding:0 7px; font-size:10.9px; line-height:1.28; color:#3c5068; background:#fbfdff; transition:.25s}
+ol.points li.on{border-left-color:var(--ok); background:#f2fbf5; color:var(--ink); box-shadow:0 0 0 2px rgba(15,157,88,.12)}
+ol.points li .hl{color:var(--ok); font-weight:700}
+.hint{font-size:12px; color:var(--muted); margin-top:5px}
+footer{padding:3px 18px 5px; font-size:11px; color:var(--muted); line-height:1.5}
+footer b{color:var(--jhu)}
+.actions button.ptsB{flex:0 0 26px; padding:2px 0; font-size:11px; border-radius:6px}   /* 要点编号按钮：特异性需高于 .actions button */
+/* 左右两列都吸附固定；只有中间列（结构+读数）随页面滚动 */
+#colA, #colC{position:sticky; top:4px; align-self:flex-start;
+             max-height:calc(100vh - 10px); overflow-y:auto; overscroll-behavior:contain}
+#colA::-webkit-scrollbar, #colC::-webkit-scrollbar{width:6px}
+#colA::-webkit-scrollbar-thumb, #colC::-webkit-scrollbar-thumb{background:#c3d3e6; border-radius:3px}
+/* 中间列底部留白：让最后一张卡片也能滚动到屏幕中间 */
+#colB{padding-bottom:52vh}
+.panel > .pbody{max-height:2600px; overflow:hidden; transition:max-height .22s ease, opacity .18s ease}
+.panel.folded > .pbody{max-height:0 !important; opacity:0}
+.panel.folded{border-color:#bcd0e5; background:#f8fbff}
+.panel.folded > .phead h2{color:#5b6b80}
+.ptool[data-act="fold"]{font-size:11px}
+.readlabel{font-size:12.5px; font-weight:700; color:#5b6b80; margin:7px 0 3px; padding-top:6px; border-top:1px dashed #dbe5f0}
+.readwrap svg{max-height:196px}
+.pbody > svg{max-height:300px}
+.pbody > svg + svg{max-height:196px}
+@media (max-width:1200px){ #boardWrap{min-width:1180px} }
+
+  /* ---- 第13章语义色 ---- */
+  :root{ --sno2:#c2703a; --water:#2b6cb0; --magf:#7c3aed; --ionf:#0d8b7f; }
+</style>
+</head>
+<body>
+<header>
+  <h1>第 13 章 半导体传感器</h1>
+  <div class="sub">气敏 · 湿敏 · 离子敏 · 磁敏 · 色敏 | 动态演示</div>
+  <div class="right"><b>江汉大学</b><br>传感器原理与技术</div>
+</header>
+<div id="laybar">
+  <span style="font-weight:700;color:#0e4a8e">板块布局</span>
+  <button id="layReset">↺ 恢复默认（一屏）</button>
+  <span class="hint"><b>左右两列固定不动</b>（左＝型式与输入量＋要点，右＝数据/曲线/公式），只有<b>中间列</b>随页面滚动；每块标题栏的 <b>▾</b> 可折叠该板块；<b>滚轮下滑时滑过上方的那几块会自动收起、滚回来自动展开</b>（手动折起的不会被自动展开）；拖动<b>标题栏</b>可换列换位、拖<b>竖条</b>调列宽、<b>＋ －</b> 缩放、<b>⛶</b> 全屏放大（<b>Esc</b> 退出）。布局自动记住。</span>
+</div>
+
+<div id="boardWrap">
+<main id="board">
+
+  <!-- ================= 左列 ================= -->
+  <div class="col" id="colA">
+    <div class="colhead">① 器件与输入量 · 本章要点</div>
+
+
+    <section class="card panel" id="ctrlCard">
+      <div class="phead">
+        <h2>器件与输入量</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="ctrl">
+        <div class="row" style="align-items:flex-start">
+          <span class="name" style="padding-top:4px" id="typeName"><b>敏感器件</b></span>
+          <div class="seg tight" id="segDev" style="flex:1">
+            <button data-dev="gas" class="on">气敏<small>SnO₂</small></button>
+            <button data-dev="hum">湿敏<small>陶瓷</small></button>
+            <button data-dev="ion">离子敏<small>ISFET</small></button>
+            <button data-dev="mag">磁敏<small>InSb</small></button>
+            <button data-dev="col">色敏<small>双结硅</small></button>
+          </div>
+        </div>
+        <div class="hint" id="devHint">气敏：加热到 200~400 ℃ 促进化学吸附与热清洗；还原性气体在 SnO₂ 晶粒表面给出电子 → 表面耗尽层变薄 → 电阻下降。</div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b id="xName">气体浓度 c</b><br><span class="tiny" id="xTxt">还原性气体 CO（量程 30~1000 ppm）</span></span>
+          <button class="step" id="xM" title="减小">−</button>
+          <input type="range" id="xin" min="0" max="1000" step="5" value="100">
+          <button class="step" id="xP" title="增大">＋</button>
+          <output id="xOut">100 ppm</output>
+        </div>
+      </div>
+      <div class="ctrl">
+        <div class="row">
+          <span class="name"><b id="auxName">工作温度 T</b><br><span class="tiny" id="auxTxt">热清洗 / 加速吸附 / 稳定工作点</span></span>
+          <input type="range" id="auxin" min="200" max="400" step="5" value="300">
+          <output id="auxOut">300 ℃</output>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="playGas" class="ghost">▶ 气敏原理</button>
+        <button id="playHum" class="ghost">▶ 湿敏特性</button>
+        <button id="playIon" class="ghost">▶ 离子敏能斯特</button>
+        <button id="playMagCol" class="ghost">▶ 磁敏 · 色敏</button>
+        <button id="reset" class="ghost" style="flex:0 0 58px">↺ 复位</button>
+      </div>
+      <div class="ctrl" style="margin-top:5px">
+        <div class="row">
+          <span class="name"><b>演示速度</b><br><span class="tiny">0.4× 慢 ～ 2.5× 快</span></span>
+          <input type="range" id="speed" min="0.4" max="2.5" step="0.1" value="1">
+          <output id="speedOut">1.0×</output>
+        </div>
+      </div>
+      <div class="narrate" id="narration">初始状态：气敏（SnO₂ 烧结型）、CO 浓度 100 ppm、工作温度 300 ℃。四个演示按钮分别讲：气敏原理 / 湿敏特性 / 离子敏能斯特 / 磁敏·色敏；左列「巡览要点」逐条过关键结论。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="ptsCard">
+      <div class="phead">
+        <h2>本章要点</h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="actions" style="margin-top:0">
+        <button id="ptsPlay" class="ghost" style="flex:0 0 98px">▶ 巡览要点</button>
+        <button id="ptsB0" class="ghost ptsB">1</button><button id="ptsB1" class="ghost ptsB">2</button>
+        <button id="ptsB2" class="ghost ptsB">3</button><button id="ptsB3" class="ghost ptsB">4</button>
+        <button id="ptsB4" class="ghost ptsB">5</button><button id="ptsB5" class="ghost ptsB">6</button>
+        <button id="ptsB6" class="ghost ptsB">7</button><button id="ptsB7" class="ghost ptsB">8</button>
+        <button id="ptsB8" class="ghost ptsB">9</button><button id="ptsB9" class="ghost ptsB">10</button>
+      </div>
+      <ol class="points" id="points"></ol>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colA" data-right="colB" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 中列 ================= -->
+  <div class="col" id="colB">
+    <div class="colhead">② 结构动态 ＋ 输出读数（成对显示）</div>
+
+
+    <section class="card panel" id="stCard">
+      <div class="phead">
+        <h2>结构动态 <small id="stSub">SnO₂ 烧结型气敏元件剖面</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="st" viewBox="0 0 700 300" role="img" aria-label="半导体传感器结构动态（气敏/湿敏/离子敏/磁敏/色敏）">
+
+        <!-- ================= 气敏：SnO₂ 烧结型（旁热式）剖面 ================= -->
+        <g id="stGas">
+          <rect x="96" y="76" width="508" height="176" rx="12" fill="none" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="7 5"/>
+          <text x="100" y="70" font-size="11" fill="#94a3b8">不锈钢网罩（防爆、通气）</text>
+          <text id="gConc" x="600" y="70" text-anchor="end" font-size="11.5" font-weight="700" fill="#2b6cb0">CO = 100 ppm</text>
+          <rect x="150" y="100" width="400" height="132" rx="9" fill="#fdece0" stroke="#c2703a" stroke-width="1.6"/>
+          <rect id="gDep" x="150" y="100" width="400" height="18" fill="#7c3aed" opacity=".22"/>
+          <text id="gDepTxt" x="524" y="115" text-anchor="end" font-size="10" fill="#5b2ea8">表面耗尽层（吸附氧 O⁻ 夺走电子）</text>
+          <rect x="210" y="132" width="280" height="68" rx="7" fill="#eef2f7" stroke="#9fb2c8" stroke-width="1.4"/>
+          <text x="214" y="128" font-size="10.5" fill="#94a3b8">Al₂O₃ 陶瓷管</text>
+          <path id="gCoil" d="M232 166 h16 l10 -18 l14 36 l14 -36 l14 36 l14 -36 l14 36 l14 -36 l14 36 l10 -18 h16" fill="none" stroke="#b9c6d4" stroke-width="3.2" stroke-linecap="round"/>
+          <text id="gTxt" x="214" y="222" font-size="11" font-weight="700" fill="#d94a3d">加热丝 Ni-Cr：T = 300 ℃</text>
+          <text x="522" y="228" text-anchor="end" font-size="10.5" fill="#a05a2a">SnO₂ 敏感体（多孔）</text>
+          <rect x="150" y="100" width="24" height="132" fill="#e3cd78" opacity=".95" stroke="#a07c14" stroke-width="1"/>
+          <rect x="526" y="100" width="24" height="132" fill="#e3cd78" opacity=".95" stroke="#a07c14" stroke-width="1"/>
+          <line x1="150" y1="126" x2="80" y2="126" stroke="#5b6b80" stroke-width="1.8"/>
+          <circle cx="78" cy="126" r="3.6" fill="#5b6b80"/>
+          <text x="20" y="120" font-size="11" fill="#5b6b80">金电极 A</text>
+          <line x1="550" y1="126" x2="622" y2="126" stroke="#5b6b80" stroke-width="1.8"/>
+          <circle cx="624" cy="126" r="3.6" fill="#5b6b80"/>
+          <text x="688" y="120" text-anchor="end" font-size="11" fill="#5b6b80">金电极 B</text>
+          <text x="150" y="266" font-size="10.5" fill="#94a3b8">敏感体电阻（相对洁净空气）：R_s/R_a 越小 = 气体浓度越高</text>
+          <rect x="150" y="272" width="300" height="14" rx="4" fill="#f4f8fd" stroke="#d5dfec"/>
+          <rect id="gRBar" x="150" y="272" width="66" height="14" rx="4" fill="#0e4a8e" opacity=".8"/>
+          <text id="gRTxt" x="462" y="283" font-size="12" font-weight="700" fill="#0e4a8e">R_s/R_a = 0.220</text>
+          <g id="gMols"></g>
+          <g id="gElec"></g>
+        </g>
+
+        <!-- ================= 湿敏：MgCr₂O₄-TiO₂ 多孔陶瓷（梳状电极） ================= -->
+        <g id="stHum" style="display:none">
+          <rect x="132" y="98" width="330" height="108" rx="9" fill="#f3ead9" stroke="#a8907a" stroke-width="1.6"/>
+          <text x="136" y="218" font-size="10.5" fill="#8a7a63">多孔陶瓷（气孔率 30%~40%）</text>
+          <circle cx="172" cy="120" r="5.2" fill="#fff" opacity=".9"/>
+          <circle cx="206" cy="140" r="3.6" fill="#fff" opacity=".9"/>
+          <circle cx="240" cy="118" r="6" fill="#fff" opacity=".9"/>
+          <circle cx="278" cy="146" r="4.4" fill="#fff" opacity=".9"/>
+          <circle cx="312" cy="122" r="5.6" fill="#fff" opacity=".9"/>
+          <circle cx="348" cy="142" r="3.8" fill="#fff" opacity=".9"/>
+          <circle cx="384" cy="120" r="5" fill="#fff" opacity=".9"/>
+          <circle cx="420" cy="146" r="4.6" fill="#fff" opacity=".9"/>
+          <circle cx="188" cy="176" r="5" fill="#fff" opacity=".9"/>
+          <circle cx="226" cy="192" r="3.6" fill="#fff" opacity=".9"/>
+          <circle cx="266" cy="172" r="6.2" fill="#fff" opacity=".9"/>
+          <circle cx="306" cy="194" r="4.2" fill="#fff" opacity=".9"/>
+          <circle cx="344" cy="174" r="5.4" fill="#fff" opacity=".9"/>
+          <circle cx="382" cy="192" r="3.8" fill="#fff" opacity=".9"/>
+          <circle cx="420" cy="176" r="5" fill="#fff" opacity=".9"/>
+          <line x1="146" y1="106" x2="146" y2="198" stroke="#a07c14" stroke-width="4"/>
+          <line x1="146" y1="122" x2="254" y2="122" stroke="#a07c14" stroke-width="2.6"/>
+          <line x1="146" y1="152" x2="254" y2="152" stroke="#a07c14" stroke-width="2.6"/>
+          <line x1="146" y1="182" x2="254" y2="182" stroke="#a07c14" stroke-width="2.6"/>
+          <line x1="448" y1="106" x2="448" y2="198" stroke="#a07c14" stroke-width="4"/>
+          <line x1="448" y1="137" x2="340" y2="137" stroke="#a07c14" stroke-width="2.6"/>
+          <line x1="448" y1="167" x2="340" y2="167" stroke="#a07c14" stroke-width="2.6"/>
+          <line x1="448" y1="197" x2="340" y2="197" stroke="#a07c14" stroke-width="2.6"/>
+          <line x1="146" y1="106" x2="112" y2="84" stroke="#5b6b80" stroke-width="1.6"/>
+          <circle cx="110" cy="82" r="3.4" fill="#5b6b80"/>
+          <line x1="448" y1="106" x2="482" y2="84" stroke="#5b6b80" stroke-width="1.6"/>
+          <circle cx="484" cy="82" r="3.4" fill="#5b6b80"/>
+          <text x="64" y="76" font-size="11" fill="#a07c14">梳状电极 Au</text>
+          <text x="152" y="66" font-size="11" fill="#2b6cb0">● H⁺　</text>
+          <text x="212" y="66" font-size="11" fill="#0e4a8e">● OH⁻</text>
+          <text id="hFilmTxt" x="470" y="48" text-anchor="end" font-size="11" font-weight="700" fill="#2b6cb0">连续水膜（RH↑ 越厚）</text>
+          <rect id="hFilm" x="132" y="88" width="330" height="10" fill="#2b6cb0" opacity=".25"/>
+          <text x="132" y="237" font-size="10.5" fill="#94a3b8">湿敏元件阻抗 |Z|（对数刻度）</text>
+          <rect x="132" y="244" width="300" height="14" rx="4" fill="#f4f8fd" stroke="#d5dfec"/>
+          <rect id="hZBar" x="132" y="244" width="0" height="14" rx="4" fill="#0e4a8e" opacity=".8"/>
+          <text id="hZTxt" x="442" y="255" font-size="12" font-weight="700" fill="#0e4a8e">|Z| = 238.9 kΩ</text>
+          <g id="hMols"></g>
+          <g id="hIons"></g>
+        </g>
+
+        <!-- ================= 离子敏：ISFET 剖面（参比电极 + 敏感膜 + 沟道） ================= -->
+        <g id="stIon" style="display:none">
+          <text x="20" y="34" font-size="11" fill="#94a3b8">界面电位 ∝ lg a(H⁺)：25 ℃ 约 59 mV/pH → 等效栅压改变 → 漏极电流改变</text>
+          <rect x="110" y="46" width="460" height="74" rx="6" fill="#e3f0fb" stroke="#9fb2c8" stroke-width="1.4"/>
+          <text x="196" y="62" font-size="10.5" fill="#5b6b80">被测溶液（H⁺ 活度 a_H⁺）</text>
+          <rect x="506" y="40" width="16" height="84" rx="3" fill="#cfd8e3" stroke="#5b6b80" stroke-width="1.2"/>
+          <text x="498" y="58" text-anchor="end" font-size="10.5" fill="#5b6b80">参比电极 Ag-AgCl</text>
+          <line x1="514" y1="40" x2="514" y2="24" stroke="#5b6b80" stroke-width="1.6"/>
+          <text x="520" y="20" font-size="10.5" fill="#5b6b80">G（栅）</text>
+          <text id="iETxt" x="196" y="110" font-size="11" font-weight="700" fill="#d94a3d">E = 0.0 mV（相对 pH 7）</text>
+          <rect x="280" y="120" width="160" height="12" rx="3" fill="#0d8b7f" opacity=".9"/>
+          <text x="448" y="131" font-size="10.5" fill="#0d8b7f">Si₃N₄/SiO₂ 敏感膜</text>
+          <rect x="230" y="132" width="340" height="88" rx="7" fill="#eef2f7" stroke="#9fb2c8" stroke-width="1.4"/>
+          <text x="224" y="216" text-anchor="end" font-size="10.5" fill="#94a3b8">p-Si 衬底</text>
+          <rect x="248" y="140" width="68" height="44" fill="#2b6cb0" opacity=".8"/>
+          <rect x="484" y="140" width="68" height="44" fill="#2b6cb0" opacity=".8"/>
+          <text x="282" y="200" text-anchor="middle" font-size="10.5" fill="#0e4a8e">S 源（n⁺）</text>
+          <text x="518" y="200" text-anchor="middle" font-size="10.5" fill="#0e4a8e">D 漏（n⁺）</text>
+          <rect id="iDep" x="316" y="150" width="168" height="16" fill="#7c3aed" opacity=".2"/>
+          <rect id="iChan" x="316" y="140" width="168" height="10" fill="#0f9d58" opacity=".85"/>
+          <text id="iIDTxt" x="400" y="180" text-anchor="middle" font-size="11" font-weight="700" fill="#0e4a8e">I_D = 1.000 mA</text>
+          <g id="iAds"></g>
+          <g id="iDots"></g>
+        </g>
+
+        <!-- ================= 磁敏：InSb 曲折形磁敏电阻 + 考比诺圆盘对照 ================= -->
+        <g id="stMag" style="display:none">
+          <text x="20" y="40" font-size="11" fill="#94a3b8">洛伦兹力使载流子路径偏转（霍尔角 θ_H = arctan μB）→ 路径变长 → 电阻增大</text>
+          <text x="104" y="84" font-size="11" fill="#7c3aed">B（垂直纸面向外，均匀磁场）</text>
+          <g id="mBf">
+            <circle cx="260" cy="66" r="9" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+            <circle cx="260" cy="66" r="2.8" fill="#7c3aed"/>
+            <circle cx="380" cy="66" r="9" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+            <circle cx="380" cy="66" r="2.8" fill="#7c3aed"/>
+            <circle cx="500" cy="66" r="9" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+            <circle cx="500" cy="66" r="2.8" fill="#7c3aed"/>
+          </g>
+          <text id="mTilt" x="672" y="58" text-anchor="end" font-size="11.5" font-weight="700" fill="#7c3aed">θ_H = arctan(μB) = 66.9°</text>
+          <rect x="104" y="90" width="420" height="112" rx="8" fill="#f4f8fd" stroke="#9fb2c8" stroke-width="1.4"/>
+          <text x="112" y="196" font-size="10.5" fill="#94a3b8">InSb 磁敏电阻（陶瓷基片上做成曲折形）</text>
+          <path d="M150 114 H470 V136 H150 V158 H470 V180 H150" fill="none" stroke="#c2703a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>
+          <circle cx="150" cy="114" r="7" fill="#e3cd78" stroke="#a07c14" stroke-width="1.2"/>
+          <circle cx="150" cy="180" r="7" fill="#e3cd78" stroke="#a07c14" stroke-width="1.2"/>
+          <line x1="150" y1="114" x2="84" y2="114" stroke="#5b6b80" stroke-width="1.8"/>
+          <line x1="150" y1="180" x2="84" y2="180" stroke="#5b6b80" stroke-width="1.8"/>
+          <circle cx="82" cy="114" r="3.4" fill="#5b6b80"/>
+          <circle cx="82" cy="180" r="3.4" fill="#5b6b80"/>
+          <circle cx="612" cy="150" r="30" fill="none" stroke="#9fb2c8" stroke-width="1.4"/>
+          <circle cx="612" cy="150" r="4" fill="#5b6b80"/>
+          <path d="M612 132 a18 18 0 1 1 -13 31" fill="none" stroke="#c2703a" stroke-width="2.2"/>
+          <text x="612" y="196" text-anchor="middle" font-size="10.5" fill="#94a3b8">考比诺圆盘（无霍尔电场）</text>
+          <text x="104" y="232" font-size="10.5" fill="#94a3b8">磁敏电阻 R_B（相对零场电阻）</text>
+          <rect x="104" y="238" width="300" height="14" rx="4" fill="#f4f8fd" stroke="#d5dfec"/>
+          <rect id="mRBar" x="104" y="238" width="0" height="14" rx="4" fill="#7c3aed" opacity=".8"/>
+          <text id="mRTxt" x="416" y="249" font-size="12" font-weight="700" fill="#7c3aed">R_B = 341.1 Ω</text>
+          <g id="mCar"></g>
+        </g>
+
+        <!-- ================= 色敏：双结硅色敏器件剖面 + 吸收深度 ================= -->
+        <g id="stCol" style="display:none">
+          <text x="20" y="40" font-size="11" fill="#94a3b8">短波在浅结被吸收、长波穿透到深结 → 两路短路电流之比只与波长有关</text>
+          <circle id="cLamp" cx="300" cy="58" r="9" fill="#d94a3d" opacity=".85"/>
+          <line id="cRay" x1="300" y1="66" x2="300" y2="86" stroke="#d94a3d" stroke-width="2.4"/>
+          <text id="cLam" x="318" y="62" font-size="11.5" font-weight="700" fill="#0e4a8e">λ = 550 nm</text>
+          <text x="536" y="80" text-anchor="end" font-size="10.5" fill="#5b6b80">上电极（透明 / 指状）</text>
+          <line x1="210" y1="86" x2="252" y2="86" stroke="#5b6b80" stroke-width="2.6"/>
+          <line x1="348" y1="86" x2="540" y2="86" stroke="#5b6b80" stroke-width="2.6"/>
+          <rect x="210" y="88" width="330" height="112" rx="5" fill="#eef2f7" stroke="#9fb2c8" stroke-width="1.4"/>
+          <rect x="210" y="88" width="330" height="14" fill="#2b6cb0" opacity=".5"/>
+          <rect x="210" y="102" width="330" height="56" fill="#d94a3d" opacity=".22"/>
+          <text x="214" y="97" font-size="10" font-weight="700" fill="#0e4a8e">浅结 D₁（峰值 ≈450 nm）</text>
+          <text x="214" y="152" font-size="10.5" fill="#a02a20">深结 D₂（峰值 ≈700 nm）</text>
+          <text x="214" y="196" font-size="10.5" fill="#94a3b8">n 型硅衬底</text>
+          <rect x="210" y="200" width="330" height="10" fill="#c9d3de" stroke="#5b6b80" stroke-width="1"/>
+          <line id="cXp" x1="210" y1="93.6" x2="540" y2="93.6" stroke="#0f9d58" stroke-width="1.6" stroke-dasharray="6 4"/>
+          <text id="cXpTxt" x="206" y="98" text-anchor="end" font-size="10.5" font-weight="700" fill="#0f9d58">1/α = 0.40 μm</text>
+          <rect id="cGlow" x="210" y="91" width="330" height="5" fill="#0f9d58" opacity=".3"/>
+          <line x1="562" y1="88" x2="562" y2="200" stroke="#9fb2c8" stroke-width="1.4"/>
+          <line x1="556" y1="88" x2="568" y2="88" stroke="#9fb2c8" stroke-width="1.4"/>
+          <line x1="556" y1="116" x2="568" y2="116" stroke="#9fb2c8" stroke-width="1.4"/>
+          <line x1="556" y1="144" x2="568" y2="144" stroke="#9fb2c8" stroke-width="1.4"/>
+          <line x1="556" y1="172" x2="568" y2="172" stroke="#9fb2c8" stroke-width="1.4"/>
+          <line x1="556" y1="200" x2="568" y2="200" stroke="#9fb2c8" stroke-width="1.4"/>
+          <text x="574" y="92" font-size="10.5" fill="#5b6b80">0 μm</text>
+          <text x="574" y="120" font-size="10.5" fill="#5b6b80">2 μm</text>
+          <text x="574" y="148" font-size="10.5" fill="#5b6b80">4 μm</text>
+          <text x="574" y="176" font-size="10.5" fill="#5b6b80">6 μm</text>
+          <text x="574" y="204" font-size="10.5" fill="#5b6b80">8 μm</text>
+          <text x="210" y="230" font-size="10.5" fill="#94a3b8">短路电流（相对满量程）</text>
+          <rect x="210" y="238" width="300" height="14" rx="4" fill="#f4f8fd" stroke="#d5dfec"/>
+          <rect id="cBar1" x="210" y="238" width="0" height="14" rx="4" fill="#2b6cb0" opacity=".85"/>
+          <text id="cBar1T" x="518" y="249" font-size="11" font-weight="700" fill="#2b6cb0">I₁ = 180.1 nA</text>
+          <rect x="210" y="256" width="300" height="14" rx="4" fill="#f4f8fd" stroke="#d5dfec"/>
+          <rect id="cBar2" x="210" y="256" width="0" height="14" rx="4" fill="#d94a3d" opacity=".85"/>
+          <text id="cBar2T" x="518" y="267" font-size="11" font-weight="700" fill="#d94a3d">I₂ = 110.4 nA</text>
+          <g id="cPho"></g>
+        </g>
+      </svg>
+      <div class="hint" id="stHint">SnO₂ 气敏元件：加热丝把敏感体加热到 200~400 ℃，气体分子穿过不锈钢网罩在晶粒表面授受电子 → 表面耗尽层厚度随电阻变化。</div>
+      </div>
+    </section>
+
+    <section class="card panel" id="readCard">
+      <div class="phead">
+        <h2>输出读数 <small id="readSub">气敏 · 敏感体电阻与灵敏度</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <div class="big">
+        <span class="cap" id="bigCap">敏感体电阻 R_s</span>
+        <span class="num" id="bigNum">6.600</span><span class="unit" id="bigUnit">kΩ</span>
+      </div>
+      <div class="kv">
+        <div class="box"><span id="k1t">灵敏度 β</span><b id="kv1">4.545</b></div>
+        <div class="box"><span id="k2t">电阻比 R_s/R_a</span><b id="kv2">0.220</b></div>
+        <div class="box"><span id="k3t">洁净空气 R_a</span><b id="kv3">30.0 kΩ</b></div>
+        <div class="box"><span id="k4t">脉冲加热功率</span><b id="kv4">0.070 W</b></div>
+      </div>
+      <div class="readlabel" id="readLabel">输出读数：敏感体电阻 / 灵敏度 / 加热（脉冲加热省 98.6%）</div>
+      <div class="readwrap"><svg viewBox="0 0 620 240" role="img" aria-label="半导体传感器输出读数">
+        <g transform="translate(16,20)">
+          <text id="rd1" x="0" y="0" font-size="12.5" font-weight="700" fill="#0e4a8e">洁净空气（标准态）：R_a = 30.0 kΩ，加热 T = 300 ℃</text>
+          <text id="rd2" x="0" y="22" font-size="12" fill="#5b6b80">R_s = R_a/(1+α(T)·√c) = 30.0/(1+0.355×10.0) = 6.600 kΩ</text>
+          <text id="rd3" x="0" y="44" font-size="12" fill="#5b6b80">灵敏度 β = R_a/R_s = 4.545（教材 @100 ppm CO：0.13~0.31）</text>
+          <text id="rd4" x="0" y="66" font-size="12" fill="#5b6b80">加热：P = U²/R = 5²/5 = 5.0 W，每秒仅加热 14 ms → 平均 0.070 W</text>
+          <rect x="0" y="80" width="560" height="16" rx="5" fill="#f4f8fd" stroke="#d5dfec"/>
+          <rect id="rdBar" x="0" y="80" width="66" height="16" rx="5" fill="#0e4a8e"/>
+          <text id="rdBarTxt" x="0" y="114" font-size="12.5" font-weight="700" fill="#0e4a8e">R_s/R_a = 0.220（相对洁净空气）</text>
+          <text id="rd5" x="0" y="142" font-size="12.5" font-weight="700" fill="#d94a3d">CO = 100 ppm　T = 300 ℃　（脉冲加热省 98.6%）</text>
+          <text id="rd6" x="0" y="166" font-size="11" fill="#94a3b8">机理：空气中 O₂ 吸附夺电子成 O⁻ → 表面耗尽 → 电阻高；还原性气体给电子 → 耗尽可能耗尽层变薄 → 电阻低。</text>
+          <text id="rd7" x="0" y="188" font-size="11" fill="#94a3b8">应用：室内 CO / 煤气报警（30~1000 ppm）、酒驾呼气乙醇、燃烧氧含量闭环、烟气分析。</text>
+          <text id="rd8" x="0" y="210" font-size="11" fill="#94a3b8">注意：气敏本质不区分气体种类（交叉敏感）→ 选择性靠催化 / 滤膜 / 阵列与温度调制。</text>
+        </g>
+      </svg></div>
+      <div class="fine" id="readFine">式(13-1) p = (ρ/m)RT 用于湿度换算；本页气敏读数取 R_a = 30 kΩ（示意），模型使 100 ppm、300 ℃ 时 R_s/R_a ≈ 0.22。</div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="vsplit" data-left="colB" data-right="colC" title="拖动可调整两列宽度"></div>
+
+  <!-- ================= 右列 ================= -->
+  <div class="col" id="colC">
+    <div class="colhead">③ 公式推导 · 特性曲线</div>
+
+
+    <section class="card panel" id="fmlCard">
+      <div class="phead">
+        <h2>公式推导 <small id="fmlTitle">气敏 · 表面电阻控制</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody"><div class="fml" id="fmlBody"></div></div>
+    </section>
+
+    <section class="card panel" id="curveCard">
+      <div class="phead">
+        <h2>特性曲线 <small id="curveSub">气敏：敏感体电阻比 — 气体浓度</small></h2>
+        <div class="ptools"><button class="ptool" data-act="out" title="缩小本板块内容">－</button><button class="ptool" data-act="in" title="放大本板块内容">＋</button><button class="ptool" data-act="max" title="最大化 / 还原">⛶</button></div>
+      </div>
+      <div class="pbody">
+      <svg id="curve" viewBox="0 0 700 300" role="img" aria-label="半导体传感器特性曲线">
+        <g id="cGrid"></g>
+        <rect id="cBand" x="137" y="26" width="18" height="214" fill="#0f9d58" opacity=".12" stroke="#0f9d58" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="60" y1="240" x2="672" y2="240" stroke="#9fb2c8" stroke-width="1.5"/>
+        <line x1="60" y1="26" x2="60" y2="240" stroke="#9fb2c8" stroke-width="1.5"/>
+        <line x1="430" y1="26" x2="430" y2="240" stroke="#cbd8e8" stroke-width="1.2" stroke-dasharray="5 4"/>
+        <path id="pA" fill="none" stroke="#d94a3d" stroke-width="3"/>
+        <path id="pB" fill="none" stroke="#2b6cb0" stroke-width="3"/>
+        <path id="pC" fill="none" stroke="#7c3aed" stroke-width="3"/>
+        <line id="mkX" x1="0" y1="26" x2="0" y2="240" stroke="#0e4a8e" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <circle id="mkDot" r="5.5" fill="#0e4a8e" stroke="#fff" stroke-width="2"/>
+        <circle id="mkDot2" r="5" fill="none" stroke="#0e4a8e" stroke-width="2" stroke-dasharray="3 2"/>
+        <text id="axX" x="672" y="280" text-anchor="end" font-size="12.5" fill="#5b6b80">气体浓度 c / ppm</text>
+        <text id="axY" x="60" y="15" font-size="12" font-weight="700" fill="#5b6b80">R_s / R_a</text>
+      </svg>
+      <div class="legend" id="legendWrap"></div>
+      <div class="hint" id="curveNote">气敏：R_s/R_a 随浓度单调下降；阴影带 = 教材 TGS2442 在 100 ppm CO 的灵敏度（电阻比 0.13~0.31）。</div>
+      </div>
+    </section>
+
+  </div>
+</main>
+</div><!-- /#boardWrap -->
+
+<footer>
+<b>参数：</b>气敏 SnO₂：洁净空气 R_a = 30 kΩ（示意）、加热 200~400 ℃、脉冲加热 14 ms / 1000 ms（节能 98.6%）；湿敏 MgCr₂O₄-TiO₂：10 MΩ(0%RH) → 10 kΩ(100%RH)（3 个数量级）、气孔率 30%~40%、量程 1%~100%RH、迟滞约 3%RH、感湿温度系数 0.38%/℃；离子敏：25 ℃ 一价离子 59.16 mV/十倍活度、V_G = 3 V、V_th0 = 1 V、β = 0.5 mA/V²；磁敏 InSb：μ = 7.8 m²/(V·s)、R₀ = 300 Ω、K = 0.05、L/b = 0.3~3、霍尔对照 I = 5 mA；色敏：浅结峰值 450 nm、深结峰值 700 nm、相对光强 0~1000。<b>关系式：</b>β = R_a/R_s，ρ_s 表面耗尽层，Δρ/ρ = K(μB)²[1−f(L/b)]，E = E₀ + (2.303RT/nF)·lg a，p = (ρ/m)RT，I(x) = I₀e^(−αx)。<b>课堂提问：</b>① 气敏为什么要加热，加热对灵敏度和寿命各有什么影响？② 湿敏阻抗为什么要用对数坐标，迟滞是怎么产生的？③ 双结色敏取"短路电流比"为什么能免受光源亮度影响？
+</footer>
+
+<script>
+(function(){
+  "use strict";
+/* =====================================================================
+   公共运行时（各章通用）· 由 _build/build.js 注入到主脚本的最前面
+   章节代码直接使用：$ / sfmt / frac / clamp / say / sleep / tween /
+   beginDemo / stopDemo / endDemo / bindDemos
+   约定：章节必须定义 var S = { ..., demoToken:0 }；
+        演示函数写成 async，每个 await 判断返回值，结尾 endDemo()；
+        章节 jsB 里用 DEMOS.<key> = {btn:'...', label:'...', fn:demoXxx} 注册，
+        随后调用 bindDemos() 绑定按钮点击。
+   注意：不内置任何语音朗读；演示按钮只由 bindDemos() 绑定一次。
+   ===================================================================== */
+var $ = function(id){ return document.getElementById(id); };
+function sfmt(a, d){ return (a >= 0 ? '+' : '−') + Math.abs(a).toFixed(d); }
+function frac(a, b){ return '<span class="frac"><i>' + a + '</i><b>' + b + '</b></span>'; }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+var DEMOS = {}, SPEED = 1, playingKey = null;
+function say(t){ $('narration').innerHTML = t; }
+function sleep(ms, tok){
+  return new Promise(function(res){ setTimeout(function(){ res(S.demoToken === tok); }, Math.max(60, ms/SPEED)); });
+}
+function tween(from, to, dur, set, tok){
+  dur = Math.max(160, dur/SPEED);
+  return new Promise(function(res){
+    var t0 = performance.now();
+    (function step(now){
+      if (S.demoToken !== tok) return res(false);
+      var p = (now - t0)/dur;
+      if (!isFinite(p)) p = 1;
+      p = clamp(p, 0, 1);
+      var e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
+      var v = from + (to - from)*e;
+      v = (from <= to) ? Math.min(to, Math.max(from, v)) : Math.max(to, Math.min(from, v));
+      set(v);
+      if (p < 1) requestAnimationFrame(step); else res(true);
+    })(performance.now());
+  });
+}
+function resetDemoButtons(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b){ b.textContent = DEMOS[k].label; b.classList.remove('running'); }
+  });
+}
+function stopDemo(){ S.demoToken++; playingKey = null; resetDemoButtons(); }
+function beginDemo(key){
+  stopDemo(); playingKey = key;
+  var d = DEMOS[key], b = d && $(d.btn);
+  if (b){ b.textContent = '⏸ 暂停演示'; b.classList.add('running'); }
+  return ++S.demoToken;
+}
+function endDemo(){ playingKey = null; resetDemoButtons(); }
+function bindDemos(){
+  Object.keys(DEMOS).forEach(function(k){
+    var b = $(DEMOS[k].btn);
+    if (b) b.addEventListener('click', function(){
+      if (playingKey === k){ stopDemo(); say('演示已暂停。可继续拖动滑块手动观察，或点其它演示按钮。'); }
+      else if (DEMOS[k].fn){ DEMOS[k].fn(); }
+    });
+  });
+}
+(function(){
+  var spd = $('speed');
+  if (spd) spd.addEventListener('input', function(){
+    SPEED = parseFloat(this.value) || 1;
+    $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  });
+})();
+
+
+  /* ============ 1. 物理参数与状态 ============ */
+  var CFG = {
+    /* ---- 气敏（SnO₂ 表面电阻控制型） ---- */
+    gasRa: 30e3,               /* 洁净空气中敏感体电阻 R_a = 30 kΩ（示意） */
+    gasK100: 0.3545455,         /* α(300℃) = (1/0.22−1)/√100 → 100 ppm 时 R_s/R_a = 0.22 */
+    gasT0: 300,                /* 灵敏度参考温度（课件：加热 200~400 ℃） */
+    heat: { U: 5, R: 5, tOn: 14, tCycle: 1000 },   /* 脉冲加热：1000 ms 周期里加热 14 ms */
+    /* ---- 湿敏（MgCr₂O₄-TiO₂ 多孔陶瓷，负特性） ---- */
+    humZ0: 1e7,                /* 0%RH 外推阻抗 10 MΩ */
+    humDec: 3,                 /* 0→100%RH 阻抗降约 3 个数量级 */
+    humPow: 0.85,              /* 对数特性的曲率：灵敏度随 RH 升高而下降 */
+    humHys: 1.5,               /* 迟滞：吸附/脱附两支等效相差 ±1.5%RH（合计约 3%RH） */
+    humTc: 0.0038,             /* 感湿温度系数 0.38%/℃（60%RH 口径，示意） */
+    /* ---- 离子敏（ISFET / 能斯特方程） ---- */
+    Rg: 8.314, F: 96485,       /* 气体常数 J/(mol·K)、法拉第常数 C/mol */
+    isfet: { Vg: 3.0, Vth0: 1.0, beta: 0.5e-3 },   /* I_D = (β/2)(V_G−V_th)²，pH 7 时 1.000 mA */
+    /* ---- 磁敏（InSb 磁敏电阻 / 霍尔元件对照） ---- */
+    mag: { mu: 7.8, K: 0.05, R0: 300, n: 2e22, rH: 1.0, t: 1e-5, Ic: 5e-3 },
+    /* ---- 色敏（双结硅：浅结 450 nm / 深结 700 nm） ---- */
+    col: { p1: 450, w1: 140, p2: 700, w2: 150, k: 0.6, x0: 0.1, Eg: 1.12 }
+  };
+
+  /* 器件表：主输入量（x）/ 辅助量（aux）的量程、单位、默认值与说明 */
+  var DEV = {
+    gas: { name:'SnO₂ 气敏元件', short:'气敏 · 表面电阻控制',
+      xName:'气体浓度 c', xUnit:'ppm', xMin:0, xMax:1000, xStep:5, xDef:100, xDec:0,
+      xNote:'还原性气体 CO（量程 30~1000 ppm）',
+      auxName:'工作温度 T', auxUnit:'℃', auxMin:200, auxMax:400, auxStep:5, auxDef:300, auxDec:0,
+      auxNote:'热清洗 / 加速吸附 / 稳定工作点',
+      sub:'SnO₂ 烧结型（旁热式）剖面：加热丝 + 敏感体 + 金电极',
+      readSub:'气敏 · 敏感体电阻与灵敏度',
+      readLabel:'输出读数：敏感体电阻 R_s / 灵敏度 β / 加热功率（脉冲加热省 98.6%）',
+      curveSub:'气敏：敏感体电阻比 R_s/R_a — 气体浓度',
+      hint:'气敏：加热到 200~400 ℃ 促进化学吸附与热清洗；还原性气体（CO、H₂）在晶粒表面给出电子 → 表面耗尽层变薄 → 电阻下降。灵敏度 β = R_a/R_s（教材 TGS2442 @100 ppm CO：电阻比 0.13~0.31）。',
+      stHint:'SnO₂ 气敏元件：加热丝把敏感体加热到 200~400 ℃，气体分子穿过不锈钢网罩在晶粒表面授受电子 → 表面耗尽层厚度随电阻变化。' },
+    hum: { name:'陶瓷湿敏元件', short:'湿敏 · 离子导电',
+      xName:'相对湿度 RH', xUnit:'%RH', xMin:0, xMax:100, xStep:1, xDef:50, xDec:0,
+      xNote:'量程 1%~100%RH（结露区 >80%RH）',
+      auxName:'环境温度 T', auxUnit:'℃', auxMin:5, auxMax:45, auxStep:1, auxDef:25, auxDec:0,
+      auxNote:'感湿温度系数 0.38%/℃（示意）',
+      sub:'MgCr₂O₄-TiO₂ 多孔陶瓷（梳状电极）：水分子吸附 → H⁺/OH⁻ 离子导电',
+      readSub:'湿敏 · 阻抗与迟滞',
+      readLabel:'输出读数：阻抗 |Z|（对数刻度）· 吸附/脱附支 · 温度修正',
+      curveSub:'湿敏：阻抗 |Z|（对数）— 相对湿度（含迟滞环）',
+      hint:'陶瓷湿敏（MgCr₂O₄-TiO₂，负特性）：水分子吸附后解离出 H⁺、OH⁻ → 低湿电子导电、高湿离子导电；R–RH 近似指数，取对数近似线性；0→100%RH 阻抗降约 3 个数量级。',
+      stHint:'多孔陶瓷片表面做梳状电极：水分子进入气孔后解离出 H⁺、OH⁻，离子在电极间往复导电 → 阻抗随 RH 下降；RH 越高水膜越厚。' },
+    ion: { name:'ISFET 离子敏器件', short:'离子敏 · 能斯特方程',
+      xName:'pH 值', xUnit:'', xMin:0, xMax:14, xStep:0.1, xDef:7, xDec:1,
+      xNote:'H⁺ 活度 a_H⁺：pH 每减 1，活度 ×10',
+      auxName:'温度 T', auxUnit:'℃', auxMin:5, auxMax:45, auxStep:1, auxDef:25, auxDec:0,
+      auxNote:'能斯特斜率 2.303RT/nF 随温度变化',
+      sub:'ISFET 剖面：参比电极 + Si₃N₄ 敏感膜 + 沟道',
+      readSub:'离子敏 · 界面电位与漏极电流',
+      readLabel:'输出读数：界面电位 E → 阈值电压 V_th → 漏极电流 I_D',
+      curveSub:'离子敏：界面电位 E — pH（能斯特斜率随温度）',
+      hint:'ISFET / 离子选择电极：敏感膜界面电位 E = E₀ + (RT/nF)·ln a，25 ℃ 一价离子约 59 mV/十倍活度 —— 既是标定斜率，也是灵敏度上限；等效栅压变化 → 漏极电流变化。',
+      stHint:'ISFET：溶液中的 H⁺ 在 Si₃N₄ 敏感膜上建立界面电位（吸附离子越多电位越高）→ 等效栅压改变 → 沟道反型程度与漏极电流随之改变；必须配参比电极。' },
+    mag: { name:'InSb 磁敏电阻', short:'磁敏 · 磁阻效应',
+      xName:'磁场 B', xUnit:'mT', xMin:0, xMax:600, xStep:5, xDef:300, xDec:0,
+      xNote:'垂直纸面向外（0~600 mT）',
+      auxName:'长宽比 L/b', auxUnit:'', auxMin:0.3, auxMax:3, auxStep:0.1, auxDef:1, auxDec:2,
+      auxNote:'曲折形尺寸比：越小几何磁阻越强',
+      sub:'InSb 曲折形磁敏电阻（附考比诺圆盘对照）',
+      readSub:'磁敏 · 磁阻变化与霍尔角',
+      readLabel:'输出读数：磁阻变化 ΔR/R · 霍尔角 θ_H · 霍尔元件对照',
+      curveSub:'磁敏：ΔR/R — 磁感应强度（三组 L/b）',
+      hint:'InSb 磁敏电阻：洛伦兹力使载流子路径偏转，Δρ/ρ = K(μB)²[1−f(L/b)]；因正比于 μ² 必须用高迁移率材料（InSb：7.8 m²/(V·s)）；L/b 越小（考比诺圆盘极限）几何磁阻越强。',
+      stHint:'曲折形 InSb 磁敏电阻：磁场使载流子路径沿霍尔角偏转 → 路径变长 → 电阻增大；L/b 越小、μB 越大，几何磁阻效应越强。' },
+    col: { name:'双结硅色敏器件', short:'色敏 · 短路电流比',
+      xName:'波长 λ', xUnit:'nm', xMin:400, xMax:750, xStep:2, xDef:550, xDec:0,
+      xNote:'可见光 400~750 nm',
+      auxName:'相对光强 P', auxUnit:'', auxMin:0, auxMax:1000, auxStep:10, auxDef:500, xDec:0,
+      auxNote:'只等比放大两路电流，比值不变',
+      sub:'双结硅色敏器件剖面：浅结 D₁ + 深结 D₂',
+      readSub:'色敏 · 两结短路电流与比值',
+      readLabel:'输出读数：两结短路电流 I₁、I₂ 与比值（与光强无关）',
+      curveSub:'色敏：两结相对响应与短路电流比 — 波长',
+      hint:'双结硅色敏：浅结（峰值 ≈450 nm）收短波、深结（≈700 nm）收长波；两结短路电流之比 I₁/I₂ 只与波长有关、与光强无关 → 判色不受光源亮度影响。',
+      stHint:'双结硅色敏：短波在浅结（≈0.8 μm）内就被吸收，长波穿透到深结（≈5 μm）；两结各自收集光生载流子，短路电流之比对应波长。' }
+  };
+
+  var S = { type:'gas', x:100, aux:300, dir:1, demoToken:0 };
+
+  /* ============ 2. 模型（纯函数，不碰 DOM） ============ */
+  /* --- 气敏：温度因子（T↑ → 灵敏度↓，教材 TGS2442 300 ℃ 以上特性严重下降） --- */
+  function gasTf(T){ return 1 - 0.45*(T - CFG.gasT0)/200; }
+  /* 敏感体电阻：R_s = R_a/(1+α(T)√c)，故 β = R_a/R_s = 1+α√c */
+  function gasRs(c, T){
+    var al = CFG.gasK100*gasTf(T);
+    return CFG.gasRa/(1 + al*Math.sqrt(Math.max(0, c)));
+  }
+  function gasAlpha(T){ return CFG.gasK100*gasTf(T); }
+  /* 加热：全周期功率、脉冲平均功率、节能比例 */
+  function gasHeat(){
+    var full = CFG.heat.U*CFG.heat.U/CFG.heat.R;
+    var duty = CFG.heat.tOn/CFG.heat.tCycle;
+    return { full:full, duty:duty, avg:full*duty, save:1 - duty };
+  }
+  /* --- 湿敏：lg|Z| = lg Z₀ − 3(RH/100)^0.85，含迟滞支与温度修正 --- */
+  function humZl(rhEff, T){ return 7 - CFG.humDec*Math.pow(clamp(rhEff, 0, 100)/100, CFG.humPow); }
+  function humZ(RH, T, dir){
+    var rh = clamp(RH - dir*CFG.humHys, 0, 100);
+    return CFG.humZ0*Math.pow(10, humZl(rh, T) - 7)*(1 - CFG.humTc*(T - 25));
+  }
+  /* 对数灵敏度（数量级 / %RH） */
+  function humSlope(RH){ var r = clamp(RH, 1, 100)/100; return CFG.humDec*CFG.humPow*Math.pow(r, CFG.humPow - 1)/100; }
+  /* --- 离子敏：能斯特斜率（mV / 十倍活度，n = 1） --- */
+  function nernstSlope(TC){ return 2.302585*CFG.Rg*(TC + 273.15)/CFG.F*1000; }
+  function ionModel(pH, TC){
+    var sl = nernstSlope(TC);
+    var E = sl*(7 - pH);                       /* 相对 pH 7 的界面电位 mV */
+    var Vth = CFG.isfet.Vth0 - E/1000;         /* 等效阈值电压 V */
+    var od = CFG.isfet.Vg - Vth;               /* 过驱动电压 */
+    var ID = CFG.isfet.beta/2*od*od;           /* A */
+    return { sl:sl, E:E, Vth:Vth, od:od, ID:ID, ID0:CFG.isfet.beta/2*Math.pow(CFG.isfet.Vg - CFG.isfet.Vth0, 2) };
+  }
+  /* --- 磁敏：物理磁阻 + 形状效应（式13-3 / 13-4） --- */
+  function magShape(lb){ return 1/(1 + lb); }  /* [1−f(L/b)]：L/b 越小几何磁阻越强 */
+  function magModel(B, lb){
+    var muB = CFG.mag.mu*B;
+    var phys = CFG.mag.K*muB*muB;
+    var dR = phys*magShape(lb);
+    return { muB:muB, phys:phys, shape:magShape(lb), dR:dR, RB:CFG.mag.R0*(1 + dR),
+             theta:Math.atan(muB)*180/Math.PI };
+  }
+  /* 霍尔元件对照：K_H = r/(n·e·t)（V/(A·T)），V_H = K_H·I·B */
+  function hallKH(){ return CFG.mag.rH/(CFG.mag.n*1.602e-19*CFG.mag.t); }
+  function hallVH(B){ return CFG.mag.Ic*B*hallKH(); }
+  /* --- 色敏：两结相对光谱响应（高斯型示意，峰值按课件 450 / 700 nm） --- */
+  function colR1(lam){ return Math.exp(-Math.pow((lam - CFG.col.p1)/CFG.col.w1, 2)); }
+  function colR2(lam){ return Math.exp(-Math.pow((lam - CFG.col.p2)/CFG.col.w2, 2)); }
+  function colModel(lam, P){
+    var r1 = colR1(lam), r2 = colR2(lam);
+    var I1 = CFG.col.k*P*r1, I2 = CFG.col.k*P*r2;            /* nA（相对光强单位） */
+    var xp = CFG.col.x0*Math.pow(2, (lam - 450)/50);          /* 吸收深度 μm（示意） */
+    return { r1:r1, r2:r2, I1:I1, I2:I2, ratio:r1/(r2 || 1e-9), xp:xp,
+             hv:1239.84/lam, Imax:CFG.col.k*1000 };
+  }
+
+  /* ============ 3. 动画粒子（rAF 循环） ============ */
+  var PARTS = { gas:{mols:[], mol:[], el:[], elp:[]}, hum:{mols:[], mol:[], ions:[], ion:[]},
+                ion:{ads:[], dots:[], dot:[]}, mag:{car:[], traj:[]}, col:{pho:[], ray:[]} };
+  var AN = { t:0 };
+
+  /* 确定性伪随机（避免每帧变化） */
+  function rnd(i, a, b){ var x = Math.sin(i*12.9898 + 78.233)*43758.5453; x = x - Math.floor(x); return a + (b - a)*x; }
+
+  /* 曲折形电流路径（4 条横向行程 + 3 段竖向连接）：type 1 = 行程，type 0 = 连接；
+     dir = ±1 表示霍尔角偏转方向（奇数行程反向，偏转方向随之相反） */
+  var MPD = [
+    { type:1, x0:150, y0:114, x1:470, y1:114, dir: 1 },
+    { type:0, x0:470, y0:114, x1:470, y1:136, dir: 1 },
+    { type:1, x0:470, y0:136, x1:150, y1:136, dir:-1 },
+    { type:0, x0:150, y0:136, x1:150, y1:158, dir:-1 },
+    { type:1, x0:150, y0:158, x1:470, y1:158, dir: 1 },
+    { type:0, x0:470, y0:158, x1:470, y1:180, dir: 1 },
+    { type:1, x0:470, y0:180, x1:150, y1:180, dir:-1 }
+  ];
+  var MTOT = 0;
+  (function(){
+    for (var mi = 0; mi < MPD.length; mi++){
+      var s = MPD[mi];
+      s.len = Math.sqrt((s.x1 - s.x0)*(s.x1 - s.x0) + (s.y1 - s.y0)*(s.y1 - s.y0));
+      MTOT += s.len;
+    }
+  })();
+
+  function initParts(){
+    var i, html;
+    /* --- 气敏：气体分子（下落到敏感体表面） + 注入电子 --- */
+    html = '';
+    for (i = 0; i < 14; i++) html += '<circle r="4.6" fill="#2b6cb0" stroke="#fff" stroke-width="1"/>';
+    $('gMols').innerHTML = html;
+    PARTS.gas.mols = Array.prototype.slice.call($('gMols').querySelectorAll('circle'));
+    PARTS.gas.mol = [];
+    for (i = 0; i < PARTS.gas.mols.length; i++){
+      PARTS.gas.mol.push({ x:172 + i*26.4 + rnd(i, 0, 9), p:rnd(i + 41, 0, 1), v:0.78 + rnd(i + 7, 0, 0.5) });
+    }
+    html = '';
+    for (i = 0; i < 8; i++) html += '<circle r="3.2" fill="#d94a3d" stroke="#fff" stroke-width="0.8"/>';
+    $('gElec').innerHTML = html;
+    PARTS.gas.el = Array.prototype.slice.call($('gElec').querySelectorAll('circle'));
+    PARTS.gas.elp = [];
+    for (i = 0; i < PARTS.gas.el.length; i++) PARTS.gas.elp.push({ x:200 + i*38, p:rnd(i + 90, 0, 1) });
+    /* --- 湿敏：水分子 + 离子（H⁺ 红 / OH⁻ 蓝） --- */
+    html = '';
+    for (i = 0; i < 10; i++) html += '<circle r="5.4" fill="#2b6cb0" stroke="#fff" stroke-width="1"/>';
+    $('hMols').innerHTML = html;
+    PARTS.hum.mols = Array.prototype.slice.call($('hMols').querySelectorAll('circle'));
+    PARTS.hum.mol = [];
+    for (i = 0; i < PARTS.hum.mols.length; i++){
+      PARTS.hum.mol.push({ x:150 + i*31 + rnd(i + 3, 0, 10), p:rnd(i + 21, 0, 1), v:0.6 + rnd(i + 11, 0, 0.6) });
+    }
+    html = '';
+    for (i = 0; i < 12; i++){
+      var posi = (i % 2 === 0);
+      html += '<circle r="5" fill="' + (posi ? '#d94a3d' : '#0e4a8e') + '" stroke="#fff" stroke-width="1"/>';
+    }
+    $('hIons').innerHTML = html;
+    PARTS.hum.ions = Array.prototype.slice.call($('hIons').querySelectorAll('circle'));
+    PARTS.hum.ion = [];
+    for (i = 0; i < PARTS.hum.ions.length; i++){
+      PARTS.hum.ion.push({ y:118 + (i % 6)*15, ph:rnd(i + 55, 0, 1), a:26 + rnd(i + 13, 0, 26),
+                           dir:(i % 2 === 0) ? 1 : -1, v:0.55 + rnd(i + 31, 0, 0.5) });
+    }
+    /* --- 离子敏：膜表面吸附离子（固定 8 个位置，按 pH 显隐） + 沟道载流子 --- */
+    html = '';
+    for (i = 0; i < 8; i++) html += '<circle cx="' + (292 + i*20) + '" cy="114" r="4.4" fill="#d94a3d" stroke="#fff" stroke-width="0.8" opacity="0"/>';
+    $('iAds').innerHTML = html;
+    PARTS.ion.ads = Array.prototype.slice.call($('iAds').querySelectorAll('circle'));
+    html = '';
+    for (i = 0; i < 7; i++) html += '<circle r="3.4" fill="#0f9d58" stroke="#fff" stroke-width="0.8"/>';
+    $('iDots').innerHTML = html;
+    PARTS.ion.dots = Array.prototype.slice.call($('iDots').querySelectorAll('circle'));
+    PARTS.ion.dot = [];
+    for (i = 0; i < PARTS.ion.dots.length; i++) PARTS.ion.dot.push({ p:i/PARTS.ion.dots.length, v:0.9 });
+    /* --- 磁敏：载流子沿曲折图形（含霍尔角偏转） --- */
+    PARTS.mag.traj = [];
+    for (i = 0; i < 12; i++) PARTS.mag.traj.push({ s:(i + 0.5)/12, v:0.5 + rnd(i + 17, 0, 0.3) });
+    html = '';
+    for (i = 0; i < 12; i++) html += '<circle r="3.6" fill="#c2703a" stroke="#fff" stroke-width="0.9"/>';
+    $('mCar').innerHTML = html;
+    PARTS.mag.car = Array.prototype.slice.call($('mCar').querySelectorAll('circle'));
+    /* --- 色敏：光子（沿三条光线下落） --- */
+    html = '';
+    for (i = 0; i < 9; i++) html += '<circle r="4" stroke="#334155" stroke-width="0.8"/>';
+    $('cPho').innerHTML = html;
+    PARTS.col.pho = Array.prototype.slice.call($('cPho').querySelectorAll('circle'));
+    PARTS.col.ray = [];
+    for (i = 0; i < PARTS.col.pho.length; i++){
+      PARTS.col.ray.push({ x:262 + (i % 3)*38, p:(1 + (i - i % 3)/3)/4, v:0.55 + rnd(i + 61, 0, 0.4) });
+    }
+  }
+
+  /* 磁敏：曲折图形上的点（s∈[0,1] 为全路径进度，tilt 为霍尔角引起的偏转像素） */
+  function magPoint(s, tilt){
+    var target = clamp(s, 0, 0.9999)*MTOT, acc = 0, i = 0, seg;
+    for (i = 0; i < MPD.length; i++){ seg = MPD[i]; if (target <= acc + seg.len + 1e-9) break; acc += seg.len; }
+    if (i >= MPD.length){ i = MPD.length - 1; seg = MPD[i]; }
+    var t = clamp((target - acc)/(seg.len || 1), 0, 1);
+    var oy = seg.type ? tilt*seg.dir*t : tilt*seg.dir*(1 - t);
+    return { x:seg.x0 + (seg.x1 - seg.x0)*t, y:seg.y0 + (seg.y1 - seg.y0)*t + oy };
+  }
+
+  function animGas(dt){
+    var c = S.x, sp = (0.30 + 0.55*c/1000)*dt/1000, i, m, e;
+    for (i = 0; i < PARTS.gas.mols.length; i++){
+      m = PARTS.gas.mol[i]; m.p += sp*m.v;
+      if (m.p >= 1) m.p -= 1;
+      PARTS.gas.mols[i].setAttribute('cx', m.x.toFixed(1));
+      PARTS.gas.mols[i].setAttribute('cy', (80 + 18*m.p).toFixed(1));
+      PARTS.gas.mols[i].setAttribute('opacity', (0.22 + 0.66*Math.min(1, c/400)).toFixed(2));
+    }
+    var ei = c > 5 ? 1 : 0;
+    for (i = 0; i < PARTS.gas.el.length; i++){
+      e = PARTS.gas.elp[i]; e.p += sp*1.5;
+      if (e.p > 1) e.p -= 1;
+      PARTS.gas.el[i].setAttribute('cx', (e.x + 26*e.p).toFixed(1));
+      PARTS.gas.el[i].setAttribute('cy', (100 + 30*e.p).toFixed(1));
+      PARTS.gas.el[i].setAttribute('opacity', (ei*(1 - e.p)*0.95).toFixed(2));
+    }
+  }
+
+  function animHum(dt){
+    var rh = S.x/100, i, m, o;
+    for (i = 0; i < PARTS.hum.mols.length; i++){
+      m = PARTS.hum.mol[i]; m.p += (0.22 + 0.42*rh)*dt/1000*m.v;
+      if (m.p >= 1) m.p -= 1;
+      PARTS.hum.mols[i].setAttribute('cx', m.x.toFixed(1));
+      PARTS.hum.mols[i].setAttribute('cy', (34 + 62*m.p).toFixed(1));
+      PARTS.hum.mols[i].setAttribute('opacity', (0.20 + 0.7*rh).toFixed(2));
+    }
+    o = clamp(rh*2.4, 0, 1);
+    for (i = 0; i < PARTS.hum.ions.length; i++){
+      m = PARTS.hum.ion[i]; m.ph += (0.25 + 0.75*rh)*dt/1000*m.v;
+      var x = 298 + m.dir*(m.a*Math.sin(2*Math.PI*m.ph) + 30);
+      PARTS.hum.ions[i].setAttribute('cx', x.toFixed(1));
+      PARTS.hum.ions[i].setAttribute('cy', m.y.toFixed(1));
+      PARTS.hum.ions[i].setAttribute('opacity', o.toFixed(2));
+    }
+  }
+
+  function animIon(dt){
+    var m = ionModel(S.x, S.aux), i, sp = clamp(m.ID/1.2e-3, 0.2, 1.4);
+    for (i = 0; i < PARTS.ion.dots.length; i++){
+      var d = PARTS.ion.dot[i]; d.p += sp*dt/1000*1.4;
+      if (d.p >= 1) d.p -= 1;
+      PARTS.ion.dots[i].setAttribute('cx', (322 + 168*d.p).toFixed(1));
+      PARTS.ion.dots[i].setAttribute('cy', '145');
+      PARTS.ion.dots[i].setAttribute('opacity', (0.35 + 0.6*clamp(sp, 0, 1)).toFixed(2));
+    }
+  }
+
+  function animMag(dt){
+    var m = magModel(S.x/1000, S.aux), tilt = clamp(m.muB, 0, 2.2)*6.4, i, p;
+    for (i = 0; i < PARTS.mag.car.length; i++){
+      var t = PARTS.mag.traj[i];
+      if (!t) continue;
+      t.s = (t.s + dt/1000*t.v*(0.5 + clamp(m.muB/2, 0, 1))) % 1;
+      p = magPoint(t.s, tilt);
+      PARTS.mag.car[i].setAttribute('cx', p.x.toFixed(1));
+      PARTS.mag.car[i].setAttribute('cy', p.y.toFixed(1));
+      PARTS.mag.car[i].setAttribute('opacity', (0.45 + 0.55*clamp(m.muB/1.5, 0, 1)).toFixed(2));
+    }
+  }
+
+  function animCol(dt){
+    var m = colModel(S.x, S.aux), i, r, yTop = 70, yAbs = 88 + clamp(m.xp, 0.05, 8)*14;
+    for (i = 0; i < PARTS.col.pho.length; i++){
+      r = PARTS.col.ray[i]; r.p += r.v*dt/1000*0.9;
+      if (r.p >= 1) r.p -= 1;
+      PARTS.col.pho[i].setAttribute('cx', r.x.toFixed(1));
+      PARTS.col.pho[i].setAttribute('cy', (yTop + (yAbs - yTop)*r.p).toFixed(1));
+      PARTS.col.pho[i].setAttribute('opacity', (0.25 + 0.75*(1 - r.p)).toFixed(2));
+    }
+    $('cGlow').setAttribute('y', (yAbs - 2).toFixed(1));
+    $('cGlow').setAttribute('opacity', (0.16 + 0.3*Math.abs(Math.sin(AN.t*3))).toFixed(2));
+  }
+
+  function runAnim(){
+    var last = performance.now();
+    (function loop(now){
+      var dt = Math.min(60, now - last); last = now;
+      AN.t += dt/1000;
+      try {
+        if (S.type === 'gas') animGas(dt);
+        else if (S.type === 'hum') animHum(dt);
+        else if (S.type === 'ion') animIon(dt);
+        else if (S.type === 'mag') animMag(dt);
+        else if (S.type === 'col') animCol(dt);
+      } catch (err) {}
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+
+  /* ============ 4. 波长 → 颜色（色敏光子着色） ============ */
+  function wl2rgb(l){
+    var r = 0, g = 0, b = 0, f = 1;
+    if (l < 440){ r = -(l - 440)/60; b = 1; }
+    else if (l < 490){ g = (l - 440)/50; b = 1; }
+    else if (l < 510){ g = 1; b = -(l - 510)/20; }
+    else if (l < 580){ r = (l - 510)/70; g = 1; }
+    else if (l < 645){ r = 1; g = -(l - 645)/65; }
+    else { r = 1; }
+    if (l > 700) f = 0.3 + 0.7*(780 - l)/80;
+    else if (l < 420) f = 0.3 + 0.7*(l - 380)/40;
+    function q(c){ c = clamp(c*f, 0, 1); return Math.round(255*Math.pow(c, 0.8)); }
+    return 'rgb(' + q(r) + ',' + q(g) + ',' + q(b) + ')';
+  }
+
+  /* ============ 5. 主刷新（唯一入口） ============ */
+  function paint(){
+    var t = S.type, d = DEV[t], i;
+    var isG = (t === 'gas'), isH = (t === 'hum'), isI = (t === 'ion'), isM = (t === 'mag'), isC = (t === 'col');
+
+    /* --- 按钮态与标题 --- */
+    document.querySelectorAll('#segDev button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-dev') === t);
+    });
+    $('devHint').textContent = d.hint;
+    $('stSub').textContent = d.sub;
+    $('readSub').textContent = d.readSub;
+    $('readLabel').textContent = d.readLabel;
+    $('curveSub').textContent = d.curveSub;
+    $('stHint').textContent = d.stHint;
+    $('xName').textContent = d.xName;
+    $('auxName').textContent = d.auxName;
+
+    /* --- 结构组切换 --- */
+    $('stGas').style.display = isG ? '' : 'none';
+    $('stHum').style.display = isH ? '' : 'none';
+    $('stIon').style.display = isI ? '' : 'none';
+    $('stMag').style.display = isM ? '' : 'none';
+    $('stCol').style.display = isC ? '' : 'none';
+
+    /* --- 气敏 --- */
+    var gm = gasRs(S.x, S.aux), gh = gasHeat(), gRatio = gm/CFG.gasRa, gBeta = 1/gRatio, gTf = gasTf(S.aux);
+    if (isG){
+      var th = clamp((S.aux - 200)/200, 0, 1);
+      $('gCoil').setAttribute('stroke', 'rgb(' + Math.round(140 + 105*th) + ',' + Math.round(100 - 45*th) + ',' + Math.round(80 - 45*th) + ')');
+      $('gCoil').setAttribute('stroke-width', (2.8 + 1.6*th).toFixed(2));
+      $('gConc').textContent = 'CO = ' + S.x.toFixed(0) + ' ppm';
+      $('gTxt').textContent = '加热丝 Ni-Cr：T = ' + S.aux.toFixed(0) + ' ℃';
+      $('gDep').setAttribute('height', clamp(18*gRatio, 2, 18).toFixed(1));
+      $('gDep').setAttribute('opacity', (0.10 + 0.20*gRatio).toFixed(2));
+      $('gRBar').setAttribute('width', clamp(300*gRatio, 2, 300).toFixed(1));
+      $('gRTxt').textContent = 'R_s/R_a = ' + gRatio.toFixed(3) + '　β = ' + gBeta.toFixed(2);
+    }
+    /* --- 湿敏 --- */
+    var hRhEff = clamp(S.x - S.dir*CFG.humHys, 0, 100), hZ = humZ(S.x, S.aux, S.dir);
+    var hZup = humZ(S.x, S.aux, 1), hZdn = humZ(S.x, S.aux, -1), hLg = Math.log(hZ)/Math.LN10;
+    if (isH){
+      var fh = 4 + 14*(S.x/100);
+      $('hFilm').setAttribute('y', (98 - fh).toFixed(1));
+      $('hFilm').setAttribute('height', fh.toFixed(1));
+      $('hFilm').setAttribute('opacity', (0.10 + 0.42*(S.x/100)).toFixed(2));
+      $('hFilmTxt').textContent = S.x >= 80 ? '水膜连成一片（>80%RH）' : '连续水膜（RH↑ 越厚）';
+      $('hFilmTxt').setAttribute('fill', S.x >= 80 ? '#d94a3d' : '#2b6cb0');
+      $('hZBar').setAttribute('width', clamp(100*(7 - hLg), 0, 300).toFixed(1));
+      $('hZTxt').textContent = '|Z| = ' + fmtZ(hZ) + '（' + (S.dir > 0 ? '吸附支' : '脱附支') + '）';
+    }
+    /* --- 离子敏 --- */
+    var im = ionModel(S.x, S.aux);
+    if (isI){
+      $('iChan').setAttribute('height', clamp(14*(im.od - 1.5), 4, 16).toFixed(1));
+      $('iDep').setAttribute('y', (140 + clamp(14*(im.od - 1.5), 4, 16)).toFixed(1));
+      $('iDep').setAttribute('height', clamp(30/im.od, 10, 34).toFixed(1));
+      $('iETxt').textContent = 'E = ' + (im.E >= 0 ? '+' : '−') + Math.abs(im.E).toFixed(1) + ' mV（相对 pH 7）';
+      $('iIDTxt').textContent = 'I_D = ' + (im.ID*1000).toFixed(3) + ' mA';
+      $('iAds').setAttribute('opacity', '1');
+      var nAds = Math.round(clamp(8 - (S.x - 7)*0.9, 1, 8));
+      for (i = 0; i < PARTS.ion.ads.length; i++){
+        PARTS.ion.ads[i].setAttribute('opacity', i < nAds ? '0.95' : '0.10');
+      }
+    }
+    /* --- 磁敏 --- */
+    var mg = magModel(S.x/1000, S.aux), vh = hallVH(S.x/1000);
+    if (isM){
+      $('mBf').setAttribute('opacity', clamp(S.x/600, 0.06, 1).toFixed(2));
+      $('mTilt').textContent = 'θ_H = arctan(μB) = ' + mg.theta.toFixed(1) + '°　μB = ' + mg.muB.toFixed(2);
+      $('mRBar').setAttribute('width', clamp(300*mg.dR, 0, 300).toFixed(1));
+      $('mRTxt').textContent = 'R_B = ' + mg.RB.toFixed(1) + ' Ω（ΔR/R = +' + (mg.dR*100).toFixed(1) + '%）';
+    }
+    /* --- 色敏 --- */
+    var cm = colModel(S.x, S.aux), cc = wl2rgb(S.x);
+    if (isC){
+      var yAbs = 88 + clamp(cm.xp, 0.05, 8)*14;
+      $('cLamp').setAttribute('fill', cc);
+      $('cRay').setAttribute('stroke', cc);
+      $('cLam').textContent = 'λ = ' + S.x.toFixed(0) + ' nm';
+      $('cXp').setAttribute('y1', yAbs.toFixed(1)); $('cXp').setAttribute('y2', yAbs.toFixed(1));
+      $('cXpTxt').setAttribute('y', (yAbs + 4).toFixed(1));
+      $('cXpTxt').textContent = '1/α = ' + cm.xp.toFixed(2) + ' μm';
+      $('cGlow').setAttribute('y', (yAbs - 2).toFixed(1));
+      $('cGlow').setAttribute('fill', cc);
+      $('cBar1').setAttribute('width', clamp(300*cm.I1/cm.Imax, 1, 300).toFixed(1));
+      $('cBar2').setAttribute('width', clamp(300*cm.I2/cm.Imax, 1, 300).toFixed(1));
+      $('cBar1T').textContent = 'I₁ = ' + cm.I1.toFixed(1) + ' nA（浅结 D₁）';
+      $('cBar2T').textContent = 'I₂ = ' + cm.I2.toFixed(1) + ' nA（深结 D₂）';
+      for (i = 0; i < PARTS.col.pho.length; i++) PARTS.col.pho[i].setAttribute('fill', cc);
+    }
+
+    /* --- 输出读数（大数 + 四个指标 + 细说明） --- */
+    if (isG){
+      $('bigCap').textContent = '敏感体电阻 R_s';
+      $('bigNum').textContent = (gm/1000).toFixed(3); $('bigUnit').textContent = 'kΩ';
+      $('k1t').textContent = '灵敏度 β = R_a/R_s'; $('kv1').textContent = gBeta.toFixed(3);
+      $('k2t').textContent = '电阻比 R_s/R_a'; $('kv2').textContent = gRatio.toFixed(3);
+      $('k3t').textContent = '洁净空气 R_a'; $('kv3').textContent = (CFG.gasRa/1000).toFixed(1) + ' kΩ';
+      $('k4t').textContent = '脉冲加热平均功率'; $('kv4').textContent = gh.avg.toFixed(3) + ' W';
+    } else if (isH){
+      $('bigCap').textContent = '湿敏元件阻抗 |Z|';
+      $('bigNum').textContent = fmtZnum(hZ); $('bigUnit').textContent = fmtZunit(hZ);
+      $('k1t').textContent = '相对湿度'; $('kv1').textContent = S.x.toFixed(0) + ' %RH';
+      $('k2t').textContent = '吸附 / 脱附支'; $('kv2').textContent = (S.dir > 0 ? '吸附支' : '脱附支');
+      $('k3t').textContent = '对数灵敏度（此处）'; $('kv3').textContent = humSlope(hRhEff).toFixed(4) + ' 数量级/%RH';
+      $('k4t').textContent = '环境温度 T'; $('kv4').textContent = S.aux.toFixed(0) + ' ℃';
+    } else if (isI){
+      $('bigCap').textContent = 'ISFET 漏极电流 I_D';
+      $('bigNum').textContent = (im.ID*1000).toFixed(3); $('bigUnit').textContent = 'mA';
+      $('k1t').textContent = '界面电位 E（对 pH 7）'; $('kv1').textContent = (im.E >= 0 ? '+' : '−') + Math.abs(im.E).toFixed(1) + ' mV';
+      $('k2t').textContent = '能斯特斜率 2.303RT/F'; $('kv2').textContent = im.sl.toFixed(2) + ' mV/pH';
+      $('k3t').textContent = '等效阈值电压 V_th'; $('kv3').textContent = im.Vth.toFixed(3) + ' V';
+      $('k4t').textContent = 'pH / 温度'; $('kv4').textContent = S.x.toFixed(1) + ' / ' + S.aux.toFixed(0) + ' ℃';
+    } else if (isM){
+      $('bigCap').textContent = '磁敏电阻 R_B';
+      $('bigNum').textContent = mg.RB.toFixed(1); $('bigUnit').textContent = 'Ω';
+      $('k1t').textContent = '磁阻变化 ΔR/R'; $('kv1').textContent = '+' + (mg.dR*100).toFixed(2) + ' %';
+      $('k2t').textContent = 'μB（霍尔角正切）'; $('kv2').textContent = mg.muB.toFixed(3);
+      $('k3t').textContent = '霍尔角 θ_H'; $('kv3').textContent = mg.theta.toFixed(1) + '°';
+      $('k4t').textContent = '磁场 B / 长宽比'; $('kv4').textContent = S.x.toFixed(0) + ' mT / ' + S.aux.toFixed(2);
+    } else {
+      $('bigCap').textContent = '短路电流比 I₁ / I₂';
+      $('bigNum').textContent = cm.ratio.toFixed(3); $('bigUnit').textContent = '';
+      $('k1t').textContent = '浅结 I₁（峰值 450 nm）'; $('kv1').textContent = cm.I1.toFixed(1) + ' nA';
+      $('k2t').textContent = '深结 I₂（峰值 700 nm）'; $('kv2').textContent = cm.I2.toFixed(1) + ' nA';
+      $('k3t').textContent = '吸收深度 1/α'; $('kv3').textContent = cm.xp.toFixed(2) + ' μm';
+      $('k4t').textContent = '波长 / 相对光强'; $('kv4').textContent = S.x.toFixed(0) + ' nm / ' + S.aux.toFixed(0);
+    }
+
+    /* --- 读数细块（rd1~rd8 + 条） --- */
+    paintRead(gm, gh, gRatio, gBeta, hZ, hLg, hZup, hZdn, im, mg, vh, cm);
+
+    /* --- 曲线 / 公式 / 要点 --- */
+    drawCurves();
+    paintFormulas(gm, gh, gRatio, gBeta, hZ, hLg, hZup, hZdn, im, mg, vh, cm);
+    paintPoints();
+    if (window.__repack) window.__repack();
+  }
+
+  /* 阻抗显示：自动选 kΩ / MΩ（对数刻度示意） */
+  function fmtZnum(z){ return z >= 1e6 ? (z/1e6).toFixed(3) : (z/1e3).toFixed(1); }
+  function fmtZunit(z){ return z >= 1e6 ? 'MΩ' : 'kΩ'; }
+  function fmtZ(z){ return z >= 1e6 ? (z/1e6).toFixed(3) + ' MΩ' : (z/1e3).toFixed(1) + ' kΩ'; }
+
+  /* ============ 6. 读数细块 ============ */
+  function paintRead(gm, gh, gRatio, gBeta, hZ, hLg, hZup, hZdn, im, mg, vh, cm){
+    var t = S.type;
+    if (t === 'gas'){
+      $('rd1').textContent = '洁净空气（标准态）：R_a = 30.0 kΩ，加热 T = ' + S.aux.toFixed(0) + ' ℃（温度因子 ' + gasTf(S.aux).toFixed(3) + '）';
+      $('rd2').textContent = 'R_s = R_a/(1+α(T)√c) = 30.0/(1+' + gasAlpha(S.aux).toFixed(3) + '×' + Math.sqrt(S.x).toFixed(2) + ') = ' + (gm/1000).toFixed(3) + ' kΩ';
+      $('rd3').textContent = '灵敏度 β = R_a/R_s = ' + gBeta.toFixed(3) + '　电阻比 R_s/R_a = ' + gRatio.toFixed(3) + '（教材 @100 ppm CO：0.13~0.31）';
+      $('rd4').textContent = '脉冲加热：全周期 P = U²/R = 5²/5 = ' + gh.full.toFixed(1) + ' W → 每秒加热 14 ms，平均 ' + gh.avg.toFixed(3) + ' W，省 ' + (gh.save*100).toFixed(1) + '%';
+      $('rdBar').setAttribute('width', clamp(560*gRatio, 3, 560).toFixed(1));
+      $('rdBarTxt').textContent = 'R_s/R_a = ' + gRatio.toFixed(3) + '（相对洁净空气；越小 = 气体越多）';
+      $('rd5').textContent = 'CO = ' + S.x.toFixed(0) + ' ppm　T = ' + S.aux.toFixed(0) + ' ℃　（脉冲加热省 ' + (gh.save*100).toFixed(1) + '%）';
+      $('rd6').textContent = '机理：空气中 O₂ 吸附夺电子成 O⁻ → 表面耗尽 → 电阻高；还原性气体给电子 → 耗尽层变薄 → 电阻低。';
+      $('rd7').textContent = '应用：室内 CO / 煤气报警（30~1000 ppm）、酒驾呼气乙醇、燃烧氧含量闭环、烟气分析。';
+      $('rd8').textContent = '注意：气敏本质不区分气体种类（交叉敏感）→ 选择性靠催化 / 滤膜 / 阵列与温度调制。';
+      $('readFine').innerHTML = '气敏灵敏度有<b>两种口径</b>：β = R_a/R_s（本页）与电阻比 R_s/R_a（教材图13-6 纵轴）；两者互为倒数。' +
+        '当前 β = <b>' + gBeta.toFixed(3) + '</b>，对应电阻比 <b>' + gRatio.toFixed(3) + '</b>。加热目的：热清洗、加速吸附 / 脱附、稳定工作点（代价：耐热要求、耗能、老化）。';
+    } else if (t === 'hum'){
+      $('rd1').textContent = '多孔陶瓷 MgCr₂O₄-TiO₂（P 型，气孔率 30%~40%，量程 1%~100%RH）';
+      $('rd2').textContent = '|Z| = Z₀·10^(−3(RH_s/100)^0.85) = 10 MΩ×10^(−' + (3*Math.pow(clamp(S.x - S.dir*CFG.humHys, 0, 100)/100, 0.85)).toFixed(4) + ') = ' + fmtZ(hZ);
+      var rhS = clamp(S.x - S.dir*CFG.humHys, 0, 100);
+      $('rd3').textContent = '等效 RH_s = ' + rhS.toFixed(1) + ' %RH（' + (S.dir > 0 ? '吸附' : '脱附') + '支，迟滞 ±' + CFG.humHys.toFixed(1) + '%RH）　对数灵敏度 ' + humSlope(rhS).toFixed(4) + ' 数量级/%RH';
+      $('rd4').textContent = '吸附支 ' + fmtZ(hZup) + '　脱附支 ' + fmtZ(hZdn) + '　两支合计迟滞约 3%RH（示意）';
+      $('rdBar').setAttribute('width', clamp(560*(7 - hLg)/3, 3, 560).toFixed(1));
+      $('rdBarTxt').textContent = 'lg|Z| = ' + hLg.toFixed(3) + '（对数刻度：10 MΩ → 10 kΩ，共 ' + CFG.humDec.toFixed(0) + ' 个数量级）';
+      $('rd5').textContent = 'RH = ' + S.x.toFixed(0) + ' %RH，T = ' + S.aux.toFixed(0) + ' ℃　' + (S.x >= 80 ? '（水膜连成一片）' : '');
+      $('rd6').textContent = '机理：吸附水解离出 H⁺/OH⁻ → 低湿电子导电、高湿离子导电；污染后需 400 ℃ 以上加热清洗恢复。';
+      $('rd7').textContent = 'RH > 80% 水膜连成一片；结露传感器（开关型）利用此处电阻突变（课件：约 94%RH 处近乎垂直、骤降 3 个数量级）。';
+      $('rd8').textContent = '应用：HTU21D 数字温湿度（±2%RH / ±0.3 ℃，I²C）→ 由 T、RH 代入式(13-2) 算露点。';
+      $('readFine').innerHTML = '阻抗取<b>对数刻度</b>后近似线性：R–RH 近似指数关系（教材图13-8、13-9），0→100%RH 阻抗降约 <b>3 个数量级</b>。' +
+        '感湿温度系数随 RH 增大（60%RH 时超过 <b>0.38%/℃</b>，本页按 0.38%/℃ 示意修正），精密测量必须补偿迟滞与温度。';
+    } else if (t === 'ion'){
+      $('rd1').textContent = '能斯特斜率 2.303RT/(nF) = 2.303×8.314×' + (S.aux + 273.15).toFixed(2) + '/96485 = ' + im.sl.toFixed(2) + ' mV/十倍活度';
+      $('rd2').textContent = '界面电位（相对 pH 7）E = ' + im.sl.toFixed(2) + '×(7−' + S.x.toFixed(1) + ') = ' + (im.E >= 0 ? '+' : '−') + Math.abs(im.E).toFixed(1) + ' mV';
+      $('rd3').textContent = 'ISFET 等效阈值电压 V_th = V_th0 − E = 1.000 − ' + (im.E/1000).toFixed(3) + ' = ' + im.Vth.toFixed(3) + ' V（V_G = 3.000 V）';
+      $('rd4').textContent = '漏极电流 I_D = (β/2)(V_G−V_th)² = (0.5/2)(' + im.od.toFixed(3) + ')² = ' + (im.ID*1000).toFixed(4) + ' mA（相对 pH 7：' + ((im.ID/im.ID0 - 1)*100 >= 0 ? '+' : '−') + Math.abs((im.ID/im.ID0 - 1)*100).toFixed(2) + '%）';
+      $('rdBar').setAttribute('width', clamp(560*clamp(im.ID/im.ID0/1.3, 0, 1), 3, 560).toFixed(1));
+      $('rdBarTxt').textContent = 'I_D / I_D(pH 7) = ' + (im.ID/im.ID0).toFixed(3) + '（沟道反型程度）';
+      $('rd5').textContent = 'pH = ' + S.x.toFixed(1) + '　T = ' + S.aux.toFixed(0) + ' ℃（25 ℃ 时斜率 59.16 mV/pH ≈ 教材 59 mV/pH）';
+      $('rd6').textContent = '机理：敏感膜表面与溶液建立界面电位 → 等效栅压改变 → 沟道反型程度改变 → I_D 改变（必须配参比电极）。';
+      $('rd7').textContent = '对照：玻璃电极体积大、内阻高；ISFET 体积小、响应快、输出阻抗低、易集成（EnFET / ImFET 测酶与抗体）。';
+      $('rd8').textContent = '应用：pH 计、血糖（GOD 催化 → 葡萄糖酸释 H⁺）、脑脊液葡萄糖、血清蛋白（ImFET）。';
+      $('readFine').innerHTML = '能斯特方程 E = E₀ + (RT/nF)·ln a：界面电位与离子活度成<b>对数</b>关系，25 ℃ 一价离子 <b>59 mV/十倍浓度</b>，' +
+        '既是标定直线斜率，也是<b>灵敏度上限</b>（实际略低；掺铝 Ta₂O₅ 膜更接近理论斜率）。';
+    } else if (t === 'mag'){
+      $('rd1').textContent = 'InSb 电子迁移率 μ = 7.8 m²/(V·s)　零场电阻 R₀ = ' + CFG.mag.R0.toFixed(0) + ' Ω（B = 0）';
+      $('rd2').textContent = 'μB = 7.8×' + (S.x/1000).toFixed(3) + ' = ' + mg.muB.toFixed(3) + '（霍尔角正切）→ θ_H = arctan(μB) = ' + mg.theta.toFixed(2) + '°';
+      $('rd3').textContent = '物理磁阻 K(μB)² = ' + CFG.mag.K.toFixed(2) + '×' + (mg.muB*mg.muB).toFixed(3) + ' = ' + mg.phys.toFixed(4) + '（+' + (mg.phys*100).toFixed(1) + '%）';
+      $('rd4').textContent = '式(13-4) 形状效应 [1−f(L/b)] = 1/(1+' + S.aux.toFixed(2) + ') = ' + mg.shape.toFixed(3) + ' → ΔR/R = +' + (mg.dR*100).toFixed(2) + '%，R_B = ' + mg.RB.toFixed(1) + ' Ω';
+      $('rdBar').setAttribute('width', clamp(560*mg.dR, 3, 560).toFixed(1));
+      $('rdBarTxt').textContent = 'ΔR/R = +' + (mg.dR*100).toFixed(2) + '%（相对零场电阻）';
+      $('rd5').textContent = '磁场 B = ' + S.x.toFixed(0) + ' mT（垂直纸面向外）　长宽比 L/b = ' + S.aux.toFixed(2);
+      $('rd6').textContent = '对照霍尔元件：K_H = r/(n·e·t) = ' + hallKH().toFixed(1) + ' V/(A·T) → V_H = K_H·I·B = ' + (vh*1000).toFixed(1) + ' mV（I = 5 mA，n = 2×10¹⁶ cm⁻³、t = 10 μm 示意）';
+      $('rd7').textContent = '磁敏二极管（P-I-N，一侧打毛为 r 复合面）：灵敏度比霍尔元件高几百甚至上千倍、可判磁场方向，但线性范围窄、温度特性差。';
+      $('rd8').textContent = '应用：位移 / 角度检测、功率计、安培计、钳位电流计（不断线无接触测电流）、无触点开关、可穿戴姿态监测。';
+      $('readFine').innerHTML = '磁阻效应正比于 <b>μ²</b>，所以必须用高迁移率材料（InSb 7.8 m²/(V·s)、InAs）；' +
+        '式(13-4) 计入电极短路与形状效应：<b>L/b 越小（考比诺圆盘极限）几何磁阻越强</b>；磁敏电阻两端输出<b>电阻变化</b>，霍尔元件四端输出<b>电压</b>。';
+    } else {
+      $('rd1').textContent = '双结硅色敏：浅结 D₁ 峰值 ≈450 nm、深结 D₂ 峰值 ≈700 nm（高斯型相对响应，示意）';
+      $('rd2').textContent = '相对响应 R₁(' + S.x.toFixed(0) + ') = ' + cm.r1.toFixed(4) + '　R₂(' + S.x.toFixed(0) + ') = ' + cm.r2.toFixed(4);
+      $('rd3').textContent = 'I₁ = k·P·R₁ = 0.6×' + S.aux.toFixed(0) + '×' + cm.r1.toFixed(4) + ' = ' + cm.I1.toFixed(2) + ' nA　I₂ = ' + cm.I2.toFixed(2) + ' nA';
+      $('rd4').textContent = '短路电流比 I₁/I₂ = ' + (cm.r1/cm.r2).toFixed(4) + '（只与波长有关，与光强无关）';
+      $('rdBar').setAttribute('width', clamp(560*clamp(Math.log(cm.ratio)/Math.LN10*0.14 + 0.28, 0, 1), 3, 560).toFixed(1));
+      $('rdBarTxt').textContent = 'lg(I₁/I₂) = ' + (Math.log(cm.ratio)/Math.LN10).toFixed(3) + '（单调对应波长）';
+      $('rd5').textContent = '波长 λ = ' + S.x.toFixed(0) + ' nm，相对光强 P = ' + S.aux.toFixed(0) + '　hν = 1239.84/' + S.x.toFixed(0) + ' = ' + cm.hv.toFixed(2) + ' eV > E_g(Si) = 1.12 eV';
+      $('rd6').textContent = '吸收深度 1/α ≈ ' + cm.xp.toFixed(2) + ' μm（示意：α 随 hν−E_g 增大 → 短波浅穿透、长波深穿透，I(x) = I₀e^(−αx)）';
+      $('rd7').textContent = '对照：单结 + 干涉滤光片（S2684 系列响应宽仅 10 nm，254~700 nm 多型号）；AS7264N 集成 440/490 nm 蓝光通道＋NIR＋温度传感器。';
+      $('rd8').textContent = '应用：色标识别、自动白平衡、蓝光监控、颜色与吸光度测量（纺织、印染、建材）。';
+      $('readFine').innerHTML = '双结把波长转成两路短路电流，取<b>比值 I₁/I₂</b> 后与光强无关 → 光源亮度变化不影响判色；' +
+        '当前 λ = <b>' + S.x.toFixed(0) + ' nm</b>，I₁/I₂ = <b>' + cm.ratio.toFixed(3) + '</b>（拖动"相对光强"可验证比值不变）。';
+    }
+  }
+
+  /* ============ 7. 特性曲线（按器件切换，网格按器件重建） ============ */
+  var AXC = {
+    gas: { x0:60, x1:672, y0:240, y1:26, xmin:0, xmax:1000, ymin:0, ymax:1 },
+    hum: { x0:60, x1:672, y0:240, y1:26, xmin:0, xmax:100, ymin:4, ymax:7 },
+    ion: { x0:60, x1:672, y0:240, y1:26, xmin:0, xmax:14, ymin:-450, ymax:450 },
+    mag: { x0:60, x1:672, y0:240, y1:26, xmin:0, xmax:600, ymin:0, ymax:1 },
+    colL:{ x0:60, x1:372, y0:240, y1:26, xmin:400, xmax:750, ymin:0, ymax:1.05 },
+    colR:{ x0:452, x1:672, y0:240, y1:26, xmin:400, xmax:750, ymin:-2, ymax:2 }
+  };
+  var CUR = { t:'' };
+  function mapx(a, v){ return a.x0 + (clamp(v, a.xmin, a.xmax) - a.xmin)/(a.xmax - a.xmin)*(a.x1 - a.x0); }
+  function mapy(a, v){ return a.y0 - (clamp(v, a.ymin, a.ymax) - a.ymin)/(a.ymax - a.ymin)*(a.y0 - a.y1); }
+  function gridLine(a, y, txt){
+    return '<line x1="' + a.x0 + '" y1="' + mapy(a, y).toFixed(1) + '" x2="' + a.x1 + '" y2="' + mapy(a, y).toFixed(1) + '" stroke="#e6edf6"/>' +
+           (txt === '' ? '' : '<text x="' + (a.x0 - 8) + '" y="' + (mapy(a, y) + 4).toFixed(1) + '" text-anchor="end" font-size="11.5" fill="#5b6b80">' + txt + '</text>');
+  }
+  function gridV(a, x, txt, yoff){
+    return '<line x1="' + mapx(a, x).toFixed(1) + '" y1="' + a.y1 + '" x2="' + mapx(a, x).toFixed(1) + '" y2="' + a.y0 + '" stroke="#e6edf6"/>' +
+           '<text x="' + mapx(a, x).toFixed(1) + '" y="' + (a.y0 + (yoff || 16)) + '" text-anchor="middle" font-size="11.5" fill="#5b6b80">' + txt + '</text>';
+  }
+  function buildGrid(t){
+    var a = (t === 'col') ? AXC.colL : AXC[t], h = '', i;
+    if (t === 'gas'){
+      for (i = 0; i <= 4; i++) h += gridLine(a, i/4, (i/4).toFixed(2), '');
+      for (i = 0; i <= 5; i++) h += gridV(a, i*200, String(i*200));
+      h += '<text x="' + (a.x1) + '" y="14" text-anchor="end" font-size="11.5" fill="#94a3b8">阴影带 = 100 ppm 时教材灵敏度带（电阻比 0.13~0.31 对应 R_s/R_a）</text>';
+    } else if (t === 'hum'){
+      var lab = ['10 kΩ', '100 kΩ', '1 MΩ', '10 MΩ'];
+      for (i = 0; i <= 3; i++) h += gridLine(a, 4 + i, lab[i], '');
+      for (i = 0; i <= 5; i++) h += gridV(a, i*20, String(i*20));
+      h += '<text x="' + (a.x1) + '" y="14" text-anchor="end" font-size="11.5" fill="#94a3b8">纵轴＝对数刻度（阻抗），≈直线段即"对数近似线性"</text>';
+    } else if (t === 'ion'){
+      for (i = -2; i <= 2; i++) h += gridLine(a, i*200, String(i*200), '');
+      for (i = 0; i <= 7; i++) h += gridV(a, i*2, String(i*2));
+      h += '<text x="' + (a.x1) + '" y="14" text-anchor="end" font-size="11.5" fill="#94a3b8">E 为相对 pH 7 的界面电位；斜率 = 2.303RT/F</text>';
+    } else if (t === 'mag'){
+      for (i = 0; i <= 4; i++) h += gridLine(a, i/4, (i*25) + '%', '');
+      for (i = 0; i <= 6; i++) h += gridV(a, i*100, String(i*100));
+      h += '<text x="' + (a.x1) + '" y="14" text-anchor="end" font-size="11.5" fill="#94a3b8">三条曲线 = L/b 三种取值（对照教材图13-14）</text>';
+    } else {
+      var aR = AXC.colR;
+      h += gridLine(a, 0, '');
+      for (i = 1; i <= 4; i++) h += gridLine(a, i/4, (i/4).toFixed(2));
+      for (i = 0; i <= 4; i++) h += gridV(a, 400 + i*100, String(400 + i*100), 24);
+      h += '<text x="' + (a.x1) + '" y="14" text-anchor="middle" font-size="11.5" fill="#2b6cb0">两结相对光谱响应 R(λ)</text>';
+      h += '<text x="' + (aR.x1) + '" y="14" text-anchor="end" font-size="11" fill="#d94a3d">短路电流比 I₁/I₂（对数）</text>';
+      for (i = -2; i <= 2; i++) h += gridLine(aR, i, '1e' + i);
+      for (i = 0; i <= 3; i++) h += gridV(aR, 400 + i*100, String(400 + i*100), 24);
+    }
+    $('cGrid').innerHTML = h;
+  }
+  function pathOf(a, fn){
+    var d = '', first = true, i, v;
+    for (i = 0; i <= 120; i++){
+      v = a.xmin + (a.xmax - a.xmin)*i/120;
+      d += (first ? 'M' : 'L') + mapx(a, v).toFixed(1) + ' ' + mapy(a, fn(v)).toFixed(1) + ' ';
+      first = false;
+    }
+    return d;
+  }
+  function drawCurves(){
+    var t = S.type, i;
+    if (CUR.t !== t){ buildGrid(t); CUR.t = t; }
+    $('cBand').setAttribute('opacity', t === 'gas' ? '0.12' : '0');
+    $('mkDot2').setAttribute('opacity', '0');
+    var leg = '';
+    if (t === 'gas'){
+      var a = AXC.gas;
+      $('pA').setAttribute('d', pathOf(a, function(c){ return gasRs(c, S.aux)/CFG.gasRa; }));
+      $('pA').setAttribute('opacity', '1'); $('pA').setAttribute('stroke-width', '3.4');
+      $('pB').setAttribute('d', ''); $('pC').setAttribute('d', '');
+      /* 教材灵敏度带：100 ppm 处 R/R₀ = 0.13~0.31 */
+      $('cBand').setAttribute('x', mapx(a, 92).toFixed(1)); $('cBand').setAttribute('width', (mapx(a, 108) - mapx(a, 92)).toFixed(1));
+      $('cBand').setAttribute('y', mapy(a, 0.31).toFixed(1)); $('cBand').setAttribute('height', (mapy(a, 0.13) - mapy(a, 0.31)).toFixed(1));
+      $('axX').textContent = '气体浓度 c / ppm'; $('axY').textContent = 'R_s / R_a';
+      var r0 = gasRs(S.x, S.aux)/CFG.gasRa;
+      $('mkX').setAttribute('x1', mapx(a, S.x).toFixed(1)); $('mkX').setAttribute('x2', mapx(a, S.x).toFixed(1));
+      $('mkDot').setAttribute('cx', mapx(a, S.x).toFixed(1)); $('mkDot').setAttribute('cy', mapy(a, r0).toFixed(1));
+      leg = '<span><i style="background:#d94a3d"></i>R_s/R_a（加热 ' + S.aux.toFixed(0) + ' ℃）</span>' +
+            '<span><i style="background:#0f9d58"></i>教材 TGS2442 @100 ppm：0.13~0.31</span>' +
+            '<span style="margin-left:auto">R_s/R_a = <b>' + r0.toFixed(3) + '</b>，β = R_a/R_s = <b>' + (1/r0).toFixed(3) + '</b></span>';
+      $('curveNote').textContent = '气敏：R_s/R_a 随浓度单调下降（近似幂律）；教材图13-6 给的是电阻比曲线，灵敏度 β 与之互为倒数。当前 ' + S.x.toFixed(0) + ' ppm → R_s/R_a = ' + r0.toFixed(3) + '。';
+    } else if (t === 'hum'){
+      var ah = AXC.hum;
+      $('pA').setAttribute('d', pathOf(ah, function(rh){ return humZl(clamp(rh + CFG.humHys, 0, 100), S.aux); }));
+      $('pB').setAttribute('d', pathOf(ah, function(rh){ return humZl(clamp(rh - CFG.humHys, 0, 100), S.aux); }));
+      $('pA').setAttribute('opacity', S.dir > 0 ? '1' : '0.35'); $('pA').setAttribute('stroke-width', S.dir > 0 ? '3.4' : '2');
+      $('pB').setAttribute('opacity', S.dir < 0 ? '1' : '0.35'); $('pB').setAttribute('stroke-width', S.dir < 0 ? '3.4' : '2');
+      $('pC').setAttribute('d', '');
+      $('axX').textContent = '相对湿度 RH / %RH'; $('axY').textContent = '阻抗 |Z|（对数）';
+      $('mkX').setAttribute('x1', mapx(ah, S.x).toFixed(1)); $('mkX').setAttribute('x2', mapx(ah, S.x).toFixed(1));
+      $('mkDot').setAttribute('cx', mapx(ah, S.x).toFixed(1));
+      $('mkDot').setAttribute('cy', mapy(ah, humZl(clamp(S.x + CFG.humHys, 0, 100), S.aux)).toFixed(1));
+      $('mkDot').setAttribute('fill', S.dir > 0 ? '#0e4a8e' : '#94a3b8');
+      $('mkDot2').setAttribute('opacity', '1');
+      $('mkDot2').setAttribute('cx', mapx(ah, S.x).toFixed(1));
+      $('mkDot2').setAttribute('cy', mapy(ah, humZl(clamp(S.x - CFG.humHys, 0, 100), S.aux)).toFixed(1));
+      leg = '<span><i style="background:#d94a3d"></i>吸附支（RH 上升）</span>' +
+            '<span><i style="background:#2b6cb0"></i>脱附支（RH 下降）</span>' +
+            '<span><i style="background:#cbd8e8"></i>迟滞环合计约 3%RH</span>' +
+            '<span style="margin-left:auto">当前：' + (S.dir > 0 ? '吸附支' : '脱附支') + ' ' + fmtZ(humZ(S.x, S.aux, S.dir)) + '</span>';
+      $('curveNote').textContent = '湿敏：R–RH 近似指数（对数刻度近似直线）；对数值 ' + humZl(clamp(S.x - S.dir*CFG.humHys, 0, 100), S.aux).toFixed(3) + '，0→100%RH 降 ' + CFG.humDec.toFixed(0) + ' 个数量级；拖动滑块可看吸附/脱附两支分离（迟滞）。';
+    } else if (t === 'ion'){
+      var ai = AXC.ion;
+      $('pA').setAttribute('d', pathOf(ai, function(pH){ return ionModel(pH, S.aux).E; }));
+      $('pB').setAttribute('d', pathOf(ai, function(pH){ return ionModel(pH, 25).E; }));
+      $('pA').setAttribute('opacity', '1'); $('pA').setAttribute('stroke-width', '3.4');
+      $('pB').setAttribute('opacity', '1'); $('pB').setAttribute('stroke-width', '2');
+      $('pC').setAttribute('d', '');
+      $('axX').textContent = 'pH 值'; $('axY').textContent = '界面电位 E / mV（对 pH 7）';
+      $('mkX').setAttribute('x1', mapx(ai, S.x).toFixed(1)); $('mkX').setAttribute('x2', mapx(ai, S.x).toFixed(1));
+      $('mkDot').setAttribute('cx', mapx(ai, S.x).toFixed(1)); $('mkDot').setAttribute('cy', mapy(ai, im_E(S.x)).toFixed(1));
+      leg = '<span><i style="background:#d94a3d"></i>当前 T = ' + S.aux.toFixed(0) + ' ℃（斜率 ' + nernstSlope(S.aux).toFixed(2) + ' mV/pH）</span>' +
+            '<span><i style="background:#2b6cb0"></i>25 ℃ 参考（59.16 mV/pH）</span>' +
+            '<span style="margin-left:auto">E = <b>' + fmtE(im_E(S.x)) + '</b></span>';
+      $('curveNote').textContent = '离子敏：能斯特方程给出直线 E–pH，斜率 2.303RT/F 随温度升高而增大（25 ℃ 时 59.16 mV/pH）。当前 pH ' + S.x.toFixed(1) + ' → E = ' + fmtE(im_E(S.x)) + '；I_D = ' + (ionModel(S.x, S.aux).ID*1000).toFixed(3) + ' mA。';
+    } else if (t === 'mag'){
+      var am = AXC.mag;
+      $('pA').setAttribute('d', pathOf(am, function(B){ return magModel(B/1000, 1/3).dR; }));
+      $('pB').setAttribute('d', pathOf(am, function(B){ return magModel(B/1000, 1).dR; }));
+      $('pC').setAttribute('d', pathOf(am, function(B){ return magModel(B/1000, 3).dR; }));
+      var act = (Math.abs(S.aux - 1/3) < 0.06) ? 'A' : (Math.abs(S.aux - 1) < 0.06 ? 'B' : (Math.abs(S.aux - 3) < 0.06 ? 'C' : ''));
+      $('pA').setAttribute('opacity', act === 'A' ? '1' : '0.3'); $('pA').setAttribute('stroke-width', act === 'A' ? '3.6' : '2');
+      $('pB').setAttribute('opacity', act === 'B' ? '1' : '0.3'); $('pB').setAttribute('stroke-width', act === 'B' ? '3.6' : '2');
+      $('pC').setAttribute('opacity', act === 'C' ? '1' : '0.3'); $('pC').setAttribute('stroke-width', act === 'C' ? '3.6' : '2');
+      $('axX').textContent = '磁感应强度 B / mT'; $('axY').textContent = 'ΔR / R';
+      $('mkX').setAttribute('x1', mapx(am, S.x).toFixed(1)); $('mkX').setAttribute('x2', mapx(am, S.x).toFixed(1));
+      var mNow = magModel(S.x/1000, S.aux);
+      $('mkDot').setAttribute('cx', mapx(am, S.x).toFixed(1)); $('mkDot').setAttribute('cy', mapy(am, mNow.dR).toFixed(1));
+      leg = '<span><i style="background:#d94a3d"></i>L/b = 1/3（几何磁阻最强）</span>' +
+            '<span><i style="background:#2b6cb0"></i>L/b = 1</span>' +
+            '<span><i style="background:#7c3aed"></i>L/b = 3</span>' +
+            '<span style="margin-left:auto">L/b = ' + S.aux.toFixed(2) + ' → ΔR/R = +' + (mNow.dR*100).toFixed(1) + '%</span>';
+      $('curveNote').textContent = '磁敏：Δρ/ρ = K(μB)² 是抛物线，L/b 越小形状因子越大 —— 曲线整体抬高（与教材图13-14 三组 L/b 的次序一致）。当前 μB = ' + mNow.muB.toFixed(2) + '，ΔR/R = +' + (mNow.dR*100).toFixed(2) + '%。';
+    } else {
+      var al = AXC.colL, ar = AXC.colR;
+      $('pA').setAttribute('d', pathOf(al, function(l){ return colR1(l); }));
+      $('pB').setAttribute('d', pathOf(al, function(l){ return colR2(l); }));
+      $('pC').setAttribute('d', pathOf(ar, function(l){ return Math.log(clamp(colR1(l)/(colR2(l) || 1e-9), 1e-9, 1e9))/Math.LN10; }));
+      $('pA').setAttribute('opacity', '1'); $('pA').setAttribute('stroke-width', '3.2');
+      $('pB').setAttribute('opacity', '1'); $('pB').setAttribute('stroke-width', '3.2');
+      $('pC').setAttribute('opacity', '1'); $('pC').setAttribute('stroke-width', '2.6');
+      $('axX').textContent = '波长 λ / nm'; $('axY').textContent = '相对响应 R';
+      $('mkX').setAttribute('x1', mapx(al, S.x).toFixed(1)); $('mkX').setAttribute('x2', mapx(al, S.x).toFixed(1));
+      $('mkDot').setAttribute('cx', mapx(al, S.x).toFixed(1)); $('mkDot').setAttribute('cy', mapy(al, colR1(S.x)).toFixed(1));
+      $('mkDot').setAttribute('fill', '#2b6cb0');
+      $('mkDot2').setAttribute('opacity', '1');
+      $('mkDot2').setAttribute('stroke', '#7c3aed');
+      $('mkDot2').setAttribute('cx', mapx(ar, S.x).toFixed(1));
+      $('mkDot2').setAttribute('cy', mapy(ar, Math.log(clamp(colModel(S.x, 500).ratio, 1e-9, 1e9))/Math.LN10).toFixed(1));
+      leg = '<span><i style="background:#d94a3d"></i>浅结 D₁ 相对响应</span>' +
+            '<span><i style="background:#2b6cb0"></i>深结 D₂ 相对响应</span>' +
+            '<span><i style="background:#7c3aed"></i>I₁/I₂（对数，右区）</span>' +
+            '<span style="margin-left:auto">λ = ' + S.x.toFixed(0) + ' nm → I₁/I₂ = ' + colModel(S.x, S.aux).ratio.toFixed(3) + '</span>';
+      $('curveNote').textContent = '色敏：左区两结相对响应（峰值 450 / 700 nm），右区短路电流比 I₁/I₂ 随波长单调下降；改变光强只让左右曲线不变而两路电流等比变化，比值不变。';
+    }
+    $('legendWrap').innerHTML = leg;
+  }
+  function im_E(pH){ return nernstSlope(S.aux)*(7 - pH); }
+  function fmtE(v){ return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + ' mV'; }
+
+  /* ============ 8. 公式推导（式号 + 动态代入） ============ */
+  function paintFormulas(gm, gh, gRatio, gBeta, hZ, hLg, hZup, hZdn, im, mg, vh, cm){
+    var t = S.type, html = '';
+    if (t === 'gas'){
+      $('fmlTitle').textContent = '气敏 · 表面电阻控制型';
+      html += '<div class="row"><span class="tag">灵敏</span><span>β = ' + frac('R_a', 'R_s') + ' = ' +
+              frac((CFG.gasRa/1000).toFixed(1) + ' kΩ', (gm/1000).toFixed(3) + ' kΩ') + ' = <b>' + gBeta.toFixed(3) + '</b>　（电阻比 R_s/R_a = ' + gRatio.toFixed(3) + '）</span></div>';
+      html += '<div class="row"><span class="tag">模型</span><span>R_s = ' + frac('R_a', '1+α(T)√c') + ' = ' +
+              frac('30.0 kΩ', '1+' + gasAlpha(S.aux).toFixed(3) + '×' + Math.sqrt(S.x).toFixed(2)) + ' = <b>' + (gm/1000).toFixed(3) + ' kΩ</b>　α 随 T 升高而减小（灵敏度下降）</span></div>';
+      html += '<div class="row"><span class="tag">图13-6</span><span>教材 TGS2442（室内 CO 报警）：量程 <b>30~1000 ppm</b>，灵敏度 <b>0.13~0.31</b>（电阻比），1000 ms 周期、每秒测一次、每周期加热仅 <b>14 ms</b></span></div>';
+      html += '<div class="row"><span class="tag g">加热</span><span>P_full = ' + frac('U²', 'R') + ' = ' +
+              frac('5²', '5') + ' = ' + gh.full.toFixed(1) + ' W　P_avg = P_full×' + frac('14 ms', '1000 ms') + ' = <b>' + gh.avg.toFixed(3) + ' W</b>　节能 <b>' + (gh.save*100).toFixed(1) + '%</b></span></div>';
+      html += '<div class="row"><span class="tag f">机理</span><span>空气中 O₂ 吸附夺电子成 O⁻（耗尽层厚 → 电阻高）；CO、H₂ 给出电子（耗尽层薄 → 电阻低）</span></div>';
+      html += '<div class="note">加热 200~400 ℃ 的四条理由（教材）：① 普遍需要加热（热清洗、加速吸附）；② 空气影响始终存在，相当于被测量；③ 往往需要催化提高选择性；④ 响应时间远长于物理量传感器。代价：耐热要求、耗能、老化快。</div>';
+    } else if (t === 'hum'){
+      $('fmlTitle').textContent = '湿敏 · 多孔陶瓷（负特性）';
+      var rho = 0.018016*(S.x/100)*satP(S.aux)/(8.314*(S.aux + 273.15));
+      var pPa = (rho/0.018016)*8.314*(S.aux + 273.15);
+      html += '<div class="row"><span class="tag">式 13-1</span><span>p = ' + frac('ρ', 'm') + 'RT = ' +
+              frac((rho*1000).toFixed(2) + ' g/m³', '18.02 g/mol') + '×8.314×' + (S.aux + 273.15).toFixed(2) + ' = <b>' + (pPa/1000).toFixed(2) + ' kPa</b>（当前 RH 下的水汽分压，ρ 由饱和水汽压 p_s = ' + (satP(S.aux)/1000).toFixed(2) + ' kPa 换算）</span></div>';
+      html += '<div class="row"><span class="tag">式 13-2</span><span>露点 T_d = f(T, RH)：教材在 HTU21D 应用中给出（常数 1762.39、8.1332、235.66）—— 提取文本 OCR 残缺，<b>本页不代入</b>，须按教材原文核对</span></div>';
+      html += '<div class="row"><span class="tag">特性</span><span>lg|Z| = lg Z₀ − 3·(' + frac('RH', '100') + ')^0.85 = 7 − ' + (3*Math.pow(clamp(S.x - S.dir*CFG.humHys, 0, 100)/100, 0.85)).toFixed(4) +
+              '　→ |Z| = <b>' + fmtZ(hZ) + '</b>（0→100%RH 降约 3 个数量级）</span></div>';
+      html += '<div class="row"><span class="tag g">迟滞</span><span>吸附支 ' + fmtZ(hZup) + '　脱附支 ' + fmtZ(hZdn) + '　两支等效相差约 ' + (2*CFG.humHys).toFixed(1) + '%RH（示意）；感湿温度系数 60%RH 时 &gt; 0.38%/℃</span></div>';
+      html += '<div class="row"><span class="tag f">判据</span><span>空穴为载流子 → <b>负特性</b>（本器件）；电子为载流子 → 正特性；低湿电子导电、高湿离子导电；涂覆膜型松散堆积，离子导电始终主导 → 总为负特性</span></div>';
+      html += '<div class="note">结构：MgCr₂O₄-TiO₂ 系约 1300 ℃ 烧结成 P 型多孔陶瓷（片 4 mm×5 mm×0.3 mm，气孔率 30%~40%、孔径 &lt;1 μm）；量程 1%~100%RH；污染后需 400 ℃ 以上加热清洗恢复。RH &gt; 80% 后水膜连成一片（结露传感器即利用该处电阻突变）。</div>';
+    } else if (t === 'ion'){
+      $('fmlTitle').textContent = '离子敏 · 能斯特方程与 ISFET';
+      html += '<div class="row"><span class="tag">能斯特</span><span>E = E₀ + ' + frac('RT', 'nF') + '·ln a = E₀ + ' +
+              frac('2.303RT', 'nF') + '·lg a = E₀ + <b>' + im.sl.toFixed(2) + ' mV</b>/十倍活度（T = ' + S.aux.toFixed(0) + ' ℃，n = 1）</span></div>';
+      html += '<div class="row"><span class="tag">25 ℃</span><span>2.303RT/F = ' + frac('2.303×8.314×298.15', '96485') + ' = 0.05916 V = <b>59.16 mV/pH</b>（≈ 教材 59 mV/pH，是离子敏灵敏度上限）</span></div>';
+      html += '<div class="row"><span class="tag">界面</span><span>E（相对 pH 7）= ' + im.sl.toFixed(2) + '×(7−' + S.x.toFixed(1) + ') = <b>' + fmtE(im.E) + '</b>　→ 等效栅压升高/降低</span></div>';
+      html += '<div class="row"><span class="tag g">ISFET</span><span>V_th = V_th0 − E = 1.000 − (' + (im.E/1000).toFixed(3) + ') = ' + im.Vth.toFixed(3) + ' V　I_D = ' + frac('β', '2') + '(V_G−V_th)² = <b>' + (im.ID*1000).toFixed(4) + ' mA</b></span></div>';
+      html += '<div class="row"><span class="tag v">生物敏</span><span>EnFET：GOD 催化 C₆H₁₂O₆+O₂ → 葡萄糖内酯 + H₂O₂，内酯水解成葡萄糖酸释 H⁺ → SiN 膜响应；ImFET：pH 7 缓冲液中抗原带负电、抗体带正电，结合后栅极正电荷减少 → I_D 变小</span></div>';
+      html += '<div class="note">ISFET 必须配参比电极（Ag-AgCl）做反馈式测量，才能把离子浓度稳定地转为栅压变化；Si₃N₄ 膜 pH 响应约 59 mV/pH，掺铝 Ta₂O₅ 更接近理论斜率。敏感膜对导电性无要求。</div>';
+    } else if (t === 'mag'){
+      $('fmlTitle').textContent = '磁敏 · 磁阻效应与形状效应';
+      html += '<div class="row"><span class="tag">式 13-3</span><span>' + frac('ρ_B − ρ₀', 'ρ₀') + ' = K(μB)² = ' + CFG.mag.K.toFixed(2) + '×(' +
+              CFG.mag.mu.toFixed(1) + '×' + (S.x/1000).toFixed(3) + ')² = ' + CFG.mag.K.toFixed(2) + '×' + (mg.muB*mg.muB).toFixed(3) + ' = <b>' + (mg.phys*100).toFixed(1) + '%</b>（物理磁阻效应）</span></div>';
+      html += '<div class="row"><span class="tag">式 13-4</span><span>' + frac('Δρ', 'ρ') + ' = K(μB)²[1 − f(L/b)] = ' + (mg.phys*100).toFixed(1) + '%×(1−' + (1 - mg.shape).toFixed(3) + ') = <b>+' + (mg.dR*100).toFixed(2) + '%</b>　（f = ' + frac('L/b', '1+L/b') + '，示意）</span></div>';
+      html += '<div class="row"><span class="tag">霍尔角</span><span>tan θ_H = μB = ' + mg.muB.toFixed(3) + ' → θ_H = <b>' + (mg.muB > 100 ? '≈90°' : mg.theta.toFixed(2) + '°') + '</b>　（载流子路径偏转 → 路径变长 → 电阻增大）</span></div>';
+      html += '<div class="row"><span class="tag g">霍尔</span><span>V_H = K_H·I·B，K_H = ' + frac('r', 'n·e·t') + ' = ' + hallKH().toFixed(1) + ' V/(A·T) → V_H = <b>' + (vh*1000).toFixed(1) + ' mV</b>（I = 5 mA，对照器件）</span></div>';
+      html += '<div class="row"><span class="tag f">选材</span><span>Δρ/ρ ∝ μ² → 用高迁移率 InSb / InAs（InSb：μ = 7.8 m²/(V·s)）；曲折形提高阻值，考比诺圆盘无霍尔电场、几何磁阻最强</span></div>';
+      html += '<div class="note">磁敏电阻两端输出电阻变化；霍尔元件四端输出电压 V_H = K_H·I·B；磁敏二极管（P-I-N，一侧打毛为 r 复合面）灵敏度比霍尔元件高几百甚至上千倍、可判磁场方向，但线性范围窄、温度特性差。</div>';
+    } else {
+      $('fmlTitle').textContent = '色敏 · 光吸收与双结短路电流比';
+      var ev = 1239.84/S.x;
+      html += '<div class="row"><span class="tag">光吸收</span><span>I(x) = I₀e^(−αx)，α(λ) ≈ A(hν − E_g)^½ → 短波 α 大、穿透浅；长波 α 小、穿透深</span></div>';
+      html += '<div class="row"><span class="tag">光子能量</span><span>hν = ' + frac('1239.84', S.x.toFixed(0) + ' nm') + ' = <b>' + ev.toFixed(2) + ' eV</b>　&gt;　E_g(Si) = 1.12 eV（可激发本征吸收）</span></div>';
+      html += '<div class="row"><span class="tag">穿透深度</span><span>1/α ≈ ' + cm.xp.toFixed(2) + ' μm（示意：每 50 nm 约翻一倍）；浅结 D₁（≈0.8 μm）收短波、深结 D₂（≈5 μm）收长波</span></div>';
+      html += '<div class="row"><span class="tag">两结</span><span>I₁ = k·P·R₁(' + S.x.toFixed(0) + ') = 0.6×' + S.aux.toFixed(0) + '×' + cm.r1.toFixed(4) + ' = ' + cm.I1.toFixed(2) + ' nA　I₂ = ' + cm.I2.toFixed(2) + ' nA</span></div>';
+      html += '<div class="row"><span class="tag g">判色</span><span>' + frac('I₁', 'I₂') + ' = ' + frac(cm.r1.toFixed(4), cm.r2.toFixed(4)) + ' = <b>' + cm.ratio.toFixed(3) + '</b> ← 只与波长有关，与光强 P 无关（改变光强时两路等比变化）</span></div>';
+      html += '<div class="row"><span class="tag f">对照</span><span>单结 + 干涉滤光片：S2684 系列响应宽仅 10 nm（254/340/405/500/520/560/650/700 nm 型号）；AS7264N 集成 440/490 nm 蓝光通道＋NIR＋温度、16 位输出、LGA 4.5×4.7×2.5 mm</span></div>';
+      html += '<div class="note">双结色敏把波长转成两路短路电流：比值 I₁/I₂ 与光强无关 → 光源亮度变化不影响判色；单结方案只适合特定波长的选择与测量。应用：颜色调校标定、颜色/吸光度测量、自动白平衡、蓝光监控。</div>';
+    }
+    $('fmlBody').innerHTML = html;
+  }
+  /* Magnus 近似：饱和水汽压 Pa（用于式13-1 的示例代入） */
+  function satP(TC){ return 611.2*Math.exp(17.62*TC/(243.12 + TC)); }
+
+  /* ============ 9. 要点 ============ */
+  var PTS_TEXT = [
+    '半导体传感器用半导体材料的<b>电阻、电位、电容、光电流</b>变化敏感被测量：本章五类 —— 气敏、湿敏、离子敏、磁敏、色敏。',
+    '<b>气敏为什么必须加热</b>（教材四条）：普遍需要加热（热清洗、加速吸附）；空气影响始终存在，相当于被测参量；往往需催化提高选择性；响应时间远长于物理量传感器。代价是耐热、耗能、老化。',
+    '气敏<b>方向判断</b>：氧化型气体（O₂、NO₂）夺电子 → N 型电阻↑；还原型（H₂、CO）给电子 → N 型电阻↓；同一气体在 N 型与 P 型上方向相反。灵敏度 β = R_a/R_s，教材 TGS2442 @100 ppm CO 电阻比 0.13~0.31。',
+    '<b>选择性差</b>是气敏最大短板：机理是表面电子转移，本质不区分气体种类 → 交叉敏感、一致性差、老化快；工程上靠催化层、滤膜、阵列（电子鼻）与温度调制改善。TGS2442 用<b>脉冲加热</b>（每秒 14 ms）节能 <b>98.6%</b>。',
+    '湿敏的<b>多孔性</b>是关键：气孔率越高、孔径越小、比表面越大越灵敏（MgCr₂O₄-TiO₂：气孔率 30%~40%、量程 1%~100%RH）。判据 —— 空穴为载流子 → 负特性；电子为载流子 → 正特性；低湿电子导电、高湿<b>离子导电</b>。',
+    '湿敏<b>迟滞与老化</b>：吸附/脱附两支不重合（迟滞）；R–RH 近似指数、取对数近似线性，0→100%RH 阻抗降约 <b>3 个数量级</b>；感湿温度系数随 RH 增大（60%RH 时 &gt; 0.38%/℃），污染后需 <b>400 ℃ 以上加热清洗</b>恢复。',
+    '湿敏相关器件：<b>结露传感器（开关型）</b>—— RH &gt; 80% 后水膜连成一片、电极间电阻突变（课件：约 94%RH 处近乎垂直、骤降 3 个数量级），只做"是/否"判断；<b>HTU21D</b> 数字温湿度（±2%RH、±0.3 ℃、I²C），由 T、RH 代入式(13-2) 算露点。',
+    '离子敏 = <b>能斯特方程</b> E = E₀ + (RT/nF)·ln a：25 ℃ 一价离子 <b>59 mV/十倍活度</b>，既是标定直线斜率、也是灵敏度上限；ISFET 必须配<b>参比电极</b>做反馈式测量，相对玻璃电极体积小、响应快、输出阻抗低、易集成。',
+    '生物敏扩展：<b>EnFET</b>（酶膜，葡萄糖 → 葡萄糖酸释 H⁺ 由 SiN 膜响应）、<b>ImFET</b>（抗体膜，抗原结合后栅极正电荷减少 → I_D 变小）；磁敏中<b>磁敏二极管</b>灵敏度比霍尔元件高几百甚至上千倍、可判方向，但线性窄、温漂大。',
+    '磁敏与色敏的"比值/偏转"思想：磁阻效应 Δρ/ρ = K(μB)²[1−f(L/b)] ∝ μ² → 用 InSb（7.8 m²/(V·s)）；双结色敏用<b>短路电流比</b> I₁/I₂ 判色，与光强无关。共性：半导体传感器温度影响大（迁移率、载流子、化学平衡），必须做温度补偿与稳定化处理。'
+  ];
+  var PTS = { active:-1 };
+  function paintPoints(){
+    if (!$('points').children.length){
+      var html = '', k;
+      for (k = 0; k < PTS_TEXT.length; k++) html += '<li data-pi="' + k + '">' + PTS_TEXT[k] + '</li>';
+      $('points').innerHTML = html;
+    }
+  }
+  function setPt(i){
+    PTS.active = i;
+    var lis = $('points').children, k;
+    for (k = 0; k < lis.length; k++) lis[k].classList.toggle('on', k === i);
+    for (k = 0; k < PTS_TEXT.length; k++){
+      var bb = $('ptsB' + k);
+      if (bb) bb.classList.toggle('on', k === i);
+    }
+    if (i >= 0) say('<b>要点 ' + (i + 1) + '/' + PTS_TEXT.length + '</b>：' + PTS_TEXT[i]);
+  }
+  for (var pb = 0; pb < PTS_TEXT.length; pb++){
+    (function(k){ $('ptsB' + k).addEventListener('click', function(){ stopDemo(); setPt(k); }); })(pb);
+  }
+
+  /* ============ 10. 交互 ============ */
+  function applyRanges(t, reset){
+    var d = DEV[t];
+    $('xin').setAttribute('min', d.xMin); $('xin').setAttribute('max', d.xMax); $('xin').setAttribute('step', d.xStep);
+    $('auxin').setAttribute('min', d.auxMin); $('auxin').setAttribute('max', d.auxMax); $('auxin').setAttribute('step', d.auxStep);
+    $('xTxt').textContent = d.xNote; $('auxTxt').textContent = d.auxNote;
+    if (reset){ S.x = d.xDef; S.aux = d.auxDef; S.dir = 1; }
+  }
+  function syncSlider(){
+    var d = DEV[S.type];
+    $('xin').value = S.x; $('auxin').value = S.aux;
+    $('xOut').textContent = S.x.toFixed(d.xDec) + (d.xUnit ? ' ' + d.xUnit : '');
+    $('auxOut').textContent = S.aux.toFixed(d.auxDec) + (d.auxUnit ? ' ' + d.auxUnit : '');
+  }
+  function setDev(t){
+    if (!DEV[t]) return;
+    S.type = t; applyRanges(t, true); syncSlider(); paint();
+  }
+  function setX(v){
+    var d = DEV[S.type];
+    var nv = (d.xStep >= 1) ? Math.round(v/d.xStep)*d.xStep : Math.round(v*10)/10;
+    nv = clamp(nv, d.xMin, d.xMax);
+    if (nv < S.x) S.dir = -1; else if (nv > S.x) S.dir = 1;
+    S.x = nv; $('xin').value = S.x; syncSlider();
+    paint();
+  }
+  function setAux(v){
+    var d = DEV[S.type];
+    var nv = clamp(Math.round(v/d.auxStep)*d.auxStep, d.auxMin, d.auxMax);
+    S.aux = Math.round(nv*100)/100; $('auxin').value = S.aux; syncSlider();
+    paint();
+  }
+  $('xin').addEventListener('input', function(){ stopDemo(); setX(+this.value); });
+  $('auxin').addEventListener('input', function(){ stopDemo(); setAux(+this.value); });
+  $('xM').addEventListener('click', function(){ stopDemo(); setX(S.x - DEV[S.type].xStep*2); });
+  $('xP').addEventListener('click', function(){ stopDemo(); setX(S.x + DEV[S.type].xStep*2); });
+  document.querySelectorAll('#segDev button').forEach(function(b){
+    b.addEventListener('click', function(){ stopDemo(); setDev(b.getAttribute('data-dev')); say(DEV[S.type].hint); });
+  });
+  $('reset').addEventListener('click', function(){
+    stopDemo();
+    S.dir = 1; setDev('gas'); setX(100); setAux(300);
+    say('已复位：气敏（SnO₂）、CO = 100 ppm、工作温度 300 ℃。');
+  });
+
+  /* ============ 11. 演示脚本 ============ */
+  async function demoGas(){
+    var tok = beginDemo('gas');
+    setDev('gas'); setX(0); setAux(300);
+    say('【<b>气敏原理</b>】洁净空气中氧吸附夺走电子（成为 O⁻），SnO₂ 表面形成耗尽层 → 电阻最大 R_a = <b>' +
+        (CFG.gasRa/1000).toFixed(1) + ' kΩ</b>（示意）。敏感体被加热丝加热到 300 ℃。');
+    if (!await sleep(3600, tok)) return;
+    say('① 通入 <b>100 ppm CO</b>：气体分子穿过网罩到达晶粒表面，给出电子 → 载流子增多、耗尽层变薄 → 电阻下降。看蓝色分子下沉、红色电子注入与紫色耗尽层变薄。');
+    if (!await tween(0, 100, 2600, setX, tok)) return;
+    if (!await sleep(2200, tok)) return;
+    var gm = gasRs(100, 300), r0 = gm/CFG.gasRa;
+    say('② 结果：R_s = <b>' + (gm/1000).toFixed(3) + ' kΩ</b>，R_s/R_a = <b>' + r0.toFixed(3) +
+        '</b>，灵敏度 β = R_a/R_s = <b>' + (1/r0).toFixed(3) + '</b> —— 教材 TGS2442 在 100 ppm CO 的电阻比是 0.13~0.31，模型取中值 0.22。');
+    if (!await sleep(3600, tok)) return;
+    say('③ <b>加热的作用</b>：热清洗、加速吸附/脱附、稳定工作点（空气影响始终存在，相当于被测参量）。温度太高灵敏度反而下降 —— 把工作温度拖到 400 ℃ 对比。');
+    setAux(400);
+    if (!await sleep(2800, tok)) return;
+    say('④ T = 400 ℃：β 降到 <b>' + (CFG.gasRa/gasRs(100, 400)).toFixed(2) +
+        '</b>（300 ℃ 时 ' + (1/r0).toFixed(2) + '）。教材 TGS2442 在 100 ℃ 以下特性很好、300 ℃ 以上严重下降，所以用<b>脉冲加热</b>：1000 ms 周期里只加热 14 ms，平均 ' +
+        gasHeat().avg.toFixed(3) + ' W，省 <b>' + (gasHeat().save*100).toFixed(1) + '%</b>。');
+    setAux(300);
+    if (!await sleep(3400, tok)) return;
+    say('⑤ 再拉高浓度到 1000 ppm：R_s/R_a → <b>' + (gasRs(1000, 300)/CFG.gasRa).toFixed(3) +
+        '</b>。报警器就是靠这个"电阻比"越限触发（量程 30~1000 ppm）—— 但气敏本质不区分气体种类，选择性是最大短板。');
+    if (!await tween(100, 1000, 2200, setX, tok)) return;
+    if (!await sleep(2400, tok)) return;
+    setX(100);
+    say('【小结】气敏 = <b>表面电子转移 + 加热</b>：还原性气体给电子 → 电阻下降；灵敏度 β = R_a/R_s 与电阻比互为倒数。');
+    if (!await sleep(2800, tok)) return;
+    endDemo();
+  }
+
+  async function demoHum(){
+    var tok = beginDemo('hum');
+    setDev('hum'); setX(10);
+    say('【<b>湿敏特性</b>】MgCr₂O₄-TiO₂ 多孔陶瓷：水分子吸附后解离出 H⁺、OH⁻ —— 低湿以电子导电为主、高湿以<b>离子导电</b>为主 → 阻抗随 RH 下降。');
+    if (!await sleep(3600, tok)) return;
+    if (!await tween(10, 50, 2400, setX, tok)) return;
+    if (!await sleep(1800, tok)) return;
+    say('① RH = 50 %RH、25 ℃：|Z| = <b>' + fmtZ(humZ(50, 25, 1)) +
+        '</b>。注意纵轴是<b>对数刻度</b> —— R–RH 近似指数关系，取对数后近似直线。');
+    if (!await sleep(3400, tok)) return;
+    if (!await tween(50, 90, 2400, setX, tok)) return;
+    say('② RH 升到 90 %RH：水分子更多、离子载流子更多 → |Z| 降到 <b>' + fmtZ(humZ(90, 25, 1)) +
+        '</b>。灵敏度随湿度升高而下降（对数刻度上斜率变平）。RH &gt; 80% 后水膜连成一片。');
+    if (!await sleep(3200, tok)) return;
+    if (!await tween(90, 40, 2600, setX, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('③ <b>回程走"脱附支"</b>：同一 RH 下阻抗比吸附支低（水分子来不及脱附）→ 这就是<b>迟滞</b>。当前吸附支 ' +
+        fmtZ(humZ(40, 25, 1)) + '、脱附支 ' + fmtZ(humZ(40, 25, -1)) + '（模型等效合计约 3%RH）。');
+    if (!await sleep(3600, tok)) return;
+    if (!await tween(40, 100, 2200, setX, tok)) return;
+    if (!await sleep(1600, tok)) return;
+    say('④ 全量程：0 → 100 %RH 阻抗从 10 MΩ 降到 10 kΩ，共 <b>3 个数量级</b>。温度也要补偿：感湿温度系数随 RH 增大，60%RH 时超过 0.38%/℃，污染后需 400 ℃ 以上加热清洗恢复。');
+    if (!await sleep(3800, tok)) return;
+    setX(50);
+    say('【小结】湿敏看三点：<b>多孔结构</b>（气孔率 30%~40%）、<b>对数特性</b>（3 个数量级）、<b>迟滞与温度漂移</b>；RH &gt; 80% 的电阻突变可用于结露判断。');
+    if (!await sleep(3000, tok)) return;
+    endDemo();
+  }
+
+  async function demoIon(){
+    var tok = beginDemo('ion');
+    setDev('ion'); setX(7); setAux(25);
+    say('【<b>离子敏 · 能斯特方程</b>】E = E₀ + (RT/nF)·ln a。25 ℃、一价离子：2.303RT/F = <b>59.16 mV</b>/十倍活度 —— 这是 pH 测量的灵敏度上限。pH = 7 时为参考点。');
+    if (!await sleep(3800, tok)) return;
+    say('① 把 pH 从 7 降到 <b>4</b>（H⁺ 活度增大 1000 倍）：界面电位升到 ' + fmtE(ionModel(4, 25).E) +
+        '，等效栅压升高 → 阈值电压降到 ' + ionModel(4, 25).Vth.toFixed(3) + ' V → 漏极电流增到 <b>' + (ionModel(4, 25).ID*1000).toFixed(3) + ' mA</b>。');
+    if (!await tween(7, 4, 2400, setX, tok)) return;
+    if (!await sleep(2400, tok)) return;
+    say('② 反向：pH = 10（碱）→ 界面电位 ' + fmtE(ionModel(10, 25).E) + '，漏极电流降到 <b>' + (ionModel(10, 25).ID*1000).toFixed(3) +
+        ' mA</b>。I_D 随 pH 单调变化即可标定，但<b>必须配参比电极</b>（Ag-AgCl）做反馈式测量。');
+    if (!await tween(4, 10, 2600, setX, tok)) return;
+    if (!await sleep(2400, tok)) return;
+    say('③ 温度影响斜率：升到 37 ℃，斜率变成 <b>' + nernstSlope(37).toFixed(2) +
+        ' mV/pH</b>（25 ℃ 时 59.16）—— 所以精密 pH 测量必须做温度补偿。');
+    setAux(37); setX(4);
+    if (!await sleep(3400, tok)) return;
+    setAux(25);
+    say('④ 换成酶膜/抗体膜就是 <b>EnFET</b>（葡萄糖 → 葡萄糖酸释 H⁺，由 SiN 膜响应）与 <b>ImFET</b>（抗原抗体结合改变栅极电荷）——把离子敏变成生物量检测。');
+    if (!await sleep(3400, tok)) return;
+    setX(7);
+    say('【小结】界面电位与离子活度成<b>对数</b>关系（59 mV/十倍浓度），ISFET 把它变成阈值电压与漏极电流的变化；体积小、输出阻抗低，但离不开参比电极与温度补偿。');
+    if (!await sleep(3200, tok)) return;
+    endDemo();
+  }
+
+  async function demoMagCol(){
+    var tok = beginDemo('magCol');
+    setDev('mag'); setX(0); setAux(1);
+    say('【<b>磁敏</b>】磁阻效应 Δρ/ρ = K(μB)²：B = 0 时载流子走直线；加上磁场后受洛伦兹力偏转（霍尔角 tan θ = μB）→ 路径变长 → 电阻增大。材料必须高迁移率，InSb μ = 7.8 m²/(V·s)。');
+    if (!await sleep(3800, tok)) return;
+    if (!await tween(0, 300, 2600, setX, tok)) return;
+    if (!await sleep(1800, tok)) return;
+    var mm = magModel(0.3, 1);
+    say('① B = 300 mT、L/b = 1：μB = <b>' + mm.muB.toFixed(2) + '</b>，ΔR/R = +<b>' + (mm.dR*100).toFixed(2) +
+        '%</b>，R_B = ' + mm.RB.toFixed(1) + ' Ω，霍尔角 ' + mm.theta.toFixed(1) + '°。');
+    if (!await sleep(3400, tok)) return;
+    say('② 形状效应（式13-4）：L/b 越小，电极短路引起的几何磁阻越强 —— 把长宽比拖到 0.33 看看曲线抬升。');
+    setAux(0.33);
+    if (!await sleep(3000, tok)) return;
+    say('③ L/b = 0.33：ΔR/R 增到 +<b>' + (magModel(0.3, 0.33).dR*100).toFixed(2) +
+        '%</b>。极限就是考比诺圆盘（无霍尔电场，几何磁阻最强）。对照霍尔元件：四端输出 V_H = K_H·I·B = ' + (hallVH(0.3)*1000).toFixed(1) + ' mV。');
+    setAux(1); setX(600);
+    if (!await sleep(3600, tok)) return;
+    say('④ B = 600 mT：ΔR/R = +<b>' + (magModel(0.6, 1).dR*100).toFixed(1) +
+        '%</b>。磁敏二极管灵敏度比霍尔元件高几百甚至上千倍、可判磁场方向，但线性范围窄、温度特性差。');
+    if (!await sleep(3200, tok)) return;
+    setDev('col'); setX(450); setAux(500);
+    say('【<b>色敏</b>】双结硅色敏：短波在浅结被吸收（峰值 ≈450 nm），长波穿透到深结（≈700 nm）。λ = 450 nm 时 I₁/I₂ = <b>' +
+        colModel(450, 500).ratio.toFixed(2) + '</b>（蓝紫光几乎全被浅结收走）。');
+    if (!await sleep(3800, tok)) return;
+    if (!await tween(450, 700, 2800, setX, tok)) return;
+    if (!await sleep(1800, tok)) return;
+    say('⑤ λ = 700 nm（红光）：穿透深度约 ' + colModel(700, 500).xp.toFixed(2) + ' μm，光生载流子主要落在深结 → I₁/I₂ 降到 <b>' +
+        colModel(700, 500).ratio.toFixed(3) + '</b>。比值随波长单调变化 → 拿来判色。');
+    if (!await sleep(3600, tok)) return;
+    say('⑥ 关键优势：把<b>光强</b>从 500 提到 1000 —— 两路短路电流同时翻倍，而比值 I₁/I₂ <b>不变</b>（仍是 ' +
+        colModel(700, 1000).ratio.toFixed(3) + '）→ 光源亮度变化不影响判色。');
+    setAux(1000);
+    if (!await sleep(3400, tok)) return;
+    setX(550); setAux(500);
+    say('【小结】磁敏靠"偏转"（∝ μ²、形状效应）、色敏靠"比值"（与光强无关）；两者都是把不可直接测量的量转换成一对比值/增量来读数。');
+    if (!await sleep(3000, tok)) return;
+    endDemo();
+  }
+
+  async function demoPts(){
+    var tok = beginDemo('pts');
+    say('【<b>本章要点</b>】共 ' + PTS_TEXT.length + ' 条，逐条过一遍；也可点编号按钮单独回看。');
+    if (!await sleep(2000, tok)) return;
+    for (var i = 0; i < PTS_TEXT.length; i++){
+      setPt(i);
+      if (!await sleep(PTS_TEXT[i].length > 70 ? 3200 : 2400, tok)) return;
+    }
+    setPt(-1);
+    endDemo();
+  }
+
+  /* ============ 12. 键盘快捷键 ============ */
+  document.addEventListener('keydown', function(e){
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input') return;
+    if (e.key === 'ArrowLeft'){ stopDemo(); setX(S.x - DEV[S.type].xStep*2); e.preventDefault(); }
+    else if (e.key === 'ArrowRight'){ stopDemo(); setX(S.x + DEV[S.type].xStep*2); e.preventDefault(); }
+    else if (e.key === '1'){ stopDemo(); setDev('gas'); }
+    else if (e.key === '2'){ stopDemo(); setDev('hum'); }
+    else if (e.key === '3'){ stopDemo(); setDev('ion'); }
+    else if (e.key === '4'){ stopDemo(); setDev('mag'); }
+    else if (e.key === '5'){ stopDemo(); setDev('col'); }
+    else if (e.key === ' '){
+      e.preventDefault();
+      if (playingKey){ stopDemo(); say('演示已暂停。'); }
+      else { var k = { gas:'gas', hum:'hum', ion:'ion', mag:'magCol', col:'magCol' }[S.type]; if (DEMOS[k] && DEMOS[k].fn) DEMOS[k].fn(); }
+    }
+    else if (e.key === 'r' || e.key === 'R'){ $('reset').click(); }
+  });
+
+
+  DEMOS.gas    = { btn:'playGas',    label:'▶ 气敏原理',    fn:demoGas };
+  DEMOS.hum    = { btn:'playHum',    label:'▶ 湿敏特性',    fn:demoHum };
+  DEMOS.ion    = { btn:'playIon',    label:'▶ 离子敏能斯特', fn:demoIon };
+  DEMOS.magCol = { btn:'playMagCol', label:'▶ 磁敏 · 色敏',  fn:demoMagCol };
+  DEMOS.pts    = { btn:'ptsPlay',    label:'▶ 巡览要点',    fn:demoPts };
+  bindDemos();
+
+  /* ============ 启动：URL 参数 → 状态 → 一次 paint → 动画 ============ */
+  var q = new URLSearchParams(location.search);
+  if (q.has('type') && DEV[q.get('type')]) S.type = q.get('type');
+  applyRanges(S.type, true);
+  if (q.has('x')){
+    var xv = parseFloat(q.get('x'));
+    if (isFinite(xv)) S.x = clamp(xv, DEV[S.type].xMin, DEV[S.type].xMax);
+  }
+  if (q.has('aux')){
+    var av = parseFloat(q.get('aux'));
+    if (isFinite(av)) S.aux = clamp(av, DEV[S.type].auxMin, DEV[S.type].auxMax);
+  }
+  if (q.has('speed')) SPEED = clamp(parseFloat(q.get('speed')) || 1, 0.4, 2.5);
+  syncSlider();
+  $('speed').value = SPEED; $('speedOut').textContent = SPEED.toFixed(1) + '×';
+  paint();
+  initParts();
+  runAnim();
+  var AUTO = { '1':'gas', '2':'hum', '3':'ion', '4':'magCol', '5':'pts' };
+  if (AUTO[q.get('auto')] && DEMOS[AUTO[q.get('auto')]].fn) DEMOS[AUTO[q.get('auto')]].fn();
+
+})();
+</script>
+
+<script>
+/* ==================== 板块布局引擎：拖动 / 缩放 / 记忆 ====================
+   由 _build/build.js 注入；章节的面板清单 / 记忆键 / 默认布局在构建时替换。 */
+(function(){
+  "use strict";
+  var BOARD = document.getElementById('board');
+  var COLS  = ['colA','colB','colC'];
+  var IDS   = ["ctrlCard","ptsCard","stCard","readCard","fmlCard","curveCard"];
+  var MINZ = 0.7, MAXZ = 1.6, MINCOL = 260;
+  var KEY = 'jh-semi-layout-v1';
+  var DEF = {"weight":{"colA":2.9,"colB":5.2,"colC":3.9},"col":{"colA":["ctrlCard","ptsCard"],"colB":["stCard","readCard"],"colC":["fmlCard","curveCard"]},"zoom":{}};
+  var L = null, focused = null;
+  function el(id){ return document.getElementById(id); }
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function load(){
+    var d;
+    try { d = JSON.parse(localStorage.getItem(KEY)); } catch (e) { d = null; }
+    if (!d || !d.col) return clone(DEF);
+    COLS.forEach(function(c){ if (!d.col[c]) d.col[c] = []; });
+    var seen = {};
+    COLS.forEach(function(c){
+      d.col[c] = d.col[c].filter(function(id){ if (IDS.indexOf(id) < 0 || seen[id]) return false; seen[id] = 1; return true; });
+    });
+    IDS.forEach(function(id){ if (!seen[id]){ d.col.colC.push(id); seen[id] = 1; } });
+    d.weight = d.weight || clone(DEF.weight);
+    d.zoom = d.zoom || {};
+    return d;
+  }
+  L = load();
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(L)); } catch (e) {} }
+  function render(){
+    COLS.forEach(function(cid){
+      var col = el(cid);
+      L.col[cid].forEach(function(pid){ var p = el(pid); if (p) col.appendChild(p); });
+      col.style.flexGrow = L.weight[cid] || 1;
+    });
+  }
+  function applyZoom(id){
+    var p = el(id); if (!p) return;
+    var b = p.querySelector('.pbody'); if (!b) return;
+    b.style.zoom = L.zoom[id] || 1;
+  }
+  function applyAll(){ render(); IDS.forEach(applyZoom); }
+
+  function startDrag(ev, p){
+    if (ev.button) return;
+    var x0 = ev.clientX, y0 = ev.clientY, moved = false, lastTarget = null;
+    function move(e){
+      if (!moved){
+        if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) < 6) return;
+        moved = true;
+        document.body.classList.add('layout-dragging');
+        p.classList.add('sorting');
+      }
+      var col = null, i, r;
+      for (i = 0; i < COLS.length; i++){
+        r = el(COLS[i]).getBoundingClientRect();
+        if (e.clientX >= r.left - 6 && e.clientX <= r.right + 6){ col = COLS[i]; break; }
+      }
+      if (!col) col = (e.clientX < BOARD.getBoundingClientRect().left + BOARD.clientWidth/2) ? COLS[0] : COLS[COLS.length - 1];
+      var list = L.col[col].filter(function(id){ return id !== p.id; });
+      var idx = list.length, j, q, qr;
+      for (j = 0; j < list.length; j++){
+        q = el(list[j]); if (!q) continue;
+        qr = q.getBoundingClientRect();
+        if (e.clientY < qr.top + qr.height/2){ idx = j; break; }
+      }
+      var key = col + ':' + idx;
+      if (key === lastTarget) return;
+      lastTarget = key;
+      COLS.forEach(function(c2){ L.col[c2] = L.col[c2].filter(function(id){ return id !== p.id; }); });
+      L.col[col].splice(idx, 0, p.id);
+      render();
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', up);
+      document.body.classList.remove('layout-dragging');
+      p.classList.remove('sorting');
+      if (moved) save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
+  }
+  function startSplit(ev, sp){
+    ev.preventDefault();
+    var left = el(sp.getAttribute('data-left')), right = el(sp.getAttribute('data-right'));
+    var total = left.offsetWidth + right.offsetWidth;
+    var wl = L.weight[left.id] || 1, wr = L.weight[right.id] || 1, sum = wl + wr;
+    var x0 = ev.clientX, pxPerWeight = total/sum;
+    document.body.classList.add('layout-dragging');
+    function move(e){
+      var d = (e.clientX - x0)/pxPerWeight;
+      var nl = Math.max(MINCOL/(total/sum), Math.min(sum - MINCOL/(total/sum), wl + d));
+      left.style.flexGrow = nl; right.style.flexGrow = sum - nl;
+      L.weight[left.id] = nl; L.weight[right.id] = sum - nl;
+    }
+    function up(){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.body.classList.remove('layout-dragging');
+      save();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  }
+  function zoomPanel(id, d){
+    var z = Math.round(((L.zoom[id] || 1) + d)*100)/100;
+    L.zoom[id] = Math.max(MINZ, Math.min(MAXZ, z));
+    applyZoom(id); save();
+  }
+  function toggleFocus(id){
+    var p = el(id); if (!p) return;
+    if (focused === id){ p.classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    else {
+      if (focused) el(focused).classList.remove('focused');
+      p.classList.add('focused'); document.body.classList.add('has-focus'); focused = id;
+    }
+  }
+  function reset(){
+    L = clone(DEF);
+    if (focused){ el(focused).classList.remove('focused'); document.body.classList.remove('has-focus'); focused = null; }
+    applyAll(); save();
+  }
+  var back = document.createElement('div');
+  back.id = 'focusBack';
+  back.addEventListener('click', function(){ if (focused) toggleFocus(focused); });
+  document.body.appendChild(back);
+
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var head = p.querySelector('.phead');
+    if (head){
+      head.addEventListener('pointerdown', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        e.preventDefault(); startDrag(e, p);
+      });
+      head.addEventListener('dblclick', function(e){
+        if (e.target.closest && e.target.closest('.ptool')) return;
+        toggleFocus(id);
+      });
+    }
+    p.querySelectorAll('.ptool').forEach(function(b){
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        var a = b.getAttribute('data-act');
+        if (a === 'in') zoomPanel(id, 0.08);
+        else if (a === 'out') zoomPanel(id, -0.08);
+        else if (a === 'max') toggleFocus(id);
+      });
+    });
+  });
+  document.querySelectorAll('.vsplit').forEach(function(sp){
+    sp.addEventListener('pointerdown', function(e){ startSplit(e, sp); });
+  });
+  /* ---------- 折叠：滑过上方自动折叠，回到可视区自动展开；可手动锁定 ---------- */
+  function setFold(p, on){
+    p.classList.toggle('folded', on);
+    var btn = p.querySelector('.ptool[data-act="fold"]');
+    if (btn) btn.textContent = on ? '▸' : '▾';
+  }
+  IDS.forEach(function(id){
+    var p = el(id); if (!p) return;
+    var tools = p.querySelector('.ptools');
+    if (!tools) return;
+    var fb = document.createElement('button');
+    fb.className = 'ptool';
+    fb.setAttribute('data-act', 'fold');
+    fb.title = '折叠 / 展开本板块（手动折叠后不会被自动展开）';
+    fb.textContent = '▾';
+    tools.insertBefore(fb, tools.firstChild);
+    fb.addEventListener('click', function(e){
+      e.stopPropagation();
+      var folded = p.classList.contains('folded');
+      setFold(p, !folded);
+      if (!folded) p.setAttribute('data-manual', '1'); else p.removeAttribute('data-manual');
+    });
+  });
+  var ticking = false;
+  function autoFold(){
+    ticking = false;
+    var vh = window.innerHeight || 900;
+    IDS.forEach(function(id){
+      var p = el(id); if (!p) return;
+      if (!p.parentNode || p.parentNode.id !== 'colB') return;    /* 只有中间列参与自动折叠（左右两列固定不动） */
+      var r = p.getBoundingClientRect();
+      if (r.bottom < 90){                                          /* 整块滑到上方之外 → 收起 */
+        if (!p.classList.contains('folded')) setFold(p, true);
+      } else if (r.top < vh - 30 && r.bottom > 60 && !p.hasAttribute('data-manual')){
+        if (p.classList.contains('folded')) setFold(p, false);      /* 回到可视区 → 展开 */
+      }
+    });
+  }
+  function onScrollOrWheel(){
+    if (!ticking){ ticking = true; requestAnimationFrame(autoFold); }
+  }
+  window.addEventListener('scroll', onScrollOrWheel, { passive:true });
+  window.addEventListener('wheel', onScrollOrWheel, { passive:true });
+  window.addEventListener('touchmove', onScrollOrWheel, { passive:true });
+  window.addEventListener('resize', function(){ if (window.__repack) window.__repack(); });
+  setTimeout(autoFold, 400);
+  window.__autoFold = autoFold;
+
+  var lr = document.getElementById('layReset');
+  if (lr) lr.addEventListener('click', reset);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && focused) toggleFocus(focused); });
+  window.addEventListener('resize', function(){ IDS.forEach(applyZoom); });
+  window.__repack = function(){};
+  applyAll();
+  window.addEventListener('load', applyAll);
+})();
+
+</script>
+</body>
+</html>
