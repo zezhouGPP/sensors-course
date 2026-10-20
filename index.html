@@ -111,6 +111,26 @@
   #tpDlg .tpf button{border-radius:10px;padding:8px 17px;font-size:14px;font-weight:700;cursor:pointer}
   #tpDlg .tpc{background:#fff;color:#3b5273;border:1px solid #c9d8e8}
   #tpDlg .tpo{background:#0e4a8e;color:#fff;border:0}
+  /* 数据分析 */
+  .anagrid{display:flex;flex-wrap:wrap;gap:10px;margin:2px 0 4px;align-items:stretch}
+  .anacard{flex:1 1 250px;min-width:250px;max-width:100%;box-sizing:border-box;border:1px solid #e3ebf5;border-radius:11px;padding:10px 12px 12px;background:#fbfdff}
+  .anat{font-size:12.5px;font-weight:700;color:#0e4a8e;margin-bottom:9px}
+  .days{display:flex;align-items:flex-end;gap:2px;height:96px}
+  .daycol{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+  .dbars{display:flex;align-items:flex-end;justify-content:center;gap:2px;height:100%}
+  .dstud{display:block;width:5px;background:#0e4a8e;border-radius:2px 2px 0 0}
+  .dguest{display:block;width:5px;background:#e8a33d;border-radius:2px 2px 0 0}
+  .dlab{font-size:9.5px;color:#9aa9bb;text-align:center;line-height:12px;height:12px}
+  .leg{font-size:11.5px;color:#7b8ea6;margin-top:7px;display:flex;gap:14px}
+  .leg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px}
+  .hbar{display:flex;align-items:center;gap:8px;font-size:12px;margin:6px 0}
+  .hbar .hl{width:84px;flex:none;color:#5b6b80}
+  .hbar .hb{flex:1;height:12px;background:#eef3f9;border-radius:6px;overflow:hidden}
+  .hbar .hb i{display:block;height:100%;background:#0e4a8e;border-radius:6px}
+  .hbar .hn{width:52px;flex:none;text-align:right;color:#0e4a8e;font-weight:700;font-variant-numeric:tabular-nums}
+  .wlist div{font-size:12.5px;color:#5b6b80;margin:9px 0}
+  .clsub{font-size:11.5px;color:#7b8ea6;margin:-2px 0 10px;line-height:1.5}
+  .wlist b{font-size:17px;margin-right:5px;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -120,6 +140,9 @@
     <div class="tph">老师统计入口</div>
     <div class="tpb">
       <div class="tprow">
+        <input id="tpAcc" type="text" placeholder="老师账号" autocomplete="off" inputmode="numeric" spellcheck="false">
+      </div>
+      <div class="tprow" style="margin-top:8px">
         <input id="tpInput" type="password" placeholder="请输入老师密码" autocomplete="off" spellcheck="false">
         <button class="tpeye" id="tpEye" type="button" title="点击显示密码" aria-label="显示密码">👁</button>
       </div>
@@ -289,7 +312,7 @@
   <script>
   (function(){
     var API = 'https://zezhou-sensors-cours-d6a84d256e7.service.tcloudbase.com/api';
-    var K_SID = 'sensors_sid', K_NAME = 'sensors_name', K_CLS = 'sensors_cls', K_KEY = 'sensors_tkey';
+    var K_SID = 'sensors_sid', K_NAME = 'sensors_name', K_CLS = 'sensors_cls', K_KEY = 'sensors_tkey', K_ACC = 'sensors_tacc';
     function $(id){ return document.getElementById(id); }
     function post(body){
       return fetch(API, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
@@ -381,6 +404,83 @@
           '<div style="color:#9aa9bb;font-size:11.5px">' + esc(x.page) +
           (x.sid ? ' · ' + esc(x.sid) : ' · 未登录') + '</div></td></tr>';
       }).join('');
+      // ---- 数据分析 ----
+      var an = d.analysis || {};
+      var dayArr = an.daily || [];
+      var dayMax = 1;
+      dayArr.forEach(function(x){ dayMax = Math.max(dayMax, x.stud || 0, x.guest || 0); });
+      var dayHtml = dayArr.map(function(x){
+        var h1 = ((x.stud || 0) / dayMax * 100).toFixed(1);
+        var h2 = ((x.guest || 0) / dayMax * 100).toFixed(1);
+        return '<div class="daycol" title="' + esc(x.day) + '：学生 ' + (x.stud || 0) + ' 次 · 游客 ' + (x.guest || 0) + ' 次">' +
+          '<div class="dbars"><span class="dstud" style="height:' + h1 + '%"></span>' +
+          '<span class="dguest" style="height:' + h2 + '%"></span></div>' +
+          '<div class="dlab">' + (x.dd || '') + '</div></div>';
+      }).join('');
+
+      var bands = ['0', '1-5', '6-20', '21-50', '50+'];
+      var distMap = {};
+      (an.dist || []).forEach(function(x){ distMap[x.band] = x.n; });
+      var distTotal = 0;
+      bands.forEach(function(b){ distTotal += (distMap[b] || 0); });
+      if (!distTotal) distTotal = 1;
+      var distHtml = bands.map(function(b){
+        var n = distMap[b] || 0;
+        return '<div class="hbar"><span class="hl">' + (b === '0' ? '从未访问' : b + ' 次') + '</span>' +
+          '<span class="hb"><i style="width:' + (n / distTotal * 100).toFixed(1) + '%;background:' +
+          (b === '0' ? '#c0392b' : '#0e4a8e') + '"></i></span>' +
+          '<span class="hn">' + n + ' 人</span></div>';
+      }).join('');
+
+      var clsRows = (an.cls || []).map(function(c){
+        var rate = c.total ? Math.round((c.logged || 0) / c.total * 100) : 0;
+        var avg = c.logged ? ((c.pv || 0) / c.logged).toFixed(1) : '0.0';
+        return '<div class="hbar"><span class="hl" style="width:58px">' + esc(c.cls) + ' 班</span>' +
+          '<span class="hb"><i style="width:' + rate + '%"></i></span>' +
+          '<span class="hn">' + rate + '%</span></div>' +
+          '<div class="clsub">名单 ' + (c.total || 0) + ' · 登录 ' + (c.logged || 0) +
+          ' · 访问 ' + (c.pv || 0) + ' · 人均 ' + avg + '</div>';
+      }).join('');
+
+      var hMap = {}, hMax = 1;
+      (an.hour || []).forEach(function(x){ hMap[x.hh] = x.n; hMax = Math.max(hMax, x.n); });
+      var hourHtml = '';
+      for (var hh = 0; hh < 24; hh++) {
+        var hk = (hh < 10 ? '0' : '') + hh;
+        var hn = hMap[hk] || 0;
+        hourHtml += '<div class="daycol" title="' + hk + ' 时：' + hn + ' 次">' +
+          '<div class="dbars"><span class="dstud" style="width:7px;height:' + (hn / hMax * 100).toFixed(1) + '%"></span></div>' +
+          '<div class="dlab">' + (hh % 6 === 0 ? hh : '&nbsp;') + '</div></div>';
+      }
+
+      var fk = an.fbKind || [];
+      var fkTotal = 0;
+      fk.forEach(function(x){ fkTotal += x.n; });
+      if (!fkTotal) fkTotal = 1;
+      var fkHtml = fk.length ? fk.map(function(x){
+        return '<div class="hbar"><span class="hl">' + esc(x.kind) + '</span>' +
+          '<span class="hb"><i style="width:' + (x.n / fkTotal * 100).toFixed(1) + '%"></i></span>' +
+          '<span class="hn">' + x.n + ' 条</span></div>';
+      }).join('') : '<div class="wlist"><div>还没有收到反馈</div></div>';
+
+      var anaHtml =
+        '<div class="subh">数据分析</div>' +
+        '<div class="anagrid">' +
+          '<div class="anacard"><div class="anat">近 14 天访问趋势</div><div class="days">' + dayHtml + '</div>' +
+            '<div class="leg"><span><i style="background:#0e4a8e"></i>学生</span>' +
+            '<span><i style="background:#e8a33d"></i>游客</span></div></div>' +
+          '<div class="anacard"><div class="anat">参与度分布（学生访问课件次数）</div>' + distHtml + '</div>' +
+          '<div class="anacard"><div class="anat">班级对比（登录率）</div>' +
+            (clsRows || '<div class="wlist"><div>暂无数据</div></div>') + '</div>' +
+          '<div class="anacard"><div class="anat">访问时段分布（学生）</div>' +
+            '<div class="days" style="height:82px">' + hourHtml + '</div></div>' +
+          '<div class="anacard"><div class="anat">反馈类型</div>' + fkHtml + '</div>' +
+          '<div class="anacard"><div class="anat">关注名单</div><div class="wlist">' +
+            '<div><b style="color:#c0392b">' + (an.neverLogin || 0) + '</b> 人从未登录</div>' +
+            '<div><b>' + (an.onlyLogin || 0) + '</b> 人已登录但没看课件</div>' +
+            '<div><b style="color:#1d7a46">' + (an.todayActive || 0) + '</b> 人今日活跃</div>' +
+            '</div></div>' +
+        '</div>';
       var miss = d.missing || [];
       p.innerHTML =
         '<div class="kpis">' +
@@ -391,6 +491,7 @@
           '<span>游客访问 <b>' + (d.guests || 0) + '</b> 次</span>' +
           '<span>今日 <b>' + (d.today || 0) + '</b> 次（其中游客 ' + (d.guestsToday || 0) + '）</span>' +
         '</div>' +
+        anaHtml +
         (hotList.length
           ? '<div class="hotbox"><b>活跃突出（登录或访问超过 ' + HOT + ' 次）：</b>' +
             hotList.map(function(s){
@@ -446,38 +547,40 @@
     }
 
     // ---- 老师统计：密码对话框（默认隐藏，可点击显示） ----
-    var tpMask = $('tpMask'), tpInput = $('tpInput');
+    var tpMask = $('tpMask'), tpInput = $('tpInput'), tpAcc = $('tpAcc');
     function tpErr(t){ var e = $('tpErr'); if (e) e.textContent = t || ''; }
     function openTp(){
       tpInput.value = ''; tpErr('');
       tpInput.type = 'password'; $('tpEye').textContent = '👁'; $('tpEye').title = '点击显示密码';
       tpMask.classList.add('on');
-      setTimeout(function(){ try { tpInput.focus(); } catch(e) {} }, 60);
+      setTimeout(function(){ try { (tpAcc.value ? tpInput : tpAcc).focus(); } catch(e) {} }, 60);
     }
     function closeTp(){ tpMask.classList.remove('on'); }
-    function loadStats(key){
+    function loadStats(key, acc){
       msg('正在读取统计…');
-      post({action:'stats', key: key}).then(function(d){
+      post({action:'stats', account: acc, key: key}).then(function(d){
         if (d && d.ok) {
-          try { sessionStorage.setItem(K_KEY, key); } catch(e) {}
+          try { sessionStorage.setItem(K_KEY, key); sessionStorage.setItem(K_ACC, acc); } catch(e) {}
           closeTp(); msg('统计已更新', 'ok'); render(d);
         } else {
-          tpErr((d && d.msg) || '密码不正确');
-          try { sessionStorage.removeItem(K_KEY); } catch(e) {}
+          tpErr((d && d.msg) || '账号或密码不正确');
+          try { sessionStorage.removeItem(K_KEY); sessionStorage.removeItem(K_ACC); } catch(e) {}
         }
       }).catch(function(){ tpErr('无法连接统计服务（网络或服务异常）'); });
     }
     $('adminLink').onclick = function(ev){
       ev.preventDefault();
-      var k = '';
-      try { k = sessionStorage.getItem(K_KEY) || ''; } catch(e) {}
-      if (k) { loadStats(k); return; }
+      var k = '', a = '';
+      try { k = sessionStorage.getItem(K_KEY) || ''; a = sessionStorage.getItem(K_ACC) || ''; } catch(e) {}
+      if (k && a) { loadStats(k, a); return; }
       openTp();
     };
     $('tpOk').onclick = function(){
+      var a = (tpAcc.value || '').trim().replace(/\s+/g, '');
       var v = (tpInput.value || '').trim();
-      if (!v) { tpErr('请输入密码'); return; }
-      loadStats(v);
+      if (!a) { tpErr('请输入账号'); try { tpAcc.focus(); } catch(e) {} return; }
+      if (!v) { tpErr('请输入密码'); try { tpInput.focus(); } catch(e) {} return; }
+      loadStats(v, a);
     };
     $('tpCancel').onclick = closeTp;
     $('tpMask').addEventListener('click', function(e){ if (e.target === tpMask) closeTp(); });
@@ -488,9 +591,11 @@
       this.title = show ? '点击隐藏密码' : '点击显示密码';
       try { tpInput.focus(); } catch(e) {}
     };
-    tpInput.addEventListener('keydown', function(e){
-      if (e.key === 'Enter') { $('tpOk').click(); }
-      else if (e.key === 'Escape') { closeTp(); }
+    [tpInput, tpAcc].forEach(function(el){
+      el.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') { $('tpOk').click(); }
+        else if (e.key === 'Escape') { closeTp(); }
+      });
     });
   })();
   </script>
