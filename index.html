@@ -59,6 +59,38 @@
   #adminPanel .tblwrap thead th{position:sticky;top:0;background:#fff;z-index:1}
   #adminPanel .subh{font-size:13px;color:#5b6b80;font-weight:700}
   @media (max-width:640px){ .item{flex-direction:column;align-items:flex-start} }
+
+  /* 意见反馈 */
+  .fbBtn{position:fixed;right:14px;bottom:38px;z-index:9998;background:#0e4a8e;color:#fff;border:0;
+         border-radius:999px;padding:9px 15px;font:600 13.5px/1 "Microsoft YaHei",sans-serif;cursor:pointer;
+         box-shadow:0 8px 22px rgba(14,74,142,.32)}
+  .fbBtn:hover{filter:brightness(1.08)}
+  #fbMask{position:fixed;inset:0;z-index:9999;background:rgba(10,22,38,.5);display:none;
+          align-items:center;justify-content:center;padding:18px}
+  #fbMask.on{display:flex}
+  #fbDlg{background:#fff;border-radius:16px;width:100%;max-width:470px;overflow:hidden;
+         box-shadow:0 20px 60px rgba(0,0,0,.3);font:14px/1.6 "Microsoft YaHei",sans-serif;color:#12233a}
+  #fbDlg .fbh{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #e8eef6}
+  #fbDlg .fbh b{font-size:15.5px;color:#0e4a8e}
+  #fbDlg .fbx{border:0;background:none;font-size:21px;line-height:1;color:#9aa9bb;cursor:pointer;padding:0 3px}
+  #fbDlg .fbb{padding:14px 18px 4px}
+  #fbDlg label{display:block;font-size:12.5px;color:#5b6b80;margin:0 0 6px;font-weight:700}
+  #fbDlg .fbl{font-weight:400;color:#9aa9bb}
+  #fbDlg .kinds{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:13px}
+  #fbDlg .kinds span{border:1px solid #c9d8e8;border-radius:9px;padding:5px 11px;font-size:13px;
+                     cursor:pointer;color:#3b5273;user-select:none}
+  #fbDlg .kinds span.on{background:#0e4a8e;border-color:#0e4a8e;color:#fff}
+  #fbDlg textarea{width:100%;box-sizing:border-box;border:1px solid #c9d8e8;border-radius:10px;
+                  padding:9px 11px;font:14px/1.6 inherit;color:#12233a;resize:vertical;min-height:98px;outline:none}
+  #fbDlg textarea:focus{border-color:#0e4a8e}
+  #fbDlg .fbmsg{font-size:12.5px;color:#c0392b;min-height:18px;padding:6px 0 0}
+  #fbDlg .fbmsg.ok{color:#1d7a46}
+  #fbDlg .fbf{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 18px 16px}
+  #fbDlg .fbwho{font-size:12px;color:#8496ab}
+  #fbDlg .fbs{background:#0e4a8e;color:#fff;border:0;border-radius:10px;padding:9px 20px;
+              font-weight:700;cursor:pointer;font-size:14px}
+  #fbDlg .fbs:disabled{opacity:.55;cursor:default}
+  @media (max-width:520px){ .fbBtn{right:10px;bottom:32px;padding:8px 12px;font-size:12.5px} }
 </style>
 </head>
 <body>
@@ -301,6 +333,15 @@
           '<td class="n">' + (s.logins || 0) + '</td><td class="n">' + (s.pv || 0) + '</td>' +
           '<td style="color:#7b8ea6;font-size:12px">' + esc(s.last || '—') + '</td></tr>';
       }).join('');
+      var fbs = d.feedback || [];
+      var fbRows = fbs.map(function(x){
+        return '<tr><td style="white-space:nowrap;color:#7b8ea6;font-size:12px">' + esc(x.ts) + '</td>' +
+          '<td style="white-space:nowrap">' + esc(x.name) + '</td>' +
+          '<td style="white-space:nowrap">' + esc(x.kind) + '</td>' +
+          '<td style="text-align:left;line-height:1.6">' + esc(x.content) +
+          '<div style="color:#9aa9bb;font-size:11.5px">' + esc(x.page) +
+          (x.sid ? ' · ' + esc(x.sid) : ' · 未登录') + '</div></td></tr>';
+      }).join('');
       var miss = d.missing || [];
       p.innerHTML =
         '<div class="kpis">' +
@@ -328,10 +369,16 @@
           '<th style="text-align:right">登录次数</th><th style="text-align:right">访问次数</th><th>最近登录</th>' +
           '</tr></thead><tbody>' + (sRows || '<tr><td colspan="6" style="color:#7b8ea6">暂无数据</td></tr>') +
           '</tbody></table></div>' +
+        '<div class="subh">学生反馈（共 ' + (d.feedbackTotal || 0) + ' 条' +
+          (fbs.length ? '，显示最新 ' + fbs.length + ' 条' : '') + '）</div>' +
+        '<div class="tblwrap"><table><thead><tr><th>时间</th><th>学生</th><th>类型</th><th>内容</th>' +
+          '</tr></thead><tbody>' + (fbRows || '<tr><td colspan="4" style="color:#7b8ea6">还没有收到反馈</td></tr>') +
+          '</tbody></table></div>' +
         (miss.length ? '<div class="miss"><b>未登录学号（前 ' + miss.length + ' 个）：</b>' +
           miss.map(esc).join('、') + '</div>' : '') +
         '<div style="text-align:right"><button class="ghost" id="csvCh">导出章节热度 CSV</button> ' +
-        '<button class="ghost" id="csvTop">导出学生活跃度 CSV</button></div>';
+        '<button class="ghost" id="csvTop">导出学生活跃度 CSV</button> ' +
+        '<button class="ghost" id="csvFb">导出反馈 CSV</button></div>';
 
       function dl(name, text){
         var a = document.createElement('a');
@@ -348,6 +395,13 @@
         dl('学生活跃度.csv', '\ufeff学号,姓名,班级,登录次数,访问次数,最近登录\n' + top.map(function(s){
           return [s.sid, s.name, s.cls, s.logins, s.pv, s.last].map(function(x){
             return '"' + (x == null ? '' : String(x).replace(/"/g, '""')) + '"'; }).join(',');
+        }).join('\n'));
+      };
+      var b3 = $('csvFb');
+      if (b3) b3.onclick = function(){
+        dl('学生反馈.csv', '\ufeff时间,姓名,学号,类型,内容,页面\n' + fbs.map(function(x){
+          return [x.ts, x.name, x.sid, x.kind, x.content, x.page].map(function(v){
+            return '"' + (v == null ? '' : String(v).replace(/"/g, '""')) + '"'; }).join(',');
         }).join('\n'));
       };
     }
@@ -371,6 +425,92 @@
     };
   })();
   </script>
+
+<!-- 意见反馈：学生与游客都能提交，内容进老师统计面板 -->
+<button class="fbBtn" id="fbBtn" type="button">💬 意见反馈</button>
+<div id="fbMask">
+  <div id="fbDlg" role="dialog" aria-modal="true" aria-label="意见反馈">
+    <div class="fbh"><b>意见反馈</b><button class="fbx" id="fbClose" type="button" aria-label="关闭">×</button></div>
+    <div class="fbb">
+      <label>反馈类型</label>
+      <div class="kinds" id="fbKinds">
+        <span class="on" data-k="建议">建议</span><span data-k="内容有误">内容有误</span>
+        <span data-k="显示问题">打不开 / 显示问题</span><span data-k="其他">其他</span>
+      </div>
+      <label>具体内容 <span class="fbl">（哪句看不懂、哪个演示不对、想补充什么）</span></label>
+      <textarea id="fbText" maxlength="500" placeholder="例如：第4章变面积型的原理图里，δ 和 Δa 的方向看不清，希望标得更明显。" ></textarea>
+      <div class="fbmsg" id="fbMsg"></div>
+    </div>
+    <div class="fbf">
+      <span class="fbwho" id="fbWho"></span>
+      <button class="fbs" id="fbSend" type="button">提交</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var API = 'https://zezhou-sensors-cours-d6a84d256e7.service.tcloudbase.com/api';
+  function $(id){ return document.getElementById(id); }
+  var kind = '建议', lastAt = 0;
+  var f = decodeURIComponent((location.pathname.split('/').pop() || ''));
+  var page = (!f || f.indexOf('index.html') >= 0) ? '入口页'
+             : f.replace(/\.html$/i, '').replace(/-动态演示$/, '');
+  function setMsg(t, okCls){ var m = $('fbMsg'); if(!m) return; m.textContent = t || ''; m.className = 'fbmsg' + (okCls ? ' ok' : ''); }
+  function open(){
+    $('fbMask').classList.add('on');
+    var sid = '', nm = '', cls = '';
+    try { sid = localStorage.getItem('sensors_sid') || ''; nm = localStorage.getItem('sensors_name') || ''; cls = localStorage.getItem('sensors_cls') || ''; } catch(e) {}
+    $('fbWho').textContent = sid
+      ? ('以 ' + (nm || sid) + (cls ? '（' + cls + ' 班）' : '') + ' 身份提交')
+      : '未登录，将以匿名方式提交';
+    setTimeout(function(){ try { $('fbText').focus(); } catch(e) {} }, 60);
+  }
+  function close(){ $('fbMask').classList.remove('on'); }
+  $('fbBtn').onclick = open;
+  $('fbClose').onclick = close;
+  $('fbMask').addEventListener('click', function(e){ if (e.target === $('fbMask')) close(); });
+  // 对话框打开时屏蔽页面快捷键（空格演示、方向键调参等），避免输入被抢
+  ['keydown','keyup','keypress'].forEach(function(ev){
+    document.addEventListener(ev, function(e){
+      var m = $('fbMask');
+      if (!m || !m.classList.contains('on')) return;
+      if (ev === 'keydown' && e.key === 'Escape') { close(); }
+      e.stopPropagation();
+    }, true);
+  });
+  Array.prototype.forEach.call($('fbKinds').children, function(el){
+    el.onclick = function(){
+      kind = el.getAttribute('data-k');
+      Array.prototype.forEach.call($('fbKinds').children, function(o){ o.classList.remove('on'); });
+      el.classList.add('on');
+    };
+  });
+  $('fbSend').onclick = function(){
+    var t = ($('fbText').value || '').trim();
+    if (t.length < 2) { setMsg('请先写点具体内容再提交'); return; }
+    if (Date.now() - lastAt < 15000) { setMsg('刚才已提交过，请稍后再发'); return; }
+    var sid = '';
+    try { sid = localStorage.getItem('sensors_sid') || ''; } catch(e) {}
+    var btn = this; btn.disabled = true; setMsg('');
+    fetch(API, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+                body: JSON.stringify({action:'feedback', sid:sid, kind:kind, content:t, page:page})})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        btn.disabled = false;
+        if (d && d.ok) {
+          lastAt = Date.now();
+          $('fbText').value = '';
+          setMsg('谢谢反馈，已收到 🙌 老师会在统计面板里看到', true);
+          setTimeout(close, 1600);
+        } else {
+          setMsg((d && d.msg) || '提交失败，请稍后再试');
+        }
+      })
+      .catch(function(){ btn.disabled = false; setMsg('连不上服务器（离线或网络异常），请稍后再试'); });
+  };
+})();
+</script>
   <!-- 访客统计（不蒜子）：纯前端计数，无需注册；统计服务不可用时只提示，不影响课件打开 -->
   <div class="stats" id="stats" title="由不蒜子（busuanzi）提供计数；只统计访问次数，不采集其他信息">
     <span>本站访问 <b id="busuanzi_value_site_pv">—</b> 次</span><span class="dot">·</span>
