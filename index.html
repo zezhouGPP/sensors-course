@@ -91,15 +91,54 @@
               font-weight:700;cursor:pointer;font-size:14px}
   #fbDlg .fbs:disabled{opacity:.55;cursor:default}
   @media (max-width:520px){ .fbBtn{right:10px;bottom:32px;padding:8px 12px;font-size:12.5px} }
+  /* 老师密码对话框 */
+  #tpMask{position:fixed;inset:0;z-index:10000;background:rgba(10,22,38,.5);display:none;
+          align-items:center;justify-content:center;padding:18px}
+  #tpMask.on{display:flex}
+  #tpDlg{background:#fff;border-radius:14px;width:100%;max-width:360px;overflow:hidden;
+         box-shadow:0 20px 60px rgba(0,0,0,.3);font:14px/1.6 "Microsoft YaHei",sans-serif;color:#12233a}
+  #tpDlg .tph{padding:14px 18px;border-bottom:1px solid #e8eef6;font-size:15px;font-weight:700;color:#0e4a8e}
+  #tpDlg .tpb{padding:15px 18px 4px}
+  #tpDlg .tprow{display:flex;gap:7px}
+  #tpDlg input{flex:1;min-width:0;border:1px solid #c9d8e8;border-radius:10px;padding:9px 11px;
+               font:14px/1.5 inherit;outline:none;color:#12233a;letter-spacing:1px}
+  #tpDlg input:focus{border-color:#0e4a8e}
+  #tpDlg .tpeye{flex:none;width:40px;border:1px solid #c9d8e8;background:#f7fafd;border-radius:10px;
+                cursor:pointer;font-size:16px;line-height:1}
+  #tpDlg .tpeye:hover{background:#eef4fc}
+  #tpDlg .tperr{font-size:12.5px;color:#c0392b;min-height:18px;padding:6px 0 0}
+  #tpDlg .tpf{display:flex;justify-content:flex-end;gap:9px;padding:6px 18px 15px}
+  #tpDlg .tpf button{border-radius:10px;padding:8px 17px;font-size:14px;font-weight:700;cursor:pointer}
+  #tpDlg .tpc{background:#fff;color:#3b5273;border:1px solid #c9d8e8}
+  #tpDlg .tpo{background:#0e4a8e;color:#fff;border:0}
 </style>
 </head>
 <body>
+<!-- 老师统计入口：密码框默认隐藏，点右侧按钮可临时显示 -->
+<div id="tpMask">
+  <div id="tpDlg" role="dialog" aria-modal="true" aria-label="老师统计入口">
+    <div class="tph">老师统计入口</div>
+    <div class="tpb">
+      <div class="tprow">
+        <input id="tpInput" type="password" placeholder="请输入老师密码" autocomplete="off" spellcheck="false">
+        <button class="tpeye" id="tpEye" type="button" title="点击显示密码" aria-label="显示密码">👁</button>
+      </div>
+      <div class="tperr" id="tpErr"></div>
+    </div>
+    <div class="tpf">
+      <button class="tpc" id="tpCancel" type="button">取消</button>
+      <button class="tpo" id="tpOk" type="button">确定</button>
+    </div>
+  </div>
+</div>
+
+
 <div class="wrap">
   <h1>传感器原理及检测技术 · 动态演示</h1>
   <div class="sub">可拖动板块、调整列宽、缩放内容，布局自动记忆；各章含 ▶ 演示与 ▶ 巡览要点</div>
-  <div style="font-size:12.5px;color:#7b8ea6;margin:-10px 0 12px">
-    国内访问（更快）：<a href="https://zezhou-sensors-cours-d6a84d256e7-1318767133.tcloudbaseapp.com/" style="color:#0e4a8e;font-weight:700">腾讯云镜像</a>
-    ｜ 备用：<a href="https://zezhougpp.github.io/sensors-course/" style="color:#0e4a8e;font-weight:700">GitHub Pages</a>
+  <div style="font-size:12.5px;color:#7b8ea6;margin:-10px 0 12px;line-height:1.95;word-break:break-all">
+    （主路线）<a href="https://zezhougpp.github.io/sensors-course/" style="color:#0e4a8e;font-weight:700">https://zezhougpp.github.io/sensors-course/</a><br>
+    （备用路线）<a href="https://zezhou-sensors-cours-d6a84d256e7-1318767133.tcloudbaseapp.com/" style="color:#0e4a8e;font-weight:700">https://zezhou-sensors-cours-d6a84d256e7-1318767133.tcloudbaseapp.com/</a>
   </div>
 
   <!-- 学生登录：学号即密码，登录后各章访问会计入老师统计 -->
@@ -406,23 +445,53 @@
       };
     }
 
-    $('adminLink').onclick = function(ev){
-      ev.preventDefault();
-      var key = '';
-      try { key = sessionStorage.getItem(K_KEY) || ''; } catch(e) {}
-      if (!key) key = window.prompt('请输入老师密钥') || '';
-      if (!key) return;
+    // ---- 老师统计：密码对话框（默认隐藏，可点击显示） ----
+    var tpMask = $('tpMask'), tpInput = $('tpInput');
+    function tpErr(t){ var e = $('tpErr'); if (e) e.textContent = t || ''; }
+    function openTp(){
+      tpInput.value = ''; tpErr('');
+      tpInput.type = 'password'; $('tpEye').textContent = '👁'; $('tpEye').title = '点击显示密码';
+      tpMask.classList.add('on');
+      setTimeout(function(){ try { tpInput.focus(); } catch(e) {} }, 60);
+    }
+    function closeTp(){ tpMask.classList.remove('on'); }
+    function loadStats(key){
       msg('正在读取统计…');
       post({action:'stats', key: key}).then(function(d){
         if (d && d.ok) {
           try { sessionStorage.setItem(K_KEY, key); } catch(e) {}
-          msg('统计已更新', 'ok'); render(d);
+          closeTp(); msg('统计已更新', 'ok'); render(d);
         } else {
-          msg((d && d.msg) || '密钥不正确', 'err');
+          tpErr((d && d.msg) || '密码不正确');
           try { sessionStorage.removeItem(K_KEY); } catch(e) {}
         }
-      }).catch(function(){ msg('无法连接统计服务', 'err'); });
+      }).catch(function(){ tpErr('无法连接统计服务（网络或服务异常）'); });
+    }
+    $('adminLink').onclick = function(ev){
+      ev.preventDefault();
+      var k = '';
+      try { k = sessionStorage.getItem(K_KEY) || ''; } catch(e) {}
+      if (k) { loadStats(k); return; }
+      openTp();
     };
+    $('tpOk').onclick = function(){
+      var v = (tpInput.value || '').trim();
+      if (!v) { tpErr('请输入密码'); return; }
+      loadStats(v);
+    };
+    $('tpCancel').onclick = closeTp;
+    $('tpMask').addEventListener('click', function(e){ if (e.target === tpMask) closeTp(); });
+    $('tpEye').onclick = function(){
+      var show = tpInput.type === 'password';
+      tpInput.type = show ? 'text' : 'password';
+      this.textContent = show ? '🙈' : '👁';
+      this.title = show ? '点击隐藏密码' : '点击显示密码';
+      try { tpInput.focus(); } catch(e) {}
+    };
+    tpInput.addEventListener('keydown', function(e){
+      if (e.key === 'Enter') { $('tpOk').click(); }
+      else if (e.key === 'Escape') { closeTp(); }
+    });
   })();
   </script>
 
