@@ -1897,5 +1897,24 @@ function bindDemos(){
 <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 <script>(function(){setTimeout(function(){var e=document.getElementById('busuanzi_value_page_pv'),b=document.getElementById('pvBadge');
 if(b&&(!e||!e.textContent||e.textContent==='—'))b.style.display='none';},6000);})();</script>
+
+<!-- 学生登录态上报（同域 localStorage 共享）：登录后打开某章会记一次访问 -->
+<script>
+(function(){
+  var API = 'https://zezhou-sensors-cours-d6a84d256e7.service.tcloudbase.com/api';
+  try {
+    var sid = localStorage.getItem('sensors_sid');
+    if (!sid) return;
+    var page = decodeURIComponent((location.pathname.split('/').pop() || '')
+                 .replace(/\.html$/i, '').replace(/-动态演示$/, ''));
+    var k = 'pv_' + page;
+    if (sessionStorage.getItem(k)) return;
+    sessionStorage.setItem(k, '1');
+    fetch(API, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+                body: JSON.stringify({action:'visit', sid: sid, page: page})})
+      .catch(function(){});
+  } catch (e) {}
+})();
+</script>
 </body>
 </html>

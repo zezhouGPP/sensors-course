@@ -29,6 +29,29 @@
   .stats b{color:#0e4a8e;font-size:15px;font-variant-numeric:tabular-nums}
   .stats .dot{opacity:.35}
   .stats .off{color:#c0392b}
+  /* 学生登录条 + 老师统计 */
+  .loginbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:#fff;border:1px solid #d5dfec;
+            border-radius:14px;padding:9px 14px;margin-bottom:14px;box-shadow:0 6px 24px rgba(18,35,58,.06)}
+  .loginbar .badge{font-size:12px;background:#eaf3ff;color:#0e4a8e;border-radius:8px;padding:3px 8px;font-weight:700}
+  .loginbar input{border:1px solid #b9cde4;border-radius:9px;padding:7px 10px;font-size:14px;width:170px;
+                  font-family:inherit;outline:none}
+  .loginbar input:focus{border-color:#0e4a8e}
+  .loginbar button{background:#0e4a8e;color:#fff;border:0;border-radius:9px;padding:8px 16px;font-size:14px;
+                   font-weight:700;cursor:pointer;font-family:inherit}
+  .loginbar button.ghost{background:#fff;color:#0e4a8e;border:1px solid #b9cde4}
+  .loginbar .who{font-size:13.5px;color:#12233a}
+  .loginbar .msg{font-size:12.5px;color:#7b8ea6}
+  .loginbar .msg.err{color:#c0392b}
+  .loginbar .msg.ok{color:#1d7a46}
+  #adminPanel{flex-direction:column;align-items:stretch;gap:10px;font-size:13px}
+  #adminPanel table{width:100%;border-collapse:collapse;font-size:13px}
+  #adminPanel th{text-align:left;color:#5b6b80;border-bottom:1px solid #d5dfec;padding:6px 8px;font-weight:700}
+  #adminPanel td{padding:5px 8px;border-bottom:1px dotted #e3ebf5}
+  #adminPanel td.n{text-align:right;font-variant-numeric:tabular-nums;color:#0e4a8e;font-weight:700}
+  #adminPanel .kpis{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+  #adminPanel .kpis b{color:#0e4a8e;font-size:16px;font-variant-numeric:tabular-nums}
+  #adminPanel .miss{font-size:12.5px;color:#7b8ea6;line-height:1.8;word-break:break-all;max-height:110px;overflow:auto}
+  a.adminlink{color:#0e4a8e;font-weight:700}
   @media (max-width:640px){ .item{flex-direction:column;align-items:flex-start} }
 </style>
 </head>
@@ -36,6 +59,18 @@
 <div class="wrap">
   <h1>传感器原理及检测技术 · 动态演示</h1>
   <div class="sub">可拖动板块、调整列宽、缩放内容，布局自动记忆；各章含 ▶ 演示与 ▶ 巡览要点</div>
+
+  <!-- 学生登录：学号即密码，登录后各章访问会计入老师统计 -->
+  <div class="loginbar" id="loginbar">
+    <span class="badge">学生登录</span>
+    <span id="lbForm">
+      <input id="lbSid" placeholder="请输入学号" inputmode="numeric" autocomplete="off" maxlength="20">
+      <button id="lbBtn">登录</button>
+    </span>
+    <span class="who" id="lbWho" style="display:none"></span>
+    <button class="ghost" id="lbOut" style="display:none">退出登录</button>
+    <span class="msg" id="lbMsg">学号即密码；仅用于老师了解学习情况。</span>
+  </div>
 
   <div class="quick">
     <span class="lab">直达：</span>
@@ -164,8 +199,108 @@
   <div class="tip">
     通用操作：拖动标题栏可换列换位、拖竖条调列宽、标题栏 ＋ － 缩放、⛶ 或双击全屏（Esc 退出）；↺ 恢复默认一屏；
     每章自己的键盘快捷键见文件内提示（如 ← → 调位移、空格演示、R 复位）。
+    ｜ <a href="#" class="adminlink" id="adminLink">老师统计入口</a>
   </div>
 
+
+  <!-- 老师统计面板（默认隐藏，点"老师统计入口"并输入密钥后显示） -->
+  <div class="stats" id="adminPanel" style="display:none"></div>
+  <script>
+  (function(){
+    var API = 'https://zezhou-sensors-cours-d6a84d256e7.service.tcloudbase.com/api';
+    var K_SID = 'sensors_sid', K_NAME = 'sensors_name', K_KEY = 'sensors_tkey';
+    function $(id){ return document.getElementById(id); }
+    function post(body){
+      return fetch(API, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+                         body: JSON.stringify(body)}).then(function(r){ return r.json(); });
+    }
+    function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+    function msg(t, cls){ var m=$('lbMsg'); if(!m) return; m.textContent = t; m.className = 'msg' + (cls ? ' ' + cls : ''); }
+    function showLogged(name, sid){
+      $('lbForm').style.display = 'none';
+      $('lbOut').style.display = '';
+      var w = $('lbWho'); w.style.display = '';
+      w.innerHTML = '已登录：<b>' + esc(name || '同学') + '</b>' + (sid ? ' · ' + esc(sid) : '');
+    }
+    function showOut(){
+      $('lbForm').style.display = ''; $('lbOut').style.display = 'none';
+      $('lbWho').style.display = 'none';
+    }
+    // 读取本地登录状态
+    var sid0 = '', nm0 = '';
+    try { sid0 = localStorage.getItem(K_SID) || ''; nm0 = localStorage.getItem(K_NAME) || ''; } catch(e) {}
+    if (sid0) { showLogged(nm0, sid0); msg('登录状态已保存（换设备或清缓存需重新登录）', 'ok'); }
+
+    $('lbBtn').onclick = function(){
+      var sid = ($('lbSid').value || '').replace(/\s+/g, '');
+      if (!/^\d{6,20}$/.test(sid)) { msg('请输入正确的学号（6~20 位数字）', 'err'); return; }
+      msg('登录中…');
+      post({action:'login', sid: sid}).then(function(d){
+        if (d && d.ok) {
+          try { localStorage.setItem(K_SID, sid); localStorage.setItem(K_NAME, d.name || ''); } catch(e) {}
+          showLogged(d.name, sid);
+          msg('登录成功' + (d.name ? '，' + d.name + ' 同学' : '') + '（第 ' + (d.count || 1) + ' 次登录）', 'ok');
+        } else {
+          msg((d && d.msg) || '登录失败，请确认学号已列入名单', 'err');
+        }
+      }).catch(function(){ msg('无法连接统计服务（离线或服务未开启）', 'err'); });
+    };
+    $('lbSid').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('lbBtn').click(); });
+    $('lbOut').onclick = function(){
+      try { localStorage.removeItem(K_SID); localStorage.removeItem(K_NAME); } catch(e) {}
+      showOut(); msg('已退出登录', '');
+    };
+
+    // ---- 老师统计 ----
+    function render(d){
+      var p = $('adminPanel');
+      p.style.display = 'flex';
+      var rows = (d.chapters || []).map(function(c){
+        return '<tr><td>' + esc(c.page) + '</td><td class="n">' + (c.n || 0) + '</td></tr>';
+      }).join('');
+      var miss = (d.missing || []);
+      p.innerHTML =
+        '<div class="kpis">' +
+          '<span>名单 <b>' + (d.students || 0) + '</b> 人</span>' +
+          '<span>已登录 <b>' + (d.loggedIn || 0) + '</b> 人</span>' +
+          '<span>未登录 <b>' + (d.notLoggedIn || 0) + '</b> 人</span>' +
+          '<span>总访问 <b>' + (d.visits || 0) + '</b> 次</span>' +
+          '<span>今日 <b>' + (d.today || 0) + '</b> 次</span>' +
+        '</div>' +
+        '<table><thead><tr><th>页面</th><th style="text-align:right">访问次数</th></tr></thead><tbody>' +
+        (rows || '<tr><td colspan="2" style="color:#7b8ea6">暂无数据</td></tr>') + '</tbody></table>' +
+        (miss.length ? '<div class="miss"><b>未登录学号（前 ' + miss.length + ' 个）：</b>' +
+          miss.map(esc).join('、') + '</div>' : '') +
+        '<div style="text-align:right"><button class="ghost" id="csvBtn">导出 CSV</button></div>';
+      var b = $('csvBtn');
+      if (b) b.onclick = function(){
+        var csv = '\ufeff页面,访问次数\n' + (d.chapters || []).map(function(c){
+          return '"' + c.page + '",' + (c.n || 0); }).join('\n');
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+        a.download = '访问统计.csv'; a.click();
+      };
+    }
+    $('adminLink').onclick = function(ev){
+      ev.preventDefault();
+      var key = '';
+      try { key = sessionStorage.getItem(K_KEY) || ''; } catch(e) {}
+      if (!key) key = window.prompt('请输入老师密钥') || '';
+      if (!key) return;
+      msg('正在读取统计…');
+      post({action:'stats', key: key}).then(function(d){
+        if (d && d.ok) {
+          try { sessionStorage.setItem(K_KEY, key); } catch(e) {}
+          msg('统计已更新', 'ok'); render(d);
+        } else {
+          msg((d && d.msg) || '密钥不正确', 'err');
+          try { sessionStorage.removeItem(K_KEY); } catch(e) {}
+        }
+      }).catch(function(){ msg('无法连接统计服务', 'err'); });
+    };
+  })();
+  </script>
   <!-- 访客统计（不蒜子）：纯前端计数，无需注册；统计服务不可用时只提示，不影响课件打开 -->
   <div class="stats" id="stats" title="由不蒜子（busuanzi）提供计数；只统计访问次数，不采集其他信息">
     <span>本站访问 <b id="busuanzi_value_site_pv">—</b> 次</span><span class="dot">·</span>
