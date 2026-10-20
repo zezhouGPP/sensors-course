@@ -52,6 +52,12 @@
   #adminPanel .kpis b{color:#0e4a8e;font-size:16px;font-variant-numeric:tabular-nums}
   #adminPanel .miss{font-size:12.5px;color:#7b8ea6;line-height:1.8;word-break:break-all;max-height:110px;overflow:auto}
   a.adminlink{color:#0e4a8e;font-weight:700}
+  #adminPanel .hotbox{background:#fff6e0;border:1px solid #f0d79a;border-radius:10px;padding:9px 12px;
+                      font-size:13px;line-height:1.75;color:#7a5200}
+  #adminPanel .hotbox.muted{background:#f6f9fd;border-color:#dbe6f2;color:#7b8ea6}
+  #adminPanel .tblwrap{max-height:250px;overflow:auto;border:1px solid #e7eef7;border-radius:10px}
+  #adminPanel .tblwrap thead th{position:sticky;top:0;background:#fff;z-index:1}
+  #adminPanel .subh{font-size:13px;color:#5b6b80;font-weight:700}
   @media (max-width:640px){ .item{flex-direction:column;align-items:flex-start} }
 </style>
 </head>
@@ -248,6 +254,14 @@
     try { sid0 = localStorage.getItem(K_SID) || ''; nm0 = localStorage.getItem(K_NAME) || ''; cls0 = localStorage.getItem(K_CLS) || ''; } catch(e) {}
     if (sid0) { greet(nm0, cls0); msg(pickEnc(), 'ok'); }
 
+    // 未登录访客：每次会话记一次「入口页」访问（与学生的访问分开统计）
+    try {
+      if (!sid0 && !sessionStorage.getItem('g_entry')) {
+        sessionStorage.setItem('g_entry', '1');
+        post({action:'guest', page:'入口页'});
+      }
+    } catch(e) {}
+
     $('lbBtn').onclick = function(){
       var sid = ($('lbSid').value || '').replace(/\s+/g, '');
       if (!/^\d{6,20}$/.test(sid)) { msg('请输入正确的学号（6~20 位数字）', 'err'); return; }
@@ -272,32 +286,72 @@
     function render(d){
       var p = $('adminPanel');
       p.style.display = 'flex';
-      var rows = (d.chapters || []).map(function(c){
-        return '<tr><td>' + esc(c.page) + '</td><td class="n">' + (c.n || 0) + '</td></tr>';
+      var HOT = 80;                       // 登录或访问超过这个次数 → 单独列出，供平时分参考
+      var ch = d.chapters || [];
+      var top = d.top || [];
+      var chRows = ch.map(function(c){
+        return '<tr><td>' + esc(c.page) + '</td><td class="n">' + (c.n || 0) +
+               '</td><td class="n" style="color:#b26a00">' + (c.g || 0) + '</td></tr>';
       }).join('');
-      var miss = (d.missing || []);
+      var hotList = top.filter(function(s){ return (s.logins > HOT) || (s.pv > HOT); });
+      var sRows = top.map(function(s){
+        var hot = (s.logins > HOT) || (s.pv > HOT);
+        return '<tr' + (hot ? ' style="background:#fff6e0"' : '') + '>' +
+          '<td>' + esc(s.sid) + '</td><td>' + esc(s.name) + '</td><td>' + esc(s.cls) + '</td>' +
+          '<td class="n">' + (s.logins || 0) + '</td><td class="n">' + (s.pv || 0) + '</td>' +
+          '<td style="color:#7b8ea6;font-size:12px">' + esc(s.last || '—') + '</td></tr>';
+      }).join('');
+      var miss = d.missing || [];
       p.innerHTML =
         '<div class="kpis">' +
           '<span>名单 <b>' + (d.students || 0) + '</b> 人</span>' +
           '<span>已登录 <b>' + (d.loggedIn || 0) + '</b> 人</span>' +
           '<span>未登录 <b>' + (d.notLoggedIn || 0) + '</b> 人</span>' +
-          '<span>总访问 <b>' + (d.visits || 0) + '</b> 次</span>' +
-          '<span>今日 <b>' + (d.today || 0) + '</b> 次</span>' +
+          '<span>学生访问 <b>' + (d.visits || 0) + '</b> 次</span>' +
+          '<span>游客访问 <b>' + (d.guests || 0) + '</b> 次</span>' +
+          '<span>今日 <b>' + (d.today || 0) + '</b> 次（其中游客 ' + (d.guestsToday || 0) + '）</span>' +
         '</div>' +
-        '<table><thead><tr><th>页面</th><th style="text-align:right">访问次数</th></tr></thead><tbody>' +
-        (rows || '<tr><td colspan="2" style="color:#7b8ea6">暂无数据</td></tr>') + '</tbody></table>' +
+        (hotList.length
+          ? '<div class="hotbox"><b>活跃突出（登录或访问超过 ' + HOT + ' 次）：</b>' +
+            hotList.map(function(s){
+              return esc(s.name) + '（' + esc(s.cls) + ' 班，登录 ' + s.logins + ' 次 / 访问 ' + s.pv + ' 次）';
+            }).join('、') + ' —— 可作为平时分加分参考。</div>'
+          : '<div class="hotbox muted">暂无学生达到 ' + HOT + ' 次（登录次数或访问次数）。达到后会自动在这里单独列出，'
+            + '方便按活跃度给平时分。</div>') +
+        '<div class="subh">各章热度（学生 / 游客分开统计）</div>' +
+        '<div class="tblwrap"><table><thead><tr><th>页面</th>' +
+          '<th style="text-align:right">学生访问</th><th style="text-align:right;color:#b26a00">游客访问</th>' +
+          '</tr></thead><tbody>' + (chRows || '<tr><td colspan="3" style="color:#7b8ea6">暂无数据</td></tr>') +
+          '</tbody></table></div>' +
+        '<div class="subh">学生活跃度（按访问次数排序，前 100 名）</div>' +
+        '<div class="tblwrap"><table><thead><tr><th>学号</th><th>姓名</th><th>班级</th>' +
+          '<th style="text-align:right">登录次数</th><th style="text-align:right">访问次数</th><th>最近登录</th>' +
+          '</tr></thead><tbody>' + (sRows || '<tr><td colspan="6" style="color:#7b8ea6">暂无数据</td></tr>') +
+          '</tbody></table></div>' +
         (miss.length ? '<div class="miss"><b>未登录学号（前 ' + miss.length + ' 个）：</b>' +
           miss.map(esc).join('、') + '</div>' : '') +
-        '<div style="text-align:right"><button class="ghost" id="csvBtn">导出 CSV</button></div>';
-      var b = $('csvBtn');
-      if (b) b.onclick = function(){
-        var csv = '\ufeff页面,访问次数\n' + (d.chapters || []).map(function(c){
-          return '"' + c.page + '",' + (c.n || 0); }).join('\n');
+        '<div style="text-align:right"><button class="ghost" id="csvCh">导出章节热度 CSV</button> ' +
+        '<button class="ghost" id="csvTop">导出学生活跃度 CSV</button></div>';
+
+      function dl(name, text){
         var a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-        a.download = '访问统计.csv'; a.click();
+        a.href = URL.createObjectURL(new Blob([text], {type:'text/csv;charset=utf-8'}));
+        a.download = name; a.click();
+      }
+      var b1 = $('csvCh');
+      if (b1) b1.onclick = function(){
+        dl('各章热度.csv', '\ufeff页面,学生访问,游客访问\n' + ch.map(function(c){
+          return '"' + c.page + '",' + (c.n || 0) + ',' + (c.g || 0); }).join('\n'));
+      };
+      var b2 = $('csvTop');
+      if (b2) b2.onclick = function(){
+        dl('学生活跃度.csv', '\ufeff学号,姓名,班级,登录次数,访问次数,最近登录\n' + top.map(function(s){
+          return [s.sid, s.name, s.cls, s.logins, s.pv, s.last].map(function(x){
+            return '"' + (x == null ? '' : String(x).replace(/"/g, '""')) + '"'; }).join(',');
+        }).join('\n'));
       };
     }
+
     $('adminLink').onclick = function(ev){
       ev.preventDefault();
       var key = '';
