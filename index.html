@@ -59,6 +59,10 @@
 <div class="wrap">
   <h1>传感器原理及检测技术 · 动态演示</h1>
   <div class="sub">可拖动板块、调整列宽、缩放内容，布局自动记忆；各章含 ▶ 演示与 ▶ 巡览要点</div>
+  <div style="font-size:12.5px;color:#7b8ea6;margin:-10px 0 12px">
+    国内访问（更快）：<a href="https://zezhou-sensors-cours-d6a84d256e7-1318767133.tcloudbaseapp.com/" style="color:#0e4a8e;font-weight:700">腾讯云镜像</a>
+    ｜ 备用：<a href="https://zezhougpp.github.io/sensors-course/" style="color:#0e4a8e;font-weight:700">GitHub Pages</a>
+  </div>
 
   <!-- 学生登录：学号即密码，登录后各章访问会计入老师统计 -->
   <div class="loginbar" id="loginbar">
@@ -208,7 +212,7 @@
   <script>
   (function(){
     var API = 'https://zezhou-sensors-cours-d6a84d256e7.service.tcloudbase.com/api';
-    var K_SID = 'sensors_sid', K_NAME = 'sensors_name', K_KEY = 'sensors_tkey';
+    var K_SID = 'sensors_sid', K_NAME = 'sensors_name', K_CLS = 'sensors_cls', K_KEY = 'sensors_tkey';
     function $(id){ return document.getElementById(id); }
     function post(body){
       return fetch(API, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
@@ -217,20 +221,32 @@
     function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g, function(c){
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
     function msg(t, cls){ var m=$('lbMsg'); if(!m) return; m.textContent = t; m.className = 'msg' + (cls ? ' ' + cls : ''); }
-    function showLogged(name, sid){
+    function greet(name, cls){
       $('lbForm').style.display = 'none';
       $('lbOut').style.display = '';
       var w = $('lbWho'); w.style.display = '';
-      w.innerHTML = '已登录：<b>' + esc(name || '同学') + '</b>' + (sid ? ' · ' + esc(sid) : '');
+      w.innerHTML = '欢迎，<b>' + esc(name || '同学') + '</b> 同学！' +
+        (cls ? ' <span style="color:#7b8ea6;font-size:12.5px">' + esc(cls) + ' 班</span>' : '');
     }
+    // 登录成功 / 打开页面时给学生一句鼓励
+    var ENCOURAGE = [
+      '每一种传感器，说到底都在回答同一个问题：把看不见的变化，变成看得见的数字。',
+      '先想清楚原理，再动手改参数 —— 这一步走稳了，后面都是顺的。',
+      '把一个型式吃透，另外两个自然就懂了：这是这门课最划算的学法令。',
+      '别急着背公式，先看懂那条曲线是怎么弯的。',
+      '看得懂原理，才改得动参数，才敢下结论 —— 这就是工程师的样子。',
+      '慢慢来，比较快。今天的十分钟，抵得上考前的两小时。',
+      '每一次打开演示，都是在给自己攒一份「看得懂」的底气。'
+    ];
+    function pickEnc(){ return ENCOURAGE[Math.floor(Math.random() * ENCOURAGE.length)]; }
     function showOut(){
       $('lbForm').style.display = ''; $('lbOut').style.display = 'none';
       $('lbWho').style.display = 'none';
     }
     // 读取本地登录状态
-    var sid0 = '', nm0 = '';
-    try { sid0 = localStorage.getItem(K_SID) || ''; nm0 = localStorage.getItem(K_NAME) || ''; } catch(e) {}
-    if (sid0) { showLogged(nm0, sid0); msg('登录状态已保存（换设备或清缓存需重新登录）', 'ok'); }
+    var sid0 = '', nm0 = '', cls0 = '';
+    try { sid0 = localStorage.getItem(K_SID) || ''; nm0 = localStorage.getItem(K_NAME) || ''; cls0 = localStorage.getItem(K_CLS) || ''; } catch(e) {}
+    if (sid0) { greet(nm0, cls0); msg(pickEnc(), 'ok'); }
 
     $('lbBtn').onclick = function(){
       var sid = ($('lbSid').value || '').replace(/\s+/g, '');
@@ -238,9 +254,9 @@
       msg('登录中…');
       post({action:'login', sid: sid}).then(function(d){
         if (d && d.ok) {
-          try { localStorage.setItem(K_SID, sid); localStorage.setItem(K_NAME, d.name || ''); } catch(e) {}
-          showLogged(d.name, sid);
-          msg('登录成功' + (d.name ? '，' + d.name + ' 同学' : '') + '（第 ' + (d.count || 1) + ' 次登录）', 'ok');
+          try { localStorage.setItem(K_SID, sid); localStorage.setItem(K_NAME, d.name || ''); localStorage.setItem(K_CLS, d.cls || ''); } catch(e) {}
+          greet(d.name, d.cls);
+          msg(pickEnc(), 'ok');
         } else {
           msg((d && d.msg) || '登录失败，请确认学号已列入名单', 'err');
         }
@@ -248,7 +264,7 @@
     };
     $('lbSid').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('lbBtn').click(); });
     $('lbOut').onclick = function(){
-      try { localStorage.removeItem(K_SID); localStorage.removeItem(K_NAME); } catch(e) {}
+      try { localStorage.removeItem(K_SID); localStorage.removeItem(K_NAME); localStorage.removeItem(K_CLS); } catch(e) {}
       showOut(); msg('已退出登录', '');
     };
 
