@@ -1876,5 +1876,13 @@ function bindDemos(){
 })();
 
 </script>
+
+<!-- 本页浏览次数（不蒜子）：用于统计各章热度；统计失败时自动隐藏，不影响课件 -->
+<div id="pvBadge" style="position:fixed;right:9px;bottom:7px;z-index:9;font:11px/1.2 'Microsoft YaHei',sans-serif;
+     color:#8296ad;opacity:.62;background:rgba(255,255,255,.78);border-radius:6px;padding:1px 6px;cursor:pointer"
+     title="本页浏览次数（不蒜子统计）；点击可隐藏" onclick="this.style.display='none'">本页浏览 <span id="busuanzi_value_page_pv">—</span> 次</div>
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<script>(function(){setTimeout(function(){var e=document.getElementById('busuanzi_value_page_pv'),b=document.getElementById('pvBadge');
+if(b&&(!e||!e.textContent||e.textContent==='—'))b.style.display='none';},6000);})();</script>
 </body>
 </html>

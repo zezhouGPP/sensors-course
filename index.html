@@ -24,6 +24,11 @@
   .quick a:hover{background:#eef4fc;border-color:#0e4a8e}
   .quick .lab{font-size:13px;color:#5b6b80;align-self:center;font-weight:700}
   .tip{font-size:12.5px;color:#7b8ea6;line-height:1.7;margin-top:6px}
+  .stats{margin-top:14px;padding:10px 14px;background:#fff;border:1px solid #d5dfec;border-radius:12px;
+         font-size:13px;color:#5b6b80;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:center}
+  .stats b{color:#0e4a8e;font-size:15px;font-variant-numeric:tabular-nums}
+  .stats .dot{opacity:.35}
+  .stats .off{color:#c0392b}
   @media (max-width:640px){ .item{flex-direction:column;align-items:flex-start} }
 </style>
 </head>
@@ -160,6 +165,32 @@
     通用操作：拖动标题栏可换列换位、拖竖条调列宽、标题栏 ＋ － 缩放、⛶ 或双击全屏（Esc 退出）；↺ 恢复默认一屏；
     每章自己的键盘快捷键见文件内提示（如 ← → 调位移、空格演示、R 复位）。
   </div>
+
+  <!-- 访客统计（不蒜子）：纯前端计数，无需注册；统计服务不可用时只提示，不影响课件打开 -->
+  <div class="stats" id="stats" title="由不蒜子（busuanzi）提供计数；只统计访问次数，不采集其他信息">
+    <span>本站访问 <b id="busuanzi_value_site_pv">—</b> 次</span><span class="dot">·</span>
+    <span>独立访客 <b id="busuanzi_value_site_uv">—</b> 人</span><span class="dot">·</span>
+    <span>本页访问 <b id="busuanzi_value_page_pv">—</b> 次</span>
+  </div>
+  <script>
+  (function(){
+    function fail(){
+      var st = document.getElementById('stats');
+      if (st && !st.dataset.off){
+        st.dataset.off = '1';
+        st.insertAdjacentHTML('beforeend', '<span class="dot">·</span><span class="off">统计服务暂不可用（不影响课件打开）</span>');
+      }
+    }
+    var s = document.createElement('script');
+    s.src = 'https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js';
+    s.async = true; s.onerror = fail;
+    document.body.appendChild(s);
+    setTimeout(function(){
+      var v = document.getElementById('busuanzi_value_site_pv');
+      if (!v || v.textContent === '—' || !v.textContent) fail();
+    }, 6000);
+  })();
+  </script>
 </div>
 </body>
 </html>
